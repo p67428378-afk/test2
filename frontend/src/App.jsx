@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProductList from './components/ProductList';
 import ApplicationForm from './components/ApplicationForm';
 import ApplicationStatus from './components/ApplicationStatus';
+import * as api from './api';
 
 function App() {
   const [view, setView] = useState('products'); // 'products', 'apply', 'status'
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [applicationId, setApplicationId] = useState(null);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await api.getProducts();
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
 
   const handleApplyClick = (product) => {
     setSelectedProduct(product);
@@ -19,35 +34,37 @@ function App() {
   };
 
   return (
-    <div className='min-h-screen bg-gray-100 font-sans'>
+    <div className='min-h-screen bg-gray-100'>
       <nav className='bg-blue-600 p-4 text-white shadow-md'>
         <div className='container mx-auto flex justify-between items-center'>
-          <h1 className='text-2xl font-bold'>Credit Card Application Portal</h1>
+          <h1 className='text-2xl font-bold'>Credit Card Management</h1>
           <div>
             <button
               onClick={() => setView('products')}
-              className={`mr-4 px-3 py-2 rounded ${view === 'products' ? 'bg-blue-700' : 'hover:bg-blue-500'}`}
+              className='mr-4 hover:text-blue-200'
             >
-              View Products
+              Products
             </button>
             <button
               onClick={() => setView('apply')}
-              className={`mr-4 px-3 py-2 rounded ${view === 'apply' ? 'bg-blue-700' : 'hover:bg-blue-500'}`}
+              className='mr-4 hover:text-blue-200'
             >
-              Apply Now
+              Apply
             </button>
             <button
               onClick={() => setView('status')}
-              className={`px-3 py-2 rounded ${view === 'status' ? 'bg-blue-700' : 'hover:bg-blue-500'}`}
+              className='hover:text-blue-200'
             >
-              Track Status
+              Status
             </button>
           </div>
         </div>
       </nav>
 
-      <main className='container mx-auto mt-8 p-4'>
-        {view === 'products' && <ProductList onApplyClick={handleApplyClick} />}
+      <main className='container mx-auto p-4'>
+        {view === 'products' && (
+          <ProductList products={products} onApplyClick={handleApplyClick} />
+        )}
         {view === 'apply' && (
           <ApplicationForm
             product={selectedProduct}
@@ -55,7 +72,12 @@ function App() {
             onBack={() => setView('products')}
           />
         )}
-        {view === 'status' && <ApplicationStatus initialApplicationId={applicationId} />}
+        {view === 'status' && (
+          <ApplicationStatus
+            applicationId={applicationId}
+            onBack={() => setView('products')}
+          />
+        )}
       </main>
     </div>
   );

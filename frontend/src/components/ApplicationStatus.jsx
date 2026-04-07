@@ -1,77 +1,105 @@
-import React, { useState } from 'react';
-import { getApplicationStatus } from '../api';
+import React, { useState, useEffect } from 'react';
+import * as api from '../api';
 
-function ApplicationStatus({ initialApplicationId }) {
-  const [applicationId, setApplicationId] = useState(initialApplicationId || '');
-  const [statusData, setStatusData] = useState(null);
+function ApplicationStatus({ applicationId, onBack }) {
+  const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [inputApplicationId, setInputApplicationId] = useState(applicationId || '');
 
-  const handleIdChange = (e) => {
-    setApplicationId(e.target.value);
-  };
-
-  const fetchStatus = async (e) => {
-    e.preventDefault();
-    if (!applicationId) return;
-
+  const fetchApplicationStatus = async (id) => {
+    if (!id) return;
     setLoading(true);
     setError(null);
-    setStatusData(null);
-
     try {
-      const data = await getApplicationStatus(applicationId);
-      setStatusData(data);
+      const response = await api.getApplicationStatus(id);
+      setApplication(response.data);
     } catch (err) {
-      setError(err.message);
+      console.error('Error fetching application status:', err.response ? err.response.data : err);
+      setError(err.response?.data?.detail || 'Failed to fetch application status.');
+      setApplication(null);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className='max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md'>
-      <h2 className='text-2xl font-bold text-blue-800 mb-6'>Track Application Status</h2>
+  useEffect(() => {
+    if (applicationId) {
+      fetchApplicationStatus(applicationId);
+    }
+  }, [applicationId]);
 
-      <form onSubmit={fetchStatus} className='flex flex-col sm:flex-row gap-4 mb-6'>
+  const handleInputChange = (e) => {
+    setInputApplicationId(e.target.value);
+  };
+
+  const handleSearch = () => {
+    fetchApplicationStatus(inputApplicationId);
+  };
+
+  return (
+    <div className='p-4 bg-white shadow-lg rounded-lg'>
+      <h2 className='text-3xl font-bold text-gray-800 mb-6'>Track Application Status</h2>
+
+      <div className='mb-6 flex items-center space-x-4'>
         <input
           type='text'
-          value={applicationId}
-          onChange={handleIdChange}
           placeholder='Enter Application ID'
-          required
-          className='flex-grow border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500'
+          value={inputApplicationId}
+          onChange={handleInputChange}
+          className='flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
         />
         <button
-          type='submit'
-          disabled={loading}
-          className='bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50 disabled:opacity-50'
+          onClick={handleSearch}
+          disabled={loading || !inputApplicationId}
+          className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50'
         >
-          {loading ? 'Fetching...' : 'Get Status'}
+          {loading ? 'Searching...' : 'Search'}
         </button>
-      </form>
+      </div>
 
-      {error && <div className='text-red-600 text-center mt-4'>{error}</div>}
+      {loading && <p className='text-center text-blue-600'>Loading application status...</p>}
+      {error && <p className='text-center text-red-500'>{error}</p>}
 
-      {statusData && (
-        <div className='mt-6 border border-gray-200 rounded-md p-4 bg-gray-50'>
-          <h3 className='text-xl font-semibold text-gray-800 mb-3'>Application Details</h3>
-          <p className='mb-1'><strong>Application ID:</strong> {statusData.application_id}</p>
-          <p className='mb-1'><strong>Product ID:</strong> {statusData.product_id}</p>
-          <p className='mb-1'><strong>User ID:</strong> {statusData.user_id}</p>
-          <p className='mb-1'><strong>Status:</strong> <span className='font-semibold text-blue-700'>{statusData.status}</span></p>
-          <p className='mb-1'><strong>Submission Date:</strong> {new Date(statusData.submission_date).toLocaleDateString()}</p>
-          <p className='mb-1'><strong>Last Updated:</strong> {new Date(statusData.last_updated_date).toLocaleDateString()}</p>
-          {statusData.comments && (
-            <div className='mt-3'>
-              <p className='font-semibold'>Comments:</p>
-              <pre className='bg-gray-100 p-2 rounded-md text-sm overflow-x-auto'>
-                {JSON.stringify(statusData.comments, null, 2)}
-              </pre>
+      {application && (
+        <div className='border border-gray-200 rounded-md p-6 mt-6 space-y-4'>
+          <p className='text-lg'><strong>Application ID:</strong> {application.application_id}</p>
+          <p className='text-lg'><strong>Product:</strong> {application.product_id} (Placeholder - ideally fetch product name)</p>
+          <p className='text-lg'><strong>Status:</strong> <span className={`font-semibold ${
+            application.status === 'Approved' ? 'text-green-600' :
+            application.status === 'Declined' ? 'text-red-600' :
+            'text-yellow-600'
+          }`}>{application.status}</span></p>
+          <p className='text-lg'><strong>Submission Date:</strong> {new Date(application.submission_date).toLocaleDateString()}</p>
+          <p className='text-lg'><strong>Last Updated:</strong> {new Date(application.last_updated_date).toLocaleDateString()}</p>
+          {application.comments && Object.keys(application.comments).length > 0 && (
+            <div>
+              <p className='text-lg font-semibold'>Comments:</p>
+              <ul className='list-disc list-inside ml-4'>
+                {Object.entries(application.comments).map(([key, value]) => (
+                  <li key={key} className='text-gray-700'>{key}: {value}</li>
+                ))}
+              </ul>
             </div>
           )}
+          {/* Displaying personal and financial info for completeness, though in a real app this might be restricted */}
+          <div className='border-t border-gray-200 pt-4 mt-4'>
+            <h3 className='text-xl font-semibold text-gray-700 mb-2'>Applicant Details</h3>
+            <p><strong>Date of Birth:</strong> {application.personal_info.date_of_birth}</p>
+            <p><strong>Employment Status:</strong> {application.personal_info.employment_status}</p>
+            <p><strong>Annual Income:</strong> ${application.financial_info.annual_income?.toFixed(2)}</p>
+          </div>
         </div>
       )}
+
+      <div className='mt-6 flex justify-end'>
+        <button
+          onClick={onBack}
+          className='bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out'
+        >
+          Back to Products
+        </button>
+      </div>
     </div>
   );
 }
