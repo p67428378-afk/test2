@@ -1,13 +1,12 @@
 import uuid
 from sqlalchemy import Column, String, Integer, Float, DateTime
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database import Base
 
 class Policy(Base):
     __tablename__ = "policies"
 
-    policy_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    policy_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     customer_id = Column(String, index=True)
     vehicle_type = Column(String, index=True)
     no_claims_years = Column(Integer)

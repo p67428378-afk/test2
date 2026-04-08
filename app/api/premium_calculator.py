@@ -25,7 +25,7 @@ def calculate_premium(
 
     # Create a new policy record
     db_policy = Policy(
-        policy_id=uuid.uuid4(),
+        policy_id=str(uuid.uuid4()), # Convert UUID to string
         customer_id="test_customer", # Placeholder, ideally from auth or request
         vehicle_type=request.vehicle_type.value,
         no_claims_years=request.no_claims_years,
