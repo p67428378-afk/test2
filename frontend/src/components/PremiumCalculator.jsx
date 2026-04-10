@@ -12,8 +12,8 @@ const ncbTiers = [
 
 const PremiumCalculator = () => {
     const [policyholderName, setPolicyholderName] = useState('');
-    const [vehicleMake, setVehicleMake] = useState('');
-    const [vehicleModel, setVehicleModel] = useState('');
+    const [vehicleMake, setVehicleMake] = useState('Mercedes-Benz');
+    const [vehicleModel, setVehicleModel] = useState('EQS Sedan');
     const [manufacturingYear, setManufacturingYear] = useState(2024);
     const [baseRate, setBaseRate] = useState(500);
     const [claimFreeYears, setClaimFreeYears] = useState(3);
@@ -35,7 +35,7 @@ const PremiumCalculator = () => {
             });
             setCalculatedPremium(response.premium);
         } catch (err) {
-            setError(err.detail || 'An error occurred during calculation.');
+            setError('An error occurred during calculation.');
         }
     };
 
@@ -60,8 +60,8 @@ const PremiumCalculator = () => {
                 </nav>
                 <div className='flex items-center gap-6'>
                     <div className='flex items-center gap-4 text-slate-500'>
-                        <span className='material-symbols-outlined cursor-pointer hover:bg-slate-50 p-2 rounded-full transition-all' data-icon='notifications'>notifications</span>
-                        <span className='material-symbols-outlined cursor-pointer hover:bg-slate-50 p-2 rounded-full transition-all' data-icon='settings'>settings</span>
+                        <span className='material-symbols-outlined cursor-pointer hover:bg-slate-50 p-2 rounded-full transition-all'>notifications</span>
+                        <span className='material-symbols-outlined cursor-pointer hover:bg-slate-50 p-2 rounded-full transition-all'>settings</span>
                     </div>
                     <button className='bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-bold scale-95 active:scale-90 transition-transform'>New Quote</button>
                     <div className='w-10 h-10 rounded-full bg-slate-200 overflow-hidden'>
@@ -76,10 +76,10 @@ const PremiumCalculator = () => {
                             <h2 className='text-4xl font-headline font-extrabold text-primary tracking-tight'>Premium Calculator</h2>
                             <p className='text-on-surface-variant font-body mt-2'>Design your coverage with architectural precision and data-driven insights.</p>
                         </div>
-                        <div className='flex gap-2'>
+                        <div className='flex gap-4'>
                             <button className='px-4 py-2 bg-surface-container-highest text-on-surface rounded-lg font-semibold hover:bg-surface-dim transition-colors'>Drafts (12)</button>
                             <button className='px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-semibold flex items-center gap-2'>
-                                <span className='material-symbols-outlined text-sm' data-icon='share'>share</span>
+                                <span className='material-symbols-outlined text-sm'>share</span>
                                 Share Report
                             </button>
                         </div>
@@ -89,7 +89,7 @@ const PremiumCalculator = () => {
                             <div className='bg-surface-container-lowest p-8 rounded-xl shadow-sm border-none'>
                                 <div className='flex items-center gap-3 mb-6'>
                                     <div className='w-10 h-10 rounded bg-primary-fixed flex items-center justify-center text-primary'>
-                                        <span className='material-symbols-outlined' data-icon='person'>person</span>
+                                        <span className='material-symbols-outlined'>person</span>
                                     </div>
                                     <h3 className='text-xl font-headline font-bold text-primary'>Client Dossier</h3>
                                 </div>
@@ -181,7 +181,7 @@ const PremiumCalculator = () => {
                                     ${calculatedPremium.toFixed(2).split('.')[0]}<span className='text-2xl'>.{calculatedPremium.toFixed(2).split('.')[1]}</span>
                                 </div>
                                 <div className='flex items-center gap-2 text-tertiary font-bold mb-8'>
-                                    <span className='material-symbols-outlined text-sm' data-icon='verified_user'>verified_user</span>
+                                    <span className='material-symbols-outlined text-sm'>verified_user</span>
                                     <span>{getNcbDiscount(claimFreeYears)}% Savings Applied</span>
                                 </div>
                                 <div className='w-full bg-surface-container p-4 rounded-xl mb-8 space-y-2 text-left'>
@@ -195,7 +195,7 @@ const PremiumCalculator = () => {
                                     </div>
                                     <div className='pt-2 mt-2 border-t border-outline-variant/20 flex justify-between text-sm font-bold text-primary'>
                                         <span>Payable Total</span>
-                                        <span>${calculatedPremium.toFixed(2)}</span>
+                                        <span className='ml-2'>${calculatedPremium.toFixed(2)}</span>
                                     </div>
                                 </div>
                                 <button className='w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all'>
@@ -205,7 +205,7 @@ const PremiumCalculator = () => {
                             </div>
                             <div className='bg-primary/5 p-6 rounded-xl space-y-4'>
                                 <h4 className='text-sm font-bold text-primary flex items-center gap-2'>
-                                    <span className='material-symbols-outlined text-lg' data-icon='info'>info</span>
+                                    <span className='material-symbols-outlined text-lg'>info</span>
                                     Precision Insight
                                 </h4>
                                 <p className='text-xs leading-relaxed text-on-surface-variant'>
@@ -213,7 +213,7 @@ const PremiumCalculator = () => {
                                 </p>
                                 <a className='text-xs text-primary font-bold hover:underline inline-flex items-center gap-1' href='#'>
                                     View Calculation Logic
-                                    <span className='material-symbols-outlined text-xs' data-icon='arrow_right_alt'>arrow_right_alt</span>
+                                    <span className='material-symbols-outlined text-xs'>arrow_right_alt</span>
                                 </a>
                             </div>
                         </section>

@@ -1,12 +1,22 @@
 # Vehicle Insurance Premium Calculator
 
-This project is a Vehicle Insurance Premium Calculator that provides an API to calculate insurance premiums based on a base rate, No Claims Bonus (NCB), and vehicle multipliers.
+This project is a full-stack application that calculates vehicle insurance premiums based on a base rate, No Claims Bonus (NCB) discount, and a vehicle multiplier.
 
 ## Application Architecture
 
-- **Tech Stack**: FastAPI, PostgreSQL, React
-- **Architecture**: Microservices
-- **Communication**: RESTful API
+- **Tech Stack**: FastAPI (Python) for the backend, React (Vite) for the frontend, and a PostgreSQL database.
+- **High-level component diagram**:
+
+```mermaid
+graph TD
+    A[Frontend] --> B{API Gateway};
+    B --> C[Premium Calculation Service];
+    C --> D[Policy Management Service];
+    D --> E[Database];
+```
+
+- **Communication**: The frontend communicates with the backend via a RESTful API. The backend exposes an endpoint at `/api/calculate-premium`.
+- **Database Schema**: The database stores information about policies, drivers, vehicles, and NCB history.
 
 ## Project Structure
 
@@ -15,38 +25,20 @@ This project is a Vehicle Insurance Premium Calculator that provides an API to c
 ├── backend
 │   ├── app
 │   │   ├── api
-│   │   │   └── premium_calculator.py
 │   │   ├── core
-│   │   │   └── config.py
 │   │   ├── db
-│   │   │   └── database.py
 │   │   ├── models
-│   │   │   └── policy.py
 │   │   ├── schemas
-│   │   │   └── policy.py
-│   │   ├── services
-│   │   │   └── premium_calculator_service.py
-│   │   ├── dependencies.py
-│   │   └── main.py
+│   │   └── services
 │   ├── tests
-│   │   ├── __init__.py
-│   │   ├── conftest.py
-│   │   └── test_premium_calculator.py
 │   └── requirements.txt
 └── frontend
-    ├── index.html
-    ├── package.json
-    ├── postcss.config.js
     ├── src
-    │   ├── App.jsx
-    │   ├── index.css
-    │   ├── main.jsx
     │   ├── components
-    │   │   └── PremiumCalculator.jsx
-    │   └── services
-    │       └── api.js
-    ├── tailwind.config.js
-    └── vite.config.js
+    │   ├── services
+    │   └── ...
+    ├── index.html
+    └── package.json
 ```
 
 ## Prerequisites
@@ -58,27 +50,21 @@ This project is a Vehicle Insurance Premium Calculator that provides an API to c
 
 ## Setup Instructions
 
-### Backend
-
-1.  Navigate to the `backend` directory.
-2.  Create a virtual environment: `python -m venv venv`
-3.  Activate the virtual environment: `source venv/bin/activate` (on Unix) or `venv\Scripts\activate` (on Windows).
-4.  Install dependencies: `pip install -r requirements.txt`
-5.  Create a `.env` file and set the `DATABASE_URL`.
-6.  Run the application: `uvicorn app.main:app --reload`
-
-### Frontend
-
-1.  Navigate to the `frontend` directory.
-2.  Install dependencies: `npm install`
-3.  Run the development server: `npm run dev`
+1.  **Clone the repo**
+2.  **Backend Setup**:
+    -   `cd backend`
+    -   `python -m venv venv`
+    -   `source venv/bin/activate`
+    -   `pip install -r requirements.txt`
+    -   `uvicorn app.main:app --reload`
+3.  **Frontend Setup**:
+    -   `cd frontend`
+    -   `npm install`
+    -   `npm run dev`
 
 ## API Documentation
 
-### Calculate Premium
-
-- **Endpoint**: `/api/calculate-premium`
-- **Method**: `POST`
+- **Endpoint**: `POST /api/calculate-premium`
 - **Request Body**:
 
 ```json
@@ -93,24 +79,11 @@ This project is a Vehicle Insurance Premium Calculator that provides an API to c
 
 ```json
 {
-  "premium": 390.0
+  "premium": 390
 }
 ```
 
 ## Running Tests
 
-### Backend
-
-Navigate to the `backend` directory and run:
-
-```
-pytest
-```
-
-### Frontend
-
-Navigate to the `frontend` directory and run:
-
-```
-npm test
-```
+- **Backend**: `cd backend && pytest`
+- **Frontend**: `cd frontend && npm test`
