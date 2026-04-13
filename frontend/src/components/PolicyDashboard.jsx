@@ -114,15 +114,15 @@ const PolicyDashboard = () => {
                             <div className='space-y-3'>
                                 <div className='flex justify-between'>
                                     <span className='text-sm text-slate-500'>Name</span>
-                                    <span className='text-sm font-medium'>Sarah J. Montgomery</span> {/* Placeholder */}
+                                    <span className='text-sm font-medium'>{policy.policyholder.name}</span>
                                 </div>
                                 <div className='flex justify-between'>
                                     <span className='text-sm text-slate-500'>DOB</span>
-                                    <span className='text-sm font-medium'>May 14, 1988</span> {/* Placeholder */}
+                                    <span className='text-sm font-medium'>{policy.policyholder.date_of_birth}</span>
                                 </div>
                                 <div className='flex justify-between'>
                                     <span className='text-sm text-slate-500'>Address</span>
-                                    <span className='text-sm font-medium text-right'>122 Sanctuary Dr.<br/>Aspen, CO 81611</span> {/* Placeholder */}
+                                    <span className='text-sm font-medium text-right' dangerouslySetInnerHTML={{ __html: policy.policyholder.address.replace(/,/g, ',<br/>') }}></span>
                                 </div>
                             </div>
                         </div>
@@ -153,60 +153,23 @@ const PolicyDashboard = () => {
                             </div>
                         </div>
                         <div className='grid grid-cols-1 gap-4'>
-                            {/* Medical Card */}
-                            <div className='bg-surface-container-lowest p-6 rounded-xl flex items-center justify-between group hover:shadow-md transition-shadow'>
-                                <div className='flex items-center gap-6'>
-                                    <div className='w-14 h-14 bg-secondary-container rounded-xl flex items-center justify-center text-primary'>
-                                        <span className='material-symbols-outlined text-3xl'>medical_services</span>
+                            {policy.coverage_options.map(option => (
+                                <div key={option.id} className='bg-surface-container-lowest p-6 rounded-xl flex items-center justify-between group hover:shadow-md transition-shadow'>
+                                    <div className='flex items-center gap-6'>
+                                        <div className='w-14 h-14 bg-secondary-container rounded-xl flex items-center justify-center text-primary'>
+                                            <span className='material-symbols-outlined text-3xl'>{option.coverage_type === 'Medical' ? 'medical_services' : option.coverage_type === 'Dental' ? 'dentistry' : 'visibility'}</span>
+                                        </div>
+                                        <div>
+                                            <h4 className='font-headline font-bold text-lg'>{option.coverage_type} Coverage</h4>
+                                            <p className='text-sm text-slate-500'>{option.details}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className='font-headline font-bold text-lg'>Medical Coverage</h4>
-                                        <p className='text-sm text-slate-500'>Full hospital and outpatient care</p>
-                                    </div>
-                                </div>
-                                <div className='flex items-center gap-4'>
-                                    <span className='text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full'>ACTIVE</span>
-                                    <button className='text-primary font-bold text-sm hover:underline' onClick={() => handleUpdateCoverage("Medical", "Full hospital and outpatient care", new Date().toISOString().split('T')[0], new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0])}>Change</button>
-                                </div>
-                            </div>
-                            {/* Dental Card */}
-                            <div className='bg-surface-container-lowest p-6 rounded-xl flex items-center justify-between group hover:shadow-md transition-shadow'>
-                                <div className='flex items-center gap-6'>
-                                    <div className='w-14 h-14 bg-secondary-container rounded-xl flex items-center justify-center text-primary'>
-                                        <span className='material-symbols-outlined text-3xl'>dentistry</span>
-                                    </div>
-                                    <div>
-                                        <h4 className='font-headline font-bold text-lg'>Dental Care</h4>
-                                        <p className='text-sm text-slate-500'>Diagnostic and Major Restorative</p>
+                                    <div className='flex items-center gap-4'>
+                                        <span className='text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full'>ACTIVE</span>
+                                        <button className='text-primary font-bold text-sm hover:underline' onClick={() => handleUpdateCoverage(option.coverage_type, option.details, new Date().toISOString().split('T')[0], new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0])}>Change</button>
                                     </div>
                                 </div>
-                                <div className='flex items-center gap-4'>
-                                    <div className='relative inline-block w-12 h-6 transition duration-200 ease-in-out'>
-                                        <input checked={true} className='peer absolute w-6 h-6 opacity-0 z-10 cursor-pointer' type='checkbox' onChange={() => handleUpdateCoverage("Dental", "Diagnostic and Major Restorative", new Date().toISOString().split('T')[0], new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0])}/>
-                                        <span className='block w-full h-full bg-slate-300 peer-checked:bg-primary rounded-full transition-colors'></span>
-                                        <span className='absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6'></span>
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Vision Card */}
-                            <div className='bg-surface-container-lowest p-6 rounded-xl flex items-center justify-between group hover:shadow-md transition-shadow'>
-                                <div className='flex items-center gap-6'>
-                                    <div className='w-14 h-14 bg-secondary-container rounded-xl flex items-center justify-center text-primary'>
-                                        <span className='material-symbols-outlined text-3xl'>visibility</span>
-                                    </div>
-                                    <div>
-                                        <h4 className='font-headline font-bold text-lg'>Vision Protection</h4>
-                                        <p className='text-sm text-slate-500'>Annual exams and lens allowance</p>
-                                    </div>
-                                </div>
-                                <div className='flex items-center gap-4'>
-                                    <div className='relative inline-block w-12 h-6 transition duration-200 ease-in-out'>
-                                        <input checked={true} className='peer absolute w-6 h-6 opacity-0 z-10 cursor-pointer' type='checkbox' onChange={() => handleUpdateCoverage("Vision", "Annual exams and lens allowance", new Date().toISOString().split('T')[0], new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0])}/>
-                                        <span className='block w-full h-full bg-slate-300 peer-checked:bg-primary rounded-full transition-colors'></span>
-                                        <span className='absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6'></span>
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                         <div className='mt-8 space-y-6'>
                             <h3 className='font-headline font-bold text-lg text-on-surface'>Available Upgrades</h3>

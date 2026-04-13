@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import date
 
@@ -13,9 +13,7 @@ class PolicyholderCreate(PolicyholderBase):
 
 class PolicyholderResponse(PolicyholderBase):
     id: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CoverageOptionBase(BaseModel):
     coverage_type: str
@@ -32,9 +30,7 @@ class CoverageOptionUpdate(CoverageOptionBase):
 class CoverageOptionResponse(CoverageOptionBase):
     id: str
     policy_id: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PolicyHistoryBase(BaseModel):
     action: str
@@ -45,9 +41,7 @@ class PolicyHistoryBase(BaseModel):
 class PolicyHistoryResponse(PolicyHistoryBase):
     id: str
     policy_id: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PolicyBase(BaseModel):
     policy_number: str
@@ -74,6 +68,5 @@ class PolicyResponse(PolicyBase):
     id: str
     coverage_options: List[CoverageOptionResponse] = []
     policy_history: List[PolicyHistoryResponse] = []
-
-    class Config:
-        from_attributes = True
+    policyholder: PolicyholderResponse
+    model_config = ConfigDict(from_attributes=True)

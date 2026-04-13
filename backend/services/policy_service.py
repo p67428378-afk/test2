@@ -4,7 +4,11 @@ from fastapi import HTTPException
 from datetime import date
 
 def get_policy(db: Session, policy_id: str):
-    policy = db.query(models.Policy).options(joinedload(models.Policy.coverage_options), joinedload(models.Policy.policy_history)).filter(models.Policy.id == policy_id).first()
+    policy = db.query(models.Policy).options(
+        joinedload(models.Policy.coverage_options), 
+        joinedload(models.Policy.policy_history),
+        joinedload(models.Policy.policyholder)
+    ).filter(models.Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
     return policy
