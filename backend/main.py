@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 @app.on_event("startup")
-async def startup_event():
+def startup_event():
     """
     Create database tables on application startup.
     This ensures tables are created when the app runs normally,
