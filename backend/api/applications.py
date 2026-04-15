@@ -1,9 +1,10 @@
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from backend import crud, schemas
 from backend.database import get_db
 import json
+from pydantic import ValidationError
 
 router = APIRouter()
 
@@ -13,8 +14,11 @@ def create_application(
     account_statement: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    application_dict = json.loads(application)
-    application_schema = schemas.ApplicationCreate(**application_dict)
+    try:
+        application_dict = json.loads(application)
+        application_schema = schemas.ApplicationCreate(**application_dict)
+    except (ValidationError, json.JSONDecodeError) as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
     account_statement_ref = account_statement.filename
 

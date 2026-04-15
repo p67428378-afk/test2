@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from typing import List, Optional
 from datetime import date
 
@@ -28,7 +28,7 @@ class ApplicantBase(BaseModel):
     state: str
     zip_code: str
     phone_number: str
-    email_address: str
+    email_address: EmailStr
 
 class ApplicantCreate(ApplicantBase):
     pass
@@ -42,6 +42,12 @@ class Applicant(ApplicantBase):
 class FinancialInfoBase(BaseModel):
     annual_income: float
     credit_score: int
+
+    @field_validator('annual_income')
+    def annual_income_must_be_positive(cls, v):
+        if v < 0:
+            raise ValueError('Annual income must be a positive number')
+        return v
 
 class FinancialInfoCreate(FinancialInfoBase):
     pass
