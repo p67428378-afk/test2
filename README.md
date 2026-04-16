@@ -1,14 +1,31 @@
-# Health Insurance Management Portal
+# Health Insurance Policy Management Portal
 
-This project is a health insurance management portal that allows policyholders to view, update, and cancel their health insurance policies.
+This project is a health insurance management portal for policyholders. It allows users to view their current policy, request updates to their policy, and request to cancel their policy.
 
 ## Application Architecture
 
-The application follows a microservices architecture with a React frontend and a FastAPI backend.
+The application is built using a full-stack architecture with a React frontend and a FastAPI backend.
 
-- **Frontend**: React (Vite)
-- **Backend**: FastAPI (Python)
-- **Database**: PostgreSQL
+- **Frontend**: React (Vite), Tailwind CSS, React Router
+- **Backend**: FastAPI, PostgreSQL
+
+### Frontend
+
+The frontend is a single-page application (SPA) that uses React Router for client-side routing. The main components are:
+
+- `App.jsx`: The root component that sets up the routing.
+- `Dashboard.jsx`: The main layout component that includes the sidebar and header.
+- `PolicyDetails.jsx`: Displays the user's current policy details.
+- `PolicyUpdateRequest.jsx`: A form to request updates to the policy.
+- `PolicyCancelRequest.jsx`: A form to request cancellation of the policy.
+
+### Backend
+
+The backend is a FastAPI application that provides a RESTful API for the frontend. It is responsible for:
+
+- Authenticating and authorizing users.
+- Retrieving and updating policy information from the database.
+- Handling policy update and cancellation requests.
 
 ## Project Structure
 
@@ -22,23 +39,23 @@ The application follows a microservices architecture with a React frontend and a
 │   ├── database.py
 │   ├── main.py
 │   ├── models.py
-│   ├── schemas.py
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── schemas.py
 ├── frontend
-│   ├── public
-│   ├── src
-│   │   ├── components
-│   │   │   ├── PolicyCancelRequest.jsx
-│   │   │   ├── PolicyDetails.jsx
-│   │   │   └── PolicyUpdateRequest.jsx
-│   │   ├── services
-│   │   │   └── api.js
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
 │   ├── index.html
 │   ├── package.json
 │   ├── postcss.config.js
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── components
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── PolicyCancelRequest.jsx
+│   │   │   ├── PolicyDetails.jsx
+│   │   │   └── PolicyUpdateRequest.jsx
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   └── services
+│   │       └── api.js
 │   ├── tailwind.config.js
 │   └── vite.config.js
 └── tests
@@ -50,49 +67,15 @@ The application follows a microservices architecture with a React frontend and a
 
 ### Backend
 
-1.  Create a virtual environment:
-
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    ```
-
-2.  Install the dependencies:
-
-    ```bash
-    pip install -r backend/requirements.txt
-    ```
-
-3.  Run the application:
-
-    ```bash
-    uvicorn backend.main:app --reload
-    ```
+1.  Install dependencies: `pip install -r backend/requirements.txt`
+2.  Run the server: `uvicorn backend.main:app --reload`
 
 ### Frontend
 
-1.  Install the dependencies:
-
-    ```bash
-    npm install
-    ```
-
-2.  Run the application:
-
-    ```bash
-    npm run dev
-    ```
+1.  Install dependencies: `npm install`
+2.  Run the development server: `npm run dev`
 
 ## Running Tests
 
-### Backend
-
-```bash
-pytest
-```
-
-### Frontend
-
-```bash
-npm test
-```
+- **Backend**: `pytest`
+- **Frontend**: `npm test`
