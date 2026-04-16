@@ -1,164 +1,77 @@
+
 # E-commerce Cart Functionality
 
-This project implements a simple e-commerce cart functionality using FastAPI for the backend and React for the frontend.
+This project is a simple e-commerce cart functionality implementation using FastAPI and React.
 
 ## Application Architecture
 
-The application follows a microservices-based architecture with a separate frontend and backend.
+- **Backend**: FastAPI, SQLAlchemy, SQLite
+- **Frontend**: React, Vite, Tailwind CSS
 
-- **Backend**: A FastAPI application that provides a RESTful API for managing the shopping cart. It uses PostgreSQL for the database and SQLAlchemy as the ORM.
-- **Frontend**: A React application built with Vite that consumes the backend API to provide a user interface for adding items to the cart.
+### Backend
 
-### High-Level Diagram
+The backend is a FastAPI application with the following structure:
 
-```mermaid
-graph TD
-    A[Frontend (React)] --> B{API Gateway}
-    B --> C[Cart Service (FastAPI)]
-    C --> D[Database (PostgreSQL)]
-```
+- `main.py`: The main application file, which initializes the FastAPI app, includes the routers, and handles startup events.
+- `database.py`: Contains the database connection and session management logic.
+- `models.py`: Defines the SQLAlchemy database models (`Product` and `CartItem`).
+- `schemas.py`: Defines the Pydantic schemas for data validation and serialization.
+- `crud.py`: Contains the CRUD (Create, Read, Update, Delete) operations for the database models.
+- `api/endpoints/cart.py`: Defines the API endpoints for the cart functionality.
+- `tests/`: Contains the tests for the backend application.
+
+### Frontend
+
+The frontend is a React application built with Vite. It communicates with the backend API to add items to the cart and display the cart contents.
 
 ## Project Structure
 
 ```
 .
 ├── backend
-│   ├── alembic
-│   ├── alembic.ini
+│   ├── api
+│   │   └── endpoints
+│   │       └── cart.py
+│   ├── tests
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   └── test_cart.py
+│   ├── __init__.py
 │   ├── crud.py
 │   ├── database.py
-│   ├── __init__.py
 │   ├── main.py
 │   ├── models.py
 │   ├── requirements.txt
-│   ├── schemas.py
-│   └── tests
-│       ├── __init__.py
-│       └── test_cart.py
+│   └── schemas.py
 ├── frontend
+│   ├── src
+│   │   ├── App.jsx
+│   │   └── main.jsx
 │   ├── index.html
 │   ├── package.json
-│   ├── postcss.config.js
-│   ├── src
-│   │   ├── App.css
-│   │   ├── App.jsx
-│   │   ├── App.test.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── tailwind.config.js
 │   └── vite.config.js
-└── .gitignore
+└── README.md
 ```
-
-## Prerequisites
-
-- Python 3.10+
-- Node.js 18+
-- npm
-- git
 
 ## Setup Instructions
 
 ### Backend
 
-1.  Navigate to the `backend` directory:
-    ```bash
-    cd backend
-    ```
-2.  Create a virtual environment:
-    ```bash
-    python -m venv venv
-    ```
-3.  Activate the virtual environment:
-    -   On Windows:
-        ```bash
-        venv\Scripts\activate
-        ```
-    -   On macOS and Linux:
-        ```bash
-        source venv/bin/activate
-        ```
-4.  Install the dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-5.  Set up the database. Make sure you have a running PostgreSQL instance and create a database. Then, set the `DATABASE_URL` environment variable:
-    ```bash
-    export DATABASE_URL="postgresql://user:password@postgresserver/db"
-    ```
-6.  Run the database migrations:
-    ```bash
-    alembic upgrade head
-    ```
-7.  Start the backend server:
-    ```bash
-    uvicorn main:app --reload
-    ```
+1.  Navigate to the `backend` directory.
+2.  Create a virtual environment: `python -m venv venv`
+3.  Activate the virtual environment: `source venv/bin/activate`
+4.  Install the dependencies: `pip install -r requirements.txt`
+5.  Run the application: `uvicorn main:app --reload`
 
 ### Frontend
 
-1.  Navigate to the `frontend` directory:
-    ```bash
-    cd frontend
-    ```
-2.  Install the dependencies:
-    ```bash
-    npm install
-    ```
-3.  Start the frontend development server:
-    ```bash
-    npm run dev
-    ```
-
-## API Documentation
-
-### Add Item to Cart
-
-- **Endpoint**: `POST /api/cart/add`
-- **Request Body**:
-  ```json
-  {
-    "product_id": 1,
-    "quantity": 1
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "id": 1,
-    "product_id": 1,
-    "quantity": 1
-  }
-  ```
-
-### Get Cart Items
-
-- **Endpoint**: `GET /api/cart/`
-- **Response**:
-  ```json
-  [
-    {
-      "id": 1,
-      "product_id": 1,
-      "quantity": 1
-    }
-  ]
-  ```
+1.  Navigate to the `frontend` directory.
+2.  Install the dependencies: `npm install`
+3.  Run the development server: `npm run dev`
 
 ## Running Tests
 
 ### Backend
 
-To run the backend tests, navigate to the `backend` directory and run:
-
-```bash
-pytest
-```
-
-### Frontend
-
-To run the frontend tests, navigate to the `frontend` directory and run:
-
-```bash
-npm test
-```
+1.  Navigate to the `backend` directory.
+2.  Run the tests: `pytest`
