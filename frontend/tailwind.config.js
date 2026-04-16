@@ -1,0 +1,72 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+        "colors": {
+            "surface-bright": "#f7f9ff",
+            "on-secondary-container": "#456871",
+            "outline": "#70787d",
+            "error": "#ba1a1a",
+            "tertiary-fixed": "#a1f0f2",
+            "background": "#f7f9ff",
+            "on-error": "#ffffff",
+            "primary-container": "#005670",
+            "secondary-fixed": "#c4e9f3",
+            "on-tertiary-fixed-variant": "#004f51",
+            "surface-container": "#ebeef4",
+            "on-error-container": "#93000a",
+            "surface-variant": "#dfe3e8",
+            "secondary-fixed-dim": "#a8cdd7",
+            "primary-fixed-dim": "#90cfed",
+            "on-tertiary": "#ffffff",
+            "inverse-on-surface": "#eef1f7",
+            "surface-container-highest": "#dfe3e8",
+            "primary": "#003d51",
+            "secondary": "#41646d",
+            "on-background": "#181c20",
+            "on-primary-fixed": "#001f2a",
+            "primary-fixed": "#bee9ff",
+            "on-surface-variant": "#40484c",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f1f4fa",
+            "surface": "#f7f9ff",
+            "on-primary-container": "#8bcae8",
+            "on-surface": "#181c20",
+            "error-container": "#ffdad6",
+            "secondary-container": "#c1e6f0",
+            "surface-container-high": "#e5e8ee",
+            "inverse-surface": "#2d3135",
+            "inverse-primary": "#90cfed",
+            "on-tertiary-container": "#80cfd0",
+            "on-secondary": "#ffffff",
+            "on-secondary-fixed": "#001f26",
+            "tertiary-fixed-dim": "#85d4d5",
+            "on-primary": "#ffffff",
+            "tertiary": "#004041",
+            "surface-dim": "#d7dae0",
+            "surface-tint": "#1f6580",
+            "tertiary-container": "#00595b",
+            "outline-variant": "#c0c8cd",
+            "on-tertiary-fixed": "#002021",
+            "on-primary-fixed-variant": "#004d65",
+            "on-secondary-fixed-variant": "#284c54"
+        },
+        "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+        },
+        "fontFamily": {
+            "headline": ["Manrope"],
+            "body": ["Public Sans"],
+            "label": ["Public Sans"]
+        }
+    },
+  },
+  plugins: [],
+}
