@@ -13,28 +13,28 @@ const SideNav = () => {
       </div>
       <nav className='flex-1 px-4 space-y-2'>
         <div className='text-[10px] font-headline uppercase tracking-[0.2em] text-slate-400 px-4 mb-4'>Main Navigation</div>
-        <a className='flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
-          <span className='material-symbols-outlined text-lg'>dashboard</span> Overview
+        <a className='flex items-baseline gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
+          <span className='material-symbols-outlined text-lg'>dashboard</span> <span>Overview</span>
         </a>
-        <a className='flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-100 font-bold rounded-l-lg shadow-sm font-manrope uppercase tracking-widest text-[10px] translate-x-1 duration-200' href='#'>
-          <span className='material-symbols-outlined text-lg' style={{fontVariationSettings: '\'FILL\' 1'}}>person_search</span> Individual KYC
+        <a className='flex items-baseline gap-3 px-4 py-3 bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-100 font-bold rounded-l-lg shadow-sm font-manrope uppercase tracking-widest text-[10px] translate-x-1 duration-200' href='#'>
+          <span className='material-symbols-outlined text-lg' style={{fontVariationSettings: '\'FILL\' 1'}}>person_search</span> <span>Individual KYC</span>
         </a>
-        <a className='flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
-          <span className='material-symbols-outlined text-lg'>domain</span> Corporate KYC
+        <a className='flex items-baseline gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
+          <span className='material-symbols-outlined text-lg'>domain</span> <span>Corporate KYC</span>
         </a>
-        <a className='flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
-          <span className='material-symbols-outlined text-lg'>security</span> Risk Engine
+        <a className='flex items-baseline gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
+          <span className='material-symbols-outlined text-lg'>security</span> <span>Risk Engine</span>
         </a>
-        <a className='flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
-          <span className='material-symbols-outlined text-lg'>inventory_2</span> Archived
+        <a className='flex items-baseline gap-3 px-4 py-3 text-slate-500 dark:text-slate-500 hover:text-blue-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all font-manrope uppercase tracking-widest text-[10px]' href='#'>
+          <span className='material-symbols-outlined text-lg'>inventory_2</span> <span>Archived</span>
         </a>
       </nav>
       <div className='p-4 border-t border-slate-200/10 space-y-2 mb-20'>
-        <a className='flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-blue-700 font-manrope uppercase tracking-widest text-[10px]' href='#'>
-          <span className='material-symbols-outlined text-lg'>help</span> Support
+        <a className='flex items-baseline gap-3 px-4 py-2 text-slate-500 hover:text-blue-700 font-manrope uppercase tracking-widest text-[10px]' href='#'>
+          <span className='material-symbols-outlined text-lg'>help</span> <span>Support</span>
         </a>
-        <a className='flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-blue-700 font-manrope uppercase tracking-widest text-[10px]' href='#'>
-          <span className='material-symbols-outlined text-lg'>logout</span> Sign Out
+        <a className='flex items-baseline gap-3 px-4 py-2 text-slate-500 hover:text-blue-700 font-manrope uppercase tracking-widest text-[10px]' href='#'>
+          <span className='material-symbols-outlined text-lg'>logout</span> <span>Sign Out</span>
         </a>
       </div>
     </aside>

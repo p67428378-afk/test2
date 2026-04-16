@@ -19,7 +19,7 @@ const StatusPanel = () => {
         </div>
         <div className='bg-surface-container-low p-4 rounded-lg mt-6'>
           <p className='text-sm font-semibold text-primary mb-2'>Automated Risk Alerts:</p>
-          <ul className='text-xs space-y-2 text-on-surface-variant'>
+          <ul className='text-xs space-y-2 text-on-surface-variant pb-2'>
             <li className='flex items-center gap-2'><span className='w-1.5 h-1.5 bg-error rounded-full'></span> PAN Database Mismatch</li>
             <li className='flex items-center gap-2'><span className='w-1.5 h-1.5 bg-error rounded-full'></span> Blurred Aadhaar Image OCR Failure</li>
           </ul>

@@ -9,7 +9,7 @@ const MainContent = () => {
   return (
     <main className='flex-1 ml-64 p-10 space-y-10'>
       <div className='flex justify-between items-end'>
-        <div>
+        <div className='mr-6'>
           <h1 className='text-4xl font-headline font-extrabold text-primary tracking-tight'>Onboarding Request #KYC-9902</h1>
           <p className='text-on-surface-variant font-body mt-2'>Individual Verification Queue • Assigned to Chief Compliance Officer</p>
         </div>
