@@ -1,4 +1,3 @@
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -7,7 +6,9 @@ from sqlalchemy.pool import StaticPool
 
 from backend.main import app
 from backend.database import get_db, Base
-from backend.models import Product, CartItem
+
+# Import all models here to ensure they are registered with Base
+from backend import models
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
@@ -24,6 +25,8 @@ def db_session():
     """
     Create a new database session for each test function.
     """
+    # Import models before creating tables
+    from backend import models
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
@@ -48,4 +51,3 @@ def client(db_session):
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     del app.dependency_overrides[get_db]
-
