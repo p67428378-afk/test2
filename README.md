@@ -1,29 +1,24 @@
 # KYC Onboarding Microservice
 
-This project is a KYC onboarding microservice for a retail bank. It accepts Aadhaar and PAN card details, validates document authenticity, screens the customer against RBI sanctions lists, and returns an APPROVED or FLAGGED status with a full audit trail.
+This project is a full-stack application for a Know Your Customer (KYC) onboarding process for a retail bank.
 
 ## Application Architecture
 
-The application is built using a microservices architecture with a FastAPI backend and a React frontend.
+- **Backend**: FastAPI (Python)
+- **Frontend**: React (Vite)
+- **Database**: SQLite (for simplicity, would be PostgreSQL in production)
 
-- **Backend**: FastAPI, SQLAlchemy, Pydantic, PostgreSQL
-- **Frontend**: React, Vite, Tailwind CSS
+### Backend
 
-### High-Level Diagram
+The backend is a FastAPI application that provides the following endpoints:
 
-```mermaid
-graph TD
-    A[Customer Frontend] --> B{KYC API Gateway};
-    B --> C[KYC Orchestrator];
-    C --> D[Document Validation Service];
-    C --> E[Sanctions Screening Service];
-    C --> F[Audit Trail Service];
-    D --> G[UIDAI API];
-    D --> H[Income Tax Dept API];
-    E --> I[RBI Sanctions List API];
-    F --> J[KYC Database];
-    C --> J;
-```
+- `POST /kyc/`: Create a new KYC record.
+- `GET /kyc/{kyc_id}/status`: Get the status of a KYC record.
+- `GET /kyc/{kyc_id}/audit`: Get the audit trail for a KYC record.
+
+### Frontend
+
+The frontend is a React application that provides a user interface for submitting KYC details and viewing the status and audit trail.
 
 ## Project Structure
 
@@ -44,69 +39,44 @@ graph TD
 │   │   ├── services
 │   │   │   └── kyc_service.py
 │   │   └── main.py
-│   ├── tests
-│   │   ├── __init__.py
-│   │   ├── conftest.py
-│   │   └── test_kyc.py
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── tests
+│       ├── conftest.py
+│       └── test_kyc.py
 └── frontend
     ├── src
     │   ├── components
-    │   │   ├── KycForm.jsx
-    │   │   └── KycForm.test.jsx
-    │   ├── test
-    │   │   └── setup.js
-    │   ├── App.jsx
-    │   ├── index.css
-    │   └── main.jsx
+    │   │   └── KycForm.jsx
+    │   └── App.jsx
     ├── index.html
     ├── package.json
-    ├── postcss.config.js
-    ├── tailwind.config.js
-    └── vite.config.js
+    └── ...
 ```
-
-## Prerequisites
-
-- Python 3.10+
-- Node.js 18+
-- npm
-- git
 
 ## Setup Instructions
 
 ### Backend
 
-1.  Clone the repository.
-2.  Navigate to the `backend` directory.
-3.  Create a virtual environment: `python -m venv venv`
-4.  Activate the virtual environment: `source venv/bin/activate`
-5.  Install the dependencies: `pip install -r requirements.txt`
-6.  Run the application: `uvicorn app.main:app --reload`
+1.  `cd backend`
+2.  `python -m venv venv`
+3.  `source venv/bin/activate`
+4.  `pip install -r requirements.txt`
+5.  `uvicorn app.main:app --reload`
 
 ### Frontend
 
-1.  Navigate to the `frontend` directory.
-2.  Install the dependencies: `npm install`
-3.  Run the application: `npm run dev`
-
-## API Documentation
-
-- **POST /api/v1/kyc/**: Create a new KYC record.
-- **GET /api/v1/kyc/{kyc_id}/status**: Get the status of a KYC record.
-- **GET /api/v1/kyc/{kyc_id}/audit**: Get the audit trail for a KYC record.
+1.  `cd frontend`
+2.  `npm install`
+3.  `npm run dev`
 
 ## Running Tests
 
 ### Backend
 
-```bash
-cd backend
-pytest
-```
+1.  `cd backend`
+2.  `pytest`
 
 ### Frontend
 
-```bash
-npm test
-```
+1.  `cd frontend`
+2.  `npm test`

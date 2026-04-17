@@ -207,7 +207,6 @@ const KycForm = () => {
               <div>
                 <p className='text-sm font-bold text-on-surface'>Identity Finalized (Pending)</p>
                 <p className='text-xs text-on-surface-variant mt-1'>Final decision awaiting manual PAN reconciliation.</p>
-                <p className='text-[10px] text-primary/60 font-medium mt-2'>PENDING</p>
               </div>
             </div>
           </div>
