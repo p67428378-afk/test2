@@ -1,59 +1,40 @@
 from sqlalchemy.orm import Session
-from .. import models, schemas
+from ..models.kyc import KYC, KYCStatus
+from ..schemas.kyc import KYCCreate
 
-class KycService:
-    def _validate_aadhaar(self, aadhaar_number: str) -> bool:
-        # Placeholder for real Aadhaar validation
-        return aadhaar_number != "invalid"
+def validate_aadhaar(aadhaar_number: str) -> bool:
+    # In a real application, this would call the UIDAI API
+    return True
 
-    def _validate_pan(self, pan_number: str) -> bool:
-        # Placeholder for real PAN validation
-        return pan_number != "invalid"
+def validate_pan(pan_number: str) -> bool:
+    # In a real application, this would call the NSDL/ITD API
+    return True
 
-    def _check_sanctions_list(self, full_name: str) -> bool:
-        # Placeholder for real sanctions list check
-        return full_name != "Sanctioned Person"
+def check_sanctions_list(aadhaar_number: str, pan_number: str) -> bool:
+    # In a real application, this would call the RBI sanctions list API
+    return False
 
-    def process_kyc(self, db: Session, kyc_request: schemas.KycRequest) -> schemas.KycResponse:
-        # 1. Create Customer
-        customer = models.kyc.Customer(full_name=kyc_request.full_name)
-        db.add(customer)
-        db.commit()
-        db.refresh(customer)
+def create_kyc_record(db: Session, kyc: KYCCreate) -> KYC:
+    db_kyc = KYC(**kyc.dict())
+    db.add(db_kyc)
+    db.commit()
+    db.refresh(db_kyc)
+    return db_kyc
 
-        # 2. Create Audit Trail
-        db.add(models.kyc.AuditTrail(customer_id=customer.id, activity="KYC process started"))
-        db.commit()
+def process_kyc(db: Session, kyc_id: int) -> KYC:
+    db_kyc = db.query(KYC).filter(KYC.id == kyc_id).first()
+    if not db_kyc:
+        return None
 
-        # 3. Validate Documents
-        aadhaar_valid = self._validate_aadhaar(kyc_request.aadhaar_number)
-        pan_valid = self._validate_pan(kyc_request.pan_number)
+    aadhaar_valid = validate_aadhaar(db_kyc.aadhaar_number)
+    pan_valid = validate_pan(db_kyc.pan_number)
+    sanctions_match = check_sanctions_list(db_kyc.aadhaar_number, db_kyc.pan_number)
 
-        if not aadhaar_valid:
-            customer.status = schemas.KycStatus.FLAGGED
-            db.add(models.kyc.AuditTrail(customer_id=customer.id, activity="Aadhaar validation failed"))
-            db.commit()
-            return schemas.KycResponse(customer_id=customer.id, status=customer.status, message="Aadhaar validation failed")
+    if aadhaar_valid and pan_valid and not sanctions_match:
+        db_kyc.status = KYCStatus.APPROVED
+    else:
+        db_kyc.status = KYCStatus.FLAGGED
 
-        if not pan_valid:
-            customer.status = schemas.KycStatus.FLAGGED
-            db.add(models.kyc.AuditTrail(customer_id=customer.id, activity="PAN validation failed"))
-            db.commit()
-            return schemas.KycResponse(customer_id=customer.id, status=customer.status, message="PAN validation failed")
-
-        # 4. Check Sanctions List
-        is_sanctioned = not self._check_sanctions_list(kyc_request.full_name)
-        if is_sanctioned:
-            customer.status = schemas.KycStatus.FLAGGED
-            db.add(models.kyc.AuditTrail(customer_id=customer.id, activity="Customer is on the sanctions list"))
-            db.commit()
-            return schemas.KycResponse(customer_id=customer.id, status=customer.status, message="Customer is on the sanctions list")
-
-        # 5. Approve KYC
-        customer.status = schemas.KycStatus.APPROVED
-        db.add(models.kyc.AuditTrail(customer_id=customer.id, activity="KYC process completed successfully"))
-        db.commit()
-
-        return schemas.KycResponse(customer_id=customer.id, status=customer.status, message="KYC process completed successfully.")
-
-kyc_service = KycService()
+    db.commit()
+    db.refresh(db_kyc)
+    return db_kyc

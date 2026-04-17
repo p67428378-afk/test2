@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-
-from .endpoints import kyc
+from backend.app.api.endpoints import kyc
 
 api_router = APIRouter()
-api_router.include_router(kyc.router, tags=["kyc"])
+api_router.include_router(kyc.router, prefix="/kyc", tags=["kyc"])

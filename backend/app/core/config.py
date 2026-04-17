@@ -1,10 +1,10 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://user:password@localhost/kyc_db"
-    SECRET_KEY: str = "supersecretkey"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    RBI_SANCTIONS_API_URL: str = "https://rbi-sanctions-api.gov.in"
+    UIDAI_API_URL: str = "https://uidai-api.gov.in"
+    NSDL_API_URL: str = "https://nsdl-api.gov.in"
 
     class Config:
         env_file = ".env"

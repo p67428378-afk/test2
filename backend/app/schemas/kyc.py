@@ -1,71 +1,26 @@
-from __future__ import annotations
-from pydantic import BaseModel
-from typing import List, Optional
-import datetime
-import enum
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
+import uuid
+from datetime import datetime
+from backend.app.models.kyc import KYCStatus
 
-class KycStatus(enum.Enum):
-    PENDING = "PENDING"
-    APPROVED = "APPROVED"
-    FLAGGED = "FLAGGED"
-
-class DocumentType(enum.Enum):
-    AADHAAR = "AADHAAR"
-    PAN = "PAN"
-
-class DocumentBase(BaseModel):
-    document_type: DocumentType
-    document_number: str
-
-class DocumentCreate(DocumentBase):
-    pass
-
-class Document(DocumentBase):
-    id: str
-    is_validated: bool
-    owner_id: str
-
-    class Config:
-        from_attributes = True
-
-class AuditTrailBase(BaseModel):
-    activity: str
-
-class AuditTrailCreate(AuditTrailBase):
-    pass
-
-class AuditTrail(AuditTrailBase):
-    id: str
-    timestamp: datetime.datetime
-    customer_id: str
-
-    class Config:
-        from_attributes = True
-
-class CustomerBase(BaseModel):
-    full_name: str
-
-class CustomerCreate(CustomerBase):
-    documents: List[DocumentCreate]
-
-class Customer(CustomerBase):
-    id: str
-    status: KycStatus
-    created_at: datetime.datetime
-    documents: List[Document] = []
-    audit_trails: List[AuditTrail] = []
-
-    class Config:
-        from_attributes = True
-
-class KycRequest(BaseModel):
-    full_name: str
+class KYCCreate(BaseModel):
     aadhaar_number: str
     pan_number: str
 
-class KycResponse(BaseModel):
-    customer_id: str
-    status: KycStatus
-    message: str
+class KYCUpdate(BaseModel):
+    status: KYCStatus
 
-Customer.model_rebuild()
+class KYCInDB(BaseModel):
+    id: uuid.UUID
+    aadhaar_number: str
+    pan_number: str
+    status: KYCStatus
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class KYCResponse(BaseModel):
+    id: uuid.UUID
+    status: KYCStatus

@@ -1,18 +1,14 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api/v1', // Adjust this to your backend URL
+  baseURL: '/api',
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 });
 
-export const kycRequest = async (data) => {
-  try {
-    const response = await apiClient.post('/kyc', data);
-    return response.data;
-  } catch (error) {
-    console.error('Error making KYC request:', error);
-    throw error;
+export default {
+  createKyc(data) {
+    return apiClient.post('/kyc/', data);
   }
 };
