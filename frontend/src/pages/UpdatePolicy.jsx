@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { updatePolicy } from '../services/policyService';
 
 const UpdatePolicy = () => {
   const [formData, setFormData] = useState({
@@ -16,10 +17,17 @@ const UpdatePolicy = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form submitted:', formData);
+    try {
+      // NOTE: Hardcoding policy ID to 1 for demonstration
+      await updatePolicy(1, { holder: 'John Doe', policy_number: 'HS123456', address: `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}` });
+      console.log('Policy updated successfully');
+      alert('Policy updated successfully!');
+    } catch (error) {
+      console.error('Failed to update policy:', error);
+      alert('Failed to update policy.');
+    }
   };
 
   return (
@@ -72,7 +80,7 @@ const UpdatePolicy = () => {
             </p>
             <div className='p-4 bg-surface-container-lowest rounded-xl flex items-center gap-4'>
               <div className='w-12 h-12 bg-tertiary-fixed rounded-full flex items-center justify-center text-on-tertiary-fixed'>
-                <span className='material-symbols-outlined' style={{ fontVariationSettings: '\'FILL\' 1' }}>verified_user</span>
+                <span className='material-symbols-outlined' style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
               </div>
               <div>
                 <p className='text-xs text-outline font-semibold uppercase'>Security Protocol</p>

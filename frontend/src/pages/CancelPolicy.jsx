@@ -1,10 +1,18 @@
 import React from 'react';
+import { deletePolicy } from '../services/policyService';
 
 const CancelPolicy = () => {
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (window.confirm('Are you sure you want to cancel your policy?')) {
-      // Handle cancellation logic here
-      console.log('Policy cancelled');
+      try {
+        // NOTE: Hardcoding policy ID to 1 for demonstration
+        await deletePolicy(1);
+        console.log('Policy cancelled');
+        alert('Policy cancelled successfully!');
+      } catch (error) {
+        console.error('Failed to cancel policy:', error);
+        alert('Failed to cancel policy.');
+      }
     }
   };
 
