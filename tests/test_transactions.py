@@ -17,11 +17,11 @@ def test_create_transaction(client: TestClient):
     assert data["amount"] == 100.0
     assert data["status"] == "PENDING"
 
-def test_get_transactions(client: TestClient, db_session: Session):
+def test_get_transactions(client: TestClient, session: Session):
     # Create a transaction to test with
     transaction = models.Transaction(transaction_id="txn_1", amount=10.0, sender="s1", receiver="r1", device_fingerprint="fp1")
-    db_session.add(transaction)
-    db_session.commit()
+    session.add(transaction)
+    session.commit()
 
     response = client.get("/transactions/")
     assert response.status_code == 200
@@ -29,20 +29,20 @@ def test_get_transactions(client: TestClient, db_session: Session):
     assert len(data) > 0
     assert data[0]["transaction_id"] == "txn_1"
 
-def test_get_transaction_by_id(client: TestClient, db_session: Session):
+def test_get_transaction_by_id(client: TestClient, session: Session):
     transaction = models.Transaction(transaction_id="txn_2", amount=20.0, sender="s2", receiver="r2", device_fingerprint="fp2")
-    db_session.add(transaction)
-    db_session.commit()
+    session.add(transaction)
+    session.commit()
 
     response = client.get(f"/transactions/{transaction.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["transaction_id"] == "txn_2"
 
-def test_update_transaction_status(client: TestClient, db_session: Session):
+def test_update_transaction_status(client: TestClient, session: Session):
     transaction = models.Transaction(transaction_id="txn_3", amount=30.0, sender="s3", receiver="r3", device_fingerprint="fp3")
-    db_session.add(transaction)
-    db_session.commit()
+    session.add(transaction)
+    session.commit()
 
     response = client.patch(f"/transactions/{transaction.id}", json={"status": "ALLOWED"})
     assert response.status_code == 200
