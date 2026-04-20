@@ -1,53 +1,46 @@
 # Real-time UPI Transaction Monitoring Service
 
-This project is a full-stack application for monitoring UPI transactions in real-time to detect and prevent fraudulent activities.
+This project is a full-stack application designed to monitor UPI transactions in real-time, detect fraudulent activities, and ensure regulatory compliance. The backend is built with FastAPI and the frontend is built with React.
 
 ## Application Architecture
 
-The application follows a microservices architecture with a React frontend and a FastAPI backend.
-
-- **Frontend**: A React-based dashboard for monitoring transactions, viewing alerts, and manually reviewing held transactions.
-- **Backend**: A FastAPI application that provides a REST API for transaction processing and data retrieval. It uses a PostgreSQL database for data storage and is designed to integrate with a real-time data processing engine like Kafka and machine learning models for fraud detection.
-
-### Tech Stack
-
-- **Backend**: FastAPI, Python, SQLAlchemy, PostgreSQL, Kafka, Scikit-learn
-- **Frontend**: React, Vite, Tailwind CSS, Axios
+- **Backend**: FastAPI
+- **Frontend**: React (Vite)
+- **Database**: SQLite (for local development and testing)
 
 ## Project Structure
 
 ```
-.gitignore
-backend/
-  __init__.py
-  main.py
-  database.py
-  models.py
-  schemas.py
-  services.py
-  requirements.txt
-  routers/
-    __init__.py
-    transactions.py
-frontend/
-  package.json
-  vite.config.js
-  tailwind.config.js
-  postcss.config.js
-  index.html
-  src/
-    index.css
-    main.jsx
-    App.jsx
-    components/
-      Dashboard.jsx
-    services/
-      api.js
-tests/
-  __init__.py
-  conftest.py
-  test_transactions.py
-README.md
+.
+├── backend
+│   ├── __init__.py
+│   ├── database.py
+│   ├── main.py
+│   ├── models.py
+│   ├── requirements.txt
+│   ├── routers
+│   │   ├── __init__.py
+│   │   └── transactions.py
+│   ├── schemas.py
+│   └── services.py
+├── frontend
+│   ├── index.html
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── components
+│   │   │   └── Dashboard.jsx
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   └── services
+│   │       └── api.js
+│   ├── tailwind.config.js
+│   └── vite.config.js
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    └── test_transactions.py
 ```
 
 ## Prerequisites
@@ -61,27 +54,61 @@ README.md
 
 ### Backend
 
-1.  Navigate to the `backend` directory.
-2.  Create a virtual environment: `python -m venv venv`
-3.  Activate the virtual environment: `source venv/bin/activate`
-4.  Install the dependencies: `pip install -r requirements.txt`
-5.  Set up the database and environment variables.
-6.  Run the application: `uvicorn main:app --reload`
+1.  Navigate to the `backend` directory:
+    ```bash
+    cd backend
+    ```
+2.  Create a virtual environment:
+    ```bash
+    python -m venv venv
+    ```
+3.  Activate the virtual environment:
+    -   On Windows:
+        ```bash
+        venv\Scripts\activate
+        ```
+    -   On macOS and Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+4.  Install the required dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  Start the backend server:
+    ```bash
+    uvicorn main:app --reload
+    ```
 
 ### Frontend
 
-1.  Navigate to the `frontend` directory.
-2.  Install the dependencies: `npm install`
-3.  Run the development server: `npm run dev`
-
-## API Documentation
-
-The API documentation is available at `/docs` when the backend is running.
+1.  Navigate to the `frontend` directory:
+    ```bash
+    cd frontend
+    ```
+2.  Install the required dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the frontend development server:
+    ```bash
+    npm run dev
+    ```
 
 ## Running Tests
 
-To run the backend tests, navigate to the `backend` directory and run:
+### Backend
 
-```
+Navigate to the root of the project and run:
+
+```bash
 pytest
+```
+
+### Frontend
+
+Navigate to the `frontend` directory and run:
+
+```bash
+npm test
 ```
