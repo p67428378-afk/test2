@@ -2,11 +2,9 @@ fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
-pydantic
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart
 reportlab
 openpyxl
 pytest
+requests
+pydantic
 httpx

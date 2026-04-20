@@ -1,36 +1,52 @@
+
 import React from 'react';
 
-const AccountSelector = ({ accountNumber, setAccountNumber }) => {
+const AccountSelector = ({ selectedAccount, setAccountNumber }) => {
+  const accounts = [
+    {
+      name: 'Primary Savings',
+      id: '1234567890',
+      balance: '1,420,500.00',
+      type: 'Default'
+    },
+    {
+      name: 'Investment Portfolio',
+      id: '0987654321',
+      balance: '3,842,210.50',
+      type: 'Secondary'
+    }
+  ];
+
   return (
-    <div className="bg-surface-container-low rounded-xl p-6 transition-all">
-        <label className="block font-label text-sm font-semibold uppercase tracking-widest text-on-surface-variant mb-4">Select Account
-            <div className="grid grid-cols-1 gap-4">
-                <button className="w-full text-left bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between group transition-all active:scale-[0.98]">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-primary-container flex items-center justify-center">
-                            <span className="material-symbols-outlined text-white" style={{fontVariationSettings: "'FILL' 1"}}>account_balance_wallet</span>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-primary tracking-tight">Private Wealth Savings</h3>
-                            <p className="text-sm text-on-surface-variant">•••• 8829</p>
-                        </div>
-                    </div>
-                    <span className="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">chevron_right</span>
-                </button>
-                <button className="w-full text-left bg-surface-container-high/50 p-5 rounded-xl flex items-center justify-between group transition-all opacity-70 hover:opacity-100">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
-                            <span className="material-symbols-outlined text-secondary">payments</span>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-on-surface-variant tracking-tight">Investment Portfolio</h3>
-                            <p className="text-sm text-on-surface-variant">•••• 4120</p>
-                        </div>
-                    </div>
-                    <span className="material-symbols-outlined text-on-surface-variant">unfold_more</span>
-                </button>
+    <div className="bg-surface-container-lowest p-8 rounded-xl shadow-[0_8px_32px_rgba(25,28,30,0.04)] h-full">
+      <h3 className="font-headline font-bold text-lg mb-6 flex items-center gap-2">
+        <span className="material-symbols-outlined text-primary">account_balance_wallet</span>
+        Select Account
+      </h3>
+      <div className="space-y-4">
+        {accounts.map((account) => (
+          <div
+            key={account.id}
+            onClick={() => setAccountNumber(account.id)}
+            className={`group relative p-5 rounded-lg border-2 cursor-pointer active:scale-[0.98] transition-all ${
+              selectedAccount === account.id
+                ? 'border-primary-container bg-surface-container-low'
+                : 'bg-surface hover:bg-surface-container-low border-transparent'
+            }`}>
+            <div className="flex justify-between items-start mb-4">
+              <span className={`px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wider ${
+                account.type === 'Default' ? 'bg-primary-container text-white' : 'bg-surface-container-high text-on-surface-variant'
+              }`}>{account.type}</span>
+              {selectedAccount === account.id && (
+                <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
+              )}
             </div>
-        </label>
+            <p className="font-headline font-bold text-on-surface">{account.name}</p>
+            <p className="font-body text-xs text-on-surface-variant mt-1">Vault ID: •••• {account.id.slice(-4)}</p>
+            <p className="font-headline font-extrabold text-xl mt-4 text-primary">${account.balance}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
