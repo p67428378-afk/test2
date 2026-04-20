@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getPolicies } from '../services/policyService';
+import { Link } from 'react-router-dom';
 
 const PolicyDashboard = () => {
   const [policies, setPolicies] = useState([]);
@@ -65,6 +66,14 @@ const PolicyDashboard = () => {
                 <button className='mt-6 w-full py-4 bg-white text-primary font-bold rounded-xl hover:bg-surface-container-lowest transition-all'>
                   View Full Benefits
                 </button>
+                <div className='flex gap-4 mt-4'>
+                    <Link to={`/update/${policy.id}`} className='flex-1 py-3 bg-white text-primary font-bold rounded-xl text-center hover:bg-surface-container-lowest transition-all'>
+                        Update
+                    </Link>
+                    <Link to={`/cancel/${policy.id}`} className='flex-1 py-3 bg-red-500 text-white font-bold rounded-xl text-center hover:bg-red-600 transition-all'>
+                        Cancel
+                    </Link>
+                </div>
               </div>
             </div>
           </section>

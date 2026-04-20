@@ -10,9 +10,9 @@ function App() {
     <Router>
       <Header />
       <Routes>
-        <Route path="/" element={<PolicyDashboard />} />
-        <Route path="/update" element={<UpdatePolicy />} />
-        <Route path="/cancel" element={<CancelPolicy />} />
+        <Route path='/' element={<PolicyDashboard />} />
+        <Route path='/update/:policyId' element={<UpdatePolicy />} />
+        <Route path='/cancel/:policyId' element={<CancelPolicy />} />
       </Routes>
     </Router>
   );
