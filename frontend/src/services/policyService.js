@@ -1,31 +1,28 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api/v1/policies';
+const API_URL = 'http://localhost:8000/api/v1';
 
-const getPolicy = (policyId) => {
-  return axios.get(`${API_URL}/${policyId}`);
+export const getPolicies = async () => {
+  const response = await axios.get(`${API_URL}/policies/`);
+  return response.data;
 };
 
-const getPoliciesByHolder = (policyHolderId) => {
-  return axios.get(`${API_URL}/holder/${policyHolderId}`);
+export const getPolicy = async (id) => {
+  const response = await axios.get(`${API_URL}/policies/${id}`);
+  return response.data;
 };
 
-const createPolicy = (policyData) => {
-  return axios.post(API_URL, policyData);
+export const createPolicy = async (policy) => {
+  const response = await axios.post(`${API_URL}/policies/`, policy);
+  return response.data;
 };
 
-const updatePolicy = (policyId, policyData) => {
-  return axios.put(`${API_URL}/${policyId}`, policyData);
+export const updatePolicy = async (id, policy) => {
+  const response = await axios.put(`${API_URL}/policies/${id}`, policy);
+  return response.data;
 };
 
-const cancelPolicy = (policyId) => {
-  return axios.delete(`${API_URL}/${policyId}`);
-};
-
-export default {
-  getPolicy,
-  getPoliciesByHolder,
-  createPolicy,
-  updatePolicy,
-  cancelPolicy,
+export const deletePolicy = async (id) => {
+  const response = await axios.delete(`${API_URL}/policies/${id}`);
+  return response.data;
 };

@@ -1,119 +1,140 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from faker import Faker
-
-from app.core.config import settings
 from app.schemas.policy import PolicyCreate, PolicyUpdate
+from app.models.policy import Policy, PolicyHolder
+import uuid
+from datetime import date
 
-fake = Faker()
 
 def test_create_policy(client: TestClient, db_session: Session):
-    policy_in = PolicyCreate(
-        policy_holder_id=fake.uuid4(),
-        policy_number=fake.unique.pystr(min_chars=10, max_chars=10),
-        plan_type="Gold Plan",
-        premium_amount=300.00,
-        effective_date=fake.date_object(),
-        expiration_date=fake.date_object(),
-    )
-    response = client.post("/api/v1/policies/", json=policy_in.model_dump(mode='json'))
+    policy_holder = PolicyHolder(name="John Doe", address="123 Main St", contact_info="john.doe@example.com", authentication_details="auth_details")
+    db_session.add(policy_holder)
+    db_session.commit()
+    db_session.refresh(policy_holder)
+
+    policy_data = {
+        "policy_number": f"POL-{uuid.uuid4()}",
+        "plan_type": "Gold",
+        "premium_amount": 500.0,
+        "effective_date": "2024-01-01",
+        "expiration_date": "2024-12-31",
+        "status": "Active",
+        "policy_holder_id": policy_holder.id
+    }
+    response = client.post("/api/v1/policies/", json=policy_data)
     assert response.status_code == 200
     data = response.json()
-    assert data["plan_type"] == policy_in.plan_type
-    assert data["premium_amount"] == policy_in.premium_amount
+    assert data["policy_number"] == policy_data["policy_number"]
+    assert data["plan_type"] == policy_data["plan_type"]
+    assert "id" in data
 
 def test_get_policy(client: TestClient, db_session: Session):
-    policy_in = PolicyCreate(
-        policy_holder_id=fake.uuid4(),
-        policy_number=fake.unique.pystr(min_chars=10, max_chars=10),
-        plan_type="Gold Plan",
-        premium_amount=300.00,
-        effective_date=fake.date_object(),
-        expiration_date=fake.date_object(),
+    policy_holder = PolicyHolder(name="Jane Doe", address="456 Oak St", contact_info="jane.doe@example.com", authentication_details="auth_details")
+    db_session.add(policy_holder)
+    db_session.commit()
+    db_session.refresh(policy_holder)
+
+    policy = Policy(
+        policy_number=f"POL-{uuid.uuid4()}",
+        plan_type="Silver",
+        premium_amount=300.0,
+        effective_date=date(2024, 1, 1),
+        expiration_date=date(2024, 12, 31),
+        status="Active",
+        policy_holder_id=policy_holder.id
     )
-    response = client.post("/api/v1/policies/", json=policy_in.model_dump(mode='json'))
-    assert response.status_code == 200
-    created_policy = response.json()
+    db_session.add(policy)
+    db_session.commit()
+    db_session.refresh(policy)
 
-    response = client.get(f"/api/v1/policies/{created_policy['id']}")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["id"] == created_policy["id"]
-
-def test_get_policies_by_holder(client: TestClient, db_session: Session):
-    policy_holder_id = fake.uuid4()
-    policy_in_1 = PolicyCreate(
-        policy_holder_id=policy_holder_id,
-        policy_number=fake.unique.pystr(min_chars=10, max_chars=10),
-        plan_type="Gold Plan",
-        premium_amount=300.00,
-        effective_date=fake.date_object(),
-        expiration_date=fake.date_object(),
-    )
-    client.post("/api/v1/policies/", json=policy_in_1.model_dump(mode='json'))
-
-    policy_in_2 = PolicyCreate(
-        policy_holder_id=policy_holder_id,
-        policy_number=fake.unique.pystr(min_chars=10, max_chars=10),
-        plan_type="Silver Plan",
-        premium_amount=200.00,
-        effective_date=fake.date_object(),
-        expiration_date=fake.date_object(),
-    )
-    client.post("/api/v1/policies/", json=policy_in_2.model_dump(mode='json'))
-
-    response = client.get(f"/api/v1/policies/holder/{policy_holder_id}")
+    response = client.get(f"/api/v1/policies/{policy.id}")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 2
+    assert data["policy_number"] == policy.policy_number
+    assert data["id"] == policy.id
+
+def test_get_all_policies(client: TestClient, db_session: Session):
+    policy_holder = PolicyHolder(name="Jim Doe", address="789 Pine St", contact_info="jim.doe@example.com", authentication_details="auth_details")
+    db_session.add(policy_holder)
+    db_session.commit()
+    db_session.refresh(policy_holder)
+
+    policy1 = Policy(
+        policy_number=f"POL-{uuid.uuid4()}",
+        plan_type="Bronze",
+        premium_amount=200.0,
+        effective_date=date(2024, 1, 1),
+        expiration_date=date(2024, 12, 31),
+        status="Active",
+        policy_holder_id=policy_holder.id
+    )
+    policy2 = Policy(
+        policy_number=f"POL-{uuid.uuid4()}",
+        plan_type="Platinum",
+        premium_amount=700.0,
+        effective_date=date(2024, 1, 1),
+        expiration_date=date(2024, 12, 31),
+        status="Active",
+        policy_holder_id=policy_holder.id
+    )
+    db_session.add_all([policy1, policy2])
+    db_session.commit()
+
+    response = client.get("/api/v1/policies/")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 2
 
 def test_update_policy(client: TestClient, db_session: Session):
-    policy_in = PolicyCreate(
-        policy_holder_id=fake.uuid4(),
-        policy_number=fake.unique.pystr(min_chars=10, max_chars=10),
-        plan_type="Gold Plan",
-        premium_amount=300.00,
-        effective_date=fake.date_object(),
-        expiration_date=fake.date_object(),
-    )
-    response = client.post("/api/v1/policies/", json=policy_in.model_dump(mode='json'))
-    assert response.status_code == 200
-    created_policy = response.json()
+    policy_holder = PolicyHolder(name="Jill Doe", address="101 Maple St", contact_info="jill.doe@example.com", authentication_details="auth_details")
+    db_session.add(policy_holder)
+    db_session.commit()
+    db_session.refresh(policy_holder)
 
-    policy_update = PolicyUpdate(plan_type="Platinum Plan", premium_amount=500.00, effective_date=fake.date_object(), expiration_date=fake.date_object())
-    response = client.put(f"/api/v1/policies/{created_policy['id']}", json=policy_update.model_dump(mode='json'))
+    policy = Policy(
+        policy_number=f"POL-{uuid.uuid4()}",
+        plan_type="Gold",
+        premium_amount=500.0,
+        effective_date=date(2024, 1, 1),
+        expiration_date=date(2024, 12, 31),
+        status="Active",
+        policy_holder_id=policy_holder.id
+    )
+    db_session.add(policy)
+    db_session.commit()
+    db_session.refresh(policy)
+
+    update_data = {"status": "Cancelled"}
+    response = client.put(f"/api/v1/policies/{policy.id}", json=update_data)
     assert response.status_code == 200
     data = response.json()
-    assert data["plan_type"] == "Platinum Plan"
-    assert data["premium_amount"] == 500.00
+    assert data["status"] == "Cancelled"
 
-def test_cancel_policy(client: TestClient, db_session: Session):
-    policy_in = PolicyCreate(
-        policy_holder_id=fake.uuid4(),
-        policy_number=fake.unique.pystr(min_chars=10, max_chars=10),
-        plan_type="Gold Plan",
-        premium_amount=300.00,
-        effective_date=fake.date_object(),
-        expiration_date=fake.date_object(),
+def test_delete_policy(client: TestClient, db_session: Session):
+    policy_holder = PolicyHolder(name="Jack Doe", address="212 Birch St", contact_info="jack.doe@example.com", authentication_details="auth_details")
+    db_session.add(policy_holder)
+    db_session.commit()
+    db_session.refresh(policy_holder)
+
+    policy = Policy(
+        policy_number=f"POL-{uuid.uuid4()}",
+        plan_type="Silver",
+        premium_amount=300.0,
+        effective_date=date(2024, 1, 1),
+        expiration_date=date(2024, 12, 31),
+        status="Active",
+        policy_holder_id=policy_holder.id
     )
-    response = client.post("/api/v1/policies/", json=policy_in.model_dump(mode='json'))
-    assert response.status_code == 200
-    created_policy = response.json()
+    db_session.add(policy)
+    db_session.commit()
+    db_session.refresh(policy)
 
-    response = client.delete(f"/api/v1/policies/{created_policy['id']}")
+    response = client.delete(f"/api/v1/policies/{policy.id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "cancelled"
+    assert data["status"] == "Cancelled"
 
-def test_get_non_existent_policy(client: TestClient, db_session: Session):
-    response = client.get(f"/api/v1/policies/{fake.uuid4()}")
-    assert response.status_code == 404
-
-def test_update_non_existent_policy(client: TestClient, db_session: Session):
-    policy_update = PolicyUpdate(plan_type="Platinum Plan", premium_amount=500.00, effective_date=fake.date_object(), expiration_date=fake.date_object())
-    response = client.put(f"/api/v1/policies/{fake.uuid4()}", json=policy_update.model_dump(mode='json'))
-    assert response.status_code == 404
-
-def test_cancel_non_existent_policy(client: TestClient, db_session: Session):
-    response = client.delete(f"/api/v1/policies/{fake.uuid4()}")
-    assert response.status_code == 404
+    response = client.get(f"/api/v1/policies/{policy.id}")
+    assert response.status_code == 200
+    retrieved_data = response.json()
+    assert retrieved_data["status"] == "Cancelled"

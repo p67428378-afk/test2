@@ -1,30 +1,19 @@
-# Health Insurance Management Portal
+# Health Insurance Policy Management
 
-This project is a health insurance management portal that allows policyholders to view, update, and cancel their health insurance policies.
+This project is a full-stack application for managing health insurance policies, built with FastAPI and React.
 
 ## Application Architecture
 
-The application is built with a full-stack architecture using FastAPI for the backend and React for the frontend.
+- **Backend**: FastAPI, PostgreSQL
+- **Frontend**: React, Vite, Tailwind CSS
 
-- **Backend**: FastAPI with a PostgreSQL database.
-- **Frontend**: React (Vite) with Tailwind CSS.
-- **Database**: PostgreSQL
+### Backend
 
-### Backend Architecture
+The backend is a FastAPI application with a PostgreSQL database. It provides a RESTful API for managing policies, policyholders, and other related data.
 
-The backend is a microservice that provides APIs for managing policies. It follows a standard layered architecture:
+### Frontend
 
-- **API Layer**: `routers/` for API endpoints.
-- **Service Layer**: `services/` for business logic.
-- **Data Access Layer**: `models/` and `db/` for database interaction.
-
-### Frontend Architecture
-
-The frontend is a single-page application (SPA) built with React. It communicates with the backend APIs to fetch and update data.
-
-- **Components**: Reusable UI components are located in `src/components/`.
-- **Pages**: Page-level components are in `src/pages/`.
-- **Services**: API communication logic is in `src/services/`.
+The frontend is a React application built with Vite. It uses Tailwind CSS for styling and communicates with the backend API to provide a user-friendly interface for managing policies.
 
 ## Project Structure
 
@@ -39,6 +28,7 @@ The frontend is a single-page application (SPA) built with React. It communicate
 │   │   │   └── config.py
 │   │   ├── db
 │   │   │   ├── base.py
+│   │   │   ├── base_class.py
 │   │   │   └── session.py
 │   │   ├── models
 │   │   │   └── policy.py
@@ -47,108 +37,62 @@ The frontend is a single-page application (SPA) built with React. It communicate
 │   │   ├── services
 │   │   │   └── policy_service.py
 │   │   └── main.py
-│   ├── tests
-│   │   ├── __init__.py
-│   │   ├── conftest.py
-│   │   └── test_policies.py
-│   ├── .env
-│   └── pytest.ini
-├── frontend
-│   ├── public
-│   ├── src
-│   │   ├── __tests__
-│   │   │   └── PolicyDashboard.test.jsx
-│   │   ├── components
-│   │   │   ├── BottomNavBar.jsx
-│   │   │   ├── CoverageCard.jsx
-│   │   │   ├── DeductibleProgress.jsx
-│   │   │   └── Header.jsx
-│   │   ├── pages
-│   │   │   ├── CancelPolicy.jsx
-│   │   │   ├── PolicyDashboard.jsx
-│   │   │   └── UpdatePolicy.jsx
-│   │   ├── services
-│   │   │   └── policyService.js
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── .gitignore
-│   ├── index.html
-│   ├── package.json
-│   ├── postcss.config.js
-│   ├── tailwind.config.js
-│   └── vite.config.js
-├── .gitignore
-└── README.md
+│   └── tests
+│       ├── conftest.py
+│       └── test_policies.py
+└── frontend
+    ├── src
+    │   ├── components
+    │   │   └── Header.jsx
+    │   ├── pages
+    │   │   ├── __tests__
+    │   │   │   └── PolicyDashboard.test.jsx
+    │   │   ├── CancelPolicy.jsx
+    │   │   ├── PolicyDashboard.jsx
+    │   │   └── UpdatePolicy.jsx
+    │   └── services
+    │       └── policyService.js
+    ├── index.html
+    ├── package.json
+    ├── postcss.config.js
+    ├── tailwind.config.js
+    └── vite.config.js
 ```
-
-## Prerequisites
-
-- Python 3.10+
-- Node.js 18+
-- npm
-- git
 
 ## Setup Instructions
 
 ### Backend
 
-1.  **Create a virtual environment**:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    ```
-
-2.  **Install dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3.  **Set up the database**:
-    - Make sure you have a running PostgreSQL server.
-    - Create a `.env` file in the `backend` directory with the following content:
-      ```
-      DATABASE_URL=postgresql://user:password@localhost/db
-      SECRET_KEY=a_very_secret_key
-      ```
-
-4.  **Run database migrations**:
-    ```bash
-    alembic upgrade head
-    ```
-
-5.  **Start the server**:
-    ```bash
-    uvicorn app.main:app --reload
-    ```
+1.  Navigate to the `backend` directory.
+2.  Create a virtual environment: `python -m venv venv`
+3.  Activate the virtual environment: `source venv/bin/activate`
+4.  Install the dependencies: `pip install -r requirements.txt`
+5.  Run the application: `uvicorn app.main:app --reload`
 
 ### Frontend
 
-1.  **Install dependencies**:
-    ```bash
-    cd frontend
-    npm install
-    ```
-
-2.  **Start the development server**:
-    ```bash
-    npm run dev
-    ```
+1.  Navigate to the `frontend` directory.
+2.  Install the dependencies: `npm install`
+3.  Run the application: `npm run dev`
 
 ## API Documentation
 
-The API documentation is available at `/docs` when the backend server is running.
+The API documentation is available at `/docs` when the backend is running.
 
 ## Running Tests
 
 ### Backend
 
-```bash
+Navigate to the `backend` directory and run:
+
+```
 pytest
 ```
 
 ### Frontend
 
-```bash
+Navigate to the `frontend` directory and run:
+
+```
 npm test
 ```

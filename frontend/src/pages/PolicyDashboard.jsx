@@ -1,62 +1,76 @@
-import React from 'react';
-import Header from '../components/Header';
-import DeductibleProgress from '../components/DeductibleProgress';
-import CoverageCard from '../components/CoverageCard';
-import BottomNavBar from '../components/BottomNavBar';
+import React, { useState, useEffect } from 'react';
+import { getPolicies } from '../services/policyService';
 
 const PolicyDashboard = () => {
+  const [policies, setPolicies] = useState([]);
+
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      try {
+        const data = await getPolicies();
+        setPolicies(data);
+      } catch (error) {
+        console.error("Error fetching policies:", error);
+      }
+    };
+
+    fetchPolicies();
+  }, []);
+
   return (
-    <div className="bg-background text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
-      <Header />
-      <main className="pt-24 pb-32 px-6 max-w-7xl mx-auto">
-        <section className="relative mb-12">
-          <div className="rounded-[2rem] overflow-hidden bg-gradient-to-br from-primary to-primary-container p-8 md:p-12 text-white shadow-2xl relative">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <span className="material-symbols-outlined text-[120px]" style={{ fontVariationSettings: "'FILL' 1" }}>shield_with_heart</span>
-            </div>
-            <div className="relative z-10 grid md:grid-cols-2 gap-8 items-end">
+    <main className='pt-24 pb-12 px-8 max-w-[1920px] mx-auto'>
+      <section className='mb-12'>
+        <h1 className='text-display-lg text-5xl font-extrabold text-on-surface tracking-tight mb-2'>My Policy.</h1>
+        <p className='text-on-surface-variant text-lg max-w-2xl'>Manage your coverage details, update beneficiaries, or adjust your healthcare journey settings from your clinical sanctuary.</p>
+      </section>
+
+      <div className='flex overflow-x-auto gap-8 pb-8 hide-scrollbar scroll-smooth'>
+        {policies.map(policy => (
+          <section key={policy.id} className='flex-shrink-0 w-[450px]'>
+            <div className='bg-primary rounded-full p-8 text-white relative overflow-hidden h-[600px] flex flex-col justify-between shadow-2xl shadow-primary/20'>
+              <div className='absolute top-0 right-0 w-64 h-64 bg-primary-container/30 rounded-full -mr-20 -mt-20'></div>
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-6">
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                  <span className="font-label text-xs font-semibold uppercase tracking-widest">Active Coverage</span>
+                <div className='flex justify-between items-start mb-12 relative z-10'>
+                  <div>
+                    <span className='text-xs font-bold uppercase tracking-widest opacity-70'>Active Plan</span>
+                    <h2 className='text-3xl font-extrabold mt-1'>{policy.plan_type}</h2>
+                  </div>
+                  <span className='material-symbols-outlined text-4xl' data-weight='fill'>verified_user</span>
                 </div>
-                <h2 className="font-headline font-extrabold text-4xl md:text-5xl mb-2 tracking-tight">Gold Plan</h2>
-                <p className="text-primary-fixed text-lg opacity-90 font-medium">Effective since Jan 1, 2024</p>
+                <div className='space-y-8 relative z-10'>
+                  <div>
+                    <p className='text-sm opacity-70 mb-1'>Monthly Premium</p>
+                    <p className='text-4xl font-black'>${policy.premium_amount}<span className='text-lg font-normal opacity-80'>/mo</span></p>
+                  </div>
+                  <div className='flex gap-12'>
+                    <div>
+                      <p className='text-sm opacity-70 mb-1'>Effective From</p>
+                      <p className='font-bold'>{policy.effective_date}</p>
+                    </div>
+                    <div>
+                      <p className='text-sm opacity-70 mb-1'>Expires On</p>
+                      <p className='font-bold'>{policy.expiration_date}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col md:items-end">
-                <div className="text-right">
-                  <p className="text-primary-fixed/80 text-sm font-label uppercase tracking-wider mb-1">Monthly Premium</p>
-                  <p className="text-3xl font-headline font-bold">$300.00</p>
+              <div className='bg-white/10 backdrop-blur-sm rounded-xl p-6 relative z-10'>
+                <div className='flex justify-between items-center mb-4'>
+                  <p className='text-sm font-bold'>Annual Deductible</p>
+                  <p className='text-sm font-bold'>$1,200 / $3,000</p>
                 </div>
+                <div className='w-full bg-white/20 h-2 rounded-full overflow-hidden'>
+                  <div className='bg-white h-full rounded-full' style={{ width: '40%' }}></div>
+                </div>
+                <button className='mt-6 w-full py-4 bg-white text-primary font-bold rounded-xl hover:bg-surface-container-lowest transition-all'>
+                  View Full Benefits
+                </button>
               </div>
             </div>
-          </div>
-          <DeductibleProgress />
-        </section>
-
-        <section className="mt-16 md:mt-24 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <CoverageCard icon="medical_services" title="Medical" description="Comprehensive health coverage with access to our elite network of providers." benefit="Full In-Network" />
-          <CoverageCard icon="dentistry" title="Dental" description="Restorative and preventative care including bi-annual cleanings and imaging." benefit="Tier 1 Benefits" />
-          <CoverageCard icon="visibility" title="Vision" description="Complete visual health maintenance including hardware allowance." benefit="Annual Checkup" />
-        </section>
-
-        <section className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6 p-8 rounded-[2rem] bg-surface-container-low">
-          <div>
-            <h3 className="font-headline font-bold text-lg mb-1">Policy Management</h3>
-            <p className="text-on-surface-variant text-sm">Make changes to your plan or coverage dates.</p>
-          </div>
-          <div className="flex flex-wrap gap-4 w-full md:w-auto">
-            <button className="flex-1 md:flex-none px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-primary to-primary-container text-white active:scale-95 transition-all shadow-lg shadow-primary/20">
-              Update Policy
-            </button>
-            <button className="flex-1 md:flex-none px-8 py-4 rounded-xl font-bold text-tertiary hover:bg-tertiary-fixed/20 transition-colors active:scale-95">
-              Cancel Policy
-            </button>
-          </div>
-        </section>
-      </main>
-      <BottomNavBar />
-    </div>
+          </section>
+        ))}
+      </div>
+    </main>
   );
 };
 

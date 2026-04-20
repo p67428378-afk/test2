@@ -1,13 +1,8 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
-psycopg2-binary
 pydantic
 pydantic-settings
+psycopg2-binary
 pytest
 httpx
-Faker
-python-dotenv
-passlib[bcrypt]
-python-jose[cryptography]
-alembic
