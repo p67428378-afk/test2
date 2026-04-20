@@ -3,6 +3,19 @@ import React from 'react';
 const Dashboard = () => {
   return (
     <div className='bg-surface text-on-surface'>
+      <style>
+        {`
+          .column-primary-reason {
+            min-width: 200px;
+            white-space: normal;
+            word-break: break-word;
+          }
+          .transaction-history-chart-container {
+            min-height: 200px;
+            height: auto;
+          }
+        `}
+      </style>
       {/* Shared SideNavBar */}
       <aside className='h-screen w-72 flex flex-col fixed left-0 top-0 bg-slate-50 border-r border-slate-100 p-6 gap-2 z-50'>
         <div className='mb-10'>
@@ -115,7 +128,7 @@ const Dashboard = () => {
                     <th className='px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest'>UPI ID</th>
                     <th className='px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest'>Amount</th>
                     <th className='px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest'>Risk Score</th>
-                    <th className='px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest'>Primary Reason</th>
+                    <th className='px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest column-primary-reason'>Primary Reason</th>
                     <th className='px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right'>Actions</th>
                   </tr>
                 </thead>
@@ -128,7 +141,7 @@ const Dashboard = () => {
                     <td className='px-6 py-5'>
                       <span className='text-xs font-bold px-2 py-1 bg-orange-100 text-orange-800 rounded-full'>88/100</span>
                     </td>
-                    <td className='px-6 py-5 text-xs font-semibold text-slate-500'>New Device + High Velocity</td>
+                    <td className='px-6 py-5 text-xs font-semibold text-slate-500 column-primary-reason'>New Device + High Velocity</td>
                     <td className='px-6 py-5 text-right flex justify-end gap-2'>
                       <button className='px-3 py-1.5 border border-green-600 text-green-700 rounded-md text-[10px] font-black uppercase tracking-tighter hover:bg-green-50 transition-colors'>Allow</button>
                       <button className='px-3 py-1.5 bg-error text-white rounded-md text-[10px] font-black uppercase tracking-tighter hover:opacity-90 transition-opacity'>Block</button>
@@ -142,7 +155,7 @@ const Dashboard = () => {
                     <td className='px-6 py-5'>
                       <span className='text-xs font-bold px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full'>42/100</span>
                     </td>
-                    <td className='px-6 py-5 text-xs font-semibold text-slate-500'>Geo-Divergence</td>
+                    <td className='px-6 py-5 text-xs font-semibold text-slate-500 column-primary-reason'>Geo-Divergence</td>
                     <td className='px-6 py-5 text-right flex justify-end gap-2'>
                       <button className='px-3 py-1.5 border border-green-600 text-green-700 rounded-md text-[10px] font-black uppercase tracking-tighter hover:bg-green-50'>Allow</button>
                       <button className='px-3 py-1.5 bg-error text-white rounded-md text-[10px] font-black uppercase tracking-tighter hover:opacity-90'>Block</button>
@@ -156,7 +169,7 @@ const Dashboard = () => {
                     <td className='px-6 py-5'>
                       <span className='text-xs font-bold px-2 py-1 bg-red-100 text-red-800 rounded-full'>94/100</span>
                     </td>
-                    <td className='px-6 py-5 text-xs font-semibold text-slate-500'>Known Fraud Pattern</td>
+                    <td className='px-6 py-5 text-xs font-semibold text-slate-500 column-primary-reason'>Known Fraud Pattern</td>
                     <td className='px-6 py-5 text-right flex justify-end gap-2'>
                       <button className='px-3 py-1.5 border border-green-600 text-green-700 rounded-md text-[10px] font-black uppercase tracking-tighter hover:bg-green-50'>Allow</button>
                       <button className='px-3 py-1.5 bg-error text-white rounded-md text-[10px] font-black uppercase tracking-tighter hover:opacity-90'>Block</button>
@@ -209,7 +222,7 @@ const Dashboard = () => {
                 </div>
               </div>
               {/* User History Chart */}
-              <div className='bg-surface-container-lowest rounded-xl shadow-sm p-6'>
+              <div className='bg-surface-container-lowest rounded-xl shadow-sm p-6 transaction-history-chart-container'>
                 <h4 className='text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4'>Transaction History</h4>
                 <div className='flex flex-col gap-4'>
                   <div className='flex items-end gap-1 h-24'>
