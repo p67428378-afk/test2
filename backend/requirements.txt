@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+kafka-python
+scikit-learn
+pandas
+pytest
