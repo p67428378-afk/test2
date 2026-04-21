@@ -1,47 +1,53 @@
+# Loan Eligibility Decision System
 
-# Loan Eligibility and Interest Rate Decision System
-
-This project is a loan eligibility and interest rate decision system. It provides a simple web interface for users to enter their financial details and check if they are eligible for a loan. If they are eligible, the system will also provide them with an estimated interest rate.
+This application provides a loan eligibility decision system. Users can enter their financial details to determine if they are eligible for a loan and at what interest rate.
 
 ## Application Architecture
 
-The application is built using a full-stack architecture with a React frontend and a FastAPI backend.
+- **Tech Stack**: FastAPI (Python) for the backend, React (Vite) for the frontend, and PostgreSQL for the database.
+- **High-level component diagram**:
 
-- **Frontend**: The frontend is a single-page application built with React and Vite. It uses Tailwind CSS for styling.
-- **Backend**: The backend is a RESTful API built with FastAPI. It uses a PostgreSQL database to store loan application data.
-- **Database**: The application uses a PostgreSQL database to store loan application data. The database schema is defined using SQLAlchemy.
+```mermaid
+graph TD
+    A[Frontend] --> B{API Gateway}
+    B --> C[Backend]
+    C --> D[Database]
+```
+
+- **Communication**: The frontend communicates with the backend via RESTful API endpoints. The backend runs on port 8000, and the frontend on port 5173.
+- **Database Schema**: The database consists of a single table `loan_applications` to store user application data.
 
 ## Project Structure
 
 ```
-.
-├── backend
-│   ├── __init__.py
-│   ├── database.py
-│   ├── main.py
-│   ├── models.py
-│   ├── requirements.txt
-│   ├── schemas.py
-│   └── tests
-│       ├── __init__.py
-│       ├── conftest.py
-│       └── test_main.py
-└── frontend
-    ├── index.html
-    ├── package.json
-    ├── postcss.config.js
-    ├── src
-    │   ├── App.jsx
-    │   ├── App.test.jsx
-    │   ├── components
-    │   │   ├── LoanForm.jsx
-    │   │   └── Results.jsx
-    │   ├── index.css
-    │   ├── main.jsx
-    │   └── test
-    │       └── setup.js
-    ├── tailwind.config.js
-    └── vite.config.js
+.gitignore
+README.md
+backend/
+  __init__.py
+  database.py
+  main.py
+  models.py
+  requirements.txt
+  schemas.py
+  tests/
+    conftest.py
+    test_main.py
+frontend/
+  index.html
+  package.json
+  postcss.config.js
+  src/
+    App.jsx
+    App.test.jsx
+    components/
+      LoanForm.jsx
+      Results.jsx
+    index.css
+    main.jsx
+    test/
+      setup.js
+  tailwind.config.js
+  vite.config.js
 ```
 
 ## Prerequisites
@@ -53,67 +59,68 @@ The application is built using a full-stack architecture with a React frontend a
 
 ## Setup Instructions
 
-### Backend
+1.  **Clone the repo**:
+    ```bash
+    git clone https://github.com/p67428378-afk/test2
+    cd test2
+    ```
 
-1.  Navigate to the `backend` directory:
+2.  **Backend setup**:
     ```bash
     cd backend
-    ```
-2.  Create a virtual environment:
-    ```bash
     python -m venv venv
-    ```
-3.  Activate the virtual environment:
-    -   On Windows:
-        ```bash
-        venv\Scripts\activate
-        ```
-    -   On macOS and Linux:
-        ```bash
-        source venv/bin/activate
-        ```
-4.  Install the required dependencies:
-    ```bash
+    source venv/bin/activate
     pip install -r requirements.txt
-    ```
-5.  Create a `.env` file and add the following environment variable:
-    ```
-    DATABASE_URL=postgresql://user:password@host:port/database
-    ```
-6.  Start the backend server:
-    ```bash
     uvicorn main:app --reload
     ```
 
-### Frontend
-
-1.  Navigate to the `frontend` directory:
+3.  **Frontend setup**:
     ```bash
     cd frontend
-    ```
-2.  Install the required dependencies:
-    ```bash
     npm install
-    ```
-3.  Start the frontend development server:
-    ```bash
     npm run dev
     ```
 
+4.  **Environment variables**: Create a `.env` file in the `backend` directory with the following content:
+    ```
+    DATABASE_URL=postgresql://user:password@host:port/database
+    ```
+
+## API Documentation
+
+- **Endpoint**: `/api/v1/loans/eligibility`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "credit_score": 700,
+    "annual_income": 60000,
+    "monthly_debts": 1000
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "eligible": true,
+    "interest_rate": 5.5,
+    "message": "Congratulations! You are eligible for a loan."
+  }
+  ```
+
 ## Running Tests
 
-### Backend
+- **Backend tests**:
+  ```bash
+  cd backend
+  pytest
+  ```
 
-To run the backend tests, navigate to the `backend` directory and run the following command:
+- **Frontend tests**:
+  ```bash
+  cd frontend
+  npm test
+  ```
 
-```bash
-pytest
-```
+## Deployment Notes
 
-### Frontend
-
-To run the frontend tests, navigate to the `frontend` directory and run the following command:
-
-```bash
-npm test
-```
+N/A

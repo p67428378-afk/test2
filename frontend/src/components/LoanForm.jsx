@@ -26,7 +26,7 @@ const LoanForm = ({ onSubmit }) => {
             <label className='font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant'>Credit Score (300-850)</label>
             <div className='relative'>
               <input
-                className='w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-fixed-dim/40 outline-none transition-all placeholder:text-outline-variant/60 font-medium'
+                className='w-full bg-surface-container-low border-none rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-primary-fixed-dim/40 outline-none transition-all placeholder:text-outline-variant/60 font-medium'
                 placeholder='e.g. 740'
                 type='number'
                 name='credit_score'
@@ -43,7 +43,7 @@ const LoanForm = ({ onSubmit }) => {
             <label className='font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant'>Annual Income ($)</label>
             <div className='relative'>
               <input
-                className='w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-fixed-dim/40 outline-none transition-all placeholder:text-outline-variant/60 font-medium'
+                className='w-full bg-surface-container-low border-none rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-primary-fixed-dim/40 outline-none transition-all placeholder:text-outline-variant/60 font-medium'
                 placeholder='e.g. 85,000'
                 type='number'
                 name='annual_income'
@@ -60,7 +60,7 @@ const LoanForm = ({ onSubmit }) => {
             <label className='font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant'>Monthly Debts ($)</label>
             <div className='relative'>
               <input
-                className='w-full bg-surface-container-low border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-fixed-dim/40 outline-none transition-all placeholder:text-outline-variant/60 font-medium'
+                className='w-full bg-surface-container-low border-none rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-primary-fixed-dim/40 outline-none transition-all placeholder:text-outline-variant/60 font-medium'
                 placeholder='e.g. 450'
                 type='number'
                 name='monthly_debts'
@@ -73,7 +73,7 @@ const LoanForm = ({ onSubmit }) => {
               </span>
             </div>
           </div>
-          <button type='submit' className='w-full bg-primary text-on-primary font-bold py-4 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all'>
+          <button type='submit' className='w-full bg-primary text-on-primary font-bold py-4 rounded-lg flex items-center justify-center gap-3 hover:opacity-90 active:scale-[0.98] transition-all'>
             <span>Check Eligibility</span>
             <span className='material-symbols-outlined text-lg'>analytics</span>
           </button>
