@@ -17,8 +17,8 @@ const Results = ({ result }) => {
 
       {isEligible ? (
         <div className='bg-primary-container text-on-primary rounded-xl overflow-hidden relative'>
-          <div className='absolute top-0 right-0 p-8 opacity-10'>
-            <span className='material-symbols-outlined text-9xl' style={{fontVariationSettings: '\'FILL\' 1'}}>verified</span>
+          <div className='absolute top-0 right-0 p-4 md:p-8 opacity-10'>
+            <span className='material-symbols-outlined text-6xl md:text-9xl' style={{fontVariationSettings: '\'FILL\' 1'}}>verified</span>
           </div>
           <div className='p-6 relative z-10'>
             <div className='flex items-center gap-3 mb-6'>

@@ -8,7 +8,7 @@ function App() {
 
   const handleFormSubmit = async (formData) => {
     try {
-      const response = await axios.post('http://localhost:8000/predict', formData);
+      const response = await axios.post('http://localhost:8000/check-eligibility/', formData);
       setResults(response.data);
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -21,7 +21,7 @@ function App() {
       <header className='w-full max-w-4xl mx-auto p-4'>
         <h1 className='text-4xl font-bold text-center'>Loan Eligibility</h1>
       </header>
-      <main className='w-full max-w-4xl mx-auto p-4'>
+      <main className='w-full max-w-4xl mx-auto p-4 flex-grow'>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
           <div className='bg-gray-800 p-8 rounded-lg shadow-lg'>
             <h2 className='text-2xl font-semibold mb-6'>Enter Your Details</h2>
@@ -33,9 +33,9 @@ function App() {
           </div>
         </div>
       </main>
-      <footer className='w-full max-w-4xl mx-auto p-4 mt-8'>
+      <footer className='w-full max-w-4xl mx-auto p-4 mt-auto'>
         <div className='bg-gray-800 rounded-lg p-4'>
-          <div className='flex justify-around'>
+          <div className='flex justify-between px-4'>
             <a href='#' className='flex flex-col items-center text-gray-400 hover:text-white'>
               <span className='material-symbols-outlined'>home</span>
               <span className='text-xs mt-1'>HOME</span>

@@ -19,10 +19,14 @@ def check_eligibility(applicant: schemas.LoanApplicantCreate, db: Session = Depe
     ineligibility_reasons = []
     if credit_score < 600:
         ineligibility_reasons.append("Credit score is too low.")
-    if annual_income < 30000:
-        ineligibility_reasons.append("Annual income is too low.")
-    if monthly_debts / (annual_income / 12) > 0.4:
-        ineligibility_reasons.append("Debt-to-income ratio is too high.")
+
+    if annual_income <= 0:
+        ineligibility_reasons.append("Annual income must be positive.")
+    else:
+        if annual_income < 30000:
+            ineligibility_reasons.append("Annual income is too low.")
+        if monthly_debts / (annual_income / 12) > 0.4:
+            ineligibility_reasons.append("Debt-to-income ratio is too high.")
 
     if ineligibility_reasons:
         db_applicant = models.LoanApplicant(
