@@ -12,7 +12,13 @@ def check_eligibility_and_get_rate(db: Session, request: LoanEligibilityRequest)
     if request.credit_score < MIN_CREDIT_SCORE:
         ineligibility_reasons.append("Credit score below the minimum threshold of 600.")
 
-    dti_ratio = (request.monthly_debts * 12) / request.annual_income if request.annual_income > 0 else 0
+    if request.annual_income > 0:
+        dti_ratio = (request.monthly_debts * 12) / request.annual_income
+    elif request.monthly_debts > 0:
+        dti_ratio = float('inf')
+    else:
+        dti_ratio = 0
+
     if dti_ratio > MAX_DTI_RATIO:
         ineligibility_reasons.append("Debt-to-income ratio exceeds the maximum threshold of 40%.")
 

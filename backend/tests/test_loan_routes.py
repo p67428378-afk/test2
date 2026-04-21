@@ -40,6 +40,22 @@ def test_check_eligibility_ineligible_high_dti(client: TestClient):
     assert data["interest_rate"] is None
     assert "Debt-to-income ratio exceeds the maximum threshold of 40%." in data["ineligibility_reasons"]
 
+def test_check_eligibility_ineligible_zero_income(client: TestClient):
+    response = client.post("/api/v1/loan/check-eligibility", json={"credit_score": 700, "annual_income": 0, "monthly_debts": 1000})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["eligibility_status"] is False
+    assert data["interest_rate"] is None
+    assert "Debt-to-income ratio exceeds the maximum threshold of 40%." in data["ineligibility_reasons"]
+
+def test_check_eligibility_eligible_zero_income_zero_debt(client: TestClient):
+    response = client.post("/api/v1/loan/check-eligibility", json={"credit_score": 750, "annual_income": 0, "monthly_debts": 0})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["eligibility_status"] is True
+    assert data["interest_rate"] == 4.25
+    assert data["ineligibility_reasons"] is None
+
 def test_check_eligibility_invalid_input(client: TestClient):
     response = client.post("/api/v1/loan/check-eligibility", json={"credit_score": -10, "annual_income": 50000, "monthly_debts": 1000})
     assert response.status_code == 422
