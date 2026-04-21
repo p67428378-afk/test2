@@ -1,62 +1,56 @@
-
 import React, { useState } from 'react';
-import axios from 'axios';
 import LoanForm from './components/LoanForm';
 import Results from './components/Results';
+import axios from 'axios';
 
 function App() {
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [results, setResults] = useState(null);
 
-  const checkEligibility = async (formData) => {
+  const handleFormSubmit = async (formData) => {
     try {
-      const response = await axios.post('/api/check-eligibility/', formData);
-      setResult(response.data);
-      setError(null);
-    } catch (err) {
-      setError('An error occurred while checking eligibility.');
-      setResult(null);
+      const response = await axios.post('http://localhost:8000/predict', formData);
+      setResults(response.data);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Handle error state in the UI
     }
   };
 
   return (
-    <div className='bg-surface text-on-surface min-h-screen flex flex-col'>
-      <header className='bg-slate-50 dark:bg-[#0a2540] text-[#000f22] dark:text-[#b0c8eb] flex justify-between items-center px-6 py-4 w-full sticky top-0 z-50'>
-        <div className='flex items-center gap-3'>
-          <span className='material-symbols-outlined text-2xl'>account_balance</span>
-          <h1 className='font-manrope font-bold text-lg tracking-tight'>Sovereign Ledger</h1>
-        </div>
-        <button className='w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-200/50 transition-colors'>
-          <span className='material-symbols-outlined'>notifications</span>
-        </button>
+    <div className='bg-gray-900 min-h-screen flex flex-col items-center justify-center text-white font-sans'>
+      <header className='w-full max-w-4xl mx-auto p-4'>
+        <h1 className='text-4xl font-bold text-center'>Loan Eligibility</h1>
       </header>
-      <main className='flex-grow px-5 py-8 space-y-8 max-w-md mx-auto w-full'>
-        <section className='space-y-2'>
-          <h2 className='text-3xl font-extrabold tracking-tight text-primary'>Loan Decision System</h2>
-          <p className='text-on-surface-variant text-sm leading-relaxed'>Secure, institutional-grade credit assessment and automated underwriting.</p>
-        </section>
-        <LoanForm onSubmit={checkEligibility} />
-        {error && <p className='text-red-500'>{error}</p>}
-        {result && <Results result={result} />}
+      <main className='w-full max-w-4xl mx-auto p-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+          <div className='bg-gray-800 p-8 rounded-lg shadow-lg'>
+            <h2 className='text-2xl font-semibold mb-6'>Enter Your Details</h2>
+            <LoanForm onSubmit={handleFormSubmit} />
+          </div>
+          <div className='bg-gray-800 p-8 rounded-lg shadow-lg'>
+            <h2 className='text-2xl font-semibold mb-6'>Results</h2>
+            <Results results={results} />
+          </div>
+        </div>
       </main>
-      <nav className='fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-white/80 dark:bg-[#0a2540]/80 backdrop-blur-xl border-t border-[#c4c6ce]/20 shadow-[0px_-12px_32px_rgba(17,28,45,0.06)] rounded-t-xl'>
-        <a className='flex flex-col items-center justify-center text-[#57657a] dark:text-slate-400 px-4 py-1 hover:opacity-80 transition-transform duration-200 scale-95' href='#'>
-          <span className='material-symbols-outlined'>dashboard</span>
-          <span className='font-inter text-[10px] font-semibold uppercase tracking-wider'>Dashboard</span>
-        </a>
-        <a className='flex flex-col items-center justify-center bg-[#d5e3fc] dark:bg-[#000f22] text-[#000f22] dark:text-[#ffffff] rounded-xl px-4 py-1 transition-transform duration-200 scale-95' href='#'>
-          <span className='material-symbols-outlined' style={{fontVariationSettings: '\'FILL\' 1'}}>payments</span>
-          <span className='font-inter text-[10px] font-semibold uppercase tracking-wider'>Loans</span>
-        </a>
-        <a className='flex flex-col items-center justify-center text-[#57657a] dark:text-slate-400 px-4 py-1 hover:opacity-80 transition-transform duration-200 scale-95' href='#'>
-          <span className='material-symbols-outlined'>trending_up</span>
-          <span className='font-inter text-[10px] font-semibold uppercase tracking-wider'>Market</span>
-        </a>
-        <a className='flex flex-col items-center justify-center text-[#57657a] dark:text-slate-400 px-4 py-1 hover:opacity-80 transition-transform duration-200 scale-95' href='#'>
-          <span className='material-symbols-outlined'>person</span>
-          <span className='font-inter text-[10px] font-semibold uppercase tracking-wider'>Profile</span>
-        </a>
-      </nav>
+      <footer className='w-full max-w-4xl mx-auto p-4 mt-8'>
+        <div className='bg-gray-800 rounded-lg p-4'>
+          <div className='flex justify-around'>
+            <a href='#' className='flex flex-col items-center text-gray-400 hover:text-white'>
+              <span className='material-symbols-outlined'>home</span>
+              <span className='text-xs mt-1'>HOME</span>
+            </a>
+            <a href='#' className='flex flex-col items-center text-white'>
+              <span className='material-symbols-outlined'>account_balance</span>
+              <span className='text-xs mt-1'>LOANS</span>
+            </a>
+            <a href='#' className='flex flex-col items-center text-gray-400 hover:text-white'>
+              <span className='material-symbols-outlined'>person</span>
+              <span className='text-xs mt-1'>PROFILE</span>
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
