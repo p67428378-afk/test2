@@ -1,25 +1,22 @@
 
 # Instant Debit Card Blocking Microservice
 
-This project is a full-stack application that provides a microservice for instantly blocking debit cards. It includes a FastAPI backend and a React frontend.
+**Description:**
+
+As a retail bank customer, I want to instantly block my debit card, so that I can prevent unauthorized transactions and secure my account in case of loss or theft.
 
 ## Architecture
 
-- **Backend**: FastAPI, Python, SQLAlchemy, PostgreSQL
-- **Frontend**: React, Vite, Tailwind CSS
-- **Database**: PostgreSQL (or SQLite for local development)
+- **Backend:** Python (FastAPI)
+- **Frontend:** React (Vite)
+- **Database:** SQLite (for local development)
 
-### Tech Stack
-
-- Python 3.9+
-- Node.js 16+
-- npm
-
-### Project Structure
+## Project Structure
 
 ```
 .
 ├── backend
+│   ├── __init__.py
 │   ├── database.py
 │   ├── main.py
 │   ├── models.py
@@ -32,7 +29,6 @@ This project is a full-stack application that provides a microservice for instan
 │   │   ├── __init__.py
 │   │   └── card_service.py
 │   └── tests
-│       ├── __init__.py
 │       ├── conftest.py
 │       └── test_card_service.py
 └── frontend
@@ -63,73 +59,36 @@ This project is a full-stack application that provides a microservice for instan
 
 ## Setup
 
-### Backend
-
-1.  Create a virtual environment:
+1.  **Backend:**
     ```bash
     python -m venv venv
     source venv/bin/activate
-    ```
-2.  Install dependencies:
-    ```bash
     pip install -r backend/requirements.txt
-    ```
-3.  Set up environment variables. Create a `.env` file in the `backend` directory with the following content:
-    ```
-    DATABASE_URL=postgresql://user:password@host:port/database
-    ```
-    For local development, you can use SQLite:
-    ```
-    DATABASE_URL=sqlite:///./test.db
-    ```
-4.  Run the application:
-    ```bash
     uvicorn backend.main:app --reload
     ```
 
-### Frontend
-
-1.  Install dependencies:
+2.  **Frontend:**
     ```bash
-    npm install --prefix frontend
-    ```
-2.  Run the application:
-    ```bash
-    npm run dev --prefix frontend
+    cd frontend
+    npm install
+    npm run dev
     ```
 
-## API Endpoint Reference
+## API Endpoints
 
-- **Method**: `POST`
-- **Path**: `/api/v1/cards/block`
-- **Request Body**:
-  ```json
-  {
-    "identifier": {
-      "card_number": "string",
-      "account_number": "string"
-    },
-    "otp": "string"
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "status": "BLOCKED",
-    "reference_number": "string"
-  }
-  ```
+- **POST /api/card/block:** Blocks a debit card.
+  - **Request Body:** `{ "card_number": "...", "account_number": "..." }`
+  - **Response:** `{ "status": "BLOCKED", "reference_number": "..." }`
 
 ## Running Tests
 
-### Backend
+- **Backend:**
+  ```bash
+  pytest
+  ```
 
-```bash
-pytest backend/tests
-```
-
-### Frontend
-
-```bash
-npm test --prefix frontend
-```
+- **Frontend:**
+  ```bash
+  cd frontend
+  npm test
+  ```
