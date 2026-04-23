@@ -17,17 +17,20 @@ const ApplicationForm = () => {
             </div>
             <div className='space-y-2'>
               <label className='block text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant'>Date of Birth</label>
-              <input className='w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all text-on-surface outline-none date-input-padding-fix' type='date' defaultValue='1990-05-15'/>
+              <div className='relative'>
+                <input className='w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all text-on-surface outline-none date-input-padding-fix' type='date' defaultValue='1990-05-15'/>
+                <span className='material-symbols-outlined text-on-surface-variant absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>calendar_today</span>
+              </div>
             </div>
             <div className='space-y-2 md:col-span-2'>
-              <div className='flex justify-between items-center'>
-                <label className='block text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant'>Social Security Number (SSN)</label>
-                <span className='flex items-center gap-1 text-[10px] text-primary font-semibold'>
-                  <span className='material-symbols-outlined text-[14px]'>lock</span>
-                  Your data is encrypted.
-                </span>
+              <label className='block text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant'>Social Security Number (SSN)</label>
+              <div className='relative'>
+                <input className='w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all text-on-surface outline-none tracking-widest' placeholder='XXX-XX-XXXX' type='password' defaultValue='123-45-6789'/>
+                <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-on-surface-variant/80'>
+                  <span className='material-symbols-outlined text-sm'>lock</span>
+                  <span className='text-xs font-medium'>Your data is encrypted.</span>
+                </div>
               </div>
-              <input className='w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all text-on-surface outline-none tracking-widest' placeholder='XXX-XX-XXXX' type='password' defaultValue='123-45-6789'/>
             </div>
           </div>
         </section>
@@ -49,7 +52,7 @@ const ApplicationForm = () => {
           <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
             <div className='space-y-2'>
               <label className='block text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant'>Employment Status</label>
-              <select className='w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all text-on-surface outline-none appearance-none'>
+              <select className='w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-.all text-on-surface outline-none appearance-none'>
                 <option value='employed'>Employed</option>
                 <option value='unemployed'>Unemployed</option>
                 <option value='student'>Student</option>
