@@ -1,25 +1,20 @@
-# Credit Card Approval System
+# Credit Card Approval Application
 
-This project is a full-stack web application that allows users to apply for a credit card and receive a decision on their eligibility and credit limit.
+This project is a full-stack web application that allows users to apply for a credit card. The application collects user information, processes it to determine eligibility, and assigns a credit limit if the applicant is approved.
 
 ## Application Architecture
 
-- **Tech Stack**: FastAPI (Python) for the backend, React (Vite) for the frontend, and PostgreSQL for the database.
-- **High-Level Diagram**:
+The application is built using a microservices-oriented architecture, with a React frontend and a FastAPI backend.
 
-```
-+-----------------+      +-----------------+      +-----------------------+
-|   Web Browser   |----->|  React Frontend |----->|   FastAPI Backend     |
-+-----------------+      +-----------------+      +-----------------------+
-                                                     |           |
-                                                     |           v
-                                                     |      +-----------------+
-                                                     +----->|   PostgreSQL DB |
-                                                            +-----------------+
-```
-
+- **Frontend**: React (Vite) with Tailwind CSS for styling.
+- **Backend**: FastAPI (Python) with PostgreSQL for data storage.
 - **Communication**: The frontend communicates with the backend via a RESTful API.
-- **Database Schema**: The database consists of an `applicants` table to store application data.
+
+### Tech Stack
+
+- **Backend**: FastAPI, Python, SQLAlchemy, PostgreSQL
+- **Frontend**: React, Vite, Tailwind CSS
+- **Testing**: Pytest (backend), Jest/Vitest (frontend)
 
 ## Project Structure
 
@@ -28,44 +23,21 @@ This project is a full-stack web application that allows users to apply for a cr
 ├── backend
 │   ├── app
 │   │   ├── api
-│   │   │   ├── endpoints
-│   │   │   │   └── applicants.py
-│   │   │   └── api.py
 │   │   ├── core
-│   │   │   └── config.py
 │   │   ├── models
-│   │   │   └── applicant.py
 │   │   ├── schemas
-│   │   │   └── applicant.py
 │   │   ├── services
-│   │   │   └── decision_engine.py
-│   │   ├── tests
-│   │   │   ├── conftest.py
-│   │   │   ├── test_applicant_api.py
-│   │   │   └── test_main.py
-│   │   ├── database.py
-│   │   └── main.py
-│   └── requirements.txt
+│   │   └── tests
+│   ├── requirements.txt
+│   └── ...
 └── frontend
     ├── public
     ├── src
     │   ├── components
-    │   │   ├── ApplicationForm.jsx
-    │   │   ├── InputField.jsx
-    │   │   ├── PrimaryButton.jsx
-    │   │   └── SelectField.jsx
     │   ├── pages
-    │   │   └── CreditCardApplicationPage.jsx
-    │   ├── services
-    │   │   └── api.js
-    │   ├── App.jsx
-    │   ├── index.css
-    │   └── main.jsx
-    ├── index.html
+    │   └── services
     ├── package.json
-    ├── postcss.config.js
-    ├── tailwind.config.js
-    └── vite.config.js
+    └── ...
 ```
 
 ## Prerequisites
@@ -83,7 +55,7 @@ This project is a full-stack web application that allows users to apply for a cr
 2.  Create a virtual environment: `python -m venv venv`
 3.  Activate the virtual environment: `source venv/bin/activate`
 4.  Install dependencies: `pip install -r requirements.txt`
-5.  Create a `.env` file and set the `DATABASE_URL`.
+5.  Set up the database and environment variables (see `.env.example`).
 6.  Run the application: `uvicorn app.main:app --reload`
 
 ### Frontend
@@ -94,18 +66,11 @@ This project is a full-stack web application that allows users to apply for a cr
 
 ## API Documentation
 
-- **POST /api/v1/applications/**: Submit a new credit card application.
+- **POST /api/v1/applicants/**: Submit a new credit card application.
   - **Request Body**: `ApplicantCreate` schema.
-  - **Response**: `ApplicationStatus` schema.
+  - **Response**: `Applicant` schema.
 
 ## Running Tests
 
-### Backend
-
-- Navigate to the `backend` directory.
-- Run tests: `pytest`
-
-### Frontend
-
-- Navigate to the `frontend` directory.
-- Run tests: `npm test`
+- **Backend**: `pytest`
+- **Frontend**: `npm test`
