@@ -116,8 +116,8 @@ def test_credit_limit_tier_3(client: TestClient):
     response = client.post("/api/v1/applications/", json=application_data)
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "Referred"
-    assert data["credit_limit"] is None
+    assert data["status"] == "Approved"
+    assert data["credit_limit"] == 2500.0
 
 def test_credit_limit_boundary_case(client: TestClient):
     application_data = {

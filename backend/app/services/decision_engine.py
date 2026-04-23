@@ -14,6 +14,12 @@ def get_decision(applicant: ApplicantCreate):
         credit_limit = assign_credit_limit(credit_score, annual_income)
         return decision, credit_limit, message
 
+    if credit_score >= 650 and annual_income >= 50000 and employment_status == "Employed":
+        decision = "Approved"
+        message = "Congratulations! Your application has been approved."
+        credit_limit = assign_credit_limit(credit_score, annual_income)
+        return decision, credit_limit, message
+
     # All other cases not explicitly approved or rejected are referred.
     # This covers scores between 600 and 699.
     return "Referred", None, "Your application has been referred for manual review."
@@ -23,7 +29,7 @@ def assign_credit_limit(credit_score: int, annual_income: float):
         return 10000.0
     elif credit_score >= 700 and annual_income >= 75000:
         return 5000.0
-    # The following tier is unreachable with the current get_decision logic
+    # The following tier is now reachable
     elif credit_score >= 650 and annual_income >= 50000:
         return 2500.0
     else:
