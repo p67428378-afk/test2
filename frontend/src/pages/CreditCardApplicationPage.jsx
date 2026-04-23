@@ -18,7 +18,7 @@ const CreditCardApplicationPage = () => {
           <div className='absolute inset-0 bg-white/5 pointer-events-none'></div>
           <div className='absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl'></div>
           <div className='flex justify-between items-start'>
-            <div className='flex flex-col'>
+            <div className='flex flex-col pl-2'>
               <span className='text-[10px] uppercase tracking-widest text-primary-fixed-dim opacity-70'>Signature Card</span>
               <div className='flex gap-1 mt-2'>
                 <div className='w-8 h-6 bg-tertiary-fixed-dim/40 rounded-sm'></div>
@@ -29,7 +29,7 @@ const CreditCardApplicationPage = () => {
           <div className='space-y-4'>
             <div className='text-xl font-mono text-white/90 tracking-[0.2em]'>•••• •••• •••• 8842</div>
             <div className='flex justify-between items-end'>
-              <div className='flex flex-col'>
+              <div className='flex flex-col pl-2'>
                 <span className='text-[8px] uppercase tracking-widest text-primary-fixed-dim opacity-70'>Card Holder</span>
                 <span className='text-sm font-bold text-white tracking-wide uppercase'>Jane Doe</span>
               </div>
