@@ -25,8 +25,6 @@ def assign_credit_limit(credit_score: int, annual_income: float):
         return 10000.0
     elif credit_score >= 700 and annual_income >= 75000:
         return 5000.0
-    elif credit_score >= 700 and annual_income >= 50000:
-        return 2500.0
     elif credit_score >= 650 and annual_income >= 50000:
         return 2500.0
     else:
