@@ -18,10 +18,7 @@ def get_decision(applicant: ApplicantCreate):
         return "Referred", None, "Your application has been referred for manual review."
 
     # Default to referred for other cases
-    decision = "Approved"
-    message = "Congratulations! Your application has been approved."
-    credit_limit = assign_credit_limit(credit_score, annual_income)
-    return decision, credit_limit, message
+    return "Referred", None, "Your application has been referred for manual review."
 
 def assign_credit_limit(credit_score: int, annual_income: float):
     if credit_score >= 750 and annual_income >= 100000:

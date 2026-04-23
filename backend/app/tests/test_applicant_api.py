@@ -114,7 +114,7 @@ def test_credit_limit_tier_3():
         "address": "454 Spruce St",
         "annual_income": 60000.0,
         "employment_status": "Employed",
-        "credit_score": 670
+        "credit_score": 700
     }
     response = client.post("/api/v1/applications/", json=application_data)
     assert response.status_code == 200
