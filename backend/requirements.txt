@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-dotenv
+passlib
+python-jose
+greenlet
+alembic
+pytest
+httpx
