@@ -29,7 +29,7 @@ class Applicant(BaseModel):
 
 class LoanApplicationBase(BaseModel):
     id: uuid.UUID
-    applicant_name: str
+    applicant_id: uuid.UUID
     application_date: datetime.datetime
     ease_of_approval_score: float
     loan_amount: float
