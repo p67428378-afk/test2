@@ -42,5 +42,6 @@ class BankRepresentative(Base):
     username = Column(String(255), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     role = Column(String(255))
+    hashed_password = Column(String(255), nullable=False)
 
     reviewed_applications = relationship("LoanApplication", back_populates="reviewer")
