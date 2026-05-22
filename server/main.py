@@ -1,14 +1,14 @@
-
 from fastapi import FastAPI
-from server.api.v1.endpoints import password_reset
-from server.database import Base, engine
+from server.api.v1.endpoints import topup
+from server.database import engine
+from server.models import topup_application
 
-Base.metadata.create_all(bind=engine)
+topup_application.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
+app.include_router(topup.router, prefix="/api/v1", tags=["topup"])
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Password Reset Microservice"}
+    return {"message": "Welcome to the Home Loan Top-Up Application API"}
