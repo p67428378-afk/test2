@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-dotenv
+reportlab
+starlette
+pytest
+httpx
+pydantic-settings
