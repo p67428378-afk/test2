@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+SQLAlchemy
+psycopg2-binary
+pydantic
+pydantic-settings
+python-dotenv
+pytest
+pytest-mock
+httpx
+requests
+greenlet
