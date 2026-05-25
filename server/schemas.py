@@ -1,33 +1,63 @@
 
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, UUID4
+from datetime import datetime
+from typing import List, Optional
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class CampaignBase(BaseModel):
+    name: str
+    brand_id: str
+    start_date: datetime
+    end_date: datetime
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class CampaignCreate(CampaignBase):
+    pass
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class Campaign(CampaignBase):
+    campaign_id: UUID4
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+    class Config:
+        orm_mode = True
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+class DeliverableBase(BaseModel):
+    description: str
+    platform: str
+    due_date: datetime
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+class DeliverableCreate(DeliverableBase):
+    pass
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
-
-class SetNewPasswordResponse(BaseModel):
+class Deliverable(DeliverableBase):
+    deliverable_id: UUID4
     status: str
-    login_link: str
+
+    class Config:
+        orm_mode = True
+
+class SocialMediaAccountBase(BaseModel):
+    platform: str
+    auth_code: str
+
+class SocialMediaAccountCreate(SocialMediaAccountBase):
+    pass
+
+class SocialMediaAccount(BaseModel):
+    account_id: UUID4
+
+    class Config:
+        orm_mode = True
+
+class EngagementMetricBase(BaseModel):
+    metric_type: str
+    value: int
+    timestamp: datetime
+    content_id: str
+
+class EngagementMetricCreate(EngagementMetricBase):
+    pass
+
+class EngagementMetric(EngagementMetricBase):
+    metric_id: UUID4
+    account_id: UUID4
+
+    class Config:
+        orm_mode = True

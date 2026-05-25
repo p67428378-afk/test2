@@ -1,38 +1,55 @@
 
 from sqlalchemy.orm import Session
-from server import models, schemas
+from . import models, schemas
+import uuid
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
+def get_campaign(db: Session, campaign_id: uuid.UUID):
+    return db.query(models.Campaign).filter(models.Campaign.campaign_id == campaign_id).first()
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+def get_campaigns(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Campaign).offset(skip).limit(limit).all()
 
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
+def create_campaign(db: Session, campaign: schemas.CampaignCreate):
+    db_campaign = models.Campaign(**campaign.dict())
+    db.add(db_campaign)
     db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    db.refresh(db_campaign)
+    return db_campaign
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
+def update_campaign(db: Session, campaign_id: uuid.UUID, campaign: schemas.CampaignCreate):
+    db_campaign = get_campaign(db, campaign_id)
+    if db_campaign:
+        for key, value in campaign.dict().items():
+            setattr(db_campaign, key, value)
+        db.commit()
+        db.refresh(db_campaign)
+    return db_campaign
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
+def delete_campaign(db: Session, campaign_id: uuid.UUID):
+    db_campaign = get_campaign(db, campaign_id)
+    if db_campaign:
+        db.delete(db_campaign)
+        db.commit()
+    return db_campaign
+
+def get_deliverable(db: Session, deliverable_id: uuid.UUID):
+    return db.query(models.Deliverable).filter(models.Deliverable.deliverable_id == deliverable_id).first()
+
+def get_deliverables_by_campaign(db: Session, campaign_id: uuid.UUID, skip: int = 0, limit: int = 100):
+    return db.query(models.Deliverable).filter(models.Deliverable.campaign_id == campaign_id).offset(skip).limit(limit).all()
+
+def create_deliverable(db: Session, deliverable: schemas.DeliverableCreate, campaign_id: uuid.UUID):
+    db_deliverable = models.Deliverable(**deliverable.dict(), campaign_id=campaign_id)
+    db.add(db_deliverable)
     db.commit()
-    db.refresh(otp)
-    return otp
+    db.refresh(db_deliverable)
+    return db_deliverable
 
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
-
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
-    db.commit()
-    db.refresh(user)
-    return user
+def update_deliverable(db: Session, deliverable_id: uuid.UUID, deliverable: schemas.DeliverableCreate):
+    db_deliverable = get_deliverable(db, deliverable_id)
+    if db_deliverable:
+        for key, value in deliverable.dict().items():
+            setattr(db_deliverable, key, value)
+        db.commit()
+        db.refresh(db_deliverable)
+    return db_deliverable
