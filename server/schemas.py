@@ -1,33 +1,75 @@
+from pydantic import BaseModel, UUID4
+from typing import List, Optional
+from datetime import datetime
 
-from pydantic import BaseModel
-from typing import Optional
+# Campaign Schemas
+class CampaignBase(BaseModel):
+    name: str
+    brand_id: str
+    start_date: datetime
+    end_date: datetime
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class CampaignCreate(CampaignBase):
+    pass
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class CampaignUpdate(CampaignBase):
+    pass
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class Campaign(CampaignBase):
+    campaign_id: UUID4
+    created_at: datetime
+    updated_at: datetime
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+    class Config:
+        orm_mode = True
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+# Deliverable Schemas
+class DeliverableBase(BaseModel):
+    description: str
+    platform: str
+    due_date: datetime
+    status: Optional[str] = "pending"
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+class DeliverableCreate(DeliverableBase):
+    pass
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+class DeliverableUpdate(DeliverableBase):
+    pass
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+class Deliverable(DeliverableBase):
+    deliverable_id: UUID4
+    campaign_id: UUID4
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+# Social Media Account Schemas
+class SocialMediaAccountBase(BaseModel):
+    platform: str
+    auth_code: str
+
+class SocialMediaAccountCreate(SocialMediaAccountBase):
+    pass
+
+class SocialMediaAccount(BaseModel):
+    account_id: UUID4
+    platform: str
+
+    class Config:
+        orm_mode = True
+
+# Engagement Metric Schemas
+class EngagementMetricBase(BaseModel):
+    metric_type: str
+    value: int
+    timestamp: datetime
+    content_id: str
+
+class EngagementMetric(EngagementMetricBase):
+    metric_id: UUID4
+    account_id: UUID4
+
+    class Config:
+        orm_mode = True

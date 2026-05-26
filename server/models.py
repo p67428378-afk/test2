@@ -1,41 +1,53 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
+class Campaign(Base):
+    __tablename__ = "Campaigns"
+    campaign_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String)
+    brand_id = Column(String)
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    deliverables = relationship("Deliverable", back_populates="campaign")
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
-
-class OTP(Base):
-    __tablename__ = "otps"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
+class Deliverable(Base):
+    __tablename__ = "Deliverables"
+    deliverable_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    campaign_id = Column(UUID(as_uuid=True), ForeignKey("Campaigns.campaign_id"))
+    description = Column(String)
+    platform = Column(String)
+    due_date = Column(DateTime)
+    status = Column(String)
     created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    campaign = relationship("Campaign", back_populates="deliverables")
 
-    user = relationship("User", back_populates="otps")
+class SocialMediaAccount(Base):
+    __tablename__ = "SocialMediaAccounts"
+    account_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    influencer_id = Column(UUID(as_uuid=True))
+    platform = Column(String)
+    platform_user_id = Column(String)
+    access_token = Column(String)
+    refresh_token = Column(String)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    engagement_metrics = relationship("EngagementMetric", back_populates="social_media_account")
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="password_history")
+class EngagementMetric(Base):
+    __tablename__ = "EngagementMetrics"
+    metric_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_id = Column(UUID(as_uuid=True), ForeignKey("SocialMediaAccounts.account_id"))
+    content_id = Column(String)
+    metric_type = Column(String)
+    value = Column(Integer)
+    timestamp = Column(DateTime)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    social_media_account = relationship("SocialMediaAccount", back_populates="engagement_metrics")
