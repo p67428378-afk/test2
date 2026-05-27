@@ -1,33 +1,26 @@
 
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, ConfigDict
+from decimal import Decimal
+import uuid
+from datetime import datetime
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class AlertRuleBase(BaseModel):
+    account_number: str
+    threshold_amount: Decimal
+    delivery_channel: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class AlertRuleCreate(AlertRuleBase):
+    pass
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
-
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
-
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
-
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
-
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
-
-class SetNewPasswordResponse(BaseModel):
+class AlertRuleResponse(BaseModel):
     status: str
-    login_link: str
+    confirmed_threshold: Decimal
+    delivery_channel: str
+
+class AlertRule(AlertRuleBase):
+    id: uuid.UUID
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
