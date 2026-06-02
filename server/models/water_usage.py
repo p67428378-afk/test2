@@ -1,9 +1,8 @@
 
 import uuid
-import datetime
 from sqlalchemy import Column, Float, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from server.database import Base
 
 class WaterUsage(Base):
@@ -12,6 +11,4 @@ class WaterUsage(Base):
     usage_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False)
     volume_gallons = Column(Float, nullable=False)
-    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-
-    user = relationship("User", back_populates="water_usage")
+    timestamp = Column(DateTime, nullable=False, default=func.now())

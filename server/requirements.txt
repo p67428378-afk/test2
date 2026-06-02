@@ -1,10 +1,10 @@
+
 fastapi
-sqlalchemy
-pytest
-pydantic
-pydantic-settings
-passlib
-python-jose
-python-multipart
 uvicorn
+sqlalchemy
+pydantic[email]
+pydantic-settings
+pytest
+requests
+psycopg2-binary
 email-validator

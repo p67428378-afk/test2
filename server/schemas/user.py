@@ -1,7 +1,7 @@
 
 from pydantic import BaseModel, EmailStr
-import uuid
-import datetime
+from uuid import UUID
+from datetime import datetime
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -11,8 +11,8 @@ class UserCreate(UserBase):
     password: str
 
 class User(UserBase):
-    user_id: uuid.UUID
-    created_at: datetime.datetime
+    user_id: UUID
+    created_at: datetime
 
     class Config:
         orm_mode = True

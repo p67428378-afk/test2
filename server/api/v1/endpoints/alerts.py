@@ -1,30 +1,27 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from server.schemas.alert_config import AlertConfig, AlertConfigCreate
 from server.crud import alert_config as crud_alert_config
-from server.schemas import alert_config as schema_alert_config
 from server.database import get_db
-import uuid
+from uuid import UUID
 
 router = APIRouter()
 
-@router.post("/alerts/config", response_model=schema_alert_config.AlertConfig)
-def create_alert_config(config: schema_alert_config.AlertConfigCreate, db: Session = Depends(get_db)):
-    db_config = crud_alert_config.get_alert_config(db, user_id=config.user_id)
-    if db_config:
-        raise HTTPException(status_code=409, detail="Configuration for this user already exists")
-    return crud_alert_config.create_alert_config(db=db, config=config)
+@router.post("/config", response_model=AlertConfig)
+def create_alert_config(alert_config: AlertConfigCreate, db: Session = Depends(get_db)):
+    return crud_alert_config.create_alert_config(db=db, alert_config=alert_config)
 
-@router.get("/alerts/config/{user_id}", response_model=schema_alert_config.AlertConfig)
-def read_alert_config(user_id: uuid.UUID, db: Session = Depends(get_db)):
-    db_config = crud_alert_config.get_alert_config(db, user_id=user_id)
-    if db_config is None:
+@router.get("/config/{user_id}", response_model=AlertConfig)
+def read_alert_config(user_id: UUID, db: Session = Depends(get_db)):
+    db_alert_config = crud_alert_config.get_alert_config(db, user_id=user_id)
+    if db_alert_config is None:
         raise HTTPException(status_code=404, detail="Configuration not found for the user")
-    return db_config
+    return db_alert_config
 
-@router.put("/alerts/config/{user_id}", response_model=schema_alert_config.AlertConfig)
-def update_alert_config(user_id: uuid.UUID, config: schema_alert_config.AlertConfigUpdate, db: Session = Depends(get_db)):
-    db_config = crud_alert_config.update_alert_config(db, user_id=user_id, config=config)
-    if db_config is None:
+@router.put("/config/{user_id}", response_model=AlertConfig)
+def update_alert_config(user_id: UUID, alert_config: AlertConfig, db: Session = Depends(get_db)):
+    db_alert_config = crud_alert_config.update_alert_config(db, user_id=user_id, alert_config=alert_config)
+    if db_alert_config is None:
         raise HTTPException(status_code=404, detail="Configuration not found for the user")
-    return db_config
+    return db_alert_config

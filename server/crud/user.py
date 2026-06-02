@@ -2,9 +2,9 @@
 from sqlalchemy.orm import Session
 from server.models.user import User
 from server.schemas.user import UserCreate
-import uuid
+from uuid import UUID
 
-def get_user(db: Session, user_id: uuid.UUID):
+def get_user(db: Session, user_id: UUID):
     return db.query(User).filter(User.user_id == user_id).first()
 
 def get_user_by_email(db: Session, email: str):

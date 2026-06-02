@@ -1,20 +1,17 @@
 
 from pydantic import BaseModel
-import uuid
+from uuid import UUID
 
 class AlertConfigBase(BaseModel):
     threshold_percentage: int
     leak_detection_period_hours: int
 
 class AlertConfigCreate(AlertConfigBase):
-    user_id: uuid.UUID
-
-class AlertConfigUpdate(AlertConfigBase):
-    pass
+    user_id: UUID
 
 class AlertConfig(AlertConfigBase):
-    config_id: uuid.UUID
-    user_id: uuid.UUID
+    config_id: UUID
+    user_id: UUID
 
     class Config:
         orm_mode = True

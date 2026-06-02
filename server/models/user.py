@@ -2,9 +2,8 @@
 import uuid
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from server.database import Base
-import datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -13,7 +12,4 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     phone_number = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-    water_usage = relationship("WaterUsage", back_populates="user")
-    alert_config = relationship("AlertConfig", uselist=False, back_populates="user")
+    created_at = Column(DateTime, default=func.now())

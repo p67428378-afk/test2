@@ -1,10 +1,10 @@
 
 from fastapi.testclient import TestClient
+from server.main import app
+from server.database import get_db, Base, engine
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import get_db, Base
-import uuid
+import pytest
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
@@ -24,12 +24,21 @@ def override_get_db():
     finally:
         db.close()
 
-
 app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
-def test_create_user():
+@pytest.fixture(scope="function")
+def db_session():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def test_register_user(db_session):
     response = client.post(
         "/api/v1/users/register",
         json={"email": "test@example.com", "password": "testpassword", "phone_number": "1234567890"},
@@ -39,17 +48,23 @@ def test_create_user():
     assert data["email"] == "test@example.com"
     assert "user_id" in data
 
-def test_read_user():
-    # First create a user
+    response = client.post(
+        "/api/v1/users/register",
+        json={"email": "test@example.com", "password": "testpassword", "phone_number": "1234567890"},
+    )
+    assert response.status_code == 409
+
+def test_read_user(db_session):
     response = client.post(
         "/api/v1/users/register",
         json={"email": "test2@example.com", "password": "testpassword", "phone_number": "1234567890"},
     )
     user_id = response.json()["user_id"]
 
-    # Then read the user
     response = client.get(f"/api/v1/users/{user_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "test2@example.com"
-    assert data["user_id"] == user_id
+
+    response = client.get(f"/api/v1/users/00000000-0000-0000-0000-000000000000")
+    assert response.status_code == 404

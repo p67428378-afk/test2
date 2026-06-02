@@ -1,9 +1,10 @@
 
 from fastapi.testclient import TestClient
+from server.main import app
+from server.database import get_db, Base, engine
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import get_db, Base
+import pytest
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
@@ -23,64 +24,55 @@ def override_get_db():
     finally:
         db.close()
 
-
 app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
-def test_create_alert_config():
-    # First create a user
+@pytest.fixture(scope="function")
+def db_session():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def test_alert_config(db_session):
     response = client.post(
         "/api/v1/users/register",
-        json={"email": "alert_user@example.com", "password": "testpassword", "phone_number": "1234567890"},
+        json={"email": "alert_test@example.com", "password": "testpassword", "phone_number": "1234567890"},
     )
     user_id = response.json()["user_id"]
 
-    # Then create the alert config
     response = client.post(
         "/api/v1/alerts/config",
-        json={"user_id": user_id, "threshold_percentage": 80, "leak_detection_period_hours": 2},
+        json={
+            "user_id": user_id,
+            "threshold_percentage": 80,
+            "leak_detection_period_hours": 2
+        }
     )
     assert response.status_code == 200
-    data = response.json()
-    assert data["user_id"] == user_id
-    assert data["threshold_percentage"] == 80
+    config_data = response.json()
+    assert config_data["threshold_percentage"] == 80
 
-def test_read_alert_config():
-    # First create a user and config
-    response = client.post(
-        "/api/v1/users/register",
-        json={"email": "alert_user2@example.com", "password": "testpassword", "phone_number": "1234567890"},
-    )
-    user_id = response.json()["user_id"]
-    client.post(
-        "/api/v1/alerts/config",
-        json={"user_id": user_id, "threshold_percentage": 70, "leak_detection_period_hours": 3},
-    )
-
-    # Then read the config
     response = client.get(f"/api/v1/alerts/config/{user_id}")
     assert response.status_code == 200
-    data = response.json()
-    assert data["threshold_percentage"] == 70
+    assert response.json()["threshold_percentage"] == 80
 
-def test_update_alert_config():
-    # First create a user and config
-    response = client.post(
-        "/api/v1/users/register",
-        json={"email": "alert_user3@example.com", "password": "testpassword", "phone_number": "1234567890"},
-    )
-    user_id = response.json()["user_id"]
-    client.post(
-        "/api/v1/alerts/config",
-        json={"user_id": user_id, "threshold_percentage": 60, "leak_detection_period_hours": 4},
-    )
-
-    # Then update the config
     response = client.put(
         f"/api/v1/alerts/config/{user_id}",
-        json={"threshold_percentage": 50, "leak_detection_period_hours": 5},
+        json={
+            "user_id": user_id,
+            "config_id": config_data["config_id"],
+            "threshold_percentage": 90,
+            "leak_detection_period_hours": 3
+        }
     )
     assert response.status_code == 200
-    data = response.json()
-    assert data["threshold_percentage"] == 50
+    assert response.json()["threshold_percentage"] == 90
+
+    response = client.get(f"/api/v1/alerts/config/{user_id}")
+    assert response.status_code == 200
+    assert response.json()["threshold_percentage"] == 90
