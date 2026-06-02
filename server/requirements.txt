@@ -1,6 +1,15 @@
 fastapi
-uvicorn
 sqlalchemy
+psycopg2-binary
+pytest
+httpx
+passlib
+python-jose
+python-multipart
+alembic
+greenlet
+uvicorn
+bcrypt
 pydantic
 pydantic-settings
-pytest
+email-validator
