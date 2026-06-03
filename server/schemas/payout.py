@@ -1,35 +1,11 @@
-from pydantic import BaseModel
+
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
-class PayoutBatchBase(BaseModel):
-    status: str
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    total_accounts_processed: int = 0
-    total_gross_interest: float = 0
-    total_tds_deducted: float = 0
-    total_net_payout: float = 0
-    report_url: Optional[str] = None
-
-class PayoutBatchCreate(BaseModel):
-    process_due_by_date: str
-
-class PayoutBatchResponse(BaseModel):
-    batch_id: UUID
-    message: str
-    status: str
-
-class PayoutBatch(PayoutBatchBase):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class PayoutTransactionBase(BaseModel):
+class PayoutTransaction(BaseModel):
+    transaction_id: UUID = Field(..., alias='id')
     fd_rd_account_number: str
     linked_savings_account_number: str
     gross_interest: float
@@ -37,20 +13,37 @@ class PayoutTransactionBase(BaseModel):
     net_payout_amount: float
     status: str
     failure_reason: Optional[str] = None
-    form_16a_generated: bool = False
+    form_16a_generated: bool
     form_16a_url: Optional[str] = None
 
-class PayoutTransaction(PayoutTransactionBase):
-    id: UUID
-    batch_id: UUID
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
+class PayoutBatch(BaseModel):
+    batch_id: UUID = Field(..., alias='id')
+    status: str
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    total_accounts_processed: int
+    total_gross_interest: float
+    total_tds_deducted: float
+    total_net_payout: float
+    report_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         orm_mode = True
+        allow_population_by_field_name = True
 
-class PayoutBatchDetails(PayoutBatch):
-    pass
+class PayoutBatchCreate(BaseModel):
+    process_due_by_date: str
+
+class PayoutBatchInitiateResponse(BaseModel):
+    batch_id: UUID
+    message: str
+    status: str
 
 class PayoutBatchesResponse(BaseModel):
     batches: List[PayoutBatch]

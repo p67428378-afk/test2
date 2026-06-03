@@ -1,8 +1,9 @@
+
 from sqlalchemy import Column, String, DateTime, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from server.database import Base
-from sqlalchemy.sql import func
+from datetime import datetime
 
 class TDSConfiguration(Base):
     __tablename__ = "tds_configurations"
@@ -12,5 +13,5 @@ class TDSConfiguration(Base):
     min_interest_threshold = Column(Numeric(10, 2), nullable=False)
     tds_rate = Column(Numeric(5, 2), nullable=False)
     effective_date = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
