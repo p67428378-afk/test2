@@ -1,33 +1,17 @@
-
 from pydantic import BaseModel
-from typing import Optional
+import uuid
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class PremiumCalculationRequest(BaseModel):
+    vehicle_value: float
+    ncb_years: int
+    vehicle_type_multiplier: float
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class PremiumCalculationResponse(BaseModel):
+    policy_id: uuid.UUID
+    base_premium: float
+    ncb_discount: float
+    premium_after_ncb: float
+    final_premium: float
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
-
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
-
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
-
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
-
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
-
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+    class Config:
+        orm_mode = True
