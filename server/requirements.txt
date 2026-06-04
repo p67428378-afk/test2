@@ -1,6 +1,10 @@
+alembic
 fastapi
-uvicorn
-sqlalchemy
+httpx
+psycopg2-binary
 pydantic
 pydantic-settings
 pytest
+python-dotenv
+sqlalchemy
+uvicorn[standard]
