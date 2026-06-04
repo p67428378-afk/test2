@@ -1,6 +1,9 @@
+alembic
 fastapi
-uvicorn
-sqlalchemy
+httpx
+psycopg2-binary
 pydantic
-pydantic-settings
+pydantic_settings
 pytest
+sqlalchemy
+uvicorn
