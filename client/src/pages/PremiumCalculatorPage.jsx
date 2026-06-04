@@ -1,40 +1,44 @@
 import React, { useState } from 'react';
 import PremiumForm from '../components/PremiumForm/PremiumForm';
 import PremiumDisplay from '../components/PremiumDisplay/PremiumDisplay';
+import { calculatePremium } from '../services/api';
 
 const PremiumCalculatorPage = () => {
-  const [premiumData, setPremiumData] = useState(null);
-  const [userDetails, setUserDetails] = useState(null);
+    const [premium, setPremium] = useState(null);
+    const [error, setError] = useState(null);
 
-  return (
-    <main className="flex-grow hero-gradient">
-      <div className="max-w-[1440px] mx-auto px-lg py-xl grid grid-cols-12 gap-xl">
-        {/* Left Column: Input Forms */}
-        <div className="col-span-12 lg:col-span-7 flex flex-col gap-xl">
-          <header>
-            <h1 className="font-headline-md text-headline-md text-on-surface">Calculate Your Premium</h1>
-            <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Complete the details below to generate a real-time insurance quote based on your profile.</p>
-          </header>
-          {/* Stepper Progress (Modern UI addition) */}
-          <div className="flex items-center gap-sm mb-base">
-            <div className="flex items-center gap-xs">
-              <span className="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-sm">1</span>
-              <span className="font-label-md text-label-md text-primary">Details</span>
-            </div>
-            <div className="h-[2px] w-12 bg-outline-variant"></div>
-            <div className="flex items-center gap-xs">
-              <span className={`w-6 h-6 rounded-full ${premiumData ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant'} flex items-center justify-center text-label-sm`}>2</span>
-              <span className={`font-label-md text-label-md ${premiumData ? 'text-primary' : 'text-on-surface-variant'}`}>Review</span>
-            </div>
-          </div>
-          <PremiumForm setPremiumData={setPremiumData} setUserDetails={setUserDetails} />
-        </div>
+    const handleCalculate = async (formData) => {
+        try {
+            const data = await calculatePremium(formData);
+            setPremium(data);
+            setError(null);
+        } catch (err) {
+            setError('Failed to calculate premium. Please try again.');
+            setPremium(null);
+        }
+    };
 
-        {/* Right Column: Results Display */}
-        <PremiumDisplay premiumData={premiumData} userDetails={userDetails} />
-      </div>
-    </main>
-  );
+    return (
+        <main className="flex-grow hero-gradient">
+            <div className="max-w-[1440px] mx-auto px-lg py-xl grid grid-cols-12 gap-xl">
+                <div className="col-span-12 lg:col-span-7 flex flex-col gap-xl">
+                    <header>
+                        <h1 className="font-headline-md text-headline-md text-on-surface">Calculate Your Premium</h1>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Complete the details below to generate a real-time insurance quote based on your profile.</p>
+                    </header>
+                    <PremiumForm onCalculate={handleCalculate} />
+                </div>
+                <div className="col-span-12 lg:col-span-5 flex flex-col gap-xl">
+                    <header>
+                        <h2 className="font-headline-md text-headline-md text-on-surface">Your Estimated Premium</h2>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Breakdown of your calculated annual insurance rate.</p>
+                    </header>
+                    {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">{error}</div>}
+                    <PremiumDisplay premium={premium} />
+                </div>
+            </div>
+        </main>
+    );
 };
 
 export default PremiumCalculatorPage;

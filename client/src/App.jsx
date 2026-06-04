@@ -3,7 +3,7 @@ import PremiumCalculatorPage from './pages/PremiumCalculatorPage';
 
 function App() {
   return (
-    <div className="App">
+    <div className="bg-background text-on-surface min-h-screen flex flex-col">
       <PremiumCalculatorPage />
     </div>
   );
