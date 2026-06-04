@@ -1,57 +1,94 @@
-from pydantic import BaseModel
-import uuid
-from typing import Optional, List, Dict, Any
+
+from pydantic import BaseModel, UUID4
+from typing import Optional, List, Any
 from datetime import datetime
+# from geojson_pydantic.geometries import Polygon
 
-class VisualizationData(BaseModel):
-    radar: Dict[str, Any]
-    satellite: Dict[str, Any]
-    sensors: Dict[str, Any]
+class SensorData(BaseModel):
+    source: str
+    timestamp: datetime
+    latitude: float
+    longitude: float
+    data: Any
 
-class NWPModelOutput(BaseModel):
+    class Config:
+        orm_mode = True
+
+class NwpModelOutput(BaseModel):
     model_name: str
-    variable: str
+    run_time: datetime
     forecast_time: datetime
-    grid_data: Dict[str, Any]
+    variable: str
+    grid_data: Any
 
-class ForecastGrid(BaseModel):
-    id: uuid.UUID
+    class Config:
+        orm_mode = True
+
+class ForecastGridBase(BaseModel):
     name: str
-    created_by: str
+    grid_data: Any
+
+class ForecastGridCreate(ForecastGridBase):
+    pass
+
+class ForecastGrid(ForecastGridBase):
+    id: UUID4
+    user_id: UUID4
+    version: int
     created_at: datetime
     updated_at: datetime
 
-class ForecastGridUpdate(BaseModel):
-    grid_data: Dict[str, Any]
+    class Config:
+        orm_mode = True
 
-class Warning(BaseModel):
-    id: uuid.UUID
+class WarningBase(BaseModel):
     warning_type: str
     severity: str
+    # polygon: Polygon
     issued_at: datetime
     expires_at: datetime
-    polygon: Dict[str, Any]
+    status: str = 'active'
 
 class WarningCreate(BaseModel):
     warning_type: str
     severity: str
+    details: str
+    polygon_coords: List
     start_time: datetime
     end_time: datetime
-    polygon_coords: List[List[float]]
-    details: str
 
 class WarningUpdate(BaseModel):
     action: str
     new_end_time: Optional[datetime] = None
     reason: str
 
-class TextProduct(BaseModel):
-    id: uuid.UUID
-    title: str
-    product_code: str
+class Warning(WarningBase):
+    id: UUID4
+    user_id: UUID4
     created_at: datetime
+    updated_at: datetime
 
-class TextProductCreate(BaseModel):
+    class Config:
+        orm_mode = True
+
+class TextProductBase(BaseModel):
     title: str
     product_code: str
     content: str
+
+class TextProductCreate(TextProductBase):
+    pass
+
+class TextProduct(TextProductBase):
+    id: UUID4
+    user_id: UUID4
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class VisualizationData(BaseModel):
+    radar: Any
+    satellite: Any
+    sensors: Any

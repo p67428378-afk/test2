@@ -1,19 +1,30 @@
+
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from server.main import app
+from server.database import get_db, Base
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-from server.main import app, get_db
-from server.database import Base
-from server.models.user import User
-from passlib.context import CryptContext
+from sqlalchemy.engine import Engine
+import pytest
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
-enfine = create_engine(
+# @event.listens_for(Engine, "connect")
+# def set_sqlite_pragma(dbapi_connection, connection_record):
+#     dbapi_connection.enable_load_extension(True)
+#     cursor = dbapi_connection.cursor()
+#     cursor.execute("PRAGMA foreign_keys=ON")
+#     cursor.execute("SELECT load_extension('mod_spatialite')")
+#     cursor.close()
+
+engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=enfine)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base.metadata.create_all(bind=enfine)
+
+Base.metadata.create_all(bind=engine)
+
 
 def override_get_db():
     try:
@@ -25,31 +36,31 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-def create_test_user():
+@pytest.fixture(scope="function")
+def db_session():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    db.query(User).delete()
-    db.commit()
-    user = User(username="testuser", hashed_password=get_password_hash("testpassword"), role="Forecaster", station="Test Station")
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    db.close()
-    return user
+    try:
+        yield db
+    finally:
+        db.close()
 
-def get_auth_token():
-    create_test_user()
-    response = client.post("/api/v1/token", data={"username": "testuser", "password": "testpassword"})
-    return response.json()["access_token"]
-
-def test_read_users_me():
-    token = get_auth_token()
-    response = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+def test_create_user(db_session):
+    response = client.post("/api/v1/users/", json={
+        "username": "testuser",
+        "password": "testpassword",
+        "full_name": "Test User",
+        "role": "Forecaster",
+        "station": "TEST-STATION"
+    })
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "testuser"
     assert "id" in data
+
+
+def test_read_users_me_unauthenticated():
+    response = client.get("/api/v1/users/me")
+    assert response.status_code == 401

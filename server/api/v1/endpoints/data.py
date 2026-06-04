@@ -1,16 +1,14 @@
-from fastapi import APIRouter, Query
-from typing import Optional
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from server.database import get_db
 from server.schemas.weather import VisualizationData
 
 router = APIRouter()
 
-@router.get("/visualization", response_model=VisualizationData)
-async def get_visualization_data(
-    data_types: str = Query(..., description="comma-separated list, e.g., 'radar,satellite,sensors'"),
-    region: Optional[str] = Query(None, description="e.g., 'CONUS'"),
-    timestamp: Optional[str] = Query(None, description="ISO 8601")
-):
-    # Mock data for demonstration
+@router.get("/data/visualization", response_model=VisualizationData)
+def get_visualization_data(db: Session = Depends(get_db), data_types: str = '', region: str = '', timestamp: str = ''):
+    # Mocked response
     return {
         "radar": {"type": "FeatureCollection", "features": []},
         "satellite": {"type": "FeatureCollection", "features": []},

@@ -1,2 +1,4 @@
 pydantic
 starlette
+geoalchemy2
+shapely
