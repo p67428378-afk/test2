@@ -2,14 +2,26 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-const api = axios.create({
-  baseURL: BASE_URL,
+const apiClient = axios.create({
+  baseURL: `${BASE_URL}/api/v1`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-export const createOrder = (order) => api.post('/api/v1/orders', order);
-export const getOrder = (orderId) => api.get(`/api/v1/orders/${orderId}`);
-export const getPositions = (traderId) => api.get(`/api/v1/positions/${traderId}`);
-export const getMarketData = (instrumentId) => api.get(`/api/v1/market-data/depth/${instrumentId}`);
-export const estimateTca = (trade) => api.post('/api/v1/tca/estimate', trade);
+// Order endpoints
+export const createOrder = (order) => apiClient.post('/orders', order);
+export const getOrder = (orderId) => apiClient.get(`/orders/${orderId}`);
+// In a real app, you'd have a getOrders endpoint
+// export const getOrders = () => apiClient.get('/orders');
 
-export default api;
+// Position endpoints
+export const getPositions = (traderId) => apiClient.get(`/positions/${traderId}`);
+
+// Market Data endpoints
+export const getMarketDepth = (instrumentId) => apiClient.get(`/market-data/depth/${instrumentId}`);
+
+// TCA endpoints
+export const estimateTca = (trade) => apiClient.post('/tca/estimate', trade);
+
+export default apiClient;
