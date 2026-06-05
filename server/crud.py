@@ -1,38 +1,51 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
+from passlib.context import CryptContext
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
 
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
+def create_user(db: Session, user: schemas.UserCreate):
+    hashed_password = pwd_context.hash(user.password)
+    db_user = models.User(email=user.email, hashed_password=hashed_password)
+    db.add(db_user)
     db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    db.refresh(db_user)
+    return db_user
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
+def get_movies(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Movie).offset(skip).limit(limit).all()
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
+def get_movie(db: Session, movie_id: int):
+    return db.query(models.Movie).filter(models.Movie.id == movie_id).first()
+
+def create_movie(db: Session, movie: schemas.MovieCreate):
+    db_movie = models.Movie(**movie.dict())
+    db.add(db_movie)
     db.commit()
-    db.refresh(otp)
-    return otp
+    db.refresh(db_movie)
+    return db_movie
 
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
+def get_watch_history(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.WatchHistory).filter(models.WatchHistory.user_id == user_id).offset(skip).limit(limit).all()
 
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
+def create_watch_history(db: Session, watch_history: schemas.WatchHistoryCreate, user_id: int):
+    db_watch_history = models.WatchHistory(**watch_history.dict(), user_id=user_id)
+    db.add(db_watch_history)
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(db_watch_history)
+    return db_watch_history
+
+def update_watch_history(db: Session, watch_id: int, rating: int):
+    db_watch_history = db.query(models.WatchHistory).filter(models.WatchHistory.id == watch_id).first()
+    db_watch_history.rating = rating
+    db.commit()
+    db.refresh(db_watch_history)
+    return db_watch_history
+
+def delete_watch_history(db: Session, watch_id: int):
+    db_watch_history = db.query(models.WatchHistory).filter(models.WatchHistory.id == watch_id).first()
+    db.delete(db_watch_history)
+    db.commit()
