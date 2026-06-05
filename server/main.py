@@ -1,14 +1,11 @@
-
 from fastapi import FastAPI
-from server.api.v1.endpoints import premium
-from server.database import engine, Base
+from server.app.api.v1.endpoints import insurance
+from server.app.core.config import settings
 
-Base.metadata.create_all(bind=engine)
+app = FastAPI(title=settings.PROJECT_NAME)
 
-app = FastAPI(title="Vehicle Insurance Premium Calculator")
-
-app.include_router(premium.router, prefix="/api/v1/insurance", tags=["premium"])
+app.include_router(insurance.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Vehicle Insurance Premium Calculator API"}
+    return {"message": "Welcome to SureDrive Insurance API"}
