@@ -1,33 +1,73 @@
 
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, UUID4
+from datetime import datetime
+from typing import List, Optional
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+# Base Schemas
+class SnackBase(BaseModel):
+    name: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class InventoryItemBase(BaseModel):
+    quantity: int
+    location: Optional[str] = None
+    expiry_date: Optional[datetime] = None
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+# Schemas for creating new data
+class SnackCreate(SnackBase):
+    pass
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+class InventoryItemCreate(InventoryItemBase):
+    snack_id: UUID4
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+class SnackRequestCreate(BaseModel):
+    name: str
+    quantity: int
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+class ConsumptionRecordCreate(BaseModel):
+    quantity_consumed: int
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+# Schemas for updating data
+class InventoryItemUpdate(BaseModel):
+    expiry_date: Optional[datetime] = None
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+# Schemas for reading data
+class Snack(SnackBase):
+    id: UUID4
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class InventoryItem(InventoryItemBase):
+    id: UUID4
+    snack_id: UUID4
+    created_at: datetime
+    updated_at: datetime
+    snack_name: str
+
+    class Config:
+        orm_mode = True
+
+class SnackRequest(BaseModel):
+    id: UUID4
+    snack_name: str
+    quantity: int
+    requested_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class ExpiryAlert(InventoryItem):
+    alert_status: str
+
+# Response Models
+class SnackRequestResponse(BaseModel):
+    request_id: UUID4
+    message: str
+
+class ConsumeResponse(BaseModel):
+    message: str
+
+class UpdateInventoryResponse(BaseModel):
+    message: str

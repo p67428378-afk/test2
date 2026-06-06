@@ -1,38 +1,46 @@
 
 from sqlalchemy.orm import Session
-from server import models, schemas
+from . import models, schemas
+import uuid
+from datetime import datetime, timedelta
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
+def get_inventory(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.InventoryItem).offset(skip).limit(limit).all()
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
-
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
+def create_snack_request(db: Session, request: schemas.SnackRequestCreate):
+    db_request = models.SnackRequest(**request.dict())
+    db.add(db_request)
     db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    db.refresh(db_request)
+    return db_request
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
+def consume_inventory_item(db: Session, inventory_item_id: uuid.UUID, quantity_consumed: int):
+    db_item = db.query(models.InventoryItem).filter(models.InventoryItem.id == inventory_item_id).first()
+    if db_item:
+        if db_item.quantity >= quantity_consumed:
+            db_item.quantity -= quantity_consumed
+            db_consumption = models.ConsumptionRecord(
+                inventory_item_id=inventory_item_id, 
+                quantity_consumed=quantity_consumed
+            )
+            db.add(db_consumption)
+            db.commit()
+            db.refresh(db_item)
+            return db_item
+    return None
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
-    db.commit()
-    db.refresh(otp)
-    return otp
+def update_inventory_item(db: Session, inventory_item_id: uuid.UUID, item: schemas.InventoryItemUpdate):
+    db_item = db.query(models.InventoryItem).filter(models.InventoryItem.id == inventory_item_id).first()
+    if db_item:
+        update_data = item.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_item, key, value)
+        db.commit()
+        db.refresh(db_item)
+    return db_item
 
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
-
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
-    db.commit()
-    db.refresh(user)
-    return user
+def get_expiry_alerts(db: Session, days_threshold: int = 7):
+    future_date = datetime.utcnow() + timedelta(days=days_threshold)
+    return db.query(models.InventoryItem).filter(
+        models.InventoryItem.expiry_date <= future_date
+    ).all()
