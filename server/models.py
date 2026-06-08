@@ -1,41 +1,74 @@
 
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, Integer, Float, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from server.database import Base
+import datetime
 
 class User(Base):
     __tablename__ = "users"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    username = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    role = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
-
-class OTP(Base):
-    __tablename__ = "otps"
+class Client(Base):
+    __tablename__ = "clients"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    phone = Column(String)
+    address = Column(String)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    matters = relationship("Matter", back_populates="client")
 
-    user = relationship("User", back_populates="otps")
-
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
+class Matter(Base):
+    __tablename__ = "matters"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
+    case_name = Column(String, nullable=False)
+    client_id = Column(UUID(as_uuid=True), ForeignKey('clients.id'))
+    description = Column(Text)
+    status = Column(String, nullable=False)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow)
+    end_date = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    client = relationship("Client", back_populates="matters")
 
-    user = relationship("User", back_populates="password_history")
+class Document(Base):
+    __tablename__ = "documents"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    matter_id = Column(UUID(as_uuid=True), ForeignKey('matters.id'))
+    file_name = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)
+    version = Column(Integer, default=1)
+    uploaded_by_user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class TimeEntry(Base):
+    __tablename__ = "time_entries"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    matter_id = Column(UUID(as_uuid=True), ForeignKey('matters.id'))
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
+    hours = Column(Float, nullable=False)
+    description = Column(Text)
+    date = Column(Date, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class Invoice(Base):
+    __tablename__ = "invoices"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_id = Column(UUID(as_uuid=True), ForeignKey('clients.id'))
+    matter_id = Column(UUID(as_uuid=True), ForeignKey('matters.id'), nullable=True)
+    total_amount = Column(Float, nullable=False)
+    status = Column(String, nullable=False)
+    due_date = Column(Date)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
