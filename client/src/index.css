@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ambient Shadows */
+.shadow-soft-deep {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+.shadow-lifted {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
