@@ -1,38 +1,74 @@
+import uuid
 
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from server import models, schemas
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
+from . import models, schemas
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
+
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
+
+
+def create_user(db: Session, user: schemas.UserCreate):
+    hashed_password = pwd_context.hash(user.password)
+    db_user = models.User(email=user.email, hashed_password=hashed_password)
+    db.add(db_user)
     db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    db.refresh(db_user)
+    return db_user
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
+def get_movies(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Movie).offset(skip).limit(limit).all()
+
+
+def get_movie(db: Session, movie_id: uuid.UUID):
+    return db.query(models.Movie).filter(models.Movie.id == movie_id).first()
+
+
+def get_watch_history(db: Session, user_id: uuid.UUID):
+    return (
+        db.query(models.WatchHistory)
+        .filter(models.WatchHistory.user_id == user_id)
+        .all()
+    )
+
+
+def get_watch_history_entry(db: Session, watch_id: uuid.UUID):
+    return (
+        db.query(models.WatchHistory).filter(models.WatchHistory.id == watch_id).first()
+    )
+
+
+def add_to_watch_history(
+    db: Session, user_id: uuid.UUID, watch_history_entry: schemas.WatchHistoryCreate
+):
+    db_entry = models.WatchHistory(**watch_history_entry.dict(), user_id=user_id)
+    db.add(db_entry)
     db.commit()
-    db.refresh(otp)
-    return otp
+    db.refresh(db_entry)
+    return db_entry
 
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
 
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
-    db.commit()
-    db.refresh(user)
-    return user
+def update_watch_history(db: Session, watch_id: uuid.UUID, rating: int):
+    db_entry = (
+        db.query(models.WatchHistory).filter(models.WatchHistory.id == watch_id).first()
+    )
+    if db_entry:
+        db_entry.rating = rating
+        db.commit()
+        db.refresh(db_entry)
+    return db_entry
+
+
+def remove_from_watch_history(db: Session, watch_id: uuid.UUID):
+    db_entry = (
+        db.query(models.WatchHistory).filter(models.WatchHistory.id == watch_id).first()
+    )
+    if db_entry:
+        db.delete(db_entry)
+        db.commit()
+    return db_entry

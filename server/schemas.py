@@ -1,33 +1,61 @@
+import datetime
+from uuid import UUID
 
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, EmailStr
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+class User(BaseModel):
+    id: UUID
+    email: EmailStr
+    preferences: dict | None = None
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+    class Config:
+        orm_mode = True
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+
+class TokenData(BaseModel):
+    email: str | None = None
+
+
+class Movie(BaseModel):
+    id: UUID
+    tmdb_id: int
+    title: str
+    description: str | None = None
+    release_date: datetime.date | None = None
+    poster_url: str | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class WatchHistoryCreate(BaseModel):
+    movie_id: UUID
+    watched_on: datetime.date
+    rating: int | None = None
+
+
+class WatchHistoryUpdate(BaseModel):
+    rating: int | None = None
+
+
+class WatchHistory(BaseModel):
+    id: UUID
+    user_id: UUID
+    movie_id: UUID
+    watched_on: datetime.date
+    rating: int | None = None
+    movie: Movie
+
+    class Config:
+        orm_mode = True
