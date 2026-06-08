@@ -1,6 +1,6 @@
 
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Numeric, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -39,3 +39,27 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+class AggregatedFiscalData(Base):
+    __tablename__ = "aggregated_fiscal_data"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    data_source = Column(String(100), nullable=False)
+    metric_name = Column(String(100), nullable=False)
+    metric_value = Column(Numeric(15, 2), nullable=False)
+    timestamp = Column(DateTime, nullable=False, default=func.now())
+
+class BudgetData(Base):
+    __tablename__ = "budget_data"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    department_name = Column(String(150), unique=True, nullable=False)
+    allocated_budget = Column(Numeric(15, 2), nullable=False)
+    actual_spending = Column(Numeric(15, 2), nullable=False, default=0.00)
+    fiscal_year = Column(Integer, nullable=False)
+
+class EmergencyFundTransaction(Base):
+    __tablename__ = "emergency_fund_transactions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_name = Column(String(150), nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    authorized_by = Column(String(100), nullable=False)
+    timestamp = Column(DateTime, nullable=False, default=func.now())
