@@ -1,22 +1,40 @@
-
 from fastapi.testclient import TestClient
-from server.main import app
-from server.tests.conftest import client, test_db
-import uuid
+from sqlalchemy.orm import Session
 
-def test_read_inventory(client, test_db):
+from server import crud, schemas
+
+
+def test_read_inventory_items(client: TestClient, db: Session):
+    snack = crud.create_snack(db, schemas.SnackCreate(name="test_snack"))
+    crud.create_inventory_item(
+        db, schemas.InventoryItemCreate(snack_id=snack.id, quantity=10, location="A1")
+    )
     response = client.get("/api/v1/inventory/")
     assert response.status_code == 200
-    assert len(response.json()) > 0
+    data = response.json()
+    assert len(data) > 0
+    assert data[0]["quantity"] == 10
 
-def test_consume_item(client, test_db):
-    db, item_id = test_db
-    response = client.put(f"/api/v1/inventory/{item_id}/consume", json={"quantity_consumed": 5})
-    assert response.status_code == 200
-    assert response.json() == {"message": f"Successfully consumed 5 of item {item_id}"}
 
-def test_update_item(client, test_db):
-    db, item_id = test_db
-    response = client.put(f"/api/v1/inventory/{item_id}", json={"expiry_date": "2025-12-31T12:00:00"})
+def test_update_inventory_item(client: TestClient, db: Session):
+    snack = crud.create_snack(db, schemas.SnackCreate(name="test_snack_2"))
+    item = crud.create_inventory_item(
+        db, schemas.InventoryItemCreate(snack_id=snack.id, quantity=10, location="A1")
+    )
+    response = client.put(f"/api/v1/inventory/{item.id}", json={"quantity": 5})
     assert response.status_code == 200
-    assert response.json() == {"message": f"Successfully updated item {item_id}"}
+    data = response.json()
+    assert data["quantity"] == 5
+
+
+def test_consume_inventory_item(client: TestClient, db: Session):
+    snack = crud.create_snack(db, schemas.SnackCreate(name="test_snack_3"))
+    item = crud.create_inventory_item(
+        db, schemas.InventoryItemCreate(snack_id=snack.id, quantity=10, location="A1")
+    )
+    response = client.put(
+        f"/api/v1/inventory/{item.id}/consume", json={"quantity_consumed": 3}
+    )
+    assert response.status_code == 200
+    db.refresh(item)
+    assert item.quantity == 7

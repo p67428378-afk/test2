@@ -1,30 +1,50 @@
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload
-from typing import List
-from server import crud, models, schemas
+from sqlalchemy.orm import Session
+
+from server import crud, schemas
 from server.database import get_db
-import uuid
 
 router = APIRouter()
 
-@router.get("/", response_model=List[schemas.InventoryItem])
-def read_inventory(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    inventory = db.query(models.InventoryItem).options(joinedload(models.InventoryItem.snack)).offset(skip).limit(limit).all()
-    for item in inventory:
-        item.snack_name = item.snack.name
-    return inventory
 
-@router.put("/{inventory_id}/consume", response_model=schemas.ConsumeResponse)
-def consume_item(inventory_id: uuid.UUID, consumption: schemas.ConsumptionRecordCreate, db: Session = Depends(get_db)):
-    db_item = crud.consume_inventory_item(db, inventory_item_id=inventory_id, quantity_consumed=consumption.quantity_consumed)
-    if db_item is None:
-        raise HTTPException(status_code=404, detail="Inventory item not found or not enough quantity")
-    return {"message": f"Successfully consumed {consumption.quantity_consumed} of item {inventory_id}"}
+@router.get("/", response_model=list[schemas.InventoryItem])
+def read_inventory_items(
+    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+):
+    items = crud.get_inventory_items(db, skip=skip, limit=limit)
+    return items
 
-@router.put("/{inventory_id}", response_model=schemas.UpdateInventoryResponse)
-def update_item(inventory_id: uuid.UUID, item: schemas.InventoryItemUpdate, db: Session = Depends(get_db)):
-    db_item = crud.update_inventory_item(db, inventory_item_id=inventory_id, item=item)
+
+@router.put("/{inventory_id}", response_model=schemas.InventoryItem)
+def update_inventory_item(
+    inventory_id: UUID, item: schemas.InventoryItemUpdate, db: Session = Depends(get_db)
+):
+    db_item = crud.get_inventory_item(db, inventory_item_id=inventory_id)
     if db_item is None:
         raise HTTPException(status_code=404, detail="Inventory item not found")
-    return {"message": f"Successfully updated item {inventory_id}"}
+    return crud.update_inventory_item(db=db, inventory_item_id=inventory_id, item=item)
+
+
+@router.put("/{inventory_id}/consume", response_model=schemas.ConsumptionRecord)
+def consume_inventory_item(
+    inventory_id: UUID, request: schemas.ConsumeRequest, db: Session = Depends(get_db)
+):
+    db_item = crud.get_inventory_item(db, inventory_item_id=inventory_id)
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Inventory item not found")
+    if db_item.quantity < request.quantity_consumed:
+        raise HTTPException(status_code=400, detail="Not enough quantity to consume")
+
+    db_item.quantity -= request.quantity_consumed
+    crud.update_inventory_item(
+        db=db,
+        inventory_item_id=inventory_id,
+        item=schemas.InventoryItemUpdate(quantity=db_item.quantity),
+    )
+
+    consumption_record = schemas.ConsumptionRecordCreate(
+        inventory_item_id=inventory_id, quantity_consumed=request.quantity_consumed
+    )
+    return crud.create_consumption_record(db=db, record=consumption_record)

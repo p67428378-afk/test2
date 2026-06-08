@@ -1,58 +1,44 @@
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import Base, get_db
-import uuid
-from server import models
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+from server.database import Base, get_db
+from server.main import app
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-Base.metadata.create_all(bind=engine)
-
-
-def override_get_db():
+def _override_get_db():
+    db = TestingSessionLocal()
     try:
-        db = TestingSessionLocal()
         yield db
     finally:
         db.close()
 
 
-app.dependency_overrides[get_db] = override_get_db
-
-
-@pytest.fixture(scope="module")
-def client():
-    with TestClient(app) as c:
-        yield c
-
-@pytest.fixture(scope="module")
-def test_db():
+@pytest.fixture(autouse=True)
+def _setup_database():
     Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    # Add a snack
-    snack = models.Snack(name="test snack", id=uuid.uuid4())
-    db.add(snack)
-    db.commit()
-    # Add an inventory item
-    inventory_item = models.InventoryItem(
-        snack_id=snack.id,
-        quantity=10,
-        location="test location",
-        id = uuid.uuid4()
-    )
-    db.add(inventory_item)
-    db.commit()
-
-    yield db, inventory_item.id
-
+    app.dependency_overrides[get_db] = _override_get_db
+    yield
+    app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+
+@pytest.fixture
+def db() -> Session:
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

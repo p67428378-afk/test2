@@ -1,73 +1,95 @@
-
-from pydantic import BaseModel, UUID4
 from datetime import datetime
-from typing import List, Optional
+from uuid import UUID
 
-# Base Schemas
+from pydantic import BaseModel
+
+
 class SnackBase(BaseModel):
     name: str
 
-class InventoryItemBase(BaseModel):
-    quantity: int
-    location: Optional[str] = None
-    expiry_date: Optional[datetime] = None
 
-# Schemas for creating new data
 class SnackCreate(SnackBase):
     pass
 
-class InventoryItemCreate(InventoryItemBase):
-    snack_id: UUID4
 
-class SnackRequestCreate(BaseModel):
-    name: str
-    quantity: int
-
-class ConsumptionRecordCreate(BaseModel):
-    quantity_consumed: int
-
-# Schemas for updating data
-class InventoryItemUpdate(BaseModel):
-    expiry_date: Optional[datetime] = None
-
-# Schemas for reading data
 class Snack(SnackBase):
-    id: UUID4
+    id: UUID
     created_at: datetime
     updated_at: datetime
 
     class Config:
         orm_mode = True
+
+
+class InventoryItemBase(BaseModel):
+    quantity: int
+    location: str | None = None
+    expiry_date: datetime | None = None
+
+
+class InventoryItemCreate(InventoryItemBase):
+    snack_id: UUID
+
+
+class InventoryItemUpdate(InventoryItemBase):
+    pass
+
 
 class InventoryItem(InventoryItemBase):
-    id: UUID4
-    snack_id: UUID4
+    id: UUID
+    snack_id: UUID
     created_at: datetime
     updated_at: datetime
-    snack_name: str
 
     class Config:
         orm_mode = True
 
-class SnackRequest(BaseModel):
-    id: UUID4
+
+class SnackRequestBase(BaseModel):
     snack_name: str
     quantity: int
+
+
+class SnackRequestCreate(SnackRequestBase):
+    pass
+
+
+class SnackRequest(SnackRequestBase):
+    id: UUID
     requested_at: datetime
 
     class Config:
         orm_mode = True
 
-class ExpiryAlert(InventoryItem):
+
+class ConsumptionRecordBase(BaseModel):
+    inventory_item_id: UUID
+    quantity_consumed: int
+
+
+class ConsumptionRecordCreate(ConsumptionRecordBase):
+    pass
+
+
+class ConsumptionRecord(ConsumptionRecordBase):
+    id: UUID
+    consumed_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class ExpiryAlert(BaseModel):
+    id: UUID
+    snack_name: str
+    quantity: int
+    location: str | None = None
+    expiry_date: datetime
     alert_status: str
 
-# Response Models
-class SnackRequestResponse(BaseModel):
-    request_id: UUID4
-    message: str
+    class Config:
+        orm_mode = True
 
-class ConsumeResponse(BaseModel):
-    message: str
 
-class UpdateInventoryResponse(BaseModel):
-    message: str
+class ConsumeRequest(BaseModel):
+    quantity_consumed: int

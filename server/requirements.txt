@@ -1,7 +1,11 @@
 fastapi
+uvicorn
 sqlalchemy
 psycopg2-binary
-uvicorn
-pydantic
 pytest
-uuid
+httpx
+passlib[bcrypt]
+bcrypt
+python-jose[cryptography]
+faker
+pydantic
