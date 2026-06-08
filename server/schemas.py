@@ -1,33 +1,118 @@
 
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, UUID4, EmailStr
+from typing import List, Optional
+from datetime import datetime, date
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
+    role: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class UserCreate(UserBase):
+    password: str
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class User(UserBase):
+    id: UUID4
+    created_at: datetime
+    updated_at: datetime
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+    class Config:
+        orm_mode = True
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+class ClientBase(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    address: Optional[str] = None
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+class ClientCreate(ClientBase):
+    pass
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+class Client(ClientBase):
+    id: UUID4
+    created_at: datetime
+    updated_at: datetime
 
-class SetNewPasswordResponse(BaseModel):
+    class Config:
+        orm_mode = True
+
+class MatterBase(BaseModel):
+    case_name: str
+    client_id: UUID4
+    description: Optional[str] = None
     status: str
-    login_link: str
+
+class MatterCreate(MatterBase):
+    pass
+
+class Matter(MatterBase):
+    id: UUID4
+    start_date: datetime
+    end_date: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class DocumentBase(BaseModel):
+    matter_id: UUID4
+    file_name: str
+
+class DocumentCreate(DocumentBase):
+    file_path: str
+    version: int = 1
+    uploaded_by_user_id: UUID4
+
+class Document(DocumentBase):
+    id: UUID4
+    version: int
+    uploaded_by_user_id: UUID4
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class TimeEntryBase(BaseModel):
+    matter_id: UUID4
+    user_id: UUID4
+    hours: float
+    description: Optional[str] = None
+    date: date
+
+class TimeEntryCreate(TimeEntryBase):
+    pass
+
+class TimeEntry(TimeEntryBase):
+    id: UUID4
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class InvoiceBase(BaseModel):
+    client_id: UUID4
+    matter_id: Optional[UUID4] = None
+    total_amount: float
+    status: str
+    due_date: Optional[date] = None
+
+class InvoiceCreate(InvoiceBase):
+    pass
+
+class Invoice(InvoiceBase):
+    id: UUID4
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
