@@ -1,41 +1,21 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from datetime import datetime
+from sqlalchemy import Column, String, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from server.database import Base
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+class CertificateRequest(Base):
+    __tablename__ = "certificate_requests"
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
-
-class OTP(Base):
-    __tablename__ = "otps"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="otps")
-
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="password_history")
+    # Use String(36) or UUID depending on DB, but to be safe and compatible with SQLite and Postgres:
+    # We can use String(36) as a fallback or a custom type, or just String(36) with default=lambda: str(uuid.uuid4())
+    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    customer_id = Column(String(255), nullable=False)
+    account_number = Column(String(255), nullable=False)
+    purpose = Column(String(255), nullable=False)
+    request_timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
+    status = Column(String(50), nullable=False)  # 'SUCCESS', 'FAILED', 'PENDING'
+    failure_reason = Column(Text, nullable=True)
+    generated_pdf_url = Column(String(1024), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

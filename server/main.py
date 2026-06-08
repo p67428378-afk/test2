@@ -1,14 +1,29 @@
-
 from fastapi import FastAPI
-from server.api.v1.endpoints import password_reset
-from server.database import Base, engine
+from fastapi.middleware.cors import CORSMiddleware
+from server.database import engine, Base
+from server.api.v1 import api_router
 
+# Create database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+    title="Account Balance Certificate Generation Microservice",
+    description="Microservice to generate digitally signed account balance certificates.",
+    version="1.0.0"
+)
 
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Password Reset Microservice"}
+# Include API Router
+app.include_router(api_router, prefix="/api/v1")
+
+@app.get("/health", tags=["health"])
+def health_check():
+    return {"status": "healthy"}

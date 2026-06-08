@@ -1,38 +1,37 @@
-
 from sqlalchemy.orm import Session
-from server import models, schemas
+from server.models import CertificateRequest
+from datetime import datetime
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
-
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
-
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
+def create_certificate_request(db: Session, customer_id: str, account_number: str, purpose: str, status: str, failure_reason: str = None, generated_pdf_url: str = None):
+    db_obj = CertificateRequest(
+        customer_id=customer_id,
+        account_number=account_number,
+        purpose=purpose,
+        status=status,
+        failure_reason=failure_reason,
+        generated_pdf_url=generated_pdf_url
+    )
+    db.add(db_obj)
     db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    db.refresh(db_obj)
+    return db_obj
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
+def get_certificate_request(db: Session, request_id: str):
+    return db.query(CertificateRequest).filter(CertificateRequest.id == request_id).first()
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
+def get_certificate_requests(db: Session, skip: int = 0, limit: int = 20):
+    query = db.query(CertificateRequest)
+    total = query.count()
+    items = query.order_by(CertificateRequest.created_at.desc()).offset(skip).limit(limit).all()
+    return items, total
+
+def update_certificate_request(db: Session, db_obj: CertificateRequest, status: str, failure_reason: str = None, generated_pdf_url: str = None):
+    db_obj.status = status
+    if failure_reason is not None:
+        db_obj.failure_reason = failure_reason
+    if generated_pdf_url is not None:
+        db_obj.generated_pdf_url = generated_pdf_url
+    db_obj.updated_at = datetime.utcnow()
     db.commit()
-    db.refresh(otp)
-    return otp
-
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
-
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
-    db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(db_obj)
+    return db_obj
