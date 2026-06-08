@@ -1,6 +1,7 @@
 fastapi
-uvicorn
-sqlalchemy
-pydantic
+psycopg2-binary
 pydantic-settings
+pydantic[email]
 pytest
+sqlalchemy
+uvicorn
