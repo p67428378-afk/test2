@@ -1,41 +1,45 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from server.database import Base
 
-class User(Base):
-    __tablename__ = "users"
+
+class Snack(Base):
+    __tablename__ = "snacks"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
+    name = Column(String, nullable=False, unique=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
 
-class OTP(Base):
-    __tablename__ = "otps"
+class InventoryItem(Base):
+    __tablename__ = "inventory_items"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
+    snack_id = Column(UUID(as_uuid=True), ForeignKey("snacks.id"))
+    quantity = Column(Integer, nullable=False)
+    location = Column(String)
+    expiry_date = Column(DateTime)
     created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    snack = relationship("Snack")
 
-    user = relationship("User", back_populates="otps")
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
+class ConsumptionRecord(Base):
+    __tablename__ = "consumption_records"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
+    inventory_item_id = Column(UUID(as_uuid=True), ForeignKey("inventory_items.id"))
+    quantity_consumed = Column(Integer, nullable=False)
+    consumed_at = Column(DateTime, default=func.now())
+    inventory_item = relationship("InventoryItem")
 
-    user = relationship("User", back_populates="password_history")
+
+class SnackRequest(Base):
+    __tablename__ = "snack_requests"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    snack_name = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    requested_at = Column(DateTime, default=func.now())
