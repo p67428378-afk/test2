@@ -1,55 +1,61 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
-from uuid import UUID
 import datetime
+from uuid import UUID
 
-class UserBase(BaseModel):
+from pydantic import BaseModel, EmailStr
+
+
+class UserCreate(BaseModel):
     email: EmailStr
-
-class UserCreate(UserBase):
     password: str
 
-class User(UserBase):
+
+class User(BaseModel):
     id: UUID
-    preferences: Optional[dict] = None
+    email: EmailStr
+    preferences: dict | None = None
 
     class Config:
         orm_mode = True
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-class TokenData(BaseModel):
-    email: Optional[str] = None
 
-class MovieBase(BaseModel):
+class TokenData(BaseModel):
+    email: str | None = None
+
+
+class Movie(BaseModel):
+    id: UUID
     tmdb_id: int
     title: str
-    description: Optional[str] = None
-    release_date: Optional[datetime.date] = None
-    poster_url: Optional[str] = None
-
-class MovieCreate(MovieBase):
-    pass
-
-class Movie(MovieBase):
-    id: UUID
+    description: str | None = None
+    release_date: datetime.date | None = None
+    poster_url: str | None = None
 
     class Config:
         orm_mode = True
 
-class WatchHistoryBase(BaseModel):
+
+class WatchHistoryCreate(BaseModel):
     movie_id: UUID
     watched_on: datetime.date
-    rating: Optional[int] = None
+    rating: int | None = None
 
-class WatchHistoryCreate(WatchHistoryBase):
-    pass
 
-class WatchHistory(WatchHistoryBase):
+class WatchHistoryUpdate(BaseModel):
+    rating: int | None = None
+
+
+class WatchHistory(BaseModel):
     id: UUID
     user_id: UUID
+    movie_id: UUID
+    watched_on: datetime.date
+    rating: int | None = None
+    movie: Movie
 
     class Config:
         orm_mode = True
