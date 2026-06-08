@@ -57,14 +57,14 @@ export default function Header({ title, subtitle }) {
           {/* Notifications */}
           <button className='relative p-1.5 text-on-surface-variant hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant'>
             <span className='material-symbols-outlined'>notifications</span>
-            <span className='absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-surface-container'></span>
+            <span className='absolute top-0 right-0 w-2 h-2 bg-error rounded-full ring-2 ring-surface-container'></span>
           </button>
 
           {/* CTA */}
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className='hidden lg:flex items-center gap-sm bg-inverse-primary text-white px-md py-1.5 rounded hover:bg-opacity-90 transition-opacity text-label-md font-label-md uppercase disabled:opacity-50'
+            className='hidden lg:flex items-center gap-sm bg-inverse-primary text-white px-lg py-2.5 rounded hover:bg-opacity-90 transition-opacity text-label-md font-label-md uppercase disabled:opacity-50'
           >
             <span className='material-symbols-outlined text-[18px]'>download</span>
             {downloading ? 'Generating...' : 'Download Parliamentary Report'}

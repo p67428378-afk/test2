@@ -11,12 +11,12 @@ export default function Sidebar() {
   return (
     <aside className='fixed left-0 top-0 h-full w-[280px] bg-surface border-r border-outline-variant flex flex-col z-50'>
       {/* Header */}
-      <div className='px-lg py-xl border-b border-outline-variant flex items-center gap-md'>
+      <div className='px-md py-xl border-b border-outline-variant flex items-center gap-md'>
         <div className='w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shrink-0'>
           <span className='material-symbols-outlined fill text-on-primary-container text-[24px]'>account_balance</span>
         </div>
-        <div>
-          <h1 className='text-headline-md font-headline-md text-on-surface leading-tight'>National Fiscal Portal</h1>
+        <div className='min-w-0'>
+          <h1 className='text-headline-md font-headline-md text-on-surface leading-tight break-words'>National Fiscal Portal</h1>
           <p className='text-label-sm font-label-sm text-on-surface-variant uppercase mt-1'>Fiscal Monitoring</p>
         </div>
       </div>
@@ -25,10 +25,10 @@ export default function Sidebar() {
       <nav className='flex-1 py-lg flex flex-col gap-sm overflow-y-auto'>
         <Link
           to='/'
-          className={`flex items-center gap-md px-lg py-md transition-colors ${
+          className={`flex items-center gap-md px-md py-md transition-colors border-l-4 ${
             isActive('/')
-              ? 'text-on-surface font-bold border-l-4 border-primary bg-surface-container-high'
-              : 'text-on-surface-variant hover:bg-surface-bright'
+              ? 'text-on-surface font-bold border-primary bg-surface-container-high'
+              : 'text-on-surface-variant hover:bg-surface-bright border-transparent'
           }`}
         >
           <span className='material-symbols-outlined'>dashboard</span>
@@ -37,10 +37,10 @@ export default function Sidebar() {
 
         <Link
           to='/budget-variance'
-          className={`flex items-center gap-md px-lg py-md transition-colors ${
+          className={`flex items-center gap-md px-md py-md transition-colors border-l-4 ${
             isActive('/budget-variance')
-              ? 'text-on-surface font-bold border-l-4 border-primary bg-surface-container-high'
-              : 'text-on-surface-variant hover:bg-surface-bright'
+              ? 'text-on-surface font-bold border-primary bg-surface-container-high'
+              : 'text-on-surface-variant hover:bg-surface-bright border-transparent'
           }`}
         >
           <span className='material-symbols-outlined'>analytics</span>
@@ -49,10 +49,10 @@ export default function Sidebar() {
 
         <Link
           to='/emergency-funds'
-          className={`flex items-center gap-md px-lg py-md transition-colors ${
+          className={`flex items-center gap-md px-md py-md transition-colors border-l-4 ${
             isActive('/emergency-funds')
-              ? 'text-on-surface font-bold border-l-4 border-primary bg-surface-container-high'
-              : 'text-on-surface-variant hover:bg-surface-bright'
+              ? 'text-on-surface font-bold border-primary bg-surface-container-high'
+              : 'text-on-surface-variant hover:bg-surface-bright border-transparent'
           }`}
         >
           <span className='material-symbols-outlined'>emergency</span>
@@ -61,7 +61,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className='p-lg border-t border-outline-variant flex items-center gap-md hover:bg-surface-bright transition-colors cursor-pointer'>
+      <div className='px-md py-lg border-t border-outline-variant flex items-center gap-md hover:bg-surface-bright transition-colors cursor-pointer'>
         <div className='w-8 h-8 rounded-full bg-surface-variant overflow-hidden shrink-0 border border-outline-variant'>
           <img
             alt="Hon. Finance Minister"
@@ -70,10 +70,10 @@ export default function Sidebar() {
           />
         </div>
         <div className='flex-1 min-w-0'>
-          <p className='text-label-md font-label-md text-on-surface truncate'>Hon. Finance Minister</p>
-          <p className='text-label-sm font-label-sm text-on-surface-variant uppercase mt-0.5 truncate'>Finance Minister</p>
+          <p className='text-label-md font-label-md text-on-surface whitespace-nowrap overflow-hidden text-ellipsis'>Hon. Finance Minister</p>
+          <p className='text-label-sm font-label-sm text-on-surface-variant uppercase mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis'>Finance Minister</p>
         </div>
-        <span className='material-symbols-outlined text-on-surface-variant text-[20px]'>expand_more</span>
+        <span className='material-symbols-outlined text-on-surface-variant text-[20px] shrink-0'>expand_more</span>
       </div>
     </aside>
   );
