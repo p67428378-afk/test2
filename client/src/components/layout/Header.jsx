@@ -32,18 +32,18 @@ export default function Header({ title, subtitle }) {
   return (
     <header className='h-16 flex justify-between items-center px-lg z-40 bg-surface-container border-b border-outline-variant shadow-sm shrink-0'>
       {/* Left: Title & Subtitle */}
-      <div className='flex items-center gap-md'>
-        <div>
-          <h2 className='text-headline-lg font-headline-lg font-semibold text-on-surface leading-none'>{title}</h2>
+      <div className='flex items-center gap-md min-w-0'>
+        <div className='min-w-0'>
+          <h2 className='text-headline-lg font-headline-lg font-semibold text-on-surface leading-none truncate'>{title}</h2>
         </div>
-        <div className='h-6 w-px bg-outline-variant mx-sm'></div>
-        <p className='text-body-md font-body-md text-on-surface-variant hidden lg:block'>{subtitle}</p>
+        <div className='h-6 w-px bg-outline-variant mx-sm shrink-0'></div>
+        <p className='text-body-md font-body-md text-on-surface-variant hidden lg:block truncate'>{subtitle}</p>
       </div>
 
       {/* Right: Search & Actions */}
-      <div className='flex items-center gap-lg'>
+      <div className='flex items-center gap-lg shrink-0'>
         {/* Search */}
-        <div className='relative hidden md:block w-64'>
+        <div className='relative hidden md:block w-64 shrink-0'>
           <span className='material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]'>search</span>
           <input
             className='w-full bg-surface-variant border border-outline-variant rounded py-1.5 pl-10 pr-3 text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline'
@@ -53,9 +53,9 @@ export default function Header({ title, subtitle }) {
         </div>
 
         {/* Actions */}
-        <div className='flex items-center gap-md'>
+        <div className='flex items-center gap-md shrink-0 flex-nowrap'>
           {/* Notifications */}
-          <button className='relative p-1.5 text-on-surface-variant hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant'>
+          <button className='relative p-1.5 text-on-surface-variant hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant shrink-0'>
             <span className='material-symbols-outlined'>notifications</span>
             <span className='absolute top-0 right-0 w-2 h-2 bg-error rounded-full ring-2 ring-surface-container'></span>
           </button>
@@ -64,10 +64,10 @@ export default function Header({ title, subtitle }) {
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className='hidden lg:flex items-center gap-sm bg-inverse-primary text-white px-lg py-2.5 rounded hover:bg-opacity-90 transition-opacity text-label-md font-label-md uppercase disabled:opacity-50'
+            className='hidden lg:flex items-center gap-sm bg-inverse-primary text-white px-lg py-2.5 rounded hover:bg-opacity-90 transition-opacity text-label-md font-label-md uppercase disabled:opacity-50 whitespace-nowrap shrink-0'
           >
-            <span className='material-symbols-outlined text-[18px]'>download</span>
-            {downloading ? 'Generating...' : 'Download Parliamentary Report'}
+            <span className='material-symbols-outlined text-[18px] shrink-0'>download</span>
+            <span className='whitespace-nowrap shrink-0'>{downloading ? 'Generating...' : 'Download Parliamentary Report'}</span>
           </button>
         </div>
       </div>

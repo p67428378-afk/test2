@@ -70,8 +70,8 @@ export default function Sidebar() {
           />
         </div>
         <div className='flex-1 min-w-0'>
-          <p className='text-label-md font-label-md text-on-surface whitespace-nowrap overflow-hidden text-ellipsis'>Hon. Finance Minister</p>
-          <p className='text-label-sm font-label-sm text-on-surface-variant uppercase mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis'>Finance Minister</p>
+          <p className='text-label-md font-label-md text-on-surface break-words'>Hon. Finance Minister</p>
+          <p className='text-label-sm font-label-sm text-on-surface-variant uppercase mt-0.5 break-words'>Finance Minister</p>
         </div>
         <span className='material-symbols-outlined text-on-surface-variant text-[20px] shrink-0'>expand_more</span>
       </div>
