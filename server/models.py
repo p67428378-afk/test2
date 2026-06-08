@@ -1,4 +1,3 @@
-
 import uuid
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
@@ -14,6 +13,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     security_question = Column(String(255), nullable=False)
     security_answer_hash = Column(String(255), nullable=False)
+    account_number = Column(String(255), unique=True, nullable=True) # Added for mobile update lookup
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
@@ -39,3 +39,29 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+class MobileUpdateRequest(Base):
+    __tablename__ = "mobile_update_requests"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_number = Column(String(255), nullable=False)
+    old_mobile_hash = Column(String(255), nullable=False)
+    new_mobile_hash = Column(String(255), nullable=False)
+    old_mobile_number = Column(String(255), nullable=True) # Stored for sending OTP
+    new_mobile_number = Column(String(255), nullable=True) # Stored for sending OTP
+    status = Column(String(50), default="PENDING_OLD_OTP", nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    otp_verifications = relationship("OTPVerification", back_populates="request", cascade="all, delete-orphan")
+
+class OTPVerification(Base):
+    __tablename__ = "otp_verifications"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    request_id = Column(UUID(as_uuid=True), ForeignKey("mobile_update_requests.id"), nullable=False)
+    otp_hash = Column(String(255), nullable=False)
+    mobile_number_type = Column(String(50), nullable=False) # 'OLD' or 'NEW'
+    expires_at = Column(DateTime, nullable=False)
+    verified_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    request = relationship("MobileUpdateRequest", back_populates="otp_verifications")

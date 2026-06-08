@@ -1,7 +1,8 @@
-
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
+# Existing Password Reset Schemas
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
     mobile_number: str
@@ -31,3 +32,41 @@ class SetNewPasswordRequest(BaseModel):
 class SetNewPasswordResponse(BaseModel):
     status: str
     login_link: str
+
+# New Mobile Number Update Schemas
+class MobileUpdateInitiateRequest(BaseModel):
+    account_number: str
+    new_mobile_number: str
+
+class MobileUpdateInitiateResponse(BaseModel):
+    message: str
+    request_id: str
+    status: str
+
+class VerifyOldOTPRequest(BaseModel):
+    otp: str
+    request_id: str
+
+class VerifyOldOTPResponse(BaseModel):
+    message: str
+    request_id: str
+    status: str
+
+class VerifyNewOTPRequest(BaseModel):
+    otp: str
+    request_id: str
+
+class VerifyNewOTPResponse(BaseModel):
+    message: str
+    request_id: str
+    status: str
+
+class MobileUpdateStatusResponse(BaseModel):
+    account_number: str
+    created_at: datetime
+    request_id: str
+    status: str
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
