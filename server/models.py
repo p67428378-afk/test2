@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Numeric, JSON
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Numeric, JSON, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -41,27 +41,35 @@ class PasswordHistory(Base):
 
 class SKU(Base):
     __tablename__ = "skus"
-    sku_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sku_number = Column(String(50), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
-    category = Column(String(100), nullable=False)
+    category = Column(String(100), default="Snacks", nullable=False)
     private_brand = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
     performance = relationship("SKUPerformance", back_populates="sku", uselist=False)
 
 class SKUPerformance(Base):
     __tablename__ = "sku_performance"
-    performance_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sku_id = Column(UUID(as_uuid=True), ForeignKey("skus.sku_id"), nullable=False)
-    sales_per_linear_ft = Column(Numeric(10, 2), default=0.00, nullable=False)
-    in_stock_rate = Column(Numeric(5, 2), default=0.00, nullable=False)
-    status = Column(String(50), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sku_id = Column(UUID(as_uuid=True), ForeignKey("skus.id"), nullable=False)
+    sales_per_week = Column(Numeric(10, 2), default=0.00, nullable=False)
+    in_stock_rate = Column(Numeric(5, 2), default=100.00, nullable=False)
+    shelf_capacity_used = Column(Numeric(5, 2), default=0.00, nullable=False)
+    status_badge = Column(String(50), default="MAINTAIN", nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
     sku = relationship("SKU", back_populates="performance")
 
 class AssortmentReview(Base):
     __tablename__ = "assortment_reviews"
-    review_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(String(255), nullable=False)
-    scenario_name = Column(String(50), nullable=False)
-    actions = Column(JSON, default=list, nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario = Column(String(50), nullable=False)
+    audit_id = Column(String(50), unique=True, nullable=False)
+    actions_summary = Column(Text, nullable=False)
+    submitted_at = Column(DateTime, default=func.now(), nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)

@@ -40,42 +40,42 @@ class KPISchema(BaseModel):
     in_stock_rate: float
     shelf_capacity: float
 
-class SKUResponseSchema(BaseModel):
+class SKUPerformanceSchema(BaseModel):
     sku_id: str
+    sku_number: str
     name: str
-    category: str
     private_brand: bool
-    sales_per_linear_ft: float
+    sales_per_week: float
     in_stock_rate: float
-    status: str
+    shelf_capacity_used: float
+    status_badge: str
 
 class SKUActionSchema(BaseModel):
     sku_id: str
     action: str
 
-class GuardrailsSchema(BaseModel):
-    shelf_space_limit: str
-    private_brand_target: str
-    sales_growth: str
+class GuardrailItemSchema(BaseModel):
+    name: str
+    status: str
 
 class ScenarioDetailSchema(BaseModel):
+    name: str
     projected_sales_lift: float
     projected_private_brand_pct: float
     actions_summary: str
     sku_actions: List[SKUActionSchema]
-    guardrails: GuardrailsSchema
+    guardrails: List[GuardrailItemSchema]
 
 class AssortmentDashboardResponse(BaseModel):
     kpis: KPISchema
-    skus: List[SKUResponseSchema]
+    sku_performance: List[SKUPerformanceSchema]
     scenarios: Dict[str, ScenarioDetailSchema]
 
 class AssortmentReviewRequest(BaseModel):
-    scenario_name: str
+    scenario: str
     actions: List[SKUActionSchema]
 
 class AssortmentReviewResponse(BaseModel):
     status: str
-    message: str
     audit_id: str
     timestamp: str

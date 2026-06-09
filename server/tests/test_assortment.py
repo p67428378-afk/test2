@@ -6,7 +6,7 @@ from server.main import app
 from server.database import Base, get_db
 from server import models  # Ensure models are imported
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_assortment.db"
+SQLALCHEMY_DATABASE_URL = "sqlite://"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -38,21 +38,21 @@ def test_get_assortment_dashboard():
     assert data["kpis"]["in_stock_rate"] == 96.8
     assert data["kpis"]["shelf_capacity"] == 92.0
 
-    # Check SKUs
-    assert "skus" in data
-    assert len(data["skus"]) == 6
-    sku_names = [sku["name"] for sku in data["skus"]]
+    # Check SKU Performance
+    assert "sku_performance" in data
+    assert len(data["sku_performance"]) == 6
+    sku_names = [sku["name"] for sku in data["sku_performance"]]
     assert "Lay's Classic 8oz" in sku_names
     assert "Clover Valley Potato Chips 8oz" in sku_names
 
     # Check Scenarios
     assert "scenarios" in data
-    assert "Conservative" in data["scenarios"]
-    assert "Balanced" in data["scenarios"]
-    assert "Aggressive" in data["scenarios"]
+    assert "conservative" in data["scenarios"]
+    assert "balanced" in data["scenarios"]
+    assert "aggressive" in data["scenarios"]
     
-    assert data["scenarios"]["Balanced"]["projected_sales_lift"] == 3.8
-    assert len(data["scenarios"]["Balanced"]["sku_actions"]) == 6
+    assert data["scenarios"]["balanced"]["projected_sales_lift"] == 3.8
+    assert len(data["scenarios"]["balanced"]["sku_actions"]) == 6
 
 def test_submit_assortment_review_success():
     # First get the dashboard to seed and get SKU IDs
@@ -60,13 +60,13 @@ def test_submit_assortment_review_success():
     assert get_response.status_code == 200
     dashboard_data = get_response.json()
     
-    sku_actions = dashboard_data["scenarios"]["Balanced"]["sku_actions"]
+    sku_actions = dashboard_data["scenarios"]["balanced"]["sku_actions"]
     
     # Submit review
     response = client.post(
         "/api/v1/assortment-advisor/review",
         json={
-            "scenario_name": "Balanced",
+            "scenario": "balanced",
             "actions": sku_actions
         }
     )
@@ -80,7 +80,7 @@ def test_submit_assortment_review_invalid_scenario():
     response = client.post(
         "/api/v1/assortment-advisor/review",
         json={
-            "scenario_name": "SuperAggressive",
+            "scenario": "SuperAggressive",
             "actions": [{"sku_id": "some-uuid", "action": "GROW"}]
         }
     )
@@ -91,7 +91,7 @@ def test_submit_assortment_review_empty_actions():
     response = client.post(
         "/api/v1/assortment-advisor/review",
         json={
-            "scenario_name": "Balanced",
+            "scenario": "balanced",
             "actions": []
         }
     )
