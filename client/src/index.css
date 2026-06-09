@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .calc-btn {
+    @apply flex items-center justify-center h-16 rounded-lg text-button-text font-button-text bg-surface hover:bg-surface-bright transition-colors duration-150 cursor-pointer select-none text-on-surface shadow-sm border border-outline-variant/30;
+  }
+  .calc-btn-operator {
+    @apply text-primary bg-surface hover:bg-surface-bright border-primary/30 shadow-sm;
+  }
+  .calc-btn-primary {
+    @apply bg-secondary-container hover:bg-secondary-container/90 text-on-secondary shadow-sm border-none;
+  }
+  .calc-btn-danger {
+    @apply text-error bg-surface hover:bg-surface-bright border-error/30 shadow-sm;
+  }
+  .calc-card {
+    @apply bg-surface-container-high border border-outline-variant rounded-xl p-padding-container shadow-2xl;
+    box-shadow: 0px 20px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+  .history-item {
+    @apply flex justify-between items-center py-4 border-b border-outline-variant/50 last:border-b-0;
+  }
+}
