@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from server.api.v1.endpoints import password_reset, assortment
 from server.database import Base, engine
+# Import all models to ensure they are registered on Base.metadata before create_all
+from server import models
+from server.api.v1.endpoints import password_reset, assortment
 
 Base.metadata.create_all(bind=engine)
 
