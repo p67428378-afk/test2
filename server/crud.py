@@ -1,6 +1,6 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
+import uuid
 
 def get_user_by_login_id(db: Session, login_id: str):
     return db.query(models.User).filter(models.User.login_id == login_id).first()
@@ -36,3 +36,99 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+# Assortment Advisor CRUD
+
+def seed_skus_if_empty(db: Session):
+    count = db.query(models.SKU).count()
+    if count > 0:
+        return
+
+    # Default SKUs to seed
+    default_skus = [
+        {
+            "name": "Lay's Classic 8oz",
+            "category": "Snacks",
+            "private_brand": False,
+            "sales_per_linear_ft": 520.00,
+            "in_stock_rate": 97.2,
+            "status": "GROW"
+        },
+        {
+            "name": "Clover Valley Potato Chips 8oz",
+            "category": "Snacks",
+            "private_brand": True,
+            "sales_per_linear_ft": 310.00,
+            "in_stock_rate": 94.5,
+            "status": "GROW"
+        },
+        {
+            "name": "Doritos Nacho Cheese 9.25oz",
+            "category": "Snacks",
+            "private_brand": False,
+            "sales_per_linear_ft": 480.00,
+            "in_stock_rate": 98.1,
+            "status": "MAINTAIN"
+        },
+        {
+            "name": "Clover Valley Pretzels 16oz",
+            "category": "Snacks",
+            "private_brand": True,
+            "sales_per_linear_ft": 180.00,
+            "in_stock_rate": 91.2,
+            "status": "SWAP"
+        },
+        {
+            "name": "Cheetos Crunchy 8.5oz",
+            "category": "Snacks",
+            "private_brand": False,
+            "sales_per_linear_ft": 410.00,
+            "in_stock_rate": 96.5,
+            "status": "MAINTAIN"
+        },
+        {
+            "name": "Generic Cheese Balls 12oz",
+            "category": "Snacks",
+            "private_brand": False,
+            "sales_per_linear_ft": 95.00,
+            "in_stock_rate": 88.0,
+            "status": "REDUCE"
+        }
+    ]
+
+    for item in default_skus:
+        sku = models.SKU(
+            sku_id=uuid.uuid4(),
+            name=item["name"],
+            category=item["category"],
+            private_brand=item["private_brand"]
+        )
+        db.add(sku)
+        db.flush()  # to get sku.sku_id
+
+        perf = models.SKUPerformance(
+            performance_id=uuid.uuid4(),
+            sku_id=sku.sku_id,
+            sales_per_linear_ft=item["sales_per_linear_ft"],
+            in_stock_rate=item["in_stock_rate"],
+            status=item["status"]
+        )
+        db.add(perf)
+
+    db.commit()
+
+def get_skus_with_performance(db: Session):
+    seed_skus_if_empty(db)
+    return db.query(models.SKU).all()
+
+def create_assortment_review(db: Session, scenario_name: str, actions: list, user_id: str = "default_user"):
+    review = models.AssortmentReview(
+        review_id=uuid.uuid4(),
+        user_id=user_id,
+        scenario_name=scenario_name,
+        actions=actions
+    )
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+    return review
