@@ -10,23 +10,16 @@ const api = axios.create({
 });
 
 export const getSnacksData = async () => {
-  try {
-    const response = await api.get('/api/v1/assortment-advisor/snacks');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching snacks data:', error);
-    throw error;
-  }
+  const response = await api.get('/api/v1/assortment-advisor/snacks');
+  return response.data;
 };
 
-export const submitReview = async (payload) => {
-  try {
-    const response = await api.post('/api/v1/assortment-advisor/review', payload);
-    return response.data;
-  } catch (error) {
-    console.error('Error submitting assortment review:', error);
-    throw error;
-  }
+export const submitReview = async (scenario, actions) => {
+  const response = await api.post('/api/v1/assortment-advisor/review', {
+    scenario,
+    actions,
+  });
+  return response.data;
 };
 
 export default api;

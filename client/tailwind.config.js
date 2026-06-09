@@ -55,12 +55,6 @@ export default {
         "tertiary-fixed": "#88f3ff",
         "background": "#f9f9ff"
       },
-      borderRadius: {
-        "DEFAULT": "0.25rem",
-        "lg": "0.5rem",
-        "xl": "0.75rem",
-        "full": "9999px"
-      },
       spacing: {
         "gutter": "16px",
         "stack-lg": "24px",
@@ -70,26 +64,8 @@ export default {
         "stack-md": "16px"
       },
       fontFamily: {
-        "data-mono": ["JetBrains Mono"],
-        "label-md": ["Inter"],
-        "headline-sm": ["Inter"],
-        "body-lg": ["Inter"],
-        "body-sm": ["Inter"],
-        "headline-lg": ["Inter"],
-        "headline-md": ["Inter"],
-        "body-md": ["Inter"],
-        "label-sm": ["Inter"]
-      },
-      fontSize: {
-        "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
-        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
-        "headline-sm": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
-        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
-        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
-        "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "500"}]
+        sans: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"]
       }
     },
   },

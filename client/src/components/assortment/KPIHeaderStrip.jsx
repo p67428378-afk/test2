@@ -1,10 +1,12 @@
 import React from 'react';
 
 export default function KPIHeaderStrip({ kpis }) {
-  const salesPerLinearFt = kpis?.sales_per_linear_ft ?? 425.50;
-  const privateBrandPct = kpis?.private_brand_pct ?? 24.5;
-  const inStockRate = kpis?.in_stock_rate ?? 96.8;
-  const shelfCapacity = kpis?.shelf_capacity ?? 92;
+  const {
+    sales_per_linear_ft = 425.50,
+    private_brand_pct = 24.5,
+    in_stock_rate = 96.8,
+    shelf_capacity = 92
+  } = kpis || {};
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-stack-md mb-stack-lg'>
@@ -17,7 +19,7 @@ export default function KPIHeaderStrip({ kpis }) {
           </span>
         </div>
         <p className='text-headline-md font-headline-md text-on-surface'>
-          ${salesPerLinearFt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          ${sales_per_linear_ft.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <div className='mt-3 w-full h-1.5 bg-surface-container rounded-full overflow-hidden'>
           <div className='bg-primary-container h-full w-[85%]'></div>
@@ -31,7 +33,7 @@ export default function KPIHeaderStrip({ kpis }) {
           <span className='bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full'>Target: 25.0%</span>
         </div>
         <p className='text-headline-md font-headline-md text-on-surface'>
-          {privateBrandPct.toFixed(1)}%
+          {private_brand_pct.toFixed(1)}%
         </p>
         <div className='mt-3 w-full h-1.5 bg-surface-container rounded-full overflow-hidden'>
           <div className='bg-yellow-400 h-full w-[98%]'></div>
@@ -45,7 +47,7 @@ export default function KPIHeaderStrip({ kpis }) {
           <span className='bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full'>Target: 95.0%</span>
         </div>
         <p className='text-headline-md font-headline-md text-on-surface'>
-          {inStockRate.toFixed(1)}%
+          {in_stock_rate.toFixed(1)}%
         </p>
         <div className='mt-3 w-full h-1.5 bg-surface-container rounded-full overflow-hidden'>
           <div className='bg-green-500 h-full w-full'></div>
@@ -59,7 +61,7 @@ export default function KPIHeaderStrip({ kpis }) {
           <span className='bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full'>Optimal</span>
         </div>
         <p className='text-headline-md font-headline-md text-on-surface'>
-          {shelfCapacity}%
+          {shelf_capacity}%
         </p>
         <p className='text-label-sm text-secondary mt-1'>828 / 900 linear inches used</p>
       </div>

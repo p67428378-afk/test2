@@ -6,26 +6,22 @@ import './index.css';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Uncaught error in React tree:", error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-          <h2 style={{ color: '#ba1a1a' }}>Something went wrong.</h2>
-          <p>Check the console for details or try reloading the page.</p>
-          <pre style={{ background: '#f0f3ff', padding: '1rem', borderRadius: '0.5rem', overflowX: 'auto' }}>
-            {this.state.error?.toString()}
-          </pre>
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <h2>Something went wrong. Check console.</h2>
         </div>
       );
     }
@@ -33,8 +29,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />

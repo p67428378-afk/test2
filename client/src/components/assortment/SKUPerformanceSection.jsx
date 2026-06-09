@@ -1,45 +1,22 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 
-export default function SKUPerformanceSection({ skus = [] }) {
+export default function SKUPerformanceSection({ skus }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [brandFilter, setBrandFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const [brandFilter, setBrandFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
 
-  // Filter and search logic
-  const filteredSkus = useMemo(() => {
-    return skus.filter(sku => {
-      const matchesSearch = sku.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            sku.sku_number.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const isPrivateBrand = sku.private_brand;
-      const matchesBrand = brandFilter === 'ALL' ||
-                           (brandFilter === 'PRIVATE' && isPrivateBrand) ||
-                           (brandFilter === 'NATIONAL' && !isPrivateBrand);
+  // Filter logic
+  const filteredSkus = skus.filter(sku => {
+    const matchesSearch = sku.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          sku.sku_number.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesBrand = brandFilter === 'All' || 
+                         (brandFilter === 'Private Brand' && sku.private_brand) ||
+                         (brandFilter === 'National Brand' && !sku.private_brand);
+    const matchesStatus = statusFilter === 'All' || sku.status_badge === statusFilter;
+    return matchesSearch && matchesBrand && matchesStatus;
+  });
 
-      const matchesStatus = statusFilter === 'ALL' || sku.status_badge === statusFilter;
-
-      return matchesSearch && matchesBrand && matchesStatus;
-    });
-  }, [skus, searchTerm, brandFilter, statusFilter]);
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredSkus.length / itemsPerPage) || 1;
-  const paginatedSkus = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredSkus.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredSkus, currentPage]);
-
-  const handlePageChange = (direction) => {
-    if (direction === 'prev' && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    } else if (direction === 'next' && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const getStatusBadgeClass = (status) => {
+  const getBadgeClass = (status) => {
     switch (status?.toUpperCase()) {
       case 'GROW':
         return 'bg-green-100 text-green-700';
@@ -66,37 +43,24 @@ export default function SKUPerformanceSection({ skus = [] }) {
               placeholder='Search SKUs...'
               type='text'
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          {/* Brand Filter */}
           <select
-            className='px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-label-md focus:ring-1 focus:ring-primary outline-none'
+            className='px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-label-md focus:ring-1 focus:ring-primary'
             value={brandFilter}
-            onChange={(e) => {
-              setBrandFilter(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setBrandFilter(e.target.value)}
           >
-            <option value='ALL'>All Brands</option>
-            <option value='PRIVATE'>Private Brand</option>
-            <option value='NATIONAL'>National Brand</option>
+            <option value='All'>All Brands</option>
+            <option value='Private Brand'>Private Brand</option>
+            <option value='National Brand'>National Brand</option>
           </select>
-
-          {/* Status Filter */}
           <select
-            className='px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-label-md focus:ring-1 focus:ring-primary outline-none'
+            className='px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-label-md focus:ring-1 focus:ring-primary'
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value='ALL'>All Statuses</option>
+            <option value='All'>All Statuses</option>
             <option value='GROW'>Grow</option>
             <option value='MAINTAIN'>Maintain</option>
             <option value='SWAP'>Swap</option>
@@ -104,7 +68,6 @@ export default function SKUPerformanceSection({ skus = [] }) {
           </select>
         </div>
       </div>
-
       <div className='overflow-x-auto'>
         <table className='w-full text-left border-collapse'>
           <thead className='bg-surface text-secondary uppercase text-[10px] font-bold tracking-widest border-b border-outline-variant'>
@@ -118,67 +81,45 @@ export default function SKUPerformanceSection({ skus = [] }) {
             </tr>
           </thead>
           <tbody className='divide-y divide-outline-variant'>
-            {paginatedSkus.length > 0 ? (
-              paginatedSkus.map((sku) => (
+            {filteredSkus.length === 0 ? (
+              <tr>
+                <td colSpan='6' className='px-4 py-8 text-center text-secondary text-body-md'>
+                  No SKUs match the selected filters.
+                </td>
+              </tr>
+            ) : (
+              filteredSkus.map((sku) => (
                 <tr key={sku.sku_id} className='hover:bg-surface-container-low transition-colors group'>
                   <td className='px-4 py-4 font-body-md font-semibold text-on-surface'>{sku.name}</td>
-                  <td className='px-4 py-4 text-body-sm text-secondary font-data-mono'>{sku.sku_number}</td>
+                  <td className='px-4 py-4 text-body-sm text-secondary font-mono'>{sku.sku_number}</td>
                   <td className='px-4 py-4 text-body-sm text-secondary'>
                     {sku.private_brand ? (
-                      <span className='font-medium text-primary'>Yes</span>
+                      <span className='font-medium text-primary'>Yes (Clover Valley)</span>
                     ) : (
-                      <span>No</span>
+                      'No'
                     )}
                   </td>
-                  <td className='px-4 py-4 text-body-sm font-data-mono text-on-surface text-right'>
+                  <td className='px-4 py-4 text-body-sm font-mono text-on-surface text-right'>
                     ${sku.sales_per_week?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td className='px-4 py-4 text-body-sm font-data-mono text-on-surface text-right'>
+                  <td className='px-4 py-4 text-body-sm font-mono text-on-surface text-right'>
                     {sku.in_stock_rate?.toFixed(1)}%
                   </td>
                   <td className='px-4 py-4 text-center'>
-                    <span className={`px-2 py-1 font-label-sm rounded uppercase ${getStatusBadgeClass(sku.status_badge)}`}>
+                    <span className={`px-2 py-1 font-label-sm rounded uppercase ${getBadgeClass(sku.status_badge)}`}>
                       {sku.status_badge}
                     </span>
                   </td>
                 </tr>
               ))
-            ) : (
-              <tr>
-                <td colSpan='6' className='px-4 py-8 text-center text-secondary text-body-md'>
-                  No SKUs found matching the filters.
-                </td>
-              </tr>
             )}
           </tbody>
         </table>
       </div>
-
       <div className='p-4 border-t border-outline-variant flex justify-between items-center bg-surface'>
         <span className='text-body-sm text-secondary'>
-          Showing {paginatedSkus.length} of {filteredSkus.length} SKUs
+          Showing {filteredSkus.length} of {skus.length} SKUs
         </span>
-        <div className='flex gap-1'>
-          <button
-            onClick={() => handlePageChange('prev')}
-            disabled={currentPage === 1}
-            className='p-1 border border-outline-variant rounded hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed'
-            aria-label='Previous page'
-          >
-            <span className='material-symbols-outlined text-[18px]'>chevron_left</span>
-          </button>
-          <span className='px-3 py-1 text-body-sm font-medium text-on-surface'>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange('next')}
-            disabled={currentPage === totalPages}
-            className='p-1 border border-outline-variant rounded hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed'
-            aria-label='Next page'
-          >
-            <span className='material-symbols-outlined text-[18px]'>chevron_right</span>
-          </button>
-        </div>
       </div>
     </section>
   );

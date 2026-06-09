@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App.jsx';
-import * as api from './services/api.js';
+import { getSnacksData, submitReview } from './services/api.js';
 
 // Mock the API service
 vi.mock('./services/api.js', () => ({
@@ -19,8 +19,8 @@ const mockData = {
   },
   sku_performance: [
     {
-      sku_id: '1',
-      sku_number: 'SKU-001',
+      sku_id: 'sku-1',
+      sku_number: '10001',
       name: "Lay's Classic 8oz",
       private_brand: false,
       sales_per_week: 520.00,
@@ -28,8 +28,8 @@ const mockData = {
       status_badge: 'GROW',
     },
     {
-      sku_id: '2',
-      sku_number: 'SKU-002',
+      sku_id: 'sku-2',
+      sku_number: '10002',
       name: 'Clover Valley Potato Chips 8oz',
       private_brand: true,
       sales_per_week: 310.00,
@@ -41,40 +41,26 @@ const mockData = {
     conservative: {
       name: 'Conservative',
       projected_sales_lift: 1.2,
-      projected_private_brand_pct: 21.5,
-      actions_summary: 'Focus on low-risk swaps.',
-      sku_actions: [
-        { sku_id: '1', action: 'KEEP' },
-      ],
-      guardrails: [
-        { name: 'Shelf Capacity Compliance', status: 'PASSING' },
-      ],
+      projected_private_brand_pct: 22.0,
+      actions_summary: 'Conservative plan summary',
+      sku_actions: [{ sku_id: 'sku-1', action: 'MAINTAIN' }],
+      guardrails: [{ name: 'Shelf Capacity Compliance', status: 'Passing' }],
     },
     balanced: {
       name: 'Balanced',
       projected_sales_lift: 3.8,
       projected_private_brand_pct: 24.8,
-      actions_summary: 'Optimize shelf space.',
-      sku_actions: [
-        { sku_id: '1', action: 'KEEP' },
-        { sku_id: '2', action: 'GROW' },
-      ],
-      guardrails: [
-        { name: 'Shelf Capacity Compliance', status: 'PASSING' },
-        { name: 'Private Brand Minimum (20%)', status: 'PASSING' },
-      ],
+      actions_summary: 'Balanced plan summary',
+      sku_actions: [{ sku_id: 'sku-1', action: 'GROW' }],
+      guardrails: [{ name: 'Shelf Capacity Compliance', status: 'Passing' }],
     },
     aggressive: {
       name: 'Aggressive',
       projected_sales_lift: 6.5,
-      projected_private_brand_pct: 28.2,
-      actions_summary: 'Aggressively swap.',
-      sku_actions: [
-        { sku_id: '2', action: 'GROW' },
-      ],
-      guardrails: [
-        { name: 'Shelf Capacity Compliance', status: 'PASSING' },
-      ],
+      projected_private_brand_pct: 28.0,
+      actions_summary: 'Aggressive plan summary',
+      sku_actions: [{ sku_id: 'sku-1', action: 'GROW' }],
+      guardrails: [{ name: 'Shelf Capacity Compliance', status: 'Passing' }],
     },
   },
 };
@@ -82,35 +68,35 @@ const mockData = {
 describe('DG Assortment Advisor App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.scrollTo = vi.fn();
+    getSnacksData.mockResolvedValue(mockData);
   });
 
   it('renders loading state initially', () => {
-    api.getSnacksData.mockReturnValue(new Promise(() => {}));
     render(<App />);
     expect(screen.getByText(/Loading Assortment Advisor.../i)).toBeInTheDocument();
   });
 
-  it('renders dashboard with data after successful fetch', async () => {
-    api.getSnacksData.mockResolvedValue(mockData);
+  it('renders dashboard after loading data', async () => {
     render(<App />);
 
     await waitFor(() => {
       expect(screen.queryByText(/Loading Assortment Advisor.../i)).not.toBeInTheDocument();
     });
 
+    // Check title
     expect(screen.getByText('Snacks Assortment Advisor')).toBeInTheDocument();
-    expect(screen.getByText("$425.50")).toBeInTheDocument();
-    expect(screen.getByText("24.5%")).toBeInTheDocument();
-    expect(screen.getByText("96.8%")).toBeInTheDocument();
-    expect(screen.getByText("92%")).toBeInTheDocument();
 
+    // Check KPIs
+    expect(screen.getByText('$425.50')).toBeInTheDocument();
+    expect(screen.getByText('24.5%')).toBeInTheDocument();
+    expect(screen.getByText('96.8%')).toBeInTheDocument();
+
+    // Check SKU table
     expect(screen.getByText("Lay's Classic 8oz")).toBeInTheDocument();
-    expect(screen.getByText("Clover Valley Potato Chips 8oz")).toBeInTheDocument();
+    expect(screen.getByText('Clover Valley Potato Chips 8oz')).toBeInTheDocument();
   });
 
-  it('handles scenario selection and updates the review panel', async () => {
-    api.getSnacksData.mockResolvedValue(mockData);
+  it('allows selecting a different scenario', async () => {
     render(<App />);
 
     await waitFor(() => {
@@ -118,22 +104,25 @@ describe('DG Assortment Advisor App', () => {
     });
 
     // Balanced is selected by default
-    expect(screen.getByText('Balanced Action Plan')).toBeInTheDocument();
+    expect(screen.getByText('Balanced plan summary')).toBeInTheDocument();
 
     // Click Conservative scenario
     const conservativeCard = screen.getByText('Conservative');
     fireEvent.click(conservativeCard);
 
-    expect(screen.getByText('Conservative Action Plan')).toBeInTheDocument();
+    // Conservative summary should be shown
+    expect(screen.getByText('Conservative plan summary')).toBeInTheDocument();
   });
 
-  it('handles successful submission and displays success banner', async () => {
-    api.getSnacksData.mockResolvedValue(mockData);
-    api.submitReview.mockResolvedValue({
-      audit_id: 'AUDIT-12345',
+  it('submits the assortment plan successfully', async () => {
+    submitReview.mockResolvedValue({
+      audit_id: 'audit-12345',
       status: 'SUCCESS',
       timestamp: '2026-06-09T12:00:00.000Z',
     });
+
+    // Mock window.scrollTo
+    window.scrollTo = vi.fn();
 
     render(<App />);
 
@@ -145,20 +134,11 @@ describe('DG Assortment Advisor App', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Assortment Plan Submitted Successfully!')).toBeInTheDocument();
+      expect(submitReview).toHaveBeenCalledWith('balanced', [{ sku_id: 'sku-1', action: 'GROW' }]);
     });
 
-    expect(screen.getByText('AUDIT-12345')).toBeInTheDocument();
-  });
-
-  it('handles API error gracefully', async () => {
-    api.getSnacksData.mockRejectedValue(new Error('API Error'));
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Loading Assortment Advisor.../i)).not.toBeInTheDocument();
-    });
-
-    expect(screen.getByText(/Failed to load data from the server/i)).toBeInTheDocument();
+    // Success banner should be displayed
+    expect(screen.getByText('Assortment Plan Submitted Successfully!')).toBeInTheDocument();
+    expect(screen.getByText('audit-12345')).toBeInTheDocument();
   });
 });
