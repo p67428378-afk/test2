@@ -1,6 +1,6 @@
-
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from uuid import UUID
 
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
@@ -31,3 +31,54 @@ class SetNewPasswordRequest(BaseModel):
 class SetNewPasswordResponse(BaseModel):
     status: str
     login_link: str
+
+# Assortment Advisor Schemas
+class KPIResponse(BaseModel):
+    in_stock_rate: float
+    private_brand_pct: float
+    sales_per_linear_ft: float
+    shelf_capacity: float
+
+    class Config:
+        from_attributes = True
+
+class SKUItem(BaseModel):
+    id: UUID
+    sku_name: str
+    sales_velocity: float
+    margin_pct: float
+    current_inventory: int
+    status: str
+
+    class Config:
+        from_attributes = True
+
+class SKUsResponse(BaseModel):
+    items: List[SKUItem]
+    limit: int
+    page: int
+    total: int
+
+class ScenarioResponse(BaseModel):
+    name: str
+    sales_lift: float
+    pb_change: float
+    description: Optional[str] = None
+    is_selected: bool
+
+    class Config:
+        from_attributes = True
+
+class SKUAction(BaseModel):
+    sku_id: UUID
+    action: str
+
+class SubmitRequest(BaseModel):
+    scenario_name: str
+    sku_actions: List[SKUAction]
+
+class SubmitResponse(BaseModel):
+    submitted_by: str
+    success: bool
+    timestamp: str
+    tracking_id: str
