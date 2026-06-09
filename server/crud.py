@@ -39,13 +39,27 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
 
 # Assortment Advisor CRUD
 
-def seed_skus_if_empty(db: Session):
-    count = db.query(models.SKU).count()
-    if count > 0:
+def get_skus(db: Session):
+    return db.query(models.SKU).all()
+
+def create_assortment_review(db: Session, review: schemas.AssortmentReviewRequest, user_id: str):
+    db_review = models.AssortmentReview(
+        user_id=user_id,
+        scenario_name=review.scenario_name,
+        actions=[action.dict() for action in review.actions]
+    )
+    db.add(db_review)
+    db.commit()
+    db.refresh(db_review)
+    return db_review
+
+def seed_initial_data(db: Session):
+    # Check if SKUs already exist
+    if db.query(models.SKU).count() > 0:
         return
 
-    # Default SKUs to seed
-    default_skus = [
+    # Seed SKUs and SKUPerformance
+    initial_skus = [
         {
             "name": "Lay's Classic 8oz",
             "category": "Snacks",
@@ -96,7 +110,7 @@ def seed_skus_if_empty(db: Session):
         }
     ]
 
-    for item in default_skus:
+    for item in initial_skus:
         sku = models.SKU(
             sku_id=uuid.uuid4(),
             name=item["name"],
@@ -104,7 +118,7 @@ def seed_skus_if_empty(db: Session):
             private_brand=item["private_brand"]
         )
         db.add(sku)
-        db.flush()  # to get sku.sku_id
+        db.flush()  # Get the sku_id
 
         perf = models.SKUPerformance(
             performance_id=uuid.uuid4(),
@@ -116,19 +130,3 @@ def seed_skus_if_empty(db: Session):
         db.add(perf)
 
     db.commit()
-
-def get_skus_with_performance(db: Session):
-    seed_skus_if_empty(db)
-    return db.query(models.SKU).all()
-
-def create_assortment_review(db: Session, scenario_name: str, actions: list, user_id: str = "default_user"):
-    review = models.AssortmentReview(
-        review_id=uuid.uuid4(),
-        user_id=user_id,
-        scenario_name=scenario_name,
-        actions=actions
-    )
-    db.add(review)
-    db.commit()
-    db.refresh(review)
-    return review

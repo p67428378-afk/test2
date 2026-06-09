@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
+from uuid import UUID
 
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
@@ -64,7 +65,7 @@ class ScenarioDetailSchema(BaseModel):
     sku_actions: List[SKUActionSchema]
     guardrails: GuardrailsSchema
 
-class SnacksDashboardResponse(BaseModel):
+class AssortmentDashboardResponse(BaseModel):
     kpis: KPISchema
     skus: List[SKUResponseSchema]
     scenarios: Dict[str, ScenarioDetailSchema]
