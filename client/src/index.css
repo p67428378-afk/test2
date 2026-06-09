@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+}
+
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.1);
+}
+
+.dark-slate {
+  color: #0f172a;
+}
+
+.bg-dark-slate {
+  background-color: #0f172a;
+}
+
+.border-gray {
+  border-color: #e2e8f0;
+}
+
+.bg-amber {
+  background-color: #f59e0b;
+}
+
+.text-amber {
+  color: #f59e0b;
+}
+
+.badge-green {
+  background-color: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+.badge-red {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.badge-gray {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.badge-blue {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
+.badge-orange {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
