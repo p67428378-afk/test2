@@ -1,7 +1,8 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
+from typing import Optional
 
+# Existing Password Reset CRUD
 def get_user_by_login_id(db: Session, login_id: str):
     return db.query(models.User).filter(models.User.login_id == login_id).first()
 
@@ -36,3 +37,34 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+# New Calculator CRUD
+def create_calculation(
+    db: Session,
+    operand1: float,
+    operand2: float,
+    operator: str,
+    result: Optional[float],
+    formula: str,
+    status: str
+):
+    db_calc = models.Calculation(
+        operand1=operand1,
+        operand2=operand2,
+        operator=operator,
+        result=result,
+        formula=formula,
+        status=status
+    )
+    db.add(db_calc)
+    db.commit()
+    db.refresh(db_calc)
+    return db_calc
+
+def get_calculations(db: Session, limit: int = 100):
+    return db.query(models.Calculation).order_by(models.Calculation.created_at.desc()).limit(limit).all()
+
+def clear_calculations(db: Session):
+    db.query(models.Calculation).delete()
+    db.commit()
+    return {"message": "Calculation history cleared successfully"}

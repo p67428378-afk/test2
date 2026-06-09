@@ -1,6 +1,5 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -39,3 +38,14 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+class Calculation(Base):
+    __tablename__ = "calculations"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    operand1 = Column(Float, nullable=False)
+    operand2 = Column(Float, nullable=False)
+    operator = Column(String(20), nullable=False)
+    result = Column(Float, nullable=True)
+    formula = Column(String(255), nullable=False)
+    status = Column(String(20), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
