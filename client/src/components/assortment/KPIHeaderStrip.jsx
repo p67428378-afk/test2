@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const KPIHeaderStrip = ({ kpis }) => {
+export default function KPIHeaderStrip({ kpis }) {
   const salesPerLinearFt = kpis?.sales_per_linear_ft ?? 425.50;
   const privateBrandPct = kpis?.private_brand_pct ?? 24.5;
   const inStockRate = kpis?.in_stock_rate ?? 96.8;
@@ -20,7 +20,7 @@ export const KPIHeaderStrip = ({ kpis }) => {
           ${salesPerLinearFt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <div className='mt-3 w-full h-1.5 bg-surface-container rounded-full overflow-hidden'>
-          <div className='bg-primary-container h-full' style={{ width: '85%' }}></div>
+          <div className='bg-primary-container h-full w-[85%]'></div>
         </div>
       </div>
 
@@ -34,7 +34,7 @@ export const KPIHeaderStrip = ({ kpis }) => {
           {privateBrandPct.toFixed(1)}%
         </p>
         <div className='mt-3 w-full h-1.5 bg-surface-container rounded-full overflow-hidden'>
-          <div className='bg-yellow-400 h-full' style={{ width: `${Math.min(privateBrandPct * 4, 100)}%` }}></div>
+          <div className='bg-yellow-400 h-full w-[98%]'></div>
         </div>
       </div>
 
@@ -48,7 +48,7 @@ export const KPIHeaderStrip = ({ kpis }) => {
           {inStockRate.toFixed(1)}%
         </p>
         <div className='mt-3 w-full h-1.5 bg-surface-container rounded-full overflow-hidden'>
-          <div className='bg-green-500 h-full' style={{ width: `${inStockRate}%` }}></div>
+          <div className='bg-green-500 h-full w-full'></div>
         </div>
       </div>
 
@@ -61,12 +61,8 @@ export const KPIHeaderStrip = ({ kpis }) => {
         <p className='text-headline-md font-headline-md text-on-surface'>
           {shelfCapacity}%
         </p>
-        <p className='text-label-sm text-secondary mt-1'>
-          {Math.round(shelfCapacity * 9)} / 900 linear inches used
-        </p>
+        <p className='text-label-sm text-secondary mt-1'>828 / 900 linear inches used</p>
       </div>
     </div>
   );
-};
-
-export default KPIHeaderStrip;
+}

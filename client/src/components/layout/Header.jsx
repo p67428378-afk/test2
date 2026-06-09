@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Header = () => {
+export default function Header() {
   return (
     <header className='fixed top-0 left-0 right-0 h-[64px] bg-surface-container-lowest z-50 border-b border-outline-variant shadow-sm'>
       <div className='flex justify-between items-center w-full px-margin-x max-w-container-max mx-auto h-full'>
@@ -8,7 +8,6 @@ export const Header = () => {
         <div className='flex items-center gap-stack-sm'>
           <span className='text-headline-sm font-headline-sm font-black text-on-surface'>DG Assortment Advisor</span>
         </div>
-
         {/* Global Search */}
         <div className='flex-1 max-w-md ml-stack-lg hidden md:block'>
           <div className='relative flex items-center group'>
@@ -20,7 +19,6 @@ export const Header = () => {
             />
           </div>
         </div>
-
         {/* Trailing Actions */}
         <div className='flex items-center gap-stack-md'>
           <button className='p-2 text-secondary hover:bg-surface-container-low rounded-full transition-colors relative'>
@@ -43,6 +41,4 @@ export const Header = () => {
       </div>
     </header>
   );
-};
-
-export default Header;
+}

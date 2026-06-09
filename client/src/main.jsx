@@ -23,7 +23,7 @@ class ErrorBoundary extends React.Component {
         <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
           <h2 style={{ color: '#ba1a1a' }}>Something went wrong.</h2>
           <p>Check the console for details or try reloading the page.</p>
-          <pre style={{ background: '#f0f3ff', padding: '1rem', borderRadius: '4px', overflowX: 'auto' }}>
+          <pre style={{ background: '#f0f3ff', padding: '1rem', borderRadius: '0.5rem', overflowX: 'auto' }}>
             {this.state.error?.toString()}
           </pre>
         </div>
@@ -33,7 +33,8 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />

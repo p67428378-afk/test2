@@ -19,12 +19,9 @@ export const getSnacksData = async () => {
   }
 };
 
-export const submitReview = async (scenario, actions) => {
+export const submitReview = async (payload) => {
   try {
-    const response = await api.post('/api/v1/assortment-advisor/review', {
-      scenario,
-      actions,
-    });
+    const response = await api.post('/api/v1/assortment-advisor/review', payload);
     return response.data;
   } catch (error) {
     console.error('Error submitting assortment review:', error);

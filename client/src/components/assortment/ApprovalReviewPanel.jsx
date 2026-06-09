@@ -1,81 +1,66 @@
 import React from 'react';
 
-export const ApprovalReviewPanel = ({ scenarioKey, scenarioData, onSubmit, isSubmitting }) => {
-  const name = scenarioData?.name || scenarioKey?.charAt(0).toUpperCase() + scenarioKey?.slice(1) || 'Balanced';
-  const skuActions = scenarioData?.sku_actions || [];
-  const guardrails = scenarioData?.guardrails || [
-    { name: 'Shelf Capacity Compliance', status: 'Passing' },
-    { name: 'Private Brand Minimum (20%)', status: 'Passing' },
-    { name: 'Vendor In-Stock SLA', status: 'Passing' },
-  ];
+export default function ApprovalReviewPanel({ scenarioData, scenarioName, onSubmit, isSubmitting }) {
+  const skuActions = scenarioData?.sku_actions ?? [];
+  const guardrails = scenarioData?.guardrails ?? [];
 
-  // Calculate action counts
-  const counts = skuActions.reduce(
-    (acc, curr) => {
-      const act = curr.action?.toUpperCase();
-      if (act === 'ADD' || act === 'GROW') acc.add++;
-      else if (act === 'KEEP' || act === 'MAINTAIN') acc.keep++;
-      else if (act === 'SWAP') acc.swap++;
-      else if (act === 'REMOVE' || act === 'REDUCE') acc.remove++;
-      return acc;
-    },
-    { add: 0, keep: 0, swap: 0, remove: 0 }
-  );
+  // Group actions by type
+  const actionCounts = skuActions.reduce((acc, curr) => {
+    const action = curr.action?.toUpperCase();
+    acc[action] = (acc[action] || 0) + 1;
+    return acc;
+  }, {});
 
-  // Fallback counts if empty
-  if (skuActions.length === 0) {
-    if (scenarioKey === 'conservative') {
-      counts.add = 2;
-      counts.keep = 45;
-      counts.swap = 1;
-      counts.remove = 1;
-    } else if (scenarioKey === 'aggressive') {
-      counts.add = 8;
-      counts.keep = 38;
-      counts.swap = 5;
-      counts.remove = 4;
-    } else {
-      counts.add = 4;
-      counts.keep = 42;
-      counts.swap = 3;
-      counts.remove = 2;
+  const getActionColorClass = (action) => {
+    switch (action) {
+      case 'ADD':
+        return 'bg-green-100 text-green-700';
+      case 'KEEP':
+        return 'bg-blue-100 text-blue-700';
+      case 'SWAP':
+        return 'bg-orange-100 text-orange-700';
+      case 'REDUCE':
+      case 'REMOVE':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
-  }
+  };
 
   return (
     <section className='bg-surface-container-lowest p-stack-md rounded-xl border border-outline-variant shadow-sm'>
-      <h2 className='font-headline-sm text-headline-sm mb-4'>Assortment Strategy</h2>
+      <h2 className='font-headline-sm text-headline-sm mb-4'>Approval Review Panel</h2>
 
       {/* Scenario Summary */}
       <div className='bg-surface border border-outline-variant rounded-lg p-stack-md mb-6'>
-        <h3 className='font-label-md text-on-surface mb-3 flex items-center gap-2'>
+        <h3 className='font-label-md text-on-surface mb-3 flex items-center gap-2 uppercase tracking-wider'>
           <span className='material-symbols-outlined text-secondary text-[18px]'>insights</span>
-          {name} Action Plan
+          {scenarioName} Action Plan
         </h3>
         <div className='grid grid-cols-2 gap-3'>
           <div className='flex items-center gap-3'>
             <div className='w-8 h-8 rounded bg-green-100 flex items-center justify-center text-green-700 font-bold'>
-              {counts.add}
+              {actionCounts['ADD'] || 0}
             </div>
             <span className='text-body-sm text-secondary'>New SKUs</span>
           </div>
           <div className='flex items-center gap-3'>
             <div className='w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold'>
-              {counts.keep}
+              {actionCounts['KEEP'] || 0}
             </div>
             <span className='text-body-sm text-secondary'>Keep SKUs</span>
           </div>
           <div className='flex items-center gap-3'>
             <div className='w-8 h-8 rounded bg-orange-100 flex items-center justify-center text-orange-700 font-bold'>
-              {counts.swap}
+              {actionCounts['SWAP'] || 0}
             </div>
             <span className='text-body-sm text-secondary'>Swap SKUs</span>
           </div>
           <div className='flex items-center gap-3'>
             <div className='w-8 h-8 rounded bg-red-100 flex items-center justify-center text-red-700 font-bold'>
-              {counts.remove}
+              {(actionCounts['REDUCE'] || 0) + (actionCounts['REMOVE'] || 0)}
             </div>
-            <span className='text-body-sm text-secondary'>Remove</span>
+            <span className='text-body-sm text-secondary'>Reduce/Remove</span>
           </div>
         </div>
       </div>
@@ -83,22 +68,48 @@ export const ApprovalReviewPanel = ({ scenarioKey, scenarioData, onSubmit, isSub
       {/* Guardrail Status */}
       <div className='space-y-3 mb-stack-lg'>
         <label className='text-label-md text-secondary uppercase tracking-wider block'>Policy Guardrails</label>
-        {guardrails.map((guard, idx) => {
-          const isPassing = guard.status?.toLowerCase() === 'passing' || guard.status?.toLowerCase() === 'passed';
-          return (
-            <div key={idx} className='flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant'>
-              <div className='flex items-center gap-3'>
-                <span className={`material-symbols-outlined ${isPassing ? 'text-green-600' : 'text-red-600'}`}>
-                  {isPassing ? 'check_circle' : 'error'}
+        {guardrails.length > 0 ? (
+          guardrails.map((guardrail, idx) => {
+            const isPassing = guardrail.status?.toUpperCase() === 'PASSING' || guardrail.status?.toUpperCase() === 'PASS';
+            return (
+              <div key={idx} className='flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low border border-outline-variant'>
+                <div className='flex items-center gap-3'>
+                  <span className={`material-symbols-outlined ${isPassing ? 'text-green-600' : 'text-red-600'}`}>
+                    {isPassing ? 'check_circle' : 'cancel'}
+                  </span>
+                  <span className='text-body-sm font-medium text-on-surface'>{guardrail.name}</span>
+                </div>
+                <span className={`text-[10px] font-bold uppercase ${isPassing ? 'text-green-600' : 'text-red-600'}`}>
+                  {guardrail.status}
                 </span>
-                <span className='text-body-sm font-medium text-on-surface'>{guard.name}</span>
               </div>
-              <span className={`text-[10px] font-bold uppercase ${isPassing ? 'text-green-600' : 'text-red-600'}`}>
-                {guard.status}
-              </span>
+            );
+          })
+        ) : (
+          <>
+            <div className='flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low border border-outline-variant'>
+              <div className='flex items-center gap-3'>
+                <span className='material-symbols-outlined text-green-600'>check_circle</span>
+                <span className='text-body-sm font-medium text-on-surface'>Shelf Capacity Compliance</span>
+              </div>
+              <span className='text-[10px] font-bold text-green-600 uppercase'>Passing</span>
             </div>
-          );
-        })}
+            <div className='flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low border border-outline-variant'>
+              <div className='flex items-center gap-3'>
+                <span className='material-symbols-outlined text-green-600'>check_circle</span>
+                <span className='text-body-sm font-medium text-on-surface'>Private Brand Minimum (20%)</span>
+              </div>
+              <span className='text-[10px] font-bold text-green-600 uppercase'>Passing</span>
+            </div>
+            <div className='flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low border border-outline-variant'>
+              <div className='flex items-center gap-3'>
+                <span className='material-symbols-outlined text-green-600'>check_circle</span>
+                <span className='text-body-sm font-medium text-on-surface'>Vendor In-Stock SLA</span>
+              </div>
+              <span className='text-[10px] font-bold text-green-600 uppercase'>Passing</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Submit Button */}
@@ -114,6 +125,4 @@ export const ApprovalReviewPanel = ({ scenarioKey, scenarioData, onSubmit, isSub
       </button>
     </section>
   );
-};
-
-export default ApprovalReviewPanel;
+}
