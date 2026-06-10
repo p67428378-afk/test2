@@ -1,5 +1,4 @@
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 class PasswordResetInitiateRequest(BaseModel):
@@ -31,3 +30,13 @@ class SetNewPasswordRequest(BaseModel):
 class SetNewPasswordResponse(BaseModel):
     status: str
     login_link: str
+
+class CalculateRequest(BaseModel):
+    bill_amount: float = Field(..., ge=0, description="The total bill amount before tip")
+    tip_percentage: float = Field(..., ge=0, description="The tip percentage to apply")
+    number_of_people: int = Field(..., ge=1, description="The number of people to split the bill among")
+
+class CalculateResponse(BaseModel):
+    tip_amount: float
+    total_bill: float
+    amount_per_person: float
