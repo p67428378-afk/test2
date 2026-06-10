@@ -1,6 +1,6 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
+from uuid import UUID
 
 def get_user_by_login_id(db: Session, login_id: str):
     return db.query(models.User).filter(models.User.login_id == login_id).first()
@@ -36,3 +36,35 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+# Fund Transfer CRUD
+def get_account(db: Session, account_id: UUID):
+    return db.query(models.Account).filter(models.Account.id == account_id).first()
+
+def create_account(db: Session, user_id: UUID, balance: float, currency: str = "USD"):
+    db_account = models.Account(user_id=user_id, balance=balance, currency=currency)
+    db.add(db_account)
+    db.commit()
+    db.refresh(db_account)
+    return db_account
+
+def get_transaction(db: Session, transaction_id: UUID):
+    return db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+
+def create_transaction(db: Session, source_account_id: UUID, destination_account_id: UUID, amount: float, status: str = "PENDING"):
+    db_transaction = models.Transaction(
+        source_account_id=source_account_id,
+        destination_account_id=destination_account_id,
+        amount=amount,
+        status=status
+    )
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
+
+def update_transaction_status(db: Session, transaction: models.Transaction, status: str):
+    transaction.status = status
+    db.commit()
+    db.refresh(transaction)
+    return transaction

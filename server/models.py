@@ -1,6 +1,5 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -19,6 +18,7 @@ class User(Base):
 
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
+    accounts = relationship("Account", back_populates="user")
 
 class OTP(Base):
     __tablename__ = "otps"
@@ -39,3 +39,22 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+class Account(Base):
+    __tablename__ = "accounts"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    balance = Column(Numeric, default=0.0, nullable=False)
+    currency = Column(String(3), default="USD", nullable=False)
+
+    user = relationship("User", back_populates="accounts")
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False)
+    destination_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False)
+    amount = Column(Numeric, nullable=False)
+    status = Column(String(20), default="PENDING", nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
