@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0F172A;
+  color: #e4e1ed;
+  font-family: 'Inter', sans-serif;
+}
+
+.bg-surface-override {
+  background-color: #1E293B;
+}
+
+.border-outline-override {
+  border-color: #334155;
+}
+
+.text-indigo-override {
+  color: #6366F1;
+}
+
+.bg-indigo-override {
+  background-color: #6366F1;
+}
+
+.border-indigo-override {
+  border-color: #6366F1;
+}
+
+.text-emerald-override {
+  color: #10B981;
+}
+
+.bg-emerald-override {
+  background-color: #10B981;
+}
+
+.text-rose-override {
+  color: #EF4444;
+}
+
+.bg-rose-override {
+  background-color: #EF4444;
+}
