@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
 
@@ -36,3 +35,24 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+# Contact Management CRUD
+def get_contacts(db: Session, skip: int = 0, limit: int = 20):
+    return db.query(models.Contact).offset(skip).limit(limit).all()
+
+def get_contact_by_phone(db: Session, phone_number: str):
+    return db.query(models.Contact).filter(models.Contact.phone_number == phone_number).first()
+
+def get_contact_by_email(db: Session, email: str):
+    return db.query(models.Contact).filter(models.Contact.email == email).first()
+
+def create_contact(db: Session, contact: schemas.ContactCreate):
+    db_contact = models.Contact(
+        name=contact.name,
+        phone_number=contact.phone_number,
+        email=contact.email
+    )
+    db.add(db_contact)
+    db.commit()
+    db.refresh(db_contact)
+    return db_contact
