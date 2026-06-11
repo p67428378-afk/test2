@@ -1,6 +1,9 @@
+bcrypt
 fastapi
-uvicorn
-sqlalchemy
+passlib
 pydantic
 pydantic-settings
+pyjwt
 pytest
+sqlalchemy
+uvicorn

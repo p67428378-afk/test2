@@ -1,6 +1,5 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, DECIMAL, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -19,6 +18,7 @@ class User(Base):
 
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
+    accounts = relationship("Account", back_populates="user")
 
 class OTP(Base):
     __tablename__ = "otps"
@@ -39,3 +39,28 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+class Account(Base):
+    __tablename__ = "accounts"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    account_number = Column(String(50), unique=True, nullable=False)
+    account_type = Column(String(50), nullable=False)
+    balance = Column(DECIMAL(15, 2), default=0.00, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    user = relationship("User", back_populates="accounts")
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    from_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=True)
+    to_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False)
+    amount = Column(DECIMAL(15, 2), nullable=False)
+    type = Column(String(50), nullable=False)  # e.g., "Internal Transfer", "P2P Transfer"
+    memo = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=func.now())
+
+    from_account = relationship("Account", foreign_keys=[from_account_id])
+    to_account = relationship("Account", foreign_keys=[to_account_id])
