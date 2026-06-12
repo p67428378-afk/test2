@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Level 0 Floor */
+body {
+  background-color: #0F172A;
+  color: #dae2fd;
+}
+
+/* Level 1 Cards */
+.card-level-1 {
+  background-color: #1E293B;
+  border: 1px solid #334155;
+}
+
+/* Level 2 Overlays */
+.card-level-2 {
+  background-color: #334155;
+}
+
+/* Shadows */
+.micro-shadow {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Status Chips */
+.status-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+.status-warning {
+  background-color: rgba(244, 63, 94, 0.1);
+  color: #F43F5E;
+}
+
+/* Progress Bars */
+.progress-bg {
+  background-color: #334155;
+}
+.progress-fill-success {
+  background-color: #10B981;
+}
+.progress-fill-warning {
+  background-color: #F43F5E;
+}
+.progress-fill-amber {
+  background-color: #F59E0B;
+}
+
+/* Custom Scrollbar for sidebar and tables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
