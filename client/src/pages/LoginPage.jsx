@@ -128,7 +128,7 @@ const LoginPage = () => {
           </form>
 
           <div className='mt-6 border-t border-outline-variant pt-6 text-center'>
-            <p className='text-xs text-outline'>
+            <p className='text-sm font-medium text-on-surface-variant'>
               Secured by PCI-DSS v4.0 &amp; RBI Master Direction Compliance
             </p>
           </div>
