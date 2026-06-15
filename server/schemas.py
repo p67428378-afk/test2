@@ -1,7 +1,9 @@
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import datetime
+from uuid import UUID
 
+# Password Reset Schemas
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
     mobile_number: str
@@ -31,3 +33,25 @@ class SetNewPasswordRequest(BaseModel):
 class SetNewPasswordResponse(BaseModel):
     status: str
     login_link: str
+
+# Task Schemas
+class TaskBase(BaseModel):
+    description: str
+
+class TaskCreate(BaseModel):
+    description: str = Field(..., min_length=1)
+
+class TaskUpdate(BaseModel):
+    description: Optional[str] = Field(None, min_length=1)
+    completed: Optional[bool] = None
+
+class TaskResponse(BaseModel):
+    id: UUID
+    description: str
+    completed: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+        orm_mode = True

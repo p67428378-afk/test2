@@ -1,7 +1,8 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
+import uuid
 
+# Password Reset CRUD
 def get_user_by_login_id(db: Session, login_id: str):
     return db.query(models.User).filter(models.User.login_id == login_id).first()
 
@@ -36,3 +37,42 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+# Task CRUD
+def get_tasks(db: Session, skip: int = 0, limit: int = 20):
+    return db.query(models.Task).offset(skip).limit(limit).all()
+
+def get_task(db: Session, task_id: str):
+    try:
+        task_uuid = uuid.UUID(task_id) if isinstance(task_id, str) else task_id
+    except ValueError:
+        return None
+    return db.query(models.Task).filter(models.Task.id == task_uuid).first()
+
+def create_task(db: Session, task: schemas.TaskCreate):
+    db_task = models.Task(description=task.description)
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+def update_task(db: Session, task_id: str, task_update: schemas.TaskUpdate):
+    db_task = get_task(db, task_id)
+    if not db_task:
+        return None
+    
+    update_data = task_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_task, key, value)
+        
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+def delete_task(db: Session, task_id: str):
+    db_task = get_task(db, task_id)
+    if not db_task:
+        return False
+    db.delete(db_task)
+    db.commit()
+    return True
