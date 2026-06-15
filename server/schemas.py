@@ -1,6 +1,6 @@
-
 from pydantic import BaseModel
 from typing import Optional
+from enum import Enum
 
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
@@ -31,3 +31,18 @@ class SetNewPasswordRequest(BaseModel):
 class SetNewPasswordResponse(BaseModel):
     status: str
     login_link: str
+
+# Calculator Schemas
+class OperatorEnum(str, Enum):
+    ADD = "+"
+    SUBTRACT = "-"
+    MULTIPLY = "*"
+    DIVIDE = "/"
+
+class CalculateRequest(BaseModel):
+    operand1: float
+    operand2: float
+    operator: OperatorEnum
+
+class CalculateResponse(BaseModel):
+    result: float
