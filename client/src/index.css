@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .btn-calc {
+    @apply flex items-center justify-center rounded-lg font-button-text text-button-text h-16 w-full transition-colors duration-200 cursor-pointer active:scale-95;
+  }
+  .btn-num {
+    @apply bg-surface-container-highest text-on-surface hover:bg-surface-variant;
+  }
+  .btn-op {
+    @apply bg-[#6366F1] text-white hover:bg-[#4F46E5];
+  }
+  .btn-clear {
+    @apply bg-[rgba(239,68,68,0.2)] text-[#EF4444] hover:bg-[rgba(239,68,68,0.3)];
+  }
+  .btn-eq {
+    @apply bg-[#10B981] text-white hover:bg-[#059669];
+  }
+}
