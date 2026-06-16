@@ -1,6 +1,5 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer, Numeric, DECIMAL
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -39,3 +38,36 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+# --- Assortment Advisor Models ---
+
+class SKU(Base):
+    __tablename__ = "skus"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    weekly_sales = Column(Numeric(10, 2), nullable=False, default=0.00)
+    profit_margin = Column(Numeric(5, 2), nullable=False, default=0.00)
+    days_of_supply = Column(Integer, nullable=False, default=0)
+    recommended_action = Column(String(50), nullable=False)
+
+    decision_items = relationship("DecisionItem", back_populates="sku")
+
+class AssortmentDecision(Base):
+    __tablename__ = "assortment_decisions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    scenario_name = Column(String(50), nullable=False)
+    submitted_by = Column(String(255), nullable=False)
+    submitted_at = Column(DateTime, nullable=False, default=func.now())
+    audit_id = Column(String(100), nullable=False, unique=True)
+
+    items = relationship("DecisionItem", back_populates="decision", cascade="all, delete-orphan")
+
+class DecisionItem(Base):
+    __tablename__ = "decision_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    decision_id = Column(UUID(as_uuid=True), ForeignKey("assortment_decisions.id"), nullable=False)
+    sku_id = Column(UUID(as_uuid=True), ForeignKey("skus.id"), nullable=False)
+    action = Column(String(50), nullable=False)
+
+    decision = relationship("AssortmentDecision", back_populates="items")
+    sku = relationship("SKU", back_populates="decision_items")
