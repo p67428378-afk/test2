@@ -1,33 +1,69 @@
+from pydantic import BaseModel, EmailStr, Field
+from uuid import UUID
+from datetime import datetime
+from decimal import Decimal
+from typing import List, Optional
 
-from pydantic import BaseModel
-from typing import Optional
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class UserCreate(UserBase):
+    password: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class User(UserBase):
+    id: UUID
+    mfa_enabled: bool
+    created_at: datetime
+    updated_at: datetime
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+    class Config:
+        orm_mode = True
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+class Account(BaseModel):
+    id: UUID
+    user_id: UUID
+    account_number: str
+    account_type: str
+    balance: Decimal
+    created_at: datetime
+    updated_at: datetime
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+    class Config:
+        orm_mode = True
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+class Transaction(BaseModel):
+    id: UUID
+    account_id: UUID
+    type: str
+    amount: Decimal
+    description: Optional[str] = None
+    transaction_date: datetime
+    created_at: datetime
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+    class Config:
+        orm_mode = True
 
-class SetNewPasswordResponse(BaseModel):
+class Transfer(BaseModel):
+    id: UUID
+    from_account_id: UUID
+    to_account_id: UUID
+    amount: Decimal
     status: str
-    login_link: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+class TransferCreate(BaseModel):
+    from_account_id: UUID
+    to_account_id: UUID
+    amount: Decimal

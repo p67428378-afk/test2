@@ -1,41 +1,57 @@
-
-import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, func, DECIMAL
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from server.database import Base
+import uuid
+
+from .database import Base
 
 class User(Base):
     __tablename__ = "users"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    mfa_enabled = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
+    accounts = relationship("Account", back_populates="owner")
 
-class OTP(Base):
-    __tablename__ = "otps"
+class Account(Base):
+    __tablename__ = "accounts"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
+    account_number = Column(String, unique=True, nullable=False)
+    account_type = Column(String, nullable=False)
+    balance = Column(DECIMAL, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    owner = relationship("User", back_populates="accounts")
+    transactions = relationship("Transaction", back_populates="account")
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False)
+    type = Column(String, nullable=False)
+    amount = Column(DECIMAL, nullable=False)
+    description = Column(String)
+    transaction_date = Column(DateTime, default=func.now())
     created_at = Column(DateTime, default=func.now())
 
-    user = relationship("User", back_populates="otps")
+    account = relationship("Account", back_populates="transactions")
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
+class Transfer(Base):
+    __tablename__ = "transfers"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="password_history")
+    from_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False)
+    to_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False)
+    amount = Column(DECIMAL, nullable=False)
+    status = Column(String, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

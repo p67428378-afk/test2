@@ -1,14 +1,13 @@
-
 from fastapi import FastAPI
-from server.api.v1.endpoints import password_reset
-from server.database import Base, engine
-
-Base.metadata.create_all(bind=engine)
+from .routers import auth, accounts, transactions, transfers
 
 app = FastAPI()
 
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["accounts"])
+app.include_router(transactions.router, prefix="/api/v1/accounts", tags=["transactions"])
+app.include_router(transfers.router, prefix="/api/v1/transfers", tags=["transfers"])
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Password Reset Microservice"}
+    return {"message": "Welcome to the Banking API"}
