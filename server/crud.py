@@ -42,6 +42,8 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
 # --- Assortment Advisor CRUD ---
 
 def seed_skus_if_empty(db: Session):
+    from server.database import Base
+    Base.metadata.create_all(bind=db.get_bind())
     if db.query(models.SKU).count() == 0:
         default_skus = [
             models.SKU(
@@ -147,6 +149,8 @@ def get_skus(db: Session, scenario: Optional[str] = None) -> List[models.SKU]:
     return skus
 
 def create_assortment_decision(db: Session, decision_in: schemas.DecisionCreateRequest) -> models.AssortmentDecision:
+    from server.database import Base
+    Base.metadata.create_all(bind=db.get_bind())
     audit_id = f"AUDIT-{random.randint(10000, 99999)}"
     
     db_decision = models.AssortmentDecision(

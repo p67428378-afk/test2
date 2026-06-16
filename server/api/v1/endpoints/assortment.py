@@ -62,6 +62,9 @@ def create_decision(
     if decision_in.scenario_name.lower() not in VALID_SCENARIOS:
         raise HTTPException(status_code=400, detail="Invalid scenario name provided")
         
+    # Ensure database is initialized and seeded
+    crud.seed_skus_if_empty(db)
+    
     # Verify that all sku_ids exist
     for item in decision_in.items:
         sku = db.query(crud.models.SKU).filter(crud.models.SKU.id == item.sku_id).first()
