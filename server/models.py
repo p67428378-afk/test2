@@ -1,6 +1,12 @@
+"""
+Module: server.models
+Purpose: Database models for the application, including users, OTPs, password history, and calendar months.
+Author: Backend Developer Agent
+Created: 2026-06-16
+"""
 
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -39,3 +45,11 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+class CalendarMonth(Base):
+    __tablename__ = "calendar_months"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    year = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

@@ -1,6 +1,12 @@
+"""
+Module: server.schemas
+Purpose: Pydantic schemas for request and response validation.
+Author: Backend Developer Agent
+Created: 2026-06-16
+"""
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
@@ -31,3 +37,14 @@ class SetNewPasswordRequest(BaseModel):
 class SetNewPasswordResponse(BaseModel):
     status: str
     login_link: str
+
+class CalendarDayResponse(BaseModel):
+    date: str
+    day_number: int
+    is_current_month: bool
+    is_today: bool
+
+class CalendarGridResponse(BaseModel):
+    days: List[CalendarDayResponse]
+    month: int
+    year: int

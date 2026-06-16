@@ -1,3 +1,9 @@
+"""
+Module: server.crud
+Purpose: Database operations for users, OTPs, password history, and calendar months.
+Author: Backend Developer Agent
+Created: 2026-06-16
+"""
 
 from sqlalchemy.orm import Session
 from server import models, schemas
@@ -36,3 +42,15 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+def get_or_create_calendar_month(db: Session, year: int, month: int):
+    db_month = db.query(models.CalendarMonth).filter(
+        models.CalendarMonth.year == year,
+        models.CalendarMonth.month == month
+    ).first()
+    if not db_month:
+        db_month = models.CalendarMonth(year=year, month=month)
+        db.add(db_month)
+        db.commit()
+        db.refresh(db_month)
+    return db_month
