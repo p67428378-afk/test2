@@ -1,6 +1,7 @@
-
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
+from uuid import UUID
 
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
@@ -31,3 +32,35 @@ class SetNewPasswordRequest(BaseModel):
 class SetNewPasswordResponse(BaseModel):
     status: str
     login_link: str
+
+class AlphabetBase(BaseModel):
+    letter: str
+    word: str
+    emoji: str
+
+class AlphabetCreate(AlphabetBase):
+    pass
+
+class AlphabetResponse(AlphabetBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class NumberBase(BaseModel):
+    number: int
+    word: str
+    emoji: str
+
+class NumberCreate(NumberBase):
+    pass
+
+class NumberResponse(NumberBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

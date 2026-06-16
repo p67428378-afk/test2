@@ -1,6 +1,5 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -39,3 +38,21 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+class Alphabet(Base):
+    __tablename__ = "alphabets"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    letter = Column(String(1), unique=True, nullable=False)
+    word = Column(String(255), nullable=False)
+    emoji = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+class Number(Base):
+    __tablename__ = "numbers"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    number = Column(Integer, unique=True, nullable=False)
+    word = Column(String(255), nullable=False)
+    emoji = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
