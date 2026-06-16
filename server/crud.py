@@ -1,4 +1,4 @@
-
+import uuid
 from sqlalchemy.orm import Session
 from server import models, schemas
 
@@ -36,3 +36,13 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+
+# Recipe CRUD
+def get_recipes(db: Session, skip: int = 0, limit: int = 20):
+    return db.query(models.Recipe).offset(skip).limit(limit).all()
+
+def get_recipe(db: Session, recipe_id):
+    if isinstance(recipe_id, str):
+        recipe_id = uuid.UUID(recipe_id)
+    return db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
