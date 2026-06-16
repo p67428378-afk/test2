@@ -1,0 +1,5 @@
+pydantic
+starlette
+geoalchemy2
+shapely
+pydantic_settings
