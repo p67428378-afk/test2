@@ -1,7 +1,7 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
 
+# Existing Password Reset CRUD
 def get_user_by_login_id(db: Session, login_id: str):
     return db.query(models.User).filter(models.User.login_id == login_id).first()
 
@@ -36,3 +36,34 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+
+# New DG Cluster Assortment Advisor CRUD
+
+def get_all_skus(db: Session):
+    return db.query(models.SKU).all()
+
+def create_sku(db: Session, sku_name: str, current_sales: float, sales_per_linear_ft: float, private_brand: bool, in_stock_rate: float, shelf_capacity: int):
+    db_sku = models.SKU(
+        sku_name=sku_name,
+        current_sales=current_sales,
+        sales_per_linear_ft=sales_per_linear_ft,
+        private_brand=private_brand,
+        in_stock_rate=in_stock_rate,
+        shelf_capacity=shelf_capacity
+    )
+    db.add(db_sku)
+    db.commit()
+    db.refresh(db_sku)
+    return db_sku
+
+def create_decision(db: Session, scenario_name: str, decisions_payload: dict, submitted_by: str):
+    db_decision = models.Decision(
+        scenario_name=scenario_name,
+        decisions_payload=decisions_payload,
+        submitted_by=submitted_by
+    )
+    db.add(db_decision)
+    db.commit()
+    db.refresh(db_decision)
+    return db_decision
