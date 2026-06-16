@@ -1,10 +1,20 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from server.api.v1.endpoints import password_reset, assortment
 from server.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# Configure CORS middleware to allow frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
 app.include_router(assortment.router, prefix="/api/v1", tags=["assortment"])
