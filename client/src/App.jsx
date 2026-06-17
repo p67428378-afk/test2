@@ -91,9 +91,9 @@ export default function App() {
   return (
     <div className="min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]">
       {/* TopNavBar */}
-      <header className="bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50 flex-nowrap overflow-hidden">
-        <div className="flex items-center space-x-4 min-w-0 flex-shrink mr-4">
-          <h1 className="text-title-md font-bold text-on-surface truncate">
+      <header className="bg-surface border-b border-outline-variant flex flex-col md:flex-row justify-between items-center px-container-margin w-full max-w-full mx-auto min-h-16 py-3 md:py-0 gap-3 z-50 overflow-hidden">
+        <div className="flex items-center space-x-4 min-w-0 mr-4">
+          <h1 className="text-base md:text-lg lg:text-xl font-bold text-on-surface whitespace-normal md:whitespace-nowrap">
             Retail Banking Product Strategy Decision-Support Tool
           </h1>
           <span className="text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block whitespace-nowrap">
