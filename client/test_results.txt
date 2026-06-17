@@ -1,0 +1,1366 @@
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.0[39m [90mC:/Users/Aarchi/AppData/Local/Temp/frontend_workspaces/SCRUM-363/repo/client[39m
+
+[90mstderr[2m | src/App.test.jsx[2m > [22m[2mRetail Banking Product Strategy App[2m > [22m[2mrenders the dashboard with loading state initially[22m[39m
+Warning: An update to App inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at App (C:\Users\Aarchi\AppData\Local\Temp\frontend_workspaces\SCRUM-363\repo\client\src\App.jsx:18:49)
+Warning: An update to App inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at App (C:\Users\Aarchi\AppData\Local\Temp\frontend_workspaces\SCRUM-363\repo\client\src\App.jsx:18:49)
+Warning: An update to App inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at App (C:\Users\Aarchi\AppData\Local\Temp\frontend_workspaces\SCRUM-363\repo\client\src\App.jsx:18:49)
+Warning: An update to App inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at App (C:\Users\Aarchi\AppData\Local\Temp\frontend_workspaces\SCRUM-363\repo\client\src\App.jsx:18:49)
+Warning: An update to App inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at App (C:\Users\Aarchi\AppData\Local\Temp\frontend_workspaces\SCRUM-363\repo\client\src\App.jsx:18:49)
+Warning: An update to App inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at App (C:\Users\Aarchi\AppData\Local\Temp\frontend_workspaces\SCRUM-363\repo\client\src\App.jsx:18:49)
+
+ [33m❯[39m src/App.test.jsx [2m ([22m[2m3 tests[22m [2m|[22m [31m2 failed[39m[2m)[22m[33m 2157[2mms[22m[39m
+[31m   [33m❯[31m src/App.test.jsx[2m > [22mRetail Banking Product Strategy App[2m > [22mloads and displays KPI and product data[39m
+[31m     → Found multiple elements with the text: Savings Premium
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<td[31m
+  [33mclass[31m=[32m"py-3 px-4 font-medium"[31m
+[36m>[31m
+  [0mSavings Premium[0m
+[36m</td>[31m
+
+Ignored nodes: comments, script, style
+[36m<strong[31m
+  [33mclass[31m=[32m"text-white"[31m
+[36m>[31m
+  [0mSavings Premium[0m
+[36m</strong>[31m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[31m
+    [36m>[31m
+      [36m<header[31m
+        [33mclass[31m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex items-center space-x-4"[31m
+        [36m>[31m
+          [36m<h1[31m
+            [33mclass[31m=[32m"text-title-md font-bold text-on-surface"[31m
+          [36m>[31m
+            [0mRetail Banking Product Strategy Decision-Support Tool[0m
+          [36m</h1>[31m
+          [36m<span[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[31m
+          [36m>[31m
+            [0mSemi-Urban/Rural Branch Cluster[0m
+          [36m</span>[31m
+        [36m</div>[31m
+        [36m<nav[31m
+          [33mclass[31m=[32m"hidden md:flex space-x-8"[31m
+        [36m>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mStrategy[0m
+          [36m</a>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mDashboard[0m
+          [36m</a>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mRisk[0m
+          [36m</a>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mApprovals[0m
+          [36m</a>[31m
+        [36m</nav>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex items-center space-x-6"[31m
+        [36m>[31m
+          [36m<span[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[31m
+          [36m>[31m
+            [0mJanuary 1, 2026[0m
+          [36m</span>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center space-x-3"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"text-right hidden sm:block"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"text-on-surface font-label-md text-label-md"[31m
+              [36m>[31m
+                [0mSarah Chen[0m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"text-on-surface-variant font-label-sm text-label-sm"[31m
+              [36m>[31m
+                [0mProduct Manager[0m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<img[31m
+              [33malt[31m=[32m"Sarah Chen Avatar"[31m
+              [33mclass[31m=[32m"w-8 h-8 rounded-full border border-outline-variant"[31m
+              [33msrc[31m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+      [36m</header>[31m
+      [36m<main[31m
+        [33mclass[31m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[31m
+      [36m>[31m
+        [36m<section[31m
+          [33mclass[31m=[32m"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-4"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex justify-between items-start"[31m
+            [36m>[31m
+              [36m<h3[31m
+                [33mclass[31m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[31m
+              [36m>[31m
+                [0mBusiness per Branch[0m
+              [36m</h3>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"material-symbols-outlined text-muted text-[18px]"[31m
+              [36m>[31m
+                [0maccount_balance[0m
+              [36m</span>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-baseline space-x-2"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"font-headline-lg text-headline-lg text-[#F8FAFC]"[31m
+              [36m>[31m
+                [0m₹150 Cr[0m
+              [36m</span>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"bg-[#059669]/10 text-[#34D399] font-label-sm text-label-sm px-1.5 py-0.5 rounded flex items-center"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"material-symbols-outlined text-[12px] mr-0.5"[31m
+                [36m>[31m
+                  [0mtrending_up[0m
+                [36m</span>[31m
+                [0m+4.2% YoY[0m
+              [36m</span>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex justify-between items-start"[31m
+            [36m>[31m
+              [36m<h3[31m
+                [33mclass[31m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[31m
+              [36m>[31m
+                [0mCASA Ratio[0m
+              [36m</h3>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"material-symbols-outlined text-muted text-[18px]"[31m
+              [36m>[31m
+                [0mpie_chart[0m
+              [36m</span>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-baseline space-x-2"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"font-headline-lg text-headline-lg text-[#F8FAFC]"[31m
+              ...
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[31m
+      [36m>[31m
+        [36m<header[31m
+          [33mclass[31m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center space-x-4"[31m
+          [36m>[31m
+            [36m<h1[31m
+              [33mclass[31m=[32m"text-title-md font-bold text-on-surface"[31m
+            [36m>[31m
+              [0mRetail Banking Product Strategy Decision-Support Tool[0m
+            [36m</h1>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[31m
+            [36m>[31m
+              [0mSemi-Urban/Rural Branch Cluster[0m
+            [36m</span>[31m
+          [36m</div>[31m
+          [36m<nav[31m
+            [33mclass[31m=[32m"hidden md:flex space-x-8"[31m
+          [36m>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mStrategy[0m
+            [36m</a>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mDashboard[0m
+            [36m</a>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mRisk[0m
+            [36m</a>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mApprovals[0m
+            [36m</a>[31m
+          [36m</nav>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center space-x-6"[31m
+          [36m>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[31m
+            [36m>[31m
+              [0mJanuary 1, 2026[0m
+            [36m</span>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center space-x-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"text-right hidden sm:block"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"text-on-surface font-label-md text-label-md"[31m
+                [36m>[31m
+                  [0mSarah Chen[0m
+                [36m</div>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"text-on-surface-variant font-label-sm text-label-sm"[31m
+                [36m>[31m
+                  [0mProduct Manager[0m
+                [36m</div>[31m
+              [36m</div>[31m
+              [36m<img[31m
+                [33malt[31m=[32m"Sarah Chen Avatar"[31m
+                [33mclass[31m=[32m"w-8 h-8 rounded-full border border-outline-variant"[31m
+                [33msrc[31m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[31m
+              [36m/>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+        [36m</header>[31m
+        [36m<main[31m
+          [33mclass[31m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[31m
+        [36m>[31m
+          [36m<section[31m
+            [33mclass[31m=[32m"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-4"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex justify-between items-start"[31m
+              [36m>[31m
+                [36m<h3[31m
+                  [33mclass[31m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[31m
+                [36m>[31m
+                  [0mBusiness per Branch[0m
+                [36m</h3>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"material-symbols-outlined text-muted text-[18px]"[31m
+                [36m>[31m
+                  [0maccount_balance[0m
+                [36m</span>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex items-baseline space-x-2"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"font-headline-lg text-headline-lg text-[#F8FAFC]"[31m
+                [36m>[31m
+                  [0m₹150 Cr[0m
+                [36m</span>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"bg-[#059669]/10 text-[#34D399] font-label-sm text-label-sm px-1.5 py-0.5 rounded flex items-center"[31m
+                [36m>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"material-symbols-outlined text-[12px] mr-0.5"[31m
+                  [36m>[31m
+                    [0mtrending_up[0m
+                  [36m</span>[31m
+                  [0m+4.2% YoY[0m
+                [36m</span>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex justify-between items-start"[31m
+              [36m>[31m
+                [36m<h3[31m
+                  [33mclass[31m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[31m
+                [36m>[31m
+                  [0mCASA Ratio[0m
+                [36m</h3>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"material-symbols-outlined text-muted text-[18px]"[31m
+                [36m>[31m
+                  [0mpie_chart[0m
+  ...[39m
+[31m   [33m❯[31m src/App.test.jsx[2m > [22mRetail Banking Product Strategy App[2m > [22msubmits approval request successfully[39m
+[31m     → Found multiple elements with the text: Sarah Chen
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[31m
+  [33mclass[31m=[32m"text-on-surface font-label-md text-label-md"[31m
+[36m>[31m
+  [0mSarah Chen[0m
+[36m</div>[31m
+
+Ignored nodes: comments, script, style
+[36m<span[31m
+  [33mclass[31m=[32m"font-semibold text-white"[31m
+[36m>[31m
+  [0mSarah Chen[0m
+[36m</span>[31m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[31m
+    [36m>[31m
+      [36m<header[31m
+        [33mclass[31m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex items-center space-x-4"[31m
+        [36m>[31m
+          [36m<h1[31m
+            [33mclass[31m=[32m"text-title-md font-bold text-on-surface"[31m
+          [36m>[31m
+            [0mRetail Banking Product Strategy Decision-Support Tool[0m
+          [36m</h1>[31m
+          [36m<span[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[31m
+          [36m>[31m
+            [0mSemi-Urban/Rural Branch Cluster[0m
+          [36m</span>[31m
+        [36m</div>[31m
+        [36m<nav[31m
+          [33mclass[31m=[32m"hidden md:flex space-x-8"[31m
+        [36m>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mStrategy[0m
+          [36m</a>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mDashboard[0m
+          [36m</a>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mRisk[0m
+          [36m</a>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+            [33mhref[31m=[32m"#"[31m
+          [36m>[31m
+            [0mApprovals[0m
+          [36m</a>[31m
+        [36m</nav>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex items-center space-x-6"[31m
+        [36m>[31m
+          [36m<span[31m
+            [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[31m
+          [36m>[31m
+            [0mJanuary 1, 2026[0m
+          [36m</span>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center space-x-3"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"text-right hidden sm:block"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"text-on-surface font-label-md text-label-md"[31m
+              [36m>[31m
+                [0mSarah Chen[0m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"text-on-surface-variant font-label-sm text-label-sm"[31m
+              [36m>[31m
+                [0mProduct Manager[0m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<img[31m
+              [33malt[31m=[32m"Sarah Chen Avatar"[31m
+              [33mclass[31m=[32m"w-8 h-8 rounded-full border border-outline-variant"[31m
+              [33msrc[31m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+      [36m</header>[31m
+      [36m<main[31m
+        [33mclass[31m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"bg-[#059669]/10 border border-[#059669]/30 rounded-xl p-6 mb-6 relative animate-fadeIn"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"absolute top-4 right-4 text-muted hover:text-white transition-colors"[31m
+          [36m>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"material-symbols-outlined text-[20px]"[31m
+            [36m>[31m
+              [0mclose[0m
+            [36m</span>[31m
+          [36m</button>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-start space-x-4"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"bg-[#059669]/20 p-2 rounded-full text-[#34D399]"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"material-symbols-outlined text-[24px]"[31m
+              [36m>[31m
+                [0mcheck_circle[0m
+              [36m</span>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex-1"[31m
+            [36m>[31m
+              [36m<h3[31m
+                [33mclass[31m=[32m"text-lg font-bold text-[#34D399] mb-1"[31m
+              [36m>[31m
+                [0mScenario Submitted Successfully[0m
+              [36m</h3>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"text-sm text-[#CBD5E1] mb-4"[31m
+              [36m>[31m
+                [0mThe strategic scenario has been submitted to the regional/zonal head. An audit trail has been generated for regulatory traceability.[0m
+              [36m</p>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0F172A]/50 p-4 rounded-lg border border-subtle font-mono-data text-xs text-[#E2E8F0]"[31m
+              [36m>[31m
+                [36m<div>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"text-muted block mb-1 uppercase tracking-wider text-[10px]"[31m
+                  [36m>[31m
+                    [0mApproved By[0m
+                  [36m</span>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"font-semibold text-white"[31m
+                  [36m>[31m
+                    [0mSarah Chen[0m
+                  [36m</span>[31m
+                [36m</div>[31m
+                [36m<div>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"text-muted block mb-1 uppercase tracking-wider text-[10px]"[31m
+                  [36m>[31m
+                    [0mTimestamp[0m
+                  [36m</span>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"font-semibold text-white"[31m
+                  [36m>[31m
+                ...
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[31m
+      [36m>[31m
+        [36m<header[31m
+          [33mclass[31m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center space-x-4"[31m
+          [36m>[31m
+            [36m<h1[31m
+              [33mclass[31m=[32m"text-title-md font-bold text-on-surface"[31m
+            [36m>[31m
+              [0mRetail Banking Product Strategy Decision-Support Tool[0m
+            [36m</h1>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[31m
+            [36m>[31m
+              [0mSemi-Urban/Rural Branch Cluster[0m
+            [36m</span>[31m
+          [36m</div>[31m
+          [36m<nav[31m
+            [33mclass[31m=[32m"hidden md:flex space-x-8"[31m
+          [36m>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mStrategy[0m
+            [36m</a>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mDashboard[0m
+            [36m</a>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mRisk[0m
+            [36m</a>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[31m
+              [33mhref[31m=[32m"#"[31m
+            [36m>[31m
+              [0mApprovals[0m
+            [36m</a>[31m
+          [36m</nav>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center space-x-6"[31m
+          [36m>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[31m
+            [36m>[31m
+              [0mJanuary 1, 2026[0m
+            [36m</span>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center space-x-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"text-right hidden sm:block"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"text-on-surface font-label-md text-label-md"[31m
+                [36m>[31m
+                  [0mSarah Chen[0m
+                [36m</div>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"text-on-surface-variant font-label-sm text-label-sm"[31m
+                [36m>[31m
+                  [0mProduct Manager[0m
+                [36m</div>[31m
+              [36m</div>[31m
+              [36m<img[31m
+                [33malt[31m=[32m"Sarah Chen Avatar"[31m
+                [33mclass[31m=[32m"w-8 h-8 rounded-full border border-outline-variant"[31m
+                [33msrc[31m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[31m
+              [36m/>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+        [36m</header>[31m
+        [36m<main[31m
+          [33mclass[31m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-[#059669]/10 border border-[#059669]/30 rounded-xl p-6 mb-6 relative animate-fadeIn"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"absolute top-4 right-4 text-muted hover:text-white transition-colors"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"material-symbols-outlined text-[20px]"[31m
+              [36m>[31m
+                [0mclose[0m
+              [36m</span>[31m
+            [36m</button>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-start space-x-4"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"bg-[#059669]/20 p-2 rounded-full text-[#34D399]"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"material-symbols-outlined text-[24px]"[31m
+                [36m>[31m
+                  [0mcheck_circle[0m
+                [36m</span>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex-1"[31m
+              [36m>[31m
+                [36m<h3[31m
+                  [33mclass[31m=[32m"text-lg font-bold text-[#34D399] mb-1"[31m
+                [36m>[31m
+                  [0mScenario Submitted Successfully[0m
+                [36m</h3>[31m
+                [36m<p[31m
+                  [33mclass[31m=[32m"text-sm text-[#CBD5E1] mb-4"[31m
+                [36m>[31m
+                  [0mThe strategic scenario has been submitted to the regional/zonal head. An audit trail has been generated for regulatory traceability.[0m
+                [36m</p>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0F172A]/50 p-4 rounded-lg border border-subtle font-mono-data text-xs text-[#E2E8F0]"[31m
+                [36m>[31m
+                  [36m<div>[31m
+                    [36m<span[31m
+                      [33mclass[31m=[32m"text-muted block mb-1 uppercase tracking-wider text-[10px]"[31m
+                    [36m>[31m
+                      [0mApproved By[0m
+                    [36m</span>[31m
+                    [36m<span[31m
+                      [33mclass[31m=[32m"font-semibold text-white"[31m
+                    [36m>[31m
+                      [0mSarah Chen[0m
+                    [36m</span>[31m
+                  [36m</div>[31m
+                  [36m<div>[31m
+                    [36m<span[31m
+                      [33mclass[31m=[32m"te...[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 2 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/App.test.jsx[2m > [22mRetail Banking Product Strategy App[2m > [22mloads and displays KPI and product data
+[31m[1mTestingLibraryElementError[22m[39m: Found multiple elements with the text: Savings Premium
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<td[39m
+  [33mclass[39m=[32m"py-3 px-4 font-medium"[39m
+[36m>[39m
+  [0mSavings Premium[0m
+[36m</td>[39m
+
+Ignored nodes: comments, script, style
+[36m<strong[39m
+  [33mclass[39m=[32m"text-white"[39m
+[36m>[39m
+  [0mSavings Premium[0m
+[36m</strong>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center space-x-4"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"text-title-md font-bold text-on-surface"[39m
+          [36m>[39m
+            [0mRetail Banking Product Strategy Decision-Support Tool[0m
+          [36m</h1>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[39m
+          [36m>[39m
+            [0mSemi-Urban/Rural Branch Cluster[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<nav[39m
+          [33mclass[39m=[32m"hidden md:flex space-x-8"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mStrategy[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mDashboard[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mRisk[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mApprovals[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center space-x-6"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[39m
+          [36m>[39m
+            [0mJanuary 1, 2026[0m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center space-x-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-right hidden sm:block"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"text-on-surface font-label-md text-label-md"[39m
+              [36m>[39m
+                [0mSarah Chen[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"text-on-surface-variant font-label-sm text-label-sm"[39m
+              [36m>[39m
+                [0mProduct Manager[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Sarah Chen Avatar"[39m
+              [33mclass[39m=[32m"w-8 h-8 rounded-full border border-outline-variant"[39m
+              [33msrc[39m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</header>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex justify-between items-start"[39m
+            [36m>[39m
+              [36m<h3[39m
+                [33mclass[39m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[39m
+              [36m>[39m
+                [0mBusiness per Branch[0m
+              [36m</h3>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"material-symbols-outlined text-muted text-[18px]"[39m
+              [36m>[39m
+                [0maccount_balance[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-baseline space-x-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"font-headline-lg text-headline-lg text-[#F8FAFC]"[39m
+              [36m>[39m
+                [0m₹150 Cr[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bg-[#059669]/10 text-[#34D399] font-label-sm text-label-sm px-1.5 py-0.5 rounded flex items-center"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-[12px] mr-0.5"[39m
+                [36m>[39m
+                  [0mtrending_up[0m
+                [36m</span>[39m
+                [0m+4.2% YoY[0m
+              [36m</span>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex justify-between items-start"[39m
+            [36m>[39m
+              [36m<h3[39m
+                [33mclass[39m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[39m
+              [36m>[39m
+                [0mCASA Ratio[0m
+              [36m</h3>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"material-symbols-outlined text-muted text-[18px]"[39m
+              [36m>[39m
+                [0mpie_chart[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-baseline space-x-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"font-headline-lg text-headline-lg text-[#F8FAFC]"[39m
+              ...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center space-x-4"[39m
+          [36m>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-title-md font-bold text-on-surface"[39m
+            [36m>[39m
+              [0mRetail Banking Product Strategy Decision-Support Tool[0m
+            [36m</h1>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[39m
+            [36m>[39m
+              [0mSemi-Urban/Rural Branch Cluster[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<nav[39m
+            [33mclass[39m=[32m"hidden md:flex space-x-8"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mStrategy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mDashboard[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mRisk[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mApprovals[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center space-x-6"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[39m
+            [36m>[39m
+              [0mJanuary 1, 2026[0m
+            [36m</span>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center space-x-3"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"text-right hidden sm:block"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-on-surface font-label-md text-label-md"[39m
+                [36m>[39m
+                  [0mSarah Chen[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-on-surface-variant font-label-sm text-label-sm"[39m
+                [36m>[39m
+                  [0mProduct Manager[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Sarah Chen Avatar"[39m
+                [33mclass[39m=[32m"w-8 h-8 rounded-full border border-outline-variant"[39m
+                [33msrc[39m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[39m
+              [36m/>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</header>[39m
+        [36m<main[39m
+          [33mclass[39m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[39m
+        [36m>[39m
+          [36m<section[39m
+            [33mclass[39m=[32m"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex justify-between items-start"[39m
+              [36m>[39m
+                [36m<h3[39m
+                  [33mclass[39m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[39m
+                [36m>[39m
+                  [0mBusiness per Branch[0m
+                [36m</h3>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-muted text-[18px]"[39m
+                [36m>[39m
+                  [0maccount_balance[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-baseline space-x-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"font-headline-lg text-headline-lg text-[#F8FAFC]"[39m
+                [36m>[39m
+                  [0m₹150 Cr[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"bg-[#059669]/10 text-[#34D399] font-label-sm text-label-sm px-1.5 py-0.5 rounded flex items-center"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[12px] mr-0.5"[39m
+                  [36m>[39m
+                    [0mtrending_up[0m
+                  [36m</span>[39m
+                  [0m+4.2% YoY[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"bg-card border border-subtle rounded-xl p-card-padding flex flex-col justify-between h-24"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex justify-between items-start"[39m
+              [36m>[39m
+                [36m<h3[39m
+                  [33mclass[39m=[32m"text-muted font-label-sm text-label-sm uppercase tracking-wider"[39m
+                [36m>[39m
+                  [0mCASA Ratio[0m
+                [36m</h3>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-muted text-[18px]"[39m
+                [36m>[39m
+                  [0mpie_chart[0m
+  ...
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m src/App.test.jsx:[2m70:11[22m[39m
+    [90m 68| [39m    [34mrender[39m([33m<[39m[33mApp[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 69| [39m
+    [90m 70| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   | [39m          [31m^[39m
+    [90m 71| [39m      [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m"₹150 Cr"[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+    [90m 72| [39m      [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m"Savings Premium"[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/App.test.jsx[2m > [22mRetail Banking Product Strategy App[2m > [22msubmits approval request successfully
+[31m[1mTestingLibraryElementError[22m[39m: Found multiple elements with the text: Sarah Chen
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mclass[39m=[32m"text-on-surface font-label-md text-label-md"[39m
+[36m>[39m
+  [0mSarah Chen[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<span[39m
+  [33mclass[39m=[32m"font-semibold text-white"[39m
+[36m>[39m
+  [0mSarah Chen[0m
+[36m</span>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center space-x-4"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"text-title-md font-bold text-on-surface"[39m
+          [36m>[39m
+            [0mRetail Banking Product Strategy Decision-Support Tool[0m
+          [36m</h1>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[39m
+          [36m>[39m
+            [0mSemi-Urban/Rural Branch Cluster[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<nav[39m
+          [33mclass[39m=[32m"hidden md:flex space-x-8"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mStrategy[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mDashboard[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mRisk[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+            [33mhref[39m=[32m"#"[39m
+          [36m>[39m
+            [0mApprovals[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center space-x-6"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[39m
+          [36m>[39m
+            [0mJanuary 1, 2026[0m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center space-x-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-right hidden sm:block"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"text-on-surface font-label-md text-label-md"[39m
+              [36m>[39m
+                [0mSarah Chen[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"text-on-surface-variant font-label-sm text-label-sm"[39m
+              [36m>[39m
+                [0mProduct Manager[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Sarah Chen Avatar"[39m
+              [33mclass[39m=[32m"w-8 h-8 rounded-full border border-outline-variant"[39m
+              [33msrc[39m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</header>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"bg-[#059669]/10 border border-[#059669]/30 rounded-xl p-6 mb-6 relative animate-fadeIn"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"absolute top-4 right-4 text-muted hover:text-white transition-colors"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"material-symbols-outlined text-[20px]"[39m
+            [36m>[39m
+              [0mclose[0m
+            [36m</span>[39m
+          [36m</button>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-start space-x-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"bg-[#059669]/20 p-2 rounded-full text-[#34D399]"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"material-symbols-outlined text-[24px]"[39m
+              [36m>[39m
+                [0mcheck_circle[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex-1"[39m
+            [36m>[39m
+              [36m<h3[39m
+                [33mclass[39m=[32m"text-lg font-bold text-[#34D399] mb-1"[39m
+              [36m>[39m
+                [0mScenario Submitted Successfully[0m
+              [36m</h3>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-sm text-[#CBD5E1] mb-4"[39m
+              [36m>[39m
+                [0mThe strategic scenario has been submitted to the regional/zonal head. An audit trail has been generated for regulatory traceability.[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0F172A]/50 p-4 rounded-lg border border-subtle font-mono-data text-xs text-[#E2E8F0]"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"text-muted block mb-1 uppercase tracking-wider text-[10px]"[39m
+                  [36m>[39m
+                    [0mApproved By[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"font-semibold text-white"[39m
+                  [36m>[39m
+                    [0mSarah Chen[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"text-muted block mb-1 uppercase tracking-wider text-[10px]"[39m
+                  [36m>[39m
+                    [0mTimestamp[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"font-semibold text-white"[39m
+                  [36m>[39m
+                ...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-h-screen font-sans text-[#dae2fd] antialiased overflow-x-hidden flex flex-col bg-[#0b1326]"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin w-full max-w-full mx-auto h-16 z-50"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center space-x-4"[39m
+          [36m>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-title-md font-bold text-on-surface"[39m
+            [36m>[39m
+              [0mRetail Banking Product Strategy Decision-Support Tool[0m
+            [36m</h1>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-body-sm text-body-sm border-l border-outline-variant pl-4 ml-4 hidden lg:inline-block"[39m
+            [36m>[39m
+              [0mSemi-Urban/Rural Branch Cluster[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<nav[39m
+            [33mclass[39m=[32m"hidden md:flex space-x-8"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary transition-colors opacity-80"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mStrategy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mDashboard[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mRisk[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"[39m
+              [33mhref[39m=[32m"#"[39m
+            [36m>[39m
+              [0mApprovals[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center space-x-6"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-on-surface-variant font-label-md text-label-md hidden md:inline-block"[39m
+            [36m>[39m
+              [0mJanuary 1, 2026[0m
+            [36m</span>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center space-x-3"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"text-right hidden sm:block"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-on-surface font-label-md text-label-md"[39m
+                [36m>[39m
+                  [0mSarah Chen[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-on-surface-variant font-label-sm text-label-sm"[39m
+                [36m>[39m
+                  [0mProduct Manager[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Sarah Chen Avatar"[39m
+                [33mclass[39m=[32m"w-8 h-8 rounded-full border border-outline-variant"[39m
+                [33msrc[39m=[32m"https://lh3.googleusercontent.com/aida-public/AB6AXuDfsbSKBE2iwJozkoArYXIh4divwzymmR7m4f8kecxqr_twlTod1icmTnLk28dwvl7S6IAaobT0MTJBDpcdlfIIbq3xA_ls4T5-_MqI4CrPziAAJdh8i1SuF6Qj8P0YOLp-HG0QpI7M4kGP2c277LqdE13L447Fw4SsgAw3Y5vsUhWB5mOnN5inJVdWOsii_O0UQxTIKcZckyV0_wU_8aLPabq1c-ZKrUsvSJRBNcNf2CcBoeglZD5mV2yCAO0TTCrO4KLMQQ2bVR0"[39m
+              [36m/>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</header>[39m
+        [36m<main[39m
+          [33mclass[39m=[32m"flex-1 px-container-margin py-gutter w-full max-w-[1600px] mx-auto flex flex-col gap-stack-default"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"bg-[#059669]/10 border border-[#059669]/30 rounded-xl p-6 mb-6 relative animate-fadeIn"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"absolute top-4 right-4 text-muted hover:text-white transition-colors"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"material-symbols-outlined text-[20px]"[39m
+              [36m>[39m
+                [0mclose[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-start space-x-4"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"bg-[#059669]/20 p-2 rounded-full text-[#34D399]"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-[24px]"[39m
+                [36m>[39m
+                  [0mcheck_circle[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex-1"[39m
+              [36m>[39m
+                [36m<h3[39m
+                  [33mclass[39m=[32m"text-lg font-bold text-[#34D399] mb-1"[39m
+                [36m>[39m
+                  [0mScenario Submitted Successfully[0m
+                [36m</h3>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"text-sm text-[#CBD5E1] mb-4"[39m
+                [36m>[39m
+                  [0mThe strategic scenario has been submitted to the regional/zonal head. An audit trail has been generated for regulatory traceability.[0m
+                [36m</p>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0F172A]/50 p-4 rounded-lg border border-subtle font-mono-data text-xs text-[#E2E8F0]"[39m
+                [36m>[39m
+                  [36m<div>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"text-muted block mb-1 uppercase tracking-wider text-[10px]"[39m
+                    [36m>[39m
+                      [0mApproved By[0m
+                    [36m</span>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"font-semibold text-white"[39m
+                    [36m>[39m
+                      [0mSarah Chen[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                  [36m<div>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"te...
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m src/App.test.jsx:[2m105:11[22m[39m
+    [90m103| [39m    fireEvent[33m.[39m[34mclick[39m(submitBtn)[33m;[39m
+    [90m104| [39m
+    [90m105| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   | [39m          [31m^[39m
+    [90m106| [39m      [34mexpect[39m(
+    [90m107| [39m        screen[33m.[39m[34mgetByText[39m([32m"Scenario Submitted Successfully"[39m)[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 15:31:30
+[2m   Duration [22m 5.69s[2m (transform 211ms, setup 308ms, collect 484ms, tests 2.16s, environment 1.27s, prepare 393ms)[22m
+
