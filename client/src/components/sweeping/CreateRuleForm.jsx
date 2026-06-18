@@ -71,7 +71,7 @@ const CreateRuleForm = ({ onRuleCreated }) => {
   };
 
   return (
-    <div className="bento-card p-6 rounded-xl">
+    <div className="bento-card p-6 pb-8 rounded-xl">
       <div className="flex items-center gap-2 mb-6">
         <PlusCircle className="text-indigo-accent w-6 h-6" />
         <h3 className="text-headline-sm font-headline-sm">
@@ -188,7 +188,7 @@ const CreateRuleForm = ({ onRuleCreated }) => {
           </select>
         </div>
 
-        <div className="col-span-2 pt-4 flex gap-3">
+        <div className="col-span-2 pt-4 pb-2 flex gap-3">
           <button
             type="submit"
             className="bg-indigo-accent hover:bg-opacity-90 text-white font-label-md py-2.5 px-6 rounded-lg transition-all flex items-center gap-2"
