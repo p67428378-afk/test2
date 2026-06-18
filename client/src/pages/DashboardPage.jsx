@@ -683,93 +683,99 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full min-w-[1100px] text-left border-collapse">
                 <thead>
                   <tr className="border-b border-outline-variant/20 bg-surface-container-lowest/50">
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant whitespace-nowrap">
                       Currency
                     </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant whitespace-nowrap">
                       Country
                     </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right whitespace-nowrap">
                       Limit Amount
                     </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right whitespace-nowrap">
                       Daily Cap
                     </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right whitespace-nowrap">
                       Weekly Cap
                     </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right whitespace-nowrap">
                       Current Daily Usage
                     </th>
-                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right whitespace-nowrap">
                       Current Weekly Usage
                     </th>
                   </tr>
                 </thead>
                 <tbody className="text-sm font-mono">
                   <tr className="border-b border-outline-variant/10 hover:bg-surface-variant/10 transition-colors">
-                    <td className="px-5 py-4 font-bold text-on-surface">EUR</td>
-                    <td className="px-5 py-4 text-on-surface-variant">
+                    <td className="px-5 py-4 font-bold text-on-surface whitespace-nowrap">
+                      EUR
+                    </td>
+                    <td className="px-5 py-4 text-on-surface-variant whitespace-nowrap">
                       DE (Germany)
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $10,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $1,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $5,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-indigo-400">
+                    <td className="px-5 py-4 text-right text-indigo-400 whitespace-nowrap">
                       $750,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-indigo-400">
+                    <td className="px-5 py-4 text-right text-indigo-400 whitespace-nowrap">
                       $3,750,000.00
                     </td>
                   </tr>
                   <tr className="border-b border-outline-variant/10 hover:bg-surface-variant/10 transition-colors">
-                    <td className="px-5 py-4 font-bold text-on-surface">GBP</td>
-                    <td className="px-5 py-4 text-on-surface-variant">
+                    <td className="px-5 py-4 font-bold text-on-surface whitespace-nowrap">
+                      GBP
+                    </td>
+                    <td className="px-5 py-4 text-on-surface-variant whitespace-nowrap">
                       GB (United Kingdom)
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $10,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $1,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $5,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-emerald-400">
+                    <td className="px-5 py-4 text-right text-emerald-400 whitespace-nowrap">
                       $400,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-emerald-400">
+                    <td className="px-5 py-4 text-right text-emerald-400 whitespace-nowrap">
                       $2,000,000.00
                     </td>
                   </tr>
                   <tr className="border-b border-outline-variant/10 hover:bg-surface-variant/10 transition-colors">
-                    <td className="px-5 py-4 font-bold text-on-surface">SGD</td>
-                    <td className="px-5 py-4 text-on-surface-variant">
+                    <td className="px-5 py-4 font-bold text-on-surface whitespace-nowrap">
+                      SGD
+                    </td>
+                    <td className="px-5 py-4 text-on-surface-variant whitespace-nowrap">
                       SG (Singapore)
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $10,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $1,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-on-surface">
+                    <td className="px-5 py-4 text-right text-on-surface whitespace-nowrap">
                       $5,000,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-amber-400">
+                    <td className="px-5 py-4 text-right text-amber-400 whitespace-nowrap">
                       $900,000.00
                     </td>
-                    <td className="px-5 py-4 text-right text-amber-400">
+                    <td className="px-5 py-4 text-right text-amber-400 whitespace-nowrap">
                       $4,500,000.00
                     </td>
                   </tr>
