@@ -134,7 +134,7 @@ const CreateRuleForm = ({ onRuleCreated }) => {
             Target Account
           </label>
           <select
-            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 px-3 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
+            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 pl-3 pr-10 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
             value={targetAccount}
             onChange={(e) => setTargetAccount(e.target.value)}
           >
@@ -151,7 +151,7 @@ const CreateRuleForm = ({ onRuleCreated }) => {
             Sweep Frequency
           </label>
           <select
-            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 px-3 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
+            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 pl-3 pr-10 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
             value={frequency}
             onChange={(e) => setFrequency(e.target.value)}
           >
@@ -179,7 +179,7 @@ const CreateRuleForm = ({ onRuleCreated }) => {
             FX Hedging Strategy
           </label>
           <select
-            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 px-3 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
+            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 pl-3 pr-10 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
             value={fxStrategy}
             onChange={(e) => setFxStrategy(e.target.value)}
           >

@@ -217,7 +217,7 @@ const MobileWorkflowPage = () => {
                 Select Rule
               </label>
               <select
-                className="w-full bg-surface-container-low border border-outline-variant rounded-lg py-2 px-3 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-lg py-2 pl-3 pr-10 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
                 value={selectedRule?.id || ""}
                 onChange={(e) => {
                   const rule = rules.find((r) => r.id === e.target.value);
@@ -292,7 +292,7 @@ const MobileWorkflowPage = () => {
                       <select
                         value={fxStrategy}
                         onChange={(e) => setFxStrategy(e.target.value)}
-                        className="w-full bg-surface-container border border-outline-variant rounded py-1.5 px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-accent"
+                        className="w-full bg-surface-container border border-outline-variant rounded py-1.5 pl-2.5 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-accent"
                       >
                         <option value="spot">Spot Rate</option>
                         <option value="forward">24h Forward Contract</option>

@@ -83,7 +83,7 @@ const ParameterAdjustmentsCard = ({ rule, onAdjust }) => {
             FX Hedging Strategy
           </label>
           <select
-            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 px-3 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
+            className="w-full bg-surface-container-low border border-outline-variant rounded py-2 pl-3 pr-10 text-body-md focus:ring-2 focus:ring-indigo-accent focus:outline-none"
             value={fxStrategy}
             onChange={(e) => setFxStrategy(e.target.value)}
           >
