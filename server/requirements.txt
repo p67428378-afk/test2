@@ -4,3 +4,7 @@ sqlalchemy
 pydantic
 pydantic-settings
 pytest
+pyjwt
+bcrypt
+email-validator
+httpx
