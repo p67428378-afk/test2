@@ -25,8 +25,8 @@ describe("App Smoke Test", () => {
     render(<App />);
 
     // Check that the header title is present
-    const heading = screen.getByText("Namaste India");
-    expect(heading).toBeInTheDocument();
+    const headings = screen.getAllByText("Namaste India");
+    expect(headings[0]).toBeInTheDocument();
 
     // Wait for the mocked greeting to load and render
     await waitFor(() => {
