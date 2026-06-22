@@ -1,33 +1,21 @@
+from datetime import datetime
+from uuid import UUID
+from pydantic import BaseModel, ConfigDict
 
-from pydantic import BaseModel
-from typing import Optional
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class GreetingBase(BaseModel):
+    greeting: str
+    region: str
+    description: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class GreetingCreate(GreetingBase):
+    pass
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+class Greeting(GreetingBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
-
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
-
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+    model_config = ConfigDict(from_attributes=True)
