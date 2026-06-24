@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0f172a;
+}
+
+.sidebar-bg {
+  background-color: #020617;
+  border-right: 1px solid #334155;
+}
+
+.card-surface {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  transition: border-color 0.2s;
+}
+
+.card-surface:hover {
+  border-color: #6366f1;
+}
+
+.text-indigo-primary {
+  color: #6366f1;
+}
+
+.bg-indigo-primary {
+  background-color: #6366f1;
+}
+
+.border-indigo-primary {
+  border-color: #6366f1;
+}
+
+.text-emerald-status {
+  color: #10b981;
+}
+
+.bg-emerald-status-light {
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.text-amber-status {
+  color: #f59e0b;
+}
+
+.bg-amber-status-light {
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.text-rose-status {
+  color: #f43f5e;
+}
+
+.bg-rose-status-light {
+  background-color: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.text-slate-muted {
+  color: #94a3b8;
+}
+
+/* Custom scrollbar for data tables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
