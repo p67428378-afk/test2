@@ -1,14 +1,12 @@
 from fastapi import FastAPI
-from server.api.v1.endpoints import password_reset
-from server.app.api.v1.api import api_router as books_router
+from server.app.api.v1.api import api_router
 from server.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Library Management System")
 
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
-app.include_router(books_router, prefix="/api/v1")
+app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/")
