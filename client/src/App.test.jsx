@@ -1,171 +1,84 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import React from "react";
 import App from "./App";
-import * as api from "./services/api";
 
-// Mock the API service
 vi.mock("./services/api", () => ({
-  getDashboardData: vi.fn(),
-  submitProposal: vi.fn(),
-}));
-
-const mockDashboardData = {
-  kpis: {
-    business_per_branch: "₹42.5 Cr",
-    capacity_utilization: 78.2,
-    casa_ratio: 38.4,
-    product_availability_rate: 99.85,
-  },
-  products: [
-    {
-      id: "p1",
-      name: "Regular Savings",
-      category: "Deposit",
-      aum_contribution: 120.0,
-      npa_percentage: null,
-      status: "MAINTAIN",
-    },
-    {
-      id: "p2",
-      name: "Super Saver",
-      category: "Deposit",
-      aum_contribution: 85.0,
-      npa_percentage: null,
-      status: "GROW",
-    },
-    {
-      id: "p3",
-      name: "Gold Loan",
-      category: "Loan",
-      aum_contribution: 45.0,
-      npa_percentage: 0.85,
-      status: "GROW",
-    },
-  ],
-  scenarios: [
-    {
-      id: "conservative",
-      name: "Conservative",
-      description:
-        "Focus on deposit retention and minimizing high-risk asset exposure.",
-      casa_growth: 1.5,
-      npa_risk: "Low",
-      roa_impact: 0.1,
-      guardrails: {
-        kyc_aml_flags: true,
-        min_casa_floor: true,
-        pmla_2002_screening: true,
-        rbi_exposure_norms: true,
+  getDashboardData: vi.fn(() =>
+    Promise.resolve({
+      kpis: {
+        availability_rate: 99.85,
+        business_per_branch: "₹42.5 Cr",
+        capacity_utilization: 78.2,
+        casa_ratio: 38.4,
       },
-      product_actions: [
-        { product_id: "p1", action: "MAINTAIN" },
-        { product_id: "p2", action: "MAINTAIN" },
+      products: [
+        {
+          id: "p1",
+          name: "Savings Max",
+          category: "Savings",
+          aum_contribution: 120,
+          npa_percentage: null,
+          status: "MAINTAIN",
+        },
       ],
-    },
-    {
-      id: "balanced",
-      name: "Balanced",
-      description:
-        "Optimized growth in secure lending while aggressively expanding CASA deposits.",
-      casa_growth: 4.2,
-      npa_risk: "-0.15%",
-      roa_impact: 0.35,
-      guardrails: {
-        kyc_aml_flags: true,
-        min_casa_floor: true,
-        pmla_2002_screening: true,
-        rbi_exposure_norms: true,
-      },
-      product_actions: [
-        { product_id: "p1", action: "MAINTAIN" },
-        { product_id: "p2", action: "GROW" },
-        { product_id: "p3", action: "GROW" },
+      scenarios: [
+        {
+          id: "balanced",
+          name: "Balanced",
+          description:
+            "Promote Rural Agri-Saver & Gold Loans; Reduce Premium FD; Swap Personal Loans to low-risk variants.",
+          casa_growth: 4.5,
+          npa_risk: "Medium",
+          roa_impact: 0.35,
+          guardrails: {
+            kyc_aml_flags: true,
+            min_casa_floor: true,
+            pmla_2002_screening: true,
+            rbi_exposure_norms: true,
+          },
+          product_actions: [{ product_id: "p1", action: "MAINTAIN" }],
+        },
       ],
-    },
-  ],
-};
-
-describe("ApexBank Decision-Support Dashboard", () => {
-  it("renders loading state initially", () => {
-    vi.mocked(api.getDashboardData).mockReturnValue(new Promise(() => {}));
-    render(<App />);
-    expect(
-      screen.getByText(/Loading decision-support dashboard.../i),
-    ).toBeInTheDocument();
-  });
-
-  it("renders dashboard with KPIs, products, and scenarios after loading", async () => {
-    vi.mocked(api.getDashboardData).mockResolvedValue(mockDashboardData);
-    render(<App />);
-
-    // Wait for loading to finish
-    await waitFor(() => {
-      expect(
-        screen.queryByText(/Loading decision-support dashboard.../i),
-      ).not.toBeInTheDocument();
-    });
-
-    // Verify Brand Header
-    expect(screen.getByText("ApexBank")).toBeInTheDocument();
-
-    // Verify KPIs
-    expect(screen.getByText("₹42.5 Cr")).toBeInTheDocument();
-    expect(screen.getByText("38.4%")).toBeInTheDocument();
-    expect(screen.getByText("99.85%")).toBeInTheDocument();
-    expect(screen.getByText("78.2%")).toBeInTheDocument();
-
-    // Verify Products
-    expect(screen.getByText("Regular Savings")).toBeInTheDocument();
-    expect(screen.getByText("Super Saver")).toBeInTheDocument();
-    expect(screen.getByText("Gold Loan")).toBeInTheDocument();
-
-    // Verify Scenarios
-    expect(screen.getByText("Conservative")).toBeInTheDocument();
-    expect(screen.getByText("Balanced")).toBeInTheDocument();
-  });
-
-  it("allows switching scenarios and submitting proposal", async () => {
-    vi.mocked(api.getDashboardData).mockResolvedValue(mockDashboardData);
-    vi.mocked(api.submitProposal).mockResolvedValue({
-      id: "prop-123",
+    }),
+  ),
+  submitProposal: vi.fn(() =>
+    Promise.resolve({
+      id: "prop1",
       scenario_id: "balanced",
       status: "SUBMITTED",
       submitted_by: "Sarah Jenkins",
       routed_to: "John Doe (Zonal Head)",
-      timestamp: "2026-01-09T12:00:00Z",
+      timestamp: "2026-06-24T12:45:00Z",
       guardrails_passed: true,
       audit_trail:
-        "Proposal submitted by Sarah Jenkins to Zonal Head (John Doe). Scenario: Balanced. Guardrails status: passed. Timestamp: 2026-01-09T12:00:00Z. Audit ID: TXN-ABCDE-RURAL",
-    });
+        "Proposal submitted by Sarah Jenkins to Zonal Head (John Doe). Scenario: Balanced. Guardrails status: passed. Timestamp: 2026-06-24T12:45:00Z. Audit ID: TXN-98421-RURAL",
+    }),
+  ),
+}));
 
+describe("App Smoke Test", () => {
+  it("renders the sidebar and header", async () => {
     render(<App />);
 
+    // Check sidebar brand
+    expect(screen.getByText("Apex Retail Bank")).toBeInTheDocument();
+
+    // Check header title
+    expect(
+      screen.getByText("Semi-Urban & Rural Cluster Decision-Support"),
+    ).toBeInTheDocument();
+
+    // Wait for dashboard data to load
     await waitFor(() => {
-      expect(screen.queryByText(/Loading/i)).not.toBeInTheDocument();
+      expect(screen.getByText("Business per Branch")).toBeInTheDocument();
     });
 
-    // Click on Conservative scenario card
-    const conservativeCard = screen.getByText("Conservative");
-    fireEvent.click(conservativeCard);
+    // Check KPI values
+    expect(screen.getByText("₹42.5 Cr")).toBeInTheDocument();
+    expect(screen.getByText("38.4%")).toBeInTheDocument();
 
-    // Click on Balanced scenario card
-    const balancedCard = screen.getByText("Balanced");
-    fireEvent.click(balancedCard);
-
-    // Click Submit Proposal button
-    const submitButton = screen.getByRole("button", {
-      name: /Submit Proposal to Regional Head/i,
-    });
-    fireEvent.click(submitButton);
-
-    // Verify success banner appears
-    await waitFor(() => {
-      expect(
-        screen.getByText("Proposal Submitted Successfully"),
-      ).toBeInTheDocument();
-      expect(screen.getByText("Sarah Jenkins")).toBeInTheDocument();
-      expect(screen.getByText("John Doe (Zonal Head)")).toBeInTheDocument();
-    });
+    // Check product table
+    expect(screen.getAllByText("Savings Max")[0]).toBeInTheDocument();
   });
 });

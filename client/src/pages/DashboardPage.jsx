@@ -1,72 +1,74 @@
 import React, { useState, useEffect } from "react";
+import { getDashboardData, submitProposal } from "../services/api";
 import KPIHeaderStrip from "../components/dashboard/KPIHeaderStrip";
 import ProductPerformanceGrid from "../components/dashboard/ProductPerformanceGrid";
 import ScenarioSelector from "../components/dashboard/ScenarioSelector";
 import ApprovalReviewPanel from "../components/dashboard/ApprovalReviewPanel";
 import SuccessBanner from "../components/common/SuccessBanner";
-import { getDashboardData, submitProposal } from "../services/api";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [kpis, setKpis] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [scenarios, setScenarios] = useState([]);
-  const [selectedScenario, setSelectedScenario] = useState(null);
+  const [data, setData] = useState(null);
+  const [selectedScenarioId, setSelectedScenarioId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedProposal, setSubmittedProposal] = useState(null);
+  const [proposalResult, setProposalResult] = useState(null);
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getDashboardData();
-        setKpis(data.kpis);
-        setProducts(data.products || []);
-        setScenarios(data.scenarios || []);
+        const result = await getDashboardData();
+        setData(result);
 
-        // Pre-select Balanced scenario
-        const balanced = (data.scenarios || []).find(
-          (s) => s.id === "balanced",
+        // Pre-select "Balanced" scenario
+        const balancedScenario = result.scenarios?.find(
+          (s) =>
+            s.id.toLowerCase() === "balanced" ||
+            s.name.toLowerCase() === "balanced",
         );
-        setSelectedScenario(balanced || data.scenarios?.[0] || null);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load dashboard data. Please try again later.");
-        if (process.env.NODE_ENV !== "production") {
-          console.error(err);
+        if (balancedScenario) {
+          setSelectedScenarioId(balancedScenario.id);
+        } else if (result.scenarios?.length > 0) {
+          setSelectedScenarioId(result.scenarios[0].id);
         }
+        setError(null);
+      } catch {
+        setError("Failed to load dashboard data. Please try again later.");
       } finally {
         setLoading(false);
       }
-    }
+    };
+
     fetchData();
   }, []);
 
-  const handleSelectScenario = (scenario) => {
-    setSelectedScenario(scenario);
-    // Clear previous submission when switching scenarios
-    setSubmittedProposal(null);
+  const handleSelectScenario = (scenarioId) => {
+    setSelectedScenarioId(scenarioId);
+    // Clear previous proposal result when switching scenarios
+    setProposalResult(null);
   };
 
   const handleSubmitProposal = async () => {
+    if (!data || !selectedScenarioId) return;
+
+    const selectedScenario = data.scenarios.find(
+      (s) => s.id === selectedScenarioId,
+    );
     if (!selectedScenario) return;
+
     try {
       setIsSubmitting(true);
+      setProposalResult(null);
 
-      // Map proposed actions from selected scenario
-      const proposedActions = (selectedScenario.product_actions || []).map(
-        (pa) => ({
-          product_id: pa.product_id,
-          action: pa.action,
-        }),
-      );
+      // Prepare proposed actions payload
+      const proposedActions = selectedScenario.product_actions.map((pa) => ({
+        product_id: pa.product_id,
+        action: pa.action,
+      }));
 
-      const result = await submitProposal(selectedScenario.id, proposedActions);
-      setSubmittedProposal(result);
-
-      // Scroll to top to show success banner
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const result = await submitProposal(selectedScenarioId, proposedActions);
+      setProposalResult(result);
     } catch (err) {
       alert(
         err.response?.data?.detail ||
@@ -79,14 +81,12 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <span className="material-symbols-outlined animate-spin text-primary text-4xl">
-            sync
+      <div className="flex-1 flex items-center justify-center p-12">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
+          <span className="text-sm font-semibold text-on-surface-variant">
+            Loading dashboard data...
           </span>
-          <p className="text-on-surface-variant font-medium">
-            Loading decision-support dashboard...
-          </p>
         </div>
       </div>
     );
@@ -94,15 +94,16 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-error/10 border border-error/30 p-6 rounded-lg max-w-md text-center flex flex-col gap-4">
+      <div className="flex-1 flex items-center justify-center p-12">
+        <div className="bg-red-50 border border-error/20 rounded-xl p-6 max-w-md text-center flex flex-col gap-3">
           <span className="material-symbols-outlined text-error text-4xl">
             error
           </span>
-          <p className="text-on-surface font-medium">{error}</p>
+          <h3 className="text-lg font-bold text-error">Error</h3>
+          <p className="text-sm text-on-surface-variant">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded font-semibold transition-colors"
+            className="mt-2 bg-error text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity"
           >
             Retry
           </button>
@@ -111,37 +112,38 @@ export default function DashboardPage() {
     );
   }
 
+  const selectedScenario = data?.scenarios?.find(
+    (s) => s.id === selectedScenarioId,
+  );
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="p-6 flex flex-col gap-6 max-w-[1440px] mx-auto w-full">
       {/* Success Banner */}
-      {submittedProposal && (
-        <SuccessBanner
-          proposal={submittedProposal}
-          onClose={() => setSubmittedProposal(null)}
-        />
-      )}
+      <SuccessBanner proposalResult={proposalResult} />
 
       {/* Row 1: KPIs */}
-      <KPIHeaderStrip kpis={kpis} />
+      <KPIHeaderStrip kpis={data?.kpis} />
 
-      {/* Row 2: Split Layout */}
-      <div className="grid grid-cols-12 gap-8">
-        {/* Left Column: Data Table */}
-        <ProductPerformanceGrid
-          products={products}
-          selectedScenario={selectedScenario}
-        />
+      {/* Row 2: Split 8/4 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column (8 cols): Table */}
+        <div className="lg:col-span-8">
+          <ProductPerformanceGrid
+            products={data?.products || []}
+            selectedScenario={selectedScenario}
+          />
+        </div>
 
-        {/* Right Column: Scenarios & Approvals */}
-        <div className="col-span-12 xl:col-span-4 flex flex-col gap-6">
+        {/* Right Column (4 cols): Panels */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
           <ScenarioSelector
-            scenarios={scenarios}
-            selectedScenarioId={selectedScenario?.id}
+            scenarios={data?.scenarios || []}
+            selectedScenarioId={selectedScenarioId}
             onSelectScenario={handleSelectScenario}
           />
-
           <ApprovalReviewPanel
             selectedScenario={selectedScenario}
+            products={data?.products || []}
             onSubmit={handleSubmitProposal}
             isSubmitting={isSubmitting}
           />

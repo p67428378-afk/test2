@@ -1,17 +1,26 @@
 import React from "react";
+import PropTypes from "prop-types";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 export default function AppLayout({ children }) {
   return (
-    <div className="min-h-screen bg-surface text-on-surface font-body-md antialiased">
+    <div className="flex min-h-screen bg-background text-on-background font-sans antialiased overflow-x-hidden">
+      {/* Left Sidebar */}
       <Sidebar />
-      <Header />
-      <main className="ml-[260px] pt-24 px-8 pb-12 w-[calc(100%-260px)] min-h-screen">
-        <div className="max-w-[1440px] mx-auto flex flex-col gap-8">
-          {children}
-        </div>
+
+      {/* Main Content Wrapper */}
+      <main className="flex-1 ml-[260px] flex flex-col min-h-screen">
+        {/* Top Navigation */}
+        <Header />
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">{children}</div>
       </main>
     </div>
   );
 }
+
+AppLayout.propTypes = {
+  children: PropTypes.node.isRequired,
+};

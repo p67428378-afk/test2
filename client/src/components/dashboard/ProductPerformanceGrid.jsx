@@ -1,79 +1,87 @@
 import React from "react";
+import PropTypes from "prop-types";
 import Badge from "../common/Badge";
 
 export default function ProductPerformanceGrid({ products, selectedScenario }) {
-  // Map product actions from selected scenario for quick lookup
-  const actionMap = React.useMemo(() => {
-    const map = {};
-    if (selectedScenario?.product_actions) {
-      selectedScenario.product_actions.forEach((pa) => {
-        map[pa.product_id] = pa.action;
-      });
-    }
-    return map;
-  }, [selectedScenario]);
+  if (!products || products.length === 0) {
+    return (
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-8 text-center text-on-surface-variant">
+        No products available.
+      </div>
+    );
+  }
 
   return (
-    <div className="col-span-12 xl:col-span-8 bg-surface-container border border-outline-variant rounded-lg overflow-hidden flex flex-col">
-      <div className="p-5 border-b border-outline-variant bg-surface-container-high flex justify-between items-center">
-        <h3 className="font-title-sm text-title-sm font-semibold text-on-surface">
-          Product Performance
-        </h3>
-        <button
-          className="text-on-surface-variant hover:text-primary transition-colors"
-          aria-label="Filter list"
-        >
-          <span className="material-symbols-outlined">filter_list</span>
-        </button>
+    <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col shadow-sm">
+      <div className="p-5 border-b border-[#F1F5F9] bg-surface-container-lowest flex justify-between items-center">
+        <h2 className="text-lg font-bold text-on-surface">
+          Product Performance Grid
+        </h2>
+        {selectedScenario && (
+          <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-semibold">
+            Showing actions for: {selectedScenario.name}
+          </span>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-outline-variant bg-surface-container-low">
-              <th className="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
+            <tr className="bg-[#F8FAFC] border-b border-[#F1F5F9]">
+              <th className="py-3 px-5 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
                 Product
               </th>
-              <th className="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
+              <th className="py-3 px-5 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
                 Category
               </th>
-              <th className="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider text-right">
-                Volume
+              <th className="py-3 px-5 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                AUM Contribution
               </th>
-              <th className="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider text-right">
-                NPA / Risk
+              <th className="py-3 px-5 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                NPA %
               </th>
-              <th className="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider text-right">
-                Action Strategy
+              <th className="py-3 px-5 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                Status / Action
               </th>
             </tr>
           </thead>
-          <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+          <tbody className="text-sm text-on-surface font-medium">
             {products.map((product) => {
-              // Determine action strategy based on selected scenario or default product status
-              const action = actionMap[product.id] || product.status;
+              // Find if there is a scenario-specific action for this product
+              const scenarioAction = selectedScenario?.product_actions?.find(
+                (pa) => pa.product_id === product.id,
+              );
+              const displayAction = scenarioAction
+                ? scenarioAction.action
+                : product.status;
 
               return (
                 <tr
                   key={product.id}
-                  className="hover:bg-surface-container-high transition-colors group"
+                  className="border-b border-[#F1F5F9] hover:bg-surface-bright transition-colors"
                 >
-                  <td className="p-4 font-medium text-on-surface">
-                    {product.name}
+                  <td className="py-3 px-5 font-semibold">{product.name}</td>
+                  <td className="py-3 px-5 text-on-surface-variant">
+                    {product.category}
                   </td>
-                  <td className="p-4 text-secondary">{product.category}</td>
-                  <td className="p-4 text-right font-data-mono text-data-mono">
-                    ₹{product.aum_contribution} Cr
-                  </td>
-                  <td
-                    className={`p-4 text-right font-data-mono text-data-mono ${product.npa_percentage > 3 ? "text-error" : product.npa_percentage > 0 ? "text-tertiary" : "text-secondary"}`}
-                  >
+                  <td className="py-3 px-5">₹{product.aum_contribution} Cr</td>
+                  <td className="py-3 px-5">
                     {product.npa_percentage !== null &&
-                    product.npa_percentage !== undefined
-                      ? `${product.npa_percentage}%`
-                      : "N/A"}
+                    product.npa_percentage !== undefined ? (
+                      <span
+                        className={
+                          product.npa_percentage > 2
+                            ? "text-error font-semibold"
+                            : "text-on-surface"
+                        }
+                      >
+                        {product.npa_percentage}%
+                      </span>
+                    ) : (
+                      <span className="text-on-surface-variant">N/A</span>
+                    )}
                   </td>
-                  <td className="p-4 text-right">
-                    <Badge status={action} />
+                  <td className="py-3 px-5">
+                    <Badge>{displayAction}</Badge>
                   </td>
                 </tr>
               );
@@ -84,3 +92,25 @@ export default function ProductPerformanceGrid({ products, selectedScenario }) {
     </div>
   );
 }
+
+ProductPerformanceGrid.propTypes = {
+  products: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      category: PropTypes.string.isRequired,
+      aum_contribution: PropTypes.number.isRequired,
+      npa_percentage: PropTypes.number,
+      status: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  selectedScenario: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    product_actions: PropTypes.arrayOf(
+      PropTypes.shape({
+        product_id: PropTypes.string.isRequired,
+        action: PropTypes.string.isRequired,
+      }),
+    ),
+  }),
+};

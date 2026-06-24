@@ -1,120 +1,101 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 export default function ScenarioSelector({
   scenarios,
   selectedScenarioId,
   onSelectScenario,
 }) {
+  if (!scenarios || scenarios.length === 0) {
+    return (
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 text-center text-on-surface-variant">
+        No scenarios available.
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="font-title-sm text-title-sm font-semibold text-on-surface px-1">
-        Scenario Selection
+    <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
+      <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-4">
+        Scenario Selector
       </h3>
-
-      {scenarios.map((scenario) => {
-        const isActive = scenario.id === selectedScenarioId;
-        const isBalanced = scenario.id === "balanced";
-        const isAggressive = scenario.id === "aggressive";
-
-        let impactText = "Impact: Low";
-        if (isBalanced) impactText = "Impact: Med";
-        if (isAggressive) impactText = "Impact: High";
-
-        return (
-          <div
-            key={scenario.id}
-            onClick={() => onSelectScenario(scenario)}
-            className={`bg-surface-container border rounded-lg p-4 cursor-pointer transition-all flex flex-col gap-3 relative ${
-              isActive
-                ? "border-primary shadow-[0_0_15px_rgba(192,193,255,0.1)] opacity-100"
-                : "border-outline-variant opacity-70 hover:opacity-90 hover:bg-surface-container-high"
-            }`}
-          >
-            {isActive && (
-              <div className="absolute -left-[1px] top-4 bottom-4 w-[3px] bg-primary rounded-r-full"></div>
-            )}
-
+      <div className="flex flex-col gap-3">
+        {scenarios.map((scenario) => {
+          const isSelected = scenario.id === selectedScenarioId;
+          return (
             <div
-              className={`flex justify-between items-start ${isActive ? "pl-2" : ""}`}
+              key={scenario.id}
+              onClick={() => onSelectScenario(scenario.id)}
+              className={`p-4 border rounded-xl cursor-pointer transition-all duration-200 flex flex-col gap-2 ${
+                isSelected
+                  ? "border-2 border-primary-container bg-primary-container/5 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
+                  : "border-[#E2E8F0] hover:border-outline-variant hover:bg-surface-bright"
+              }`}
             >
-              <h4
-                className={`font-title-sm text-title-sm font-semibold ${isActive ? "text-primary" : "text-on-surface"}`}
-              >
-                {scenario.name}
-              </h4>
-              <span
-                className={`font-data-mono text-data-mono text-xs ${isActive ? "text-primary bg-primary/10 px-2 py-0.5 rounded" : "text-secondary"}`}
-              >
-                {impactText}
-              </span>
-            </div>
-
-            <p
-              className={`font-body-sm text-body-sm ${isActive ? "text-on-surface-variant pl-2" : "text-secondary line-clamp-2"}`}
-            >
-              {scenario.description}
-            </p>
-
-            {isBalanced && isActive && (
-              <div className="mt-2 pl-2 grid grid-cols-3 gap-2 border-t border-outline-variant/50 pt-3">
-                <div>
-                  <p className="font-label-caps text-[10px] text-secondary uppercase">
-                    CASA
-                  </p>
-                  <p className="font-data-mono text-sm text-primary">
-                    +{scenario.casa_growth}%
-                  </p>
-                </div>
-                <div>
-                  <p className="font-label-caps text-[10px] text-secondary uppercase">
-                    NPA
-                  </p>
-                  <p className="font-data-mono text-sm text-primary">
-                    {scenario.npa_risk}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-label-caps text-[10px] text-secondary uppercase">
-                    RoA
-                  </p>
-                  <p className="font-data-mono text-sm text-primary">
-                    +{scenario.roa_impact}%
-                  </p>
-                </div>
+              <div className="flex justify-between items-center">
+                <span
+                  className={`text-sm font-bold ${isSelected ? "text-primary" : "text-on-surface"}`}
+                >
+                  {scenario.name}
+                </span>
+                {isSelected && (
+                  <span className="material-symbols-outlined text-primary-container icon-fill text-lg">
+                    check_circle
+                  </span>
+                )}
               </div>
-            )}
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                {scenario.description}
+              </p>
 
-            {!isBalanced && isActive && (
-              <div className="mt-2 pl-2 grid grid-cols-3 gap-2 border-t border-outline-variant/50 pt-3">
-                <div>
-                  <p className="font-label-caps text-[10px] text-secondary uppercase">
+              {/* Projections Grid */}
+              <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-dashed border-[#E2E8F0] text-[11px] font-semibold">
+                <div className="flex flex-col">
+                  <span className="text-on-surface-variant font-normal">
                     CASA Growth
-                  </p>
-                  <p className="font-data-mono text-sm text-primary">
+                  </span>
+                  <span className="text-primary font-bold">
                     +{scenario.casa_growth}%
-                  </p>
+                  </span>
                 </div>
-                <div>
-                  <p className="font-label-caps text-[10px] text-secondary uppercase">
+                <div className="flex flex-col">
+                  <span className="text-on-surface-variant font-normal">
                     NPA Risk
-                  </p>
-                  <p className="font-data-mono text-sm text-primary">
+                  </span>
+                  <span
+                    className={`font-bold ${scenario.npa_risk.toLowerCase() === "low" ? "text-primary" : scenario.npa_risk.toLowerCase() === "medium" ? "text-[#F59E0B]" : "text-error"}`}
+                  >
                     {scenario.npa_risk}
-                  </p>
+                  </span>
                 </div>
-                <div>
-                  <p className="font-label-caps text-[10px] text-secondary uppercase">
+                <div className="flex flex-col">
+                  <span className="text-on-surface-variant font-normal">
                     RoA Impact
-                  </p>
-                  <p className="font-data-mono text-sm text-primary">
+                  </span>
+                  <span className="text-tertiary font-bold">
                     +{scenario.roa_impact}%
-                  </p>
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+ScenarioSelector.propTypes = {
+  scenarios: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
+      casa_growth: PropTypes.number.isRequired,
+      npa_risk: PropTypes.string.isRequired,
+      roa_impact: PropTypes.number.isRequired,
+    }),
+  ).isRequired,
+  selectedScenarioId: PropTypes.string.isRequired,
+  onSelectScenario: PropTypes.func.isRequired,
+};

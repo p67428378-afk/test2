@@ -1,130 +1,219 @@
 import React from "react";
+import PropTypes from "prop-types";
 import Button from "../common/Button";
+import Badge from "../common/Badge";
 
 export default function ApprovalReviewPanel({
   selectedScenario,
+  products,
   onSubmit,
   isSubmitting,
 }) {
-  if (!selectedScenario) return null;
+  if (!selectedScenario) {
+    return (
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 text-center text-on-surface-variant">
+        Select a scenario to view approval details.
+      </div>
+    );
+  }
 
-  const guardrails = selectedScenario.guardrails || {
-    kyc_aml_flags: true,
-    min_casa_floor: true,
-    pmla_2002_screening: true,
-    rbi_exposure_norms: true,
-  };
+  const { guardrails, product_actions } = selectedScenario;
+
+  // Map product actions to product names
+  const actionsList =
+    product_actions?.map((pa) => {
+      const product = products?.find((p) => p.id === pa.product_id);
+      return {
+        productName: product ? product.name : "Unknown Product",
+        action: pa.action,
+      };
+    }) || [];
 
   return (
-    <div className="bg-surface-container border border-outline-variant rounded-lg flex flex-col overflow-hidden mt-2">
-      <div className="h-1 w-full bg-gradient-to-r from-primary to-surface-variant"></div>
-      <div className="p-5 flex flex-col gap-5">
-        <div>
-          <h3 className="font-title-sm text-title-sm font-semibold text-on-surface mb-1">
-            Proposal Review: {selectedScenario.name} Scenario
-          </h3>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">
-            {selectedScenario.id === "balanced"
-              ? "Promote Super Saver & Gold Loans to hit Q3 CASA targets while remaining within risk parameters."
-              : selectedScenario.id === "conservative"
-                ? "Focus on deposit retention and minimizing high-risk asset exposure."
-                : "Maximize loan portfolio expansion and fee income across all customer tiers."}
-          </p>
-        </div>
+    <div className="flex flex-col gap-4">
+      {/* Approval Review Summary */}
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
+        <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+          Approval Review
+        </h3>
+        <p className="text-sm font-bold text-on-surface mb-2">
+          {selectedScenario.name} Scenario Selected
+        </p>
+        <p className="text-xs text-on-surface-variant bg-[#F8FAFC] p-3 rounded-lg border border-[#F1F5F9] leading-relaxed mb-4">
+          {selectedScenario.description}
+        </p>
 
-        {/* Compliance Checklist */}
-        <div className="flex flex-col gap-3 border border-outline-variant rounded p-4 bg-surface-container-lowest">
-          <h4 className="font-label-caps text-label-caps text-secondary uppercase mb-1">
-            Guardrail Checklist
-          </h4>
+        {/* Product Action List */}
+        <h4 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+          Proposed Actions
+        </h4>
+        <ul className="flex flex-col gap-2 mb-4 max-h-48 overflow-y-auto pr-1">
+          {actionsList.map((item, idx) => (
+            <li
+              key={idx}
+              className="flex items-center justify-between text-xs py-1.5 border-b border-[#F1F5F9] last:border-0"
+            >
+              <span className="font-semibold text-on-surface">
+                {item.productName}
+              </span>
+              <Badge>{item.action}</Badge>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+      {/* Compliance Guardrails */}
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
+        <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+          Compliance Guardrails
+        </h3>
+        <ul className="flex flex-col gap-2.5">
+          {/* RBI Exposure Norms */}
+          <li className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
               <span
-                className={`material-symbols-outlined text-sm ${guardrails.rbi_exposure_norms ? "text-primary" : "text-error"}`}
-                style={{ fontVariationSettings: "'FILL' 1" }}
+                className={`material-symbols-outlined text-lg ${
+                  guardrails.rbi_exposure_norms
+                    ? "text-primary-container icon-fill"
+                    : "text-error"
+                }`}
               >
                 {guardrails.rbi_exposure_norms ? "check_circle" : "cancel"}
               </span>
-              <span className="font-body-sm text-body-sm text-on-surface">
-                RBI Mandates Compliance
+              <span
+                className={`font-semibold ${guardrails.rbi_exposure_norms ? "text-on-surface" : "text-error"}`}
+              >
+                RBI Exposure Norms
               </span>
             </div>
             <span
-              className={`font-data-mono text-xs ${guardrails.rbi_exposure_norms ? "text-primary" : "text-error"}`}
+              className={`text-[10px] font-bold ${guardrails.rbi_exposure_norms ? "text-primary" : "text-error"}`}
             >
-              {guardrails.rbi_exposure_norms ? "Passed" : "Failed"}
+              {guardrails.rbi_exposure_norms ? "PASSED" : "FAILED"}
             </span>
-          </div>
+          </li>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          {/* KYC/AML Flags */}
+          <li className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
               <span
-                className={`material-symbols-outlined text-sm ${guardrails.kyc_aml_flags ? "text-primary" : "text-error"}`}
-                style={{ fontVariationSettings: "'FILL' 1" }}
+                className={`material-symbols-outlined text-lg ${
+                  guardrails.kyc_aml_flags
+                    ? "text-primary-container icon-fill"
+                    : "text-error"
+                }`}
               >
                 {guardrails.kyc_aml_flags ? "check_circle" : "cancel"}
               </span>
-              <span className="font-body-sm text-body-sm text-on-surface">
-                KYC/AML Requirements
+              <span
+                className={`font-semibold ${guardrails.kyc_aml_flags ? "text-on-surface" : "text-error"}`}
+              >
+                KYC/AML Flags
               </span>
             </div>
             <span
-              className={`font-data-mono text-xs ${guardrails.kyc_aml_flags ? "text-primary" : "text-error"}`}
+              className={`text-[10px] font-bold ${guardrails.kyc_aml_flags ? "text-primary" : "text-error"}`}
             >
-              {guardrails.kyc_aml_flags ? "Passed" : "Failed"}
+              {guardrails.kyc_aml_flags ? "PASSED" : "FAILED"}
             </span>
-          </div>
+          </li>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          {/* PMLA 2002 Screening */}
+          <li className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
               <span
-                className={`material-symbols-outlined text-sm ${guardrails.pmla_2002_screening ? "text-primary" : "text-error"}`}
-                style={{ fontVariationSettings: "'FILL' 1" }}
+                className={`material-symbols-outlined text-lg ${
+                  guardrails.pmla_2002_screening
+                    ? "text-primary-container icon-fill"
+                    : "text-error"
+                }`}
               >
                 {guardrails.pmla_2002_screening ? "check_circle" : "cancel"}
               </span>
-              <span className="font-body-sm text-body-sm text-on-surface">
-                PMLA Reporting Thresholds
+              <span
+                className={`font-semibold ${guardrails.pmla_2002_screening ? "text-on-surface" : "text-error"}`}
+              >
+                PMLA 2002 Screening
               </span>
             </div>
             <span
-              className={`font-data-mono text-xs ${guardrails.pmla_2002_screening ? "text-primary" : "text-error"}`}
+              className={`text-[10px] font-bold ${guardrails.pmla_2002_screening ? "text-primary" : "text-error"}`}
             >
-              {guardrails.pmla_2002_screening ? "Passed" : "Failed"}
+              {guardrails.pmla_2002_screening ? "PASSED" : "FAILED"}
             </span>
-          </div>
+          </li>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          {/* Minimum CASA Floor */}
+          <li className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
               <span
-                className={`material-symbols-outlined text-sm ${guardrails.min_casa_floor ? "text-primary" : "text-error"}`}
-                style={{ fontVariationSettings: "'FILL' 1" }}
+                className={`material-symbols-outlined text-lg ${
+                  guardrails.min_casa_floor
+                    ? "text-primary-container icon-fill"
+                    : "text-error"
+                }`}
               >
                 {guardrails.min_casa_floor ? "check_circle" : "cancel"}
               </span>
-              <span className="font-body-sm text-body-sm text-on-surface">
-                Branch CASA Floor Limit
+              <span
+                className={`font-semibold ${guardrails.min_casa_floor ? "text-on-surface" : "text-error"}`}
+              >
+                Minimum CASA Floor
               </span>
             </div>
             <span
-              className={`font-data-mono text-xs ${guardrails.min_casa_floor ? "text-primary" : "text-error"}`}
+              className={`text-[10px] font-bold ${guardrails.min_casa_floor ? "text-primary" : "text-error"}`}
             >
-              {guardrails.min_casa_floor ? "Passed" : "Failed"}
+              {guardrails.min_casa_floor ? "PASSED" : "FAILED"}
             </span>
-          </div>
-        </div>
-
-        <Button
-          onClick={onSubmit}
-          disabled={isSubmitting}
-          className="w-full bg-primary hover:bg-primary-container text-on-primary font-title-sm font-semibold py-3 rounded transition-colors mt-2 active:scale-[0.98]"
-        >
-          {isSubmitting
-            ? "Submitting Proposal..."
-            : "Submit Proposal to Regional Head"}
-        </Button>
+          </li>
+        </ul>
       </div>
+
+      {/* Submit CTA */}
+      <Button
+        onClick={onSubmit}
+        disabled={isSubmitting}
+        variant="primary"
+        className="w-full"
+      >
+        {isSubmitting ? (
+          <>
+            <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+            Submitting Proposal...
+          </>
+        ) : (
+          "Submit Proposal to Zonal Head"
+        )}
+      </Button>
     </div>
   );
 }
+
+ApprovalReviewPanel.propTypes = {
+  selectedScenario: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    guardrails: PropTypes.shape({
+      rbi_exposure_norms: PropTypes.bool.isRequired,
+      kyc_aml_flags: PropTypes.bool.isRequired,
+      pmla_2002_screening: PropTypes.bool.isRequired,
+      min_casa_floor: PropTypes.bool.isRequired,
+    }).isRequired,
+    product_actions: PropTypes.arrayOf(
+      PropTypes.shape({
+        product_id: PropTypes.string.isRequired,
+        action: PropTypes.string.isRequired,
+      }),
+    ),
+  }),
+  products: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    }),
+  ),
+  onSubmit: PropTypes.func.isRequired,
+  isSubmitting: PropTypes.bool.isRequired,
+};

@@ -1,78 +1,96 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 export default function KPIHeaderStrip({ kpis }) {
-  const business = kpis?.business_per_branch || "₹42.5 Cr";
-  const casa = kpis?.casa_ratio !== undefined ? `${kpis.casa_ratio}%` : "38.4%";
-  const uptime =
-    kpis?.product_availability_rate !== undefined
-      ? `${kpis.product_availability_rate}%`
-      : "99.85%";
-  const utilization =
-    kpis?.capacity_utilization !== undefined
-      ? `${kpis.capacity_utilization}%`
-      : "78.2%";
+  if (!kpis) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 h-28"
+          ></div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {/* KPI 1 */}
-      <div className="bg-surface-container border border-outline-variant p-5 rounded-lg flex flex-col gap-2">
-        <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-          Avg Business
-        </p>
+      {/* KPI Card 1 */}
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 hover:border-primary-container hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all duration-200 flex flex-col gap-2">
+        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+          Business per Branch
+        </span>
         <div className="flex items-end justify-between">
-          <span className="font-headline-md text-headline-md font-bold text-on-surface">
-            {business}
+          <span className="text-2xl font-bold text-on-surface">
+            {kpis.business_per_branch}
           </span>
-          <span className="font-data-mono text-data-mono text-primary bg-primary/10 px-2 py-0.5 rounded text-xs">
+          <div className="flex items-center gap-1 bg-primary-container/10 text-primary-container px-2 py-1 rounded text-xs font-semibold">
+            <span className="material-symbols-outlined text-[14px]">
+              trending_up
+            </span>
             +8.2% YoY
-          </span>
+          </div>
         </div>
       </div>
 
-      {/* KPI 2 */}
-      <div className="bg-surface-container border border-outline-variant p-5 rounded-lg flex flex-col gap-2">
-        <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-          CASA Ratio
-        </p>
+      {/* KPI Card 2 */}
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 hover:border-primary-container hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all duration-200 flex flex-col gap-2">
+        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+          CASA Ratio %
+        </span>
         <div className="flex items-end justify-between">
-          <span className="font-headline-md text-headline-md font-bold text-on-surface">
-            {casa}
+          <span className="text-2xl font-bold text-on-surface">
+            {kpis.casa_ratio}%
           </span>
-          <span className="font-data-mono text-data-mono text-secondary px-2 py-0.5 rounded text-xs">
-            Target &gt;35.0%
-          </span>
+          <div className="flex items-center gap-1 bg-primary-container/10 text-primary-container px-2 py-1 rounded text-xs font-semibold">
+            Target: 35.0%
+          </div>
         </div>
       </div>
 
-      {/* KPI 3 */}
-      <div className="bg-surface-container border border-outline-variant p-5 rounded-lg flex flex-col gap-2">
-        <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
+      {/* KPI Card 3 */}
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 hover:border-primary-container hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all duration-200 flex flex-col gap-2">
+        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
           Scheme Availability
-        </p>
+        </span>
         <div className="flex items-end justify-between">
-          <span className="font-headline-md text-headline-md font-bold text-on-surface">
-            {uptime}
+          <span className="text-2xl font-bold text-on-surface">
+            {kpis.availability_rate}%
           </span>
-          <span className="font-data-mono text-data-mono text-secondary px-2 py-0.5 rounded text-xs">
-            Uptime
-          </span>
+          <div className="flex items-center gap-1 bg-primary-container/10 text-primary-container px-2 py-1 rounded text-xs font-semibold">
+            <span className="material-symbols-outlined text-[14px]">
+              check_circle
+            </span>
+            Optimal
+          </div>
         </div>
       </div>
 
-      {/* KPI 4 */}
-      <div className="bg-surface-container border border-outline-variant p-5 rounded-lg flex flex-col gap-2">
-        <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
+      {/* KPI Card 4 */}
+      <div className="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-5 hover:border-primary-container hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all duration-200 flex flex-col gap-2">
+        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
           Capacity Utilization
-        </p>
+        </span>
         <div className="flex items-end justify-between">
-          <span className="font-headline-md text-headline-md font-bold text-on-surface">
-            {utilization}
+          <span className="text-2xl font-bold text-on-surface">
+            {kpis.capacity_utilization}%
           </span>
-          <span className="font-data-mono text-data-mono text-tertiary px-2 py-0.5 rounded text-xs bg-tertiary/10">
-            Optimal
-          </span>
+          <div className="flex items-center gap-1 bg-[#F59E0B]/10 text-[#D97706] px-2 py-1 rounded text-xs font-semibold">
+            Balanced
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+KPIHeaderStrip.propTypes = {
+  kpis: PropTypes.shape({
+    business_per_branch: PropTypes.string.isRequired,
+    casa_ratio: PropTypes.number.isRequired,
+    availability_rate: PropTypes.number.isRequired,
+    capacity_utilization: PropTypes.number.isRequired,
+  }),
+};
