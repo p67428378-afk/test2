@@ -1,73 +1,72 @@
 import React, { useState, useEffect } from "react";
-import { getDashboardData, submitProposal } from "../services/api";
 import KPIHeaderStrip from "../components/dashboard/KPIHeaderStrip";
 import ProductPerformanceGrid from "../components/dashboard/ProductPerformanceGrid";
 import ScenarioSelector from "../components/dashboard/ScenarioSelector";
 import ApprovalReviewPanel from "../components/dashboard/ApprovalReviewPanel";
+import SuccessBanner from "../components/common/SuccessBanner";
+import { getDashboardData, submitProposal } from "../services/api";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [data, setData] = useState(null);
-  const [selectedScenarioId, setSelectedScenarioId] = useState("");
+  const [kpis, setKpis] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [scenarios, setScenarios] = useState([]);
+  const [selectedScenario, setSelectedScenario] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [proposalResult, setProposalResult] = useState(null);
+  const [submittedProposal, setSubmittedProposal] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         setLoading(true);
-        const result = await getDashboardData();
-        setData(result);
+        const data = await getDashboardData();
+        setKpis(data.kpis);
+        setProducts(data.products || []);
+        setScenarios(data.scenarios || []);
 
-        // Pre-select "Balanced" scenario
-        const balancedScenario = result.scenarios?.find(
-          (s) =>
-            s.id.toLowerCase() === "balanced" ||
-            s.name.toLowerCase() === "balanced",
+        // Pre-select Balanced scenario
+        const balanced = (data.scenarios || []).find(
+          (s) => s.id === "balanced",
         );
-        if (balancedScenario) {
-          setSelectedScenarioId(balancedScenario.id);
-        } else if (result.scenarios?.length > 0) {
-          setSelectedScenarioId(result.scenarios[0].id);
-        }
+        setSelectedScenario(balanced || data.scenarios?.[0] || null);
         setError(null);
-      } catch {
+      } catch (err) {
         setError("Failed to load dashboard data. Please try again later.");
+        if (process.env.NODE_ENV !== "production") {
+          console.error(err);
+        }
       } finally {
         setLoading(false);
       }
-    };
-
+    }
     fetchData();
   }, []);
 
-  const handleSelectScenario = (scenarioId) => {
-    setSelectedScenarioId(scenarioId);
-    // Clear previous proposal result when switching scenarios
-    setProposalResult(null);
+  const handleSelectScenario = (scenario) => {
+    setSelectedScenario(scenario);
+    // Clear previous submission when switching scenarios
+    setSubmittedProposal(null);
   };
 
   const handleSubmitProposal = async () => {
-    if (!data || !selectedScenarioId) return;
-
-    const selectedScenario = data.scenarios.find(
-      (s) => s.id === selectedScenarioId,
-    );
     if (!selectedScenario) return;
-
     try {
       setIsSubmitting(true);
-      setProposalResult(null);
 
-      // Prepare proposed actions payload
-      const proposedActions = selectedScenario.product_actions.map((pa) => ({
-        product_id: pa.product_id,
-        action: pa.action,
-      }));
+      // Map proposed actions from selected scenario
+      const proposedActions = (selectedScenario.product_actions || []).map(
+        (pa) => ({
+          product_id: pa.product_id,
+          action: pa.action,
+        }),
+      );
 
-      const result = await submitProposal(selectedScenarioId, proposedActions);
-      setProposalResult(result);
+      const result = await submitProposal(selectedScenario.id, proposedActions);
+      setSubmittedProposal(result);
+
+      // Scroll to top to show success banner
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       alert(
         err.response?.data?.detail ||
@@ -80,12 +79,14 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-12">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
-          <span className="text-sm font-semibold text-on-surface-variant">
-            Loading dashboard data...
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined animate-spin text-primary text-4xl">
+            sync
           </span>
+          <p className="text-on-surface-variant font-medium">
+            Loading decision-support dashboard...
+          </p>
         </div>
       </div>
     );
@@ -93,16 +94,15 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center p-12">
-        <div className="bg-red-50 border border-error/20 rounded-xl p-6 max-w-md text-center flex flex-col gap-3">
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-error/10 border border-error/30 p-6 rounded-lg max-w-md text-center flex flex-col gap-4">
           <span className="material-symbols-outlined text-error text-4xl">
             error
           </span>
-          <h3 className="text-lg font-bold text-error">Error</h3>
-          <p className="text-sm text-on-surface-variant">{error}</p>
+          <p className="text-on-surface font-medium">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 bg-error text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded font-semibold transition-colors"
           >
             Retry
           </button>
@@ -111,55 +111,37 @@ export default function DashboardPage() {
     );
   }
 
-  const selectedScenario = data?.scenarios?.find(
-    (s) => s.id === selectedScenarioId,
-  );
-
   return (
-    <div className="p-6 flex flex-col gap-6 max-w-[1440px] mx-auto w-full">
+    <div className="flex flex-col gap-8">
       {/* Success Banner */}
-      {proposalResult && (
-        <div className="bg-primary-container/10 border border-primary-container rounded-xl p-4 flex items-start gap-3 shadow-sm animate-fadeIn">
-          <span className="material-symbols-outlined text-primary-container icon-fill shrink-0 text-2xl">
-            check_circle
-          </span>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-on-surface">
-              Proposal submitted to {proposalResult.routed_to}. Guardrails:{" "}
-              {proposalResult.guardrails_passed
-                ? "Passed"
-                : "Failed (CASA Floor, RBI Exposure Norms)"}
-            </span>
-            <span className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-              {proposalResult.audit_trail}
-            </span>
-          </div>
-        </div>
+      {submittedProposal && (
+        <SuccessBanner
+          proposal={submittedProposal}
+          onClose={() => setSubmittedProposal(null)}
+        />
       )}
 
       {/* Row 1: KPIs */}
-      <KPIHeaderStrip kpis={data?.kpis} />
+      <KPIHeaderStrip kpis={kpis} />
 
-      {/* Row 2: Split 8/4 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column (8 cols): Table */}
-        <div className="lg:col-span-8">
-          <ProductPerformanceGrid
-            products={data?.products || []}
-            selectedScenario={selectedScenario}
-          />
-        </div>
+      {/* Row 2: Split Layout */}
+      <div className="grid grid-cols-12 gap-8">
+        {/* Left Column: Data Table */}
+        <ProductPerformanceGrid
+          products={products}
+          selectedScenario={selectedScenario}
+        />
 
-        {/* Right Column (4 cols): Panels */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        {/* Right Column: Scenarios & Approvals */}
+        <div className="col-span-12 xl:col-span-4 flex flex-col gap-6">
           <ScenarioSelector
-            scenarios={data?.scenarios || []}
-            selectedScenarioId={selectedScenarioId}
+            scenarios={scenarios}
+            selectedScenarioId={selectedScenario?.id}
             onSelectScenario={handleSelectScenario}
           />
+
           <ApprovalReviewPanel
             selectedScenario={selectedScenario}
-            products={data?.products || []}
             onSubmit={handleSubmitProposal}
             isSubmitting={isSubmitting}
           />
