@@ -1,0 +1,2 @@
+# Allow logs components
+!src/components/logs/
