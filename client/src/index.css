@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col;
+  }
+}
+
+/* Custom styles matching Stitch HTML */
+.radio-custom {
+  border: 2px solid #334155;
+  background-color: transparent;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+
+.radio-custom:hover {
+  border-color: #94a3b8;
+}
+
+.radio-custom.selected {
+  border-color: #6366f1;
+}
+
+.radio-custom.selected::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background-color: #6366f1;
+  border-radius: 50%;
+}
