@@ -1,13 +1,23 @@
-
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from server.core.config import settings
+from sqlalchemy.pool import StaticPool
 
-engine = create_engine(settings.DATABASE_URL)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")
+
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    poolclass=StaticPool if "sqlite" in DATABASE_URL else None,
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()
