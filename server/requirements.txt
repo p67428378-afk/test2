@@ -4,3 +4,8 @@ sqlalchemy
 pydantic
 pydantic-settings
 pytest
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+httpx
+python-multipart
