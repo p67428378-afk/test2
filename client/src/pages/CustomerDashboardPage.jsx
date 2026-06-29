@@ -1,43 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import SearchBar from "../components/common/SearchBar";
 import RestaurantGrid from "../components/customer/RestaurantGrid";
 import ActiveOrderTracker from "../components/customer/ActiveOrderTracker";
 import Button from "../components/common/Button";
 import Modal from "../components/common/Modal";
 import Badge from "../components/common/Badge";
-import {
-  restaurantService,
-  orderService,
-  paymentService,
-} from "../services/api";
+import { restaurantService, orderService, adminService } from "../services/api";
 
-export default function CustomerDashboardPage({
-  user,
-  cart,
-  setCart,
-  activeTab,
-  setActiveTab,
-}) {
-  const [restaurants, setRestaurants] = React.useState([]);
-  const [selectedRestaurant, setSelectedRestaurant] = React.useState(null);
-  const [orders, setOrders] = React.useState([]);
-  const [cuisineFilter, setCuisineFilter] = React.useState("");
-  const [ratingFilter, setRatingFilter] = React.useState(null);
-  const [isCartOpen, setIsCartOpen] = React.useState(false);
-  const [deliveryAddress, setDeliveryAddress] = React.useState(
+export default function CustomerDashboardPage({ activeTab, setActiveTab }) {
+  const [restaurants, setRestaurants] = useState([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCuisine, setSelectedCuisine] = useState("");
+  const [minRating, setMinRating] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [deliveryAddress, setDeliveryAddress] = useState(
     "123 Main St, New York",
   );
-  const [paymentToken, setPaymentToken] = React.useState("tok_12345");
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [activeOrderId, setActiveOrderId] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [isFeedbackOpen, setIsCheckoutFeedbackOpen] = useState(false);
+  const [feedbackOrderId, setFeedbackOrderId] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [ticketType, setTicketType] = useState("delivery_issue");
+  const [ticketDesc, setTicketDescription] = useState("");
 
-  React.useEffect(() => {
-    fetchRestaurants();
-    fetchOrders();
-  }, [cuisineFilter, ratingFilter]);
+  const cuisines = [
+    "Pizza",
+    "Burgers",
+    "Sushi",
+    "Asian",
+    "Desserts",
+    "Healthy",
+    "Mexican",
+  ];
 
   const fetchRestaurants = async () => {
     try {
-      const data = await restaurantService.list(cuisineFilter, ratingFilter);
+      const data = await restaurantService.list(selectedCuisine, minRating);
       setRestaurants(data);
     } catch (err) {
       console.error("Failed to fetch restaurants", err);
@@ -46,179 +50,163 @@ export default function CustomerDashboardPage({
 
   const fetchOrders = async () => {
     try {
-      const data = await orderService.list();
+      const data = await orderService.list("customer");
       setOrders(data);
     } catch (err) {
       console.error("Failed to fetch orders", err);
     }
   };
 
-  const handleAddToCart = (item, restaurant) => {
-    if (cart.restaurantId && cart.restaurantId !== restaurant.id) {
-      if (
-        !window.confirm(
-          "Adding items from a different restaurant will clear your current cart. Continue?",
-        )
-      ) {
-        return;
-      }
-      setCart({
-        restaurantId: restaurant.id,
-        restaurantName: restaurant.name,
-        items: [{ ...item, quantity: 1 }],
-      });
-    } else {
-      const existingItem = cart.items.find((i) => i.id === item.id);
-      if (existingItem) {
-        setCart({
-          ...cart,
-          items: cart.items.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
-          ),
-        });
-      } else {
-        setCart({
-          restaurantId: restaurant.id,
-          restaurantName: restaurant.name,
-          items: [...cart.items, { ...item, quantity: 1 }],
-        });
-      }
+  useEffect(() => {
+    if (activeTab === "browse") {
+      fetchRestaurants();
+    } else if (activeTab === "orders") {
+      fetchOrders();
     }
+  }, [activeTab, selectedCuisine, minRating]);
+
+  const handleAddToCart = (item) => {
+    setCart((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
+        );
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
   };
 
   const handleRemoveFromCart = (itemId) => {
-    const updatedItems = cart.items.filter((i) => i.id !== itemId);
-    if (updatedItems.length === 0) {
-      setCart({ restaurantId: null, restaurantName: "", items: [] });
-    } else {
-      setCart({ ...cart, items: updatedItems });
-    }
+    setCart((prev) =>
+      prev.reduce((acc, item) => {
+        if (item.id === itemId) {
+          if (item.quantity > 1) {
+            acc.push({ ...item, quantity: item.quantity - 1 });
+          }
+        } else {
+          acc.push(item);
+        }
+        return acc;
+      }, []),
+    );
   };
 
   const handleCheckout = async () => {
-    if (cart.items.length === 0) return;
-    setLoading(true);
-    setError("");
+    if (!selectedRestaurant || cart.length === 0) return;
     try {
-      // 1. Create Order
       const orderPayload = {
-        restaurant_id: cart.restaurantId,
+        restaurant_id: selectedRestaurant.id,
         delivery_address: deliveryAddress,
-        items: cart.items.map((i) => ({
-          menu_item_id: i.id,
-          quantity: i.quantity,
+        items: cart.map((item) => ({
+          menu_item_id: item.id,
+          quantity: item.quantity,
         })),
       };
       const order = await orderService.create(orderPayload);
 
-      // 2. Process Payment
-      await paymentService.process({
+      // Process mock payment
+      const paymentPayload = {
         order_id: order.id,
         payment_method: "card",
-        payment_token: paymentToken,
-      });
+        payment_token: "tok_12345",
+        amount: order.total_amount,
+      };
+      // Import api to post payment
+      const api = (await import("../services/api")).default;
+      await api.post("/payments", paymentPayload);
 
-      // 3. Clear Cart & Refresh
-      setCart({ restaurantId: null, restaurantName: "", items: [] });
-      setIsCartOpen(false);
+      setActiveOrderId(order.id);
+      setCart([]);
+      setIsCheckoutOpen(false);
       setSelectedRestaurant(null);
       setActiveTab("orders");
-      fetchOrders();
     } catch (err) {
-      setError(
-        err.response?.data?.detail || "Checkout failed. Please try again.",
-      );
-    } finally {
-      setLoading(false);
+      alert("Checkout failed. Please try again.");
     }
   };
 
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackOrderId) return;
     try {
-      await orderService.updateStatus(orderId, "cancelled");
+      await orderService.submitFeedback(feedbackOrderId, rating, feedbackText);
+      setIsCheckoutFeedbackOpen(false);
+      setFeedbackOrderId(null);
+      setFeedbackText("");
       fetchOrders();
     } catch (err) {
-      console.error("Failed to cancel order", err);
+      alert("Failed to submit feedback.");
     }
   };
 
-  const handleSubmitFeedback = async (orderId, rating, feedback) => {
-    await orderService.submitFeedback(orderId, rating, feedback);
-    fetchOrders();
+  const handleTicketSubmit = async () => {
+    try {
+      await adminService.createTicket({
+        issue_type: ticketType,
+        description: ticketDesc,
+      });
+      setIsTicketOpen(false);
+      setTicketDescription("");
+      alert("Support ticket submitted successfully!");
+    } catch (err) {
+      alert("Failed to submit support ticket.");
+    }
   };
 
-  const getCartTotal = () => {
-    return cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
-  };
+  const filteredRestaurants = restaurants.filter((r) =>
+    r.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const cartTotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
 
   return (
     <div className="space-y-8">
       {activeTab === "browse" && !selectedRestaurant && (
         <div className="space-y-6">
           {/* Hero Banner */}
-          <div className="relative w-full rounded-2xl overflow-hidden h-64 shadow-md bg-gradient-to-r from-black/80 via-black/50 to-transparent flex items-center px-8 md:px-16">
-            <div
-              className="absolute inset-0 bg-cover bg-center opacity-40"
-              style={{
-                backgroundImage:
-                  "url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000&auto=format&fit=crop&q=60')",
-              }}
-            ></div>
+          <section className="relative w-full rounded-2xl overflow-hidden h-64 shadow-sm group bg-gradient-to-r from-black/80 via-black/50 to-transparent flex items-center px-8 md:px-16">
             <div className="relative max-w-xl space-y-4">
-              <h1 className="font-display-lg text-3xl md:text-4xl font-black text-white">
+              <h1 className="font-display-lg text-white text-3xl md:text-4xl font-black leading-tight">
                 Hungry? Order from your favorite local restaurants!
               </h1>
-              <p className="font-body-lg text-white/90">
+              <p className="font-body-lg text-white/90 text-sm md:text-base">
                 Fast delivery. Hot food. Happy you.
               </p>
             </div>
-          </div>
+          </section>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-xl border border-outline-variant shadow-sm">
+          {/* Search & Filters */}
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search restaurants..."
+            />
             <div className="flex flex-wrap gap-2">
-              {[
-                "",
-                "Pizza",
-                "Burgers",
-                "Sushi",
-                "Asian",
-                "Desserts",
-                "Healthy",
-                "Mexican",
-              ].map((cuisine) => (
+              <button
+                onClick={() => setSelectedCuisine("")}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-colors ${
+                  !selectedCuisine
+                    ? "bg-brand-coral text-white"
+                    : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container-high"
+                }`}
+              >
+                All Cuisines
+              </button>
+              {cuisines.map((c) => (
                 <button
-                  key={cuisine}
-                  onClick={() => setCuisineFilter(cuisine)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                    cuisineFilter === cuisine
-                      ? "bg-brand-coral text-white shadow-sm"
-                      : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
-                  }`}
-                >
-                  {cuisine || "All Cuisines"}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-on-surface-variant">
-                Min Rating:
-              </span>
-              {[null, 3, 4, 4.5].map((rating) => (
-                <button
-                  key={rating || "all"}
-                  onClick={() => setRatingFilter(rating)}
-                  className={`px-3 py-1.5 rounded-brand text-xs font-bold transition-all ${
-                    ratingFilter === rating
+                  key={c}
+                  onClick={() => setSelectedCuisine(c)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition-colors ${
+                    selectedCuisine === c
                       ? "bg-brand-coral text-white"
-                      : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+                      : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container-high"
                   }`}
                 >
-                  {rating ? `${rating}★+` : "All"}
+                  {c}
                 </button>
               ))}
             </div>
@@ -226,260 +214,414 @@ export default function CustomerDashboardPage({
 
           {/* Restaurant Grid */}
           <RestaurantGrid
-            restaurants={restaurants}
-            onRestaurantClick={setSelectedRestaurant}
+            restaurants={filteredRestaurants}
+            onSelectRestaurant={setSelectedRestaurant}
           />
         </div>
       )}
 
       {activeTab === "browse" && selectedRestaurant && (
-        <div className="space-y-6">
-          <button
-            onClick={() => setSelectedRestaurant(null)}
-            className="flex items-center gap-2 text-sm font-bold text-brand-coral hover:underline"
-          >
-            <span className="material-symbols-outlined text-sm">
-              arrow_back
-            </span>
-            Back to Restaurants
-          </button>
-
-          {/* Restaurant Header */}
-          <div className="bg-white rounded-xl border border-outline-variant p-6 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-black text-on-surface mb-1">
-                {selectedRestaurant.name}
-              </h2>
-              <p className="text-sm text-on-surface-variant capitalize mb-2">
-                {selectedRestaurant.cuisine}
-              </p>
-              <p className="text-xs text-on-surface-variant">
-                {selectedRestaurant.address}
-              </p>
-            </div>
-            <div className="flex gap-6 text-sm font-medium text-on-surface-variant">
-              <div className="flex flex-col items-center bg-surface-container-low p-3 rounded-brand border border-outline-variant min-w-[80px]">
-                <span className="material-symbols-outlined text-amber-500 fill-current">
-                  star
-                </span>
-                <span className="font-bold text-on-surface mt-1">
-                  {selectedRestaurant.rating
-                    ? selectedRestaurant.rating.toFixed(1)
-                    : "New"}
-                </span>
-              </div>
-              <div className="flex flex-col items-center bg-surface-container-low p-3 rounded-brand border border-outline-variant min-w-[80px]">
-                <span className="material-symbols-outlined text-brand-coral">
-                  delivery_dining
-                </span>
-                <span className="font-bold text-on-surface mt-1">
-                  ${selectedRestaurant.delivery_fee?.toFixed(2) || "0.00"}
-                </span>
-              </div>
-            </div>
+        <div className="space-y-8">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => setSelectedRestaurant(null)}
+              variant="secondary"
+              className="py-2 px-4"
+            >
+              <span className="material-symbols-outlined text-sm">
+                arrow_back
+              </span>{" "}
+              Back to Restaurants
+            </Button>
           </div>
 
-          {/* Menu Items */}
-          <div className="space-y-4">
-            <h3 className="font-headline-md text-lg font-bold text-on-surface">
-              Menu
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {selectedRestaurant.menu_items &&
-                selectedRestaurant.menu_items.map((item) => (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Menu Items */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-2xl border border-outline-variant p-6 space-y-4 shadow-sm">
+                <h2 className="font-headline-lg text-on-surface text-2xl font-black">
+                  {selectedRestaurant.name}
+                </h2>
+                <p className="font-body-md text-sm text-on-surface-variant">
+                  {selectedRestaurant.cuisine} • {selectedRestaurant.address}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {selectedRestaurant.menu_items?.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white rounded-xl border border-outline-variant p-4 flex gap-4 shadow-sm hover:shadow-md transition-all"
+                    className="bg-white rounded-2xl border border-outline-variant overflow-hidden flex shadow-sm hover:shadow-md transition-all"
                   >
-                    <img
-                      src={
-                        item.image_url ||
-                        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300"
-                      }
-                      alt={item.name}
-                      className="w-24 h-24 rounded-brand object-cover bg-surface-container-high"
-                    />
-                    <div className="flex-1 flex flex-col justify-between">
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                       <div>
-                        <h4 className="font-bold text-on-surface text-sm">
+                        <h4 className="font-headline-md text-on-surface text-base font-bold">
                           {item.name}
                         </h4>
-                        <p className="text-xs text-on-surface-variant line-clamp-2 mt-1">
+                        <p className="font-body-md text-xs text-on-surface-variant mt-1 line-clamp-2">
                           {item.description}
                         </p>
                       </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="font-bold text-brand-coral">
+                      <div className="flex items-center justify-between">
+                        <span className="font-headline-md text-brand-coral text-base font-black">
                           ${item.price.toFixed(2)}
                         </span>
                         <Button
-                          size="sm"
+                          onClick={() => handleAddToCart(item)}
                           variant="primary"
-                          disabled={!item.is_available}
-                          onClick={() =>
-                            handleAddToCart(item, selectedRestaurant)
-                          }
+                          className="py-1.5 px-3 text-xs"
                         >
-                          {item.is_available ? "Add to Cart" : "Out of Stock"}
+                          Add to Cart
                         </Button>
                       </div>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Cart Panel */}
+            <div className="bg-white rounded-2xl border border-outline-variant p-6 h-fit space-y-6 shadow-sm">
+              <h3 className="font-headline-md text-on-surface text-lg font-bold border-b border-outline-variant pb-3">
+                Your Cart
+              </h3>
+              {cart.length === 0 ? (
+                <div className="text-center py-8 text-on-surface-variant space-y-2">
+                  <span className="material-symbols-outlined text-4xl">
+                    shopping_cart
+                  </span>
+                  <p className="text-sm">Your cart is empty.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="divide-y divide-outline-variant max-h-60 overflow-y-auto pr-1">
+                    {cart.map((item) => (
+                      <div
+                        key={item.id}
+                        className="py-3 flex justify-between items-center gap-2"
+                      >
+                        <div className="flex-1">
+                          <p className="font-label-md text-sm text-on-surface font-bold">
+                            {item.name}
+                          </p>
+                          <p className="font-label-sm text-xs text-on-surface-variant mt-0.5">
+                            ${item.price.toFixed(2)} each
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            onClick={() => handleRemoveFromCart(item.id)}
+                            className="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface hover:bg-surface-container-highest transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="font-bold text-sm w-4 text-center">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => handleAddToCart(item)}
+                            className="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface hover:bg-surface-container-highest transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="border-t border-outline-variant pt-4 space-y-2">
+                    <div className="flex justify-between text-sm text-on-surface-variant">
+                      <span>Subtotal</span>
+                      <span>${cartTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-on-surface-variant">
+                      <span>Delivery Fee</span>
+                      <span>
+                        ${(selectedRestaurant.delivery_fee || 0).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-bold text-base text-on-surface pt-2 border-t border-outline-variant/50">
+                      <span>Total</span>
+                      <span className="text-brand-coral">
+                        $
+                        {(
+                          cartTotal + (selectedRestaurant.delivery_fee || 0)
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => setIsCheckoutOpen(true)}
+                    variant="primary"
+                    className="w-full py-3"
+                  >
+                    Proceed to Checkout
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {activeTab === "orders" && (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-black text-on-surface">My Orders</h2>
-          {orders.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl border border-outline-variant p-8">
-              <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4">
-                receipt_long
-              </span>
-              <h3 className="text-lg font-bold text-on-surface mb-2">
-                No Orders Yet
-              </h3>
-              <p className="text-sm text-on-surface-variant mb-4">
-                You haven't placed any orders on the platform yet.
-              </p>
-              <Button onClick={() => setActiveTab("browse")}>
-                Browse Restaurants
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {orders.map((order) => (
-                <ActiveOrderTracker
-                  key={order.id}
-                  order={order}
-                  onCancel={handleCancelOrder}
-                  onSubmitFeedback={handleSubmitFeedback}
-                />
-              ))}
-            </div>
+        <div className="space-y-8">
+          {activeOrderId && (
+            <ActiveOrderTracker
+              orderId={activeOrderId}
+              onClose={() => setActiveOrderId(null)}
+            />
           )}
-        </div>
-      )}
 
-      {/* Cart Modal */}
-      <Modal
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        title={`Your Cart (${cart.restaurantName || "Empty"})`}
-        footer={
-          cart.items.length > 0 && (
-            <div className="w-full space-y-4">
-              <div className="flex justify-between font-bold text-on-surface text-sm">
-                <span>Subtotal</span>
-                <span>${getCartTotal().toFixed(2)}</span>
-              </div>
+          <div className="bg-white rounded-2xl border border-outline-variant p-6 space-y-6 shadow-sm">
+            <div className="flex justify-between items-center border-b border-outline-variant pb-4">
+              <h3 className="font-headline-md text-on-surface text-lg font-bold">
+                Order History
+              </h3>
               <Button
-                variant="primary"
-                className="w-full"
-                onClick={handleCheckout}
-                disabled={loading}
+                onClick={() => setIsTicketOpen(true)}
+                variant="secondary"
+                className="py-1.5 px-4 text-xs"
               >
-                {loading ? "Processing Checkout..." : "Place Order & Pay"}
+                Submit Support Ticket
               </Button>
             </div>
-          )
-        }
-      >
-        {cart.items.length === 0 ? (
-          <div className="text-center py-8">
-            <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-2">
-              shopping_cart
-            </span>
-            <p className="text-sm text-on-surface-variant">
-              Your cart is empty.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {error && (
-              <div className="bg-error-container text-on-error-container p-3 rounded-brand text-xs font-medium border border-error/20">
-                {error}
+
+            {orders.length === 0 ? (
+              <div className="text-center py-12 text-on-surface-variant space-y-2">
+                <span className="material-symbols-outlined text-5xl">
+                  receipt_long
+                </span>
+                <p className="text-sm">You haven't placed any orders yet.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-outline-variant">
+                {orders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="py-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-surface-container-lowest transition-colors px-2 rounded-xl"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-3">
+                        <h4 className="font-headline-md text-on-surface text-base font-bold">
+                          {order.restaurant_name}
+                        </h4>
+                        <Badge status={order.status} />
+                      </div>
+                      <p className="font-body-md text-xs text-on-surface-variant">
+                        Order #{order.id.slice(0, 8)} •{" "}
+                        {new Date(order.created_at).toLocaleString()}
+                      </p>
+                      <p className="font-headline-md text-brand-coral text-sm font-black">
+                        Total: ${order.total_amount?.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 self-start md:self-auto">
+                      <Button
+                        onClick={() => setActiveOrderId(order.id)}
+                        variant="secondary"
+                        className="py-1.5 px-4 text-xs"
+                      >
+                        Track Order
+                      </Button>
+                      {order.status === "delivered" && !order.rating && (
+                        <Button
+                          onClick={() => {
+                            setFeedbackOrderId(order.id);
+                            setIsCheckoutFeedbackOpen(true);
+                          }}
+                          variant="primary"
+                          className="py-1.5 px-4 text-xs"
+                        >
+                          Rate Order
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-            <div className="divide-y divide-outline-variant max-h-60 overflow-y-auto pr-2">
-              {cart.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between py-3 text-sm"
-                >
-                  <div>
-                    <p className="font-bold text-on-surface">{item.name}</p>
-                    <p className="text-xs text-on-surface-variant">
-                      {item.quantity}x @ ${item.price.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-on-surface">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </span>
-                    <button
-                      onClick={() => handleRemoveFromCart(item.id)}
-                      className="text-error hover:text-error/80"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        delete
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Delivery Address */}
-            <div className="space-y-2 pt-4 border-t border-outline-variant">
-              <label className="block text-xs font-bold text-on-surface-variant">
-                Delivery Address
-              </label>
-              <input
-                type="text"
-                value={deliveryAddress}
-                onChange={(e) => setDeliveryAddress(e.target.value)}
-                className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-                required
-              />
-            </div>
-
-            {/* Payment Details */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-on-surface-variant">
-                Payment Method
-              </label>
-              <div className="flex items-center gap-3 p-3 border border-outline-variant rounded-brand bg-surface-container-low">
-                <span className="material-symbols-outlined text-brand-coral">
-                  credit_card
-                </span>
-                <span className="text-sm font-medium text-on-surface">
-                  Secure Card Payment
-                </span>
-              </div>
-            </div>
           </div>
-        )}
-      </Modal>
-
-      {/* Floating Cart Button */}
-      {cart.items.length > 0 && !isCartOpen && (
-        <div className="fixed bottom-6 right-6 z-40">
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="bg-brand-coral hover:bg-brand-coral/90 text-white font-bold px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 transition-all active:scale-95 animate-bounce"
-          >
-            <span className="material-symbols-outlined">shopping_cart</span>
-            <span>View Cart ({cart.items.length})</span>
-            <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
-              ${getCartTotal().toFixed(2)}
-            </span>
-          </button>
         </div>
       )}
+
+      {activeTab === "support" && (
+        <div className="bg-white rounded-2xl border border-outline-variant p-6 space-y-6 shadow-sm">
+          <div className="flex justify-between items-center border-b border-outline-variant pb-4">
+            <h3 className="font-headline-md text-on-surface text-lg font-bold">
+              Support Center
+            </h3>
+            <Button
+              onClick={() => setIsTicketOpen(true)}
+              variant="primary"
+              className="py-1.5 px-4 text-xs"
+            >
+              Submit Support Ticket
+            </Button>
+          </div>
+          <p className="font-body-md text-sm text-on-surface-variant">
+            Need help with an order, refund, or delivery? Submit a support
+            ticket and our administrators will resolve it as soon as possible.
+          </p>
+        </div>
+      )}
+
+      {/* Checkout Modal */}
+      <Modal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        title="Confirm Order & Payment"
+      >
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+              Delivery Address
+            </label>
+            <input
+              type="text"
+              value={deliveryAddress}
+              onChange={(e) => setDeliveryAddress(e.target.value)}
+              className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
+            />
+          </div>
+
+          <div className="bg-surface-container-low rounded-xl p-4 border border-outline-variant/50 space-y-2">
+            <p className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+              Payment Method
+            </p>
+            <div className="flex items-center gap-3 bg-white p-3 rounded-brand border border-outline-variant">
+              <span className="material-symbols-outlined text-brand-coral">
+                credit_card
+              </span>
+              <span className="font-label-md text-sm text-on-surface font-semibold">
+                Credit / Debit Card (Mocked)
+              </span>
+            </div>
+          </div>
+
+          <div className="border-t border-outline-variant pt-4 flex justify-between items-center">
+            <div>
+              <p className="font-label-sm text-xs text-on-surface-variant">
+                Total Amount
+              </p>
+              <p className="font-headline-md text-brand-coral text-xl font-black">
+                $
+                {(cartTotal + (selectedRestaurant?.delivery_fee || 0)).toFixed(
+                  2,
+                )}
+              </p>
+            </div>
+            <Button
+              onClick={handleCheckout}
+              variant="primary"
+              className="py-3 px-6"
+            >
+              Pay & Place Order
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Feedback Modal */}
+      <Modal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsCheckoutFeedbackOpen(false)}
+        title="Rate Your Order"
+      >
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+              Rating (1-5 Stars)
+            </label>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className="p-1 hover:scale-110 transition-transform"
+                >
+                  <span
+                    className={`material-symbols-outlined text-3xl ${star <= rating ? "text-yellow-500 fill-1" : "text-on-surface-variant"}`}
+                  >
+                    star
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+              Feedback / Comments
+            </label>
+            <textarea
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              placeholder="Tell us about your experience..."
+              className="w-full h-24 p-3 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors resize-none"
+            />
+          </div>
+
+          <Button
+            onClick={handleFeedbackSubmit}
+            variant="primary"
+            className="w-full py-3"
+          >
+            Submit Feedback
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Support Ticket Modal */}
+      <Modal
+        isOpen={isTicketOpen}
+        onClose={() => setIsTicketOpen(false)}
+        title="Submit Support Ticket"
+      >
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+              Issue Type
+            </label>
+            <select
+              value={ticketType}
+              onChange={(e) => setTicketType(e.target.value)}
+              className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
+            >
+              <option value="delivery_issue">Delivery Issue</option>
+              <option value="payment_issue">Payment Issue</option>
+              <option value="refund_request">Refund Request</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+              Description
+            </label>
+            <textarea
+              value={ticketDesc}
+              onChange={(e) => setTicketDescription(e.target.value)}
+              placeholder="Describe your issue in detail..."
+              className="w-full h-28 p-3 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors resize-none"
+            />
+          </div>
+
+          <Button
+            onClick={handleTicketSubmit}
+            variant="primary"
+            className="w-full py-3"
+          >
+            Submit Ticket
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
+
+CustomerDashboardPage.propTypes = {
+  activeTab: PropTypes.string.isRequired,
+  setActiveTab: PropTypes.func.isRequired,
+};

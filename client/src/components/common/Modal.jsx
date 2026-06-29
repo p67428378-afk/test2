@@ -1,45 +1,32 @@
 import React from "react";
+import PropTypes from "prop-types";
 
-export default function Modal({ isOpen, onClose, title, children, footer }) {
+export default function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      ></div>
-
-      {/* Modal Content */}
-      <div className="relative w-full max-w-lg mx-auto my-6 z-50 px-4">
-        <div className="border-0 rounded-xl shadow-2xl relative flex flex-col w-full bg-white outline-none focus:outline-none overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-outline-variant">
-            <h3 className="text-lg font-headline-md font-bold text-on-surface">
-              {title}
-            </h3>
-            <button
-              className="p-1 ml-auto bg-transparent border-0 text-on-surface-variant hover:text-brand-coral float-right text-3xl leading-none font-semibold outline-none focus:outline-none transition-colors"
-              onClick={onClose}
-            >
-              <span className="material-symbols-outlined text-2xl">close</span>
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="relative p-6 flex-auto max-h-[70vh] overflow-y-auto">
-            {children}
-          </div>
-
-          {/* Footer */}
-          {footer && (
-            <div className="flex items-center justify-end gap-3 p-4 border-t border-outline-variant bg-surface-container-low">
-              {footer}
-            </div>
-          )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+          <h3 className="font-headline-md text-on-surface text-lg font-bold">
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+          >
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
         </div>
+        <div className="p-6 max-h-[75vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
 }
+
+Modal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};

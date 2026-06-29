@@ -1,53 +1,54 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 export default function KPIStatsGrid({ stats }) {
-  const items = [
-    {
-      label: "Total Revenue",
-      value: `$${stats.total_revenue?.toFixed(2) || "0.00"}`,
-      icon: "payments",
-      color: "text-brand-green bg-brand-green/10",
-    },
+  const cards = [
     {
       label: "Total Orders",
       value: stats.total_orders || 0,
-      icon: "receipt_long",
+      icon: "shopping_bag",
       color: "text-brand-coral bg-brand-coral/10",
     },
     {
-      label: "Average Rating",
-      value: stats.rating ? stats.rating.toFixed(1) : "N/A",
-      icon: "star",
-      color: "text-amber-500 bg-amber-500/10",
+      label: "Total Revenue",
+      value: `$${(stats.total_revenue || 0).toFixed(2)}`,
+      icon: "payments",
+      color: "text-brand-green bg-brand-green/10",
     },
     {
       label: "Active Orders",
       value: stats.active_orders || 0,
       icon: "pending_actions",
-      color: "text-blue-500 bg-blue-500/10",
+      color: "text-blue-600 bg-blue-50",
+    },
+    {
+      label: "Average Rating",
+      value: stats.rating ? stats.rating.toFixed(1) : "N/A",
+      icon: "star",
+      color: "text-yellow-500 bg-yellow-50",
     },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {items.map((item) => (
+      {cards.map((card) => (
         <div
-          key={item.label}
-          className="bg-white rounded-xl border border-outline-variant p-6 shadow-sm flex items-center justify-between"
+          key={card.label}
+          className="bg-white rounded-2xl border border-outline-variant p-6 flex items-center justify-between shadow-sm"
         >
-          <div>
-            <p className="text-xs text-on-surface-variant font-medium mb-1">
-              {item.label}
+          <div className="space-y-1">
+            <p className="font-label-sm text-xs text-on-surface-variant font-medium">
+              {card.label}
             </p>
-            <h3 className="text-2xl font-black text-on-surface">
-              {item.value}
-            </h3>
+            <p className="font-headline-lg text-on-surface text-2xl font-black">
+              {card.value}
+            </p>
           </div>
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center ${item.color}`}
+            className={`w-12 h-12 rounded-full flex items-center justify-center ${card.color}`}
           >
             <span className="material-symbols-outlined text-2xl">
-              {item.icon}
+              {card.icon}
             </span>
           </div>
         </div>
@@ -55,3 +56,12 @@ export default function KPIStatsGrid({ stats }) {
     </div>
   );
 }
+
+KPIStatsGrid.propTypes = {
+  stats: PropTypes.shape({
+    total_orders: PropTypes.number,
+    total_revenue: PropTypes.number,
+    active_orders: PropTypes.number,
+    rating: PropTypes.number,
+  }).isRequired,
+};

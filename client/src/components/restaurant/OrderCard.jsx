@@ -1,97 +1,115 @@
 import React from "react";
+import PropTypes from "prop-types";
 import Badge from "../common/Badge";
 import Button from "../common/Button";
 
-export default function OrderCard({ order, onStatusUpdate }) {
+export default function OrderCard({ order, onUpdateStatus }) {
   return (
-    <div className="bg-white rounded-xl border border-outline-variant p-6 shadow-sm space-y-4">
-      <div className="flex items-center justify-between border-b border-outline-variant pb-3">
+    <div className="bg-white rounded-2xl border border-outline-variant p-6 space-y-4 shadow-sm hover:shadow-md transition-all">
+      <div className="flex justify-between items-start border-b border-outline-variant/50 pb-3">
         <div>
-          <h4 className="font-bold text-on-surface">
-            Order #{order.id.substring(0, 8)}
+          <h4 className="font-headline-md text-on-surface text-base font-bold">
+            Order #{order.id.slice(0, 8)}
           </h4>
-          <p className="text-xs text-on-surface-variant">
+          <p className="font-body-md text-xs text-on-surface-variant mt-0.5">
             {new Date(order.created_at).toLocaleString()}
           </p>
         </div>
-        <Badge variant={order.status === "pending" ? "primary" : "warning"}>
-          {order.status.replace("_", " ").toUpperCase()}
-        </Badge>
+        <Badge status={order.status} />
       </div>
 
-      {/* Customer Details */}
-      <div className="text-sm space-y-1">
-        <p className="text-on-surface font-medium">
-          <span className="text-on-surface-variant font-normal">Customer:</span>{" "}
-          {order.user?.full_name || "Guest"}
+      <div className="space-y-2">
+        <p className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+          Items
         </p>
-        <p className="text-on-surface font-medium">
-          <span className="text-on-surface-variant font-normal">Address:</span>{" "}
-          {order.delivery_address}
-        </p>
-      </div>
-
-      {/* Items List */}
-      <div className="divide-y divide-outline-variant border border-outline-variant rounded-xl overflow-hidden bg-surface-container-lowest text-sm">
-        {order.items &&
-          order.items.map((item) => (
-            <div
+        <ul className="space-y-1.5">
+          {order.items?.map((item) => (
+            <li
               key={item.id}
-              className="flex items-center justify-between p-3"
+              className="flex justify-between text-sm text-on-surface"
             >
-              <div className="flex items-center gap-2">
+              <span>
                 <span className="font-bold text-brand-coral">
                   {item.quantity}x
-                </span>
-                <span className="text-on-surface">
-                  {item.menu_item?.name || "Menu Item"}
-                </span>
-              </div>
-              <span className="font-medium text-on-surface">
+                </span>{" "}
+                {item.menu_item?.name || "Menu Item"}
+              </span>
+              <span className="font-medium text-on-surface-variant">
                 ${(item.price * item.quantity).toFixed(2)}
               </span>
-            </div>
+            </li>
           ))}
+        </ul>
       </div>
 
-      <div className="flex justify-between items-center font-bold text-on-surface text-sm pt-2">
-        <span>Total Earnings</span>
-        <span className="text-brand-coral text-base">
-          ${order.total_amount.toFixed(2)}
-        </span>
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant">
-        {order.status === "pending" && (
-          <>
+      <div className="flex justify-between items-center pt-3 border-t border-outline-variant/50">
+        <div>
+          <p className="font-label-sm text-xs text-on-surface-variant">
+            Total Amount
+          </p>
+          <p className="font-headline-md text-brand-coral text-lg font-black">
+            ${order.total_amount?.toFixed(2)}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {order.status === "pending" && (
+            <>
+              <Button
+                onClick={() => onUpdateStatus(order.id, "cancelled")}
+                variant="secondary"
+                className="py-1.5 px-3 text-xs"
+              >
+                Decline
+              </Button>
+              <Button
+                onClick={() => onUpdateStatus(order.id, "accepted")}
+                variant="primary"
+                className="py-1.5 px-4 text-xs"
+              >
+                Accept
+              </Button>
+            </>
+          )}
+          {order.status === "accepted" && (
             <Button
-              variant="danger"
-              size="sm"
-              onClick={() => onStatusUpdate(order.id, "cancelled")}
+              onClick={() => onUpdateStatus(order.id, "preparing")}
+              variant="primary"
+              className="py-1.5 px-4 text-xs"
             >
-              Decline
+              Start Preparing
             </Button>
+          )}
+          {order.status === "preparing" && (
             <Button
+              onClick={() => onUpdateStatus(order.id, "ready_for_pickup")}
               variant="success"
-              size="sm"
-              onClick={() => onStatusUpdate(order.id, "preparing")}
+              className="py-1.5 px-4 text-xs"
             >
-              Accept & Prepare
+              Ready for Pickup
             </Button>
-          </>
-        )}
-
-        {order.status === "preparing" && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => onStatusUpdate(order.id, "ready_for_pickup")}
-          >
-            Mark as Ready for Pickup
-          </Button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+OrderCard.propTypes = {
+  order: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
+    created_at: PropTypes.string.isRequired,
+    total_amount: PropTypes.number.isRequired,
+    items: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        quantity: PropTypes.number.isRequired,
+        price: PropTypes.number.isRequired,
+        menu_item: PropTypes.shape({
+          name: PropTypes.string,
+        }),
+      }),
+    ),
+  }).isRequired,
+  onUpdateStatus: PropTypes.func.isRequired,
+};

@@ -1,32 +1,26 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 export default function Button({
   children,
   onClick,
   type = "button",
   variant = "primary",
-  size = "md",
   disabled = false,
   className = "",
-  ...props
 }) {
   const baseStyles =
-    "inline-flex items-center justify-center font-label-md text-label-md rounded-brand transition-all active:scale-95 focus:outline-none disabled:opacity-50 disabled:pointer-events-none";
+    "font-label-md text-sm py-2.5 px-5 rounded-brand shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2";
 
   const variants = {
-    primary: "bg-brand-coral hover:bg-brand-coral/90 text-white shadow-md",
+    primary:
+      "bg-brand-coral hover:bg-brand-coral/90 text-white font-bold disabled:bg-brand-coral/50 disabled:scale-100",
     secondary:
-      "bg-secondary-container hover:bg-secondary-container/80 text-on-secondary-container border border-outline-variant",
-    outline:
-      "border border-outline text-on-surface hover:bg-surface-container-high",
-    danger: "bg-error hover:bg-error/90 text-white shadow-md",
-    success: "bg-brand-green hover:bg-brand-green/90 text-white shadow-md",
-  };
-
-  const sizes = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
+      "bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold border border-outline-variant disabled:opacity-50 disabled:scale-100",
+    danger:
+      "bg-error hover:bg-error/90 text-white font-bold disabled:bg-error/50 disabled:scale-100",
+    success:
+      "bg-brand-green hover:bg-brand-green/90 text-white font-bold disabled:bg-brand-green/50 disabled:scale-100",
   };
 
   return (
@@ -34,10 +28,18 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
+      className={`${baseStyles} ${variants[variant]} ${className}`}
     >
       {children}
     </button>
   );
 }
+
+Button.propTypes = {
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func,
+  type: PropTypes.string,
+  variant: PropTypes.oneOf(["primary", "secondary", "danger", "success"]),
+  disabled: PropTypes.bool,
+  className: PropTypes.string,
+};

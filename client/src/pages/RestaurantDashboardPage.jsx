@@ -1,405 +1,224 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import KPIStatsGrid from "../components/restaurant/KPIStatsGrid";
 import OrderCard from "../components/restaurant/OrderCard";
 import Button from "../components/common/Button";
 import Modal from "../components/common/Modal";
-import Badge from "../components/common/Badge";
 import { restaurantService, orderService } from "../services/api";
 
-export default function RestaurantDashboardPage({
-  user,
-  activeTab,
-  setActiveTab,
-}) {
-  const [restaurant, setRestaurant] = React.useState(null);
-  const [orders, setOrders] = React.useState([]);
-  const [analytics, setAnalytics] = React.useState({});
-  const [isMenuModalOpen, setIsMenuModalOpen] = React.useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
+export default function RestaurantDashboardPage({ activeTab, setActiveTab }) {
+  const [restaurant, setRestaurant] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+  const [selectedMenuItem, setSelectedMenuItem] = useState(null);
+  const [menuItemForm, setMenuItemForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    image_url: "",
+    is_available: true,
+  });
 
-  // Menu Item Form State
-  const [menuItemName, setMenuItemName] = React.useState("");
-  const [menuItemDesc, setMenuItemDescription] = React.useState("");
-  const [menuItemPrice, setMenuItemPrice] = React.useState("");
-  const [menuItemImage, setMenuItemImage] = React.useState("");
-  const [menuItemAvailable, setMenuItemAvailable] = React.useState(true);
-  const [editingMenuItemId, setEditingMenuItemId] = React.useState(null);
-
-  // Profile Form State
-  const [profileName, setProfileName] = React.useState("");
-  const [profileCuisine, setProfileCuisine] = React.useState("");
-  const [profileAddress, setProfileAddress] = React.useState("");
-  const [profileHours, setProfileHours] = React.useState("");
-  const [profileFee, setProfileFee] = React.useState("");
-  const [profileTime, setProfileTime] = React.useState("");
-
-  React.useEffect(() => {
-    fetchRestaurantData();
-  }, []);
+  // Form fields for restaurant profile
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    cuisine: "",
+    address: "",
+    operating_hours: "",
+    delivery_fee: 0,
+    delivery_time: 30,
+  });
 
   const fetchRestaurantData = async () => {
     try {
-      // 1. Fetch all restaurants to find the one owned by this user
+      // Get all restaurants and find the one owned by the current user
       const list = await restaurantService.list();
-      let myRestaurant = list.find((r) => r.owner_id === user.id);
+      const user = JSON.parse(localStorage.getItem("user"));
+      let myRestaurant = list.find((r) => r.owner_id === user?.id);
 
-      // If no restaurant exists, create a default one
       if (!myRestaurant) {
+        // Create a default restaurant profile if none exists
         myRestaurant = await restaurantService.create({
-          name: "My Gourmet Kitchen",
+          name: "My Restaurant",
           cuisine: "Italian",
-          address: "789 Chef Way, New York",
+          address: "123 Main St",
           operating_hours: "09:00-22:00",
           delivery_fee: 3.99,
           delivery_time: 30,
         });
       }
 
-      // 2. Fetch detailed restaurant profile
-      const detail = await restaurantService.get(myRestaurant.id);
-      setRestaurant(detail);
+      // Fetch full details including menu items
+      const details = await restaurantService.get(myRestaurant.id);
+      setRestaurant(details);
+      setProfileForm({
+        name: details.name,
+        cuisine: details.cuisine,
+        address: details.address,
+        operating_hours: details.operating_hours || "09:00-22:00",
+        delivery_fee: details.delivery_fee || 0,
+        delivery_time: details.delivery_time || 30,
+      });
 
-      // Populate profile form
-      setProfileName(detail.name);
-      setProfileCuisine(detail.cuisine);
-      setProfileAddress(detail.address);
-      setProfileHours(detail.operating_hours || "09:00-22:00");
-      setProfileFee(detail.delivery_fee?.toString() || "3.99");
-      setProfileTime(detail.delivery_time?.toString() || "30");
+      // Fetch orders
+      const orderList = await orderService.list("restaurant");
+      setOrders(orderList);
 
-      // 3. Fetch orders
-      const allOrders = await orderService.list();
-      const myOrders = allOrders.filter((o) => o.restaurant_id === detail.id);
-      setOrders(myOrders);
-
-      // 4. Fetch analytics
-      const stats = await restaurantService.getAnalytics(detail.id);
-      setAnalytics(stats);
+      // Fetch analytics
+      const analyticsData = await restaurantService.getAnalytics(
+        myRestaurant.id,
+      );
+      setAnalytics(analyticsData);
     } catch (err) {
       console.error("Failed to fetch restaurant data", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (orderId, newStatus) => {
+  useEffect(() => {
+    fetchRestaurantData();
+  }, [activeTab]);
+
+  const handleUpdateOrderStatus = async (orderId, status) => {
     try {
-      await orderService.updateStatus(orderId, newStatus);
+      await orderService.updateStatus(orderId, status);
       fetchRestaurantData();
     } catch (err) {
-      console.error("Failed to update order status", err);
+      alert("Failed to update order status.");
     }
   };
 
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
+  const handleSaveMenuItem = async () => {
+    if (!restaurant) return;
     try {
-      await restaurantService.update(restaurant.id, {
-        name: profileName,
-        cuisine: profileCuisine,
-        address: profileAddress,
-        operating_hours: profileHours,
-        delivery_fee: parseFloat(profileFee),
-        delivery_time: parseInt(profileTime),
-      });
-      setIsProfileModalOpen(false);
-      fetchRestaurantData();
-    } catch (err) {
-      console.error("Failed to update profile", err);
-    }
-  };
+      const payload = {
+        ...menuItemForm,
+        price: parseFloat(menuItemForm.price),
+      };
 
-  const handleMenuSubmit = async (e) => {
-    e.preventDefault();
-    const payload = {
-      name: menuItemName,
-      description: menuItemDesc,
-      price: parseFloat(menuItemPrice),
-      image_url: menuItemImage || null,
-      is_available: menuItemAvailable,
-    };
-
-    try {
-      if (editingMenuItemId) {
+      if (selectedMenuItem) {
         await restaurantService.updateMenuItem(
           restaurant.id,
-          editingMenuItemId,
+          selectedMenuItem.id,
           payload,
         );
       } else {
         await restaurantService.addMenuItem(restaurant.id, payload);
       }
+
       setIsMenuModalOpen(false);
-      resetMenuForm();
+      setSelectedMenuItem(null);
+      setMenuItemForm({
+        name: "",
+        description: "",
+        price: "",
+        image_url: "",
+        is_available: true,
+      });
       fetchRestaurantData();
     } catch (err) {
-      console.error("Failed to save menu item", err);
+      alert("Failed to save menu item.");
     }
   };
 
   const handleEditMenuItem = (item) => {
-    setEditingMenuItemId(item.id);
-    setMenuItemName(item.name);
-    setMenuItemDescription(item.description || "");
-    setMenuItemPrice(item.price.toString());
-    setMenuItemImage(item.image_url || "");
-    setMenuItemAvailable(item.is_available);
+    setSelectedMenuItem(item);
+    setMenuItemForm({
+      name: item.name,
+      description: item.description || "",
+      price: item.price.toString(),
+      image_url: item.image_url || "",
+      is_available: item.is_available,
+    });
     setIsMenuModalOpen(true);
   };
 
-  const resetMenuForm = () => {
-    setEditingMenuItemId(null);
-    setMenuItemName("");
-    setMenuItemDescription("");
-    setMenuItemPrice("");
-    setMenuItemImage("");
-    setMenuItemAvailable(true);
+  const handleSaveProfile = async () => {
+    if (!restaurant) return;
+    try {
+      await restaurantService.update(restaurant.id, profileForm);
+      alert("Profile updated successfully!");
+      fetchRestaurantData();
+    } catch (err) {
+      alert("Failed to update profile.");
+    }
   };
 
-  if (!restaurant) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-coral"></div>
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-coral"></div>
       </div>
     );
   }
 
-  const activeOrders = orders.filter((o) =>
-    ["pending", "preparing", "ready_for_pickup"].includes(o.status),
-  );
-  const completedOrders = orders.filter((o) =>
-    ["delivered", "cancelled"].includes(o.status),
-  );
+  const activeOrdersCount = orders.filter((o) =>
+    ["pending", "accepted", "preparing", "ready_for_pickup"].includes(o.status),
+  ).length;
+
+  const kpiStats = {
+    total_orders: analytics?.total_orders || 0,
+    total_revenue: analytics?.total_revenue || 0,
+    active_orders: activeOrdersCount,
+    rating: restaurant?.rating || 0,
+  };
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-outline-variant shadow-sm">
-        <div>
-          <h1 className="text-2xl font-black text-on-surface mb-1">
-            {restaurant.name}
-          </h1>
-          <p className="text-sm text-on-surface-variant capitalize">
-            {restaurant.cuisine} Partner Dashboard
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => setIsProfileModalOpen(true)}>
-            <span className="material-symbols-outlined text-sm mr-2">
-              store
-            </span>
-            Edit Profile
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              resetMenuForm();
-              setIsMenuModalOpen(true);
-            }}
-          >
-            <span className="material-symbols-outlined text-sm mr-2">add</span>
-            Add Menu Item
-          </Button>
-        </div>
-      </div>
-
-      {/* KPI Stats */}
-      <KPIStatsGrid
-        stats={{
-          total_revenue: analytics.total_revenue,
-          total_orders: analytics.total_orders,
-          rating: restaurant.rating,
-          active_orders: activeOrders.length,
-        }}
-      />
-
-      {/* Tabs Content */}
       {activeTab === "dashboard" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Active Orders Queue */}
-          <div className="lg:col-span-2 space-y-6">
-            <h3 className="font-headline-md text-lg font-bold text-on-surface flex items-center gap-2">
-              <span>Active Orders Queue</span>
-              <Badge variant="primary">{activeOrders.length}</Badge>
-            </h3>
-            {activeOrders.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border border-outline-variant p-8">
-                <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4">
-                  inbox
-                </span>
-                <h4 className="font-bold text-on-surface mb-1">
-                  Queue is Empty
-                </h4>
-                <p className="text-sm text-on-surface-variant">
-                  No active orders to prepare right now.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {activeOrders.map((order) => (
-                  <OrderCard
-                    key={order.id}
-                    order={order}
-                    onStatusUpdate={handleStatusUpdate}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="space-y-8">
+          <KPIStatsGrid stats={kpiStats} />
 
-          {/* Completed Orders History */}
-          <div className="space-y-6">
-            <h3 className="font-headline-md text-lg font-bold text-on-surface">
-              Order History
-            </h3>
-            <div className="bg-white rounded-xl border border-outline-variant p-6 shadow-sm space-y-4 max-h-[60vh] overflow-y-auto">
-              {completedOrders.length === 0 ? (
-                <p className="text-sm text-on-surface-variant text-center py-8">
-                  No completed orders yet.
-                </p>
-              ) : (
-                <div className="divide-y divide-outline-variant">
-                  {completedOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="py-3 flex items-center justify-between text-sm"
-                    >
-                      <div>
-                        <p className="font-bold text-on-surface">
-                          Order #{order.id.substring(0, 8)}
-                        </p>
-                        <p className="text-xs text-on-surface-variant">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-brand-coral">
-                          ${order.total_amount.toFixed(2)}
-                        </p>
-                        <Badge
-                          variant={
-                            order.status === "delivered" ? "success" : "danger"
-                          }
-                        >
-                          {order.status.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "menu" && (
-        <div className="space-y-6">
-          <h3 className="font-headline-md text-lg font-bold text-on-surface">
-            Menu Management
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {restaurant.menu_items &&
-              restaurant.menu_items.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm flex flex-col justify-between"
-                >
-                  <img
-                    src={
-                      item.image_url ||
-                      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300"
-                    }
-                    alt={item.name}
-                    className="w-full h-40 object-cover bg-surface-container-high"
-                  />
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-bold text-on-surface text-sm">
-                          {item.name}
-                        </h4>
-                        <Badge
-                          variant={item.is_available ? "success" : "danger"}
-                        >
-                          {item.is_available ? "Available" : "Unavailable"}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-on-surface-variant line-clamp-2">
-                        {item.description}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
-                      <span className="font-bold text-brand-coral">
-                        ${item.price.toFixed(2)}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditMenuItem(item)}
-                      >
-                        Edit Item
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === "analytics" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Sales History */}
-          <div className="lg:col-span-2 bg-white rounded-xl border border-outline-variant p-6 shadow-sm space-y-4">
-            <h3 className="font-headline-md text-base font-bold text-on-surface">
-              Sales History by Status
-            </h3>
-            <div className="space-y-3">
-              {analytics.sales_history &&
-                Object.entries(analytics.sales_history).map(
-                  ([status, count]) => (
-                    <div
-                      key={status}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <span className="capitalize text-on-surface-variant">
-                        {status.replace("_", " ")}
-                      </span>
-                      <div className="flex items-center gap-3 flex-1 max-w-xs ml-4">
-                        <div className="h-2 bg-brand-coral/20 rounded-full flex-1 overflow-hidden">
-                          <div
-                            className="h-full bg-brand-coral"
-                            style={{
-                              width: `${(count / (analytics.total_orders || 1)) * 100}%`,
-                            }}
-                          ></div>
+          {/* Analytics & Feedback */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Sales History Chart (Pure CSS/SVG) */}
+            <div className="bg-white rounded-2xl border border-outline-variant p-6 space-y-6 shadow-sm">
+              <h3 className="font-headline-md text-on-surface text-base font-bold">
+                Sales History
+              </h3>
+              <div className="space-y-4">
+                {analytics?.sales_history &&
+                Object.keys(analytics.sales_history).length > 0 ? (
+                  <div className="space-y-3">
+                    {Object.entries(analytics.sales_history).map(
+                      ([status, count]) => (
+                        <div key={status} className="space-y-1">
+                          <div className="flex justify-between text-xs font-semibold text-on-surface-variant capitalize">
+                            <span>{status.replace(/_/g, " ")}</span>
+                            <span>{count} orders</span>
+                          </div>
+                          <div className="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-brand-coral rounded-full"
+                              style={{
+                                width: `${(count / (analytics.total_orders || 1)) * 100}%`,
+                              }}
+                            ></div>
+                          </div>
                         </div>
-                        <span className="font-bold text-on-surface min-w-[20px] text-right">
-                          {count}
-                        </span>
-                      </div>
-                    </div>
-                  ),
+                      ),
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-on-surface-variant text-center py-8">
+                    No sales history available.
+                  </p>
                 )}
+              </div>
             </div>
-          </div>
 
-          {/* Customer Feedback */}
-          <div className="bg-white rounded-xl border border-outline-variant p-6 shadow-sm space-y-4">
-            <h3 className="font-headline-md text-base font-bold text-on-surface">
-              Customer Feedback
-            </h3>
-            {analytics.feedback && analytics.feedback.length === 0 ? (
-              <p className="text-sm text-on-surface-variant text-center py-8">
-                No feedback received yet.
-              </p>
-            ) : (
-              <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
-                {analytics.feedback &&
-                  analytics.feedback.map((f) => (
-                    <div
-                      key={f.order_id}
-                      className="border-b border-outline-variant pb-3 last:border-0 space-y-1"
-                    >
+            {/* Customer Feedback */}
+            <div className="bg-white rounded-2xl border border-outline-variant p-6 space-y-6 shadow-sm">
+              <h3 className="font-headline-md text-on-surface text-base font-bold">
+                Customer Feedback
+              </h3>
+              <div className="divide-y divide-outline-variant max-h-64 overflow-y-auto pr-1">
+                {analytics?.feedback && analytics.feedback.length > 0 ? (
+                  analytics.feedback.map((f, idx) => (
+                    <div key={idx} className="py-3 space-y-1">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
                           {[1, 2, 3, 4, 5].map((star) => (
@@ -407,7 +226,7 @@ export default function RestaurantDashboardPage({
                               key={star}
                               className={`material-symbols-outlined text-sm ${
                                 star <= f.rating
-                                  ? "text-amber-500 fill-current"
+                                  ? "text-yellow-500 fill-1"
                                   : "text-on-surface-variant"
                               }`}
                             >
@@ -419,182 +238,286 @@ export default function RestaurantDashboardPage({
                           {new Date(f.created_at).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-xs text-on-surface italic">
-                        "{f.feedback}"
+                      <p className="font-body-md text-xs text-on-surface font-medium">
+                        {f.feedback || "No comment left."}
                       </p>
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-on-surface-variant text-center py-8">
+                    No feedback received yet.
+                  </p>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Profile Modal */}
-      <Modal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        title="Edit Restaurant Profile"
-      >
-        <form onSubmit={handleProfileSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
-              Restaurant Name
-            </label>
-            <input
-              type="text"
-              value={profileName}
-              onChange={(e) => setProfileName(e.target.value)}
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              required
-            />
+      {activeTab === "orders" && (
+        <div className="space-y-6">
+          <h3 className="font-headline-md text-on-surface text-lg font-bold border-b border-outline-variant pb-3">
+            Order Queue
+          </h3>
+          {orders.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-outline-variant p-8">
+              <span className="material-symbols-outlined text-on-surface-variant text-5xl mb-3">
+                list_alt
+              </span>
+              <h3 className="font-headline-md text-on-surface text-lg font-bold mb-1">
+                No orders in queue
+              </h3>
+              <p className="font-body-md text-sm text-on-surface-variant">
+                New orders will appear here in real time.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {orders.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  onUpdateStatus={handleUpdateOrderStatus}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "menu" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center border-b border-outline-variant pb-3">
+            <h3 className="font-headline-md text-on-surface text-lg font-bold">
+              Manage Menu
+            </h3>
+            <Button
+              onClick={() => setIsMenuModalOpen(true)}
+              variant="primary"
+              className="py-1.5 px-4 text-xs"
+            >
+              Add Menu Item
+            </Button>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
-              Cuisine Type
-            </label>
-            <input
-              type="text"
-              value={profileCuisine}
-              onChange={(e) => setProfileCuisine(e.target.value)}
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              required
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {restaurant?.menu_items?.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl border border-outline-variant overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md transition-all"
+              >
+                <div className="p-5 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-headline-md text-on-surface text-base font-bold">
+                      {item.name}
+                    </h4>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        item.is_available
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {item.is_available ? "Available" : "Unavailable"}
+                    </span>
+                  </div>
+                  <p className="font-body-md text-xs text-on-surface-variant line-clamp-2">
+                    {item.description}
+                  </p>
+                  <p className="font-headline-md text-brand-coral text-base font-black">
+                    ${item.price.toFixed(2)}
+                  </p>
+                </div>
+                <div className="px-5 py-3 bg-surface-container-low border-t border-outline-variant/50 flex justify-end gap-2">
+                  <Button
+                    onClick={() => handleEditMenuItem(item)}
+                    variant="secondary"
+                    className="py-1 px-3 text-xs"
+                  >
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
-              Address
-            </label>
-            <input
-              type="text"
-              value={profileAddress}
-              onChange={(e) => setProfileAddress(e.target.value)}
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-on-surface-variant mb-1">
+        </div>
+      )}
+
+      {activeTab === "profile" && (
+        <div className="bg-white rounded-2xl border border-outline-variant p-6 max-w-2xl space-y-6 shadow-sm">
+          <h3 className="font-headline-md text-on-surface text-lg font-bold border-b border-outline-variant pb-3">
+            Restaurant Profile
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+                Restaurant Name
+              </label>
+              <input
+                type="text"
+                value={profileForm.name}
+                onChange={(e) =>
+                  setProfileForm({ ...profileForm, name: e.target.value })
+                }
+                className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+                Cuisine Type
+              </label>
+              <input
+                type="text"
+                value={profileForm.cuisine}
+                onChange={(e) =>
+                  setProfileForm({ ...profileForm, cuisine: e.target.value })
+                }
+                className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+                Address
+              </label>
+              <input
+                type="text"
+                value={profileForm.address}
+                onChange={(e) =>
+                  setProfileForm({ ...profileForm, address: e.target.value })
+                }
+                className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
                 Operating Hours
               </label>
               <input
                 type="text"
-                value={profileHours}
-                onChange={(e) => setProfileHours(e.target.value)}
-                placeholder="e.g., 09:00-22:00"
-                className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-                required
+                value={profileForm.operating_hours}
+                onChange={(e) =>
+                  setProfileForm({
+                    ...profileForm,
+                    operating_hours: e.target.value,
+                  })
+                }
+                className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-on-surface-variant mb-1">
+            <div className="space-y-2">
+              <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
                 Delivery Fee ($)
               </label>
               <input
                 type="number"
                 step="0.01"
-                value={profileFee}
-                onChange={(e) => setProfileFee(e.target.value)}
-                className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-                required
+                value={profileForm.delivery_fee}
+                onChange={(e) =>
+                  setProfileForm({
+                    ...profileForm,
+                    delivery_fee: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
               />
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
-              Estimated Delivery Time (mins)
-            </label>
-            <input
-              type="number"
-              value={profileTime}
-              onChange={(e) => setProfileTime(e.target.value)}
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              required
-            />
-          </div>
-          <Button type="submit" variant="primary" className="w-full">
+          <Button
+            onClick={handleSaveProfile}
+            variant="primary"
+            className="py-2.5 px-6"
+          >
             Save Profile
           </Button>
-        </form>
-      </Modal>
+        </div>
+      )}
 
       {/* Menu Item Modal */}
       <Modal
         isOpen={isMenuModalOpen}
-        onClose={() => setIsMenuModalOpen(false)}
-        title={editingMenuItemId ? "Edit Menu Item" : "Add Menu Item"}
+        onClose={() => {
+          setIsMenuModalOpen(false);
+          setSelectedMenuItem(null);
+        }}
+        title={selectedMenuItem ? "Edit Menu Item" : "Add Menu Item"}
       >
-        <form onSubmit={handleMenuSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
               Item Name
             </label>
             <input
               type="text"
-              value={menuItemName}
-              onChange={(e) => setMenuItemName(e.target.value)}
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              required
+              value={menuItemForm.name}
+              onChange={(e) =>
+                setMenuItemForm({ ...menuItemForm, name: e.target.value })
+              }
+              className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
             />
           </div>
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+              Description
+            </label>
+            <textarea
+              value={menuItemForm.description}
+              onChange={(e) =>
+                setMenuItemForm({
+                  ...menuItemForm,
+                  description: e.target.value,
+                })
+              }
+              className="w-full h-20 p-3 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors resize-none"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="font-label-sm text-xs text-on-surface-variant font-bold uppercase tracking-wider">
               Price ($)
             </label>
             <input
               type="number"
               step="0.01"
-              value={menuItemPrice}
-              onChange={(e) => setMenuItemPrice(e.target.value)}
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              required
+              value={menuItemForm.price}
+              onChange={(e) =>
+                setMenuItemForm({ ...menuItemForm, price: e.target.value })
+              }
+              className="w-full h-11 px-4 rounded-brand border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors"
             />
           </div>
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
-              Image URL (Optional)
-            </label>
-            <input
-              type="text"
-              value={menuItemImage}
-              onChange={(e) => setMenuItemImage(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-1">
-              Description
-            </label>
-            <textarea
-              value={menuItemDesc}
-              onChange={(e) => setMenuItemDescription(e.target.value)}
-              className="w-full p-2.5 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              rows="3"
-              required
-            />
-          </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 pt-2">
             <input
               type="checkbox"
               id="is_available"
-              checked={menuItemAvailable}
-              onChange={(e) => setMenuItemAvailable(e.target.checked)}
-              className="rounded border-outline-variant text-brand-coral focus:ring-brand-coral"
+              checked={menuItemForm.is_available}
+              onChange={(e) =>
+                setMenuItemForm({
+                  ...menuItemForm,
+                  is_available: e.target.checked,
+                })
+              }
+              className="rounded border-outline-variant text-brand-coral focus:ring-brand-coral h-4 w-4"
             />
             <label
               htmlFor="is_available"
-              className="text-sm font-medium text-on-surface"
+              className="font-label-md text-sm text-on-surface font-semibold"
             >
               Available for Order
             </label>
           </div>
-          <Button type="submit" variant="primary" className="w-full">
-            {editingMenuItemId ? "Save Changes" : "Add Item"}
+          <Button
+            onClick={handleSaveMenuItem}
+            variant="primary"
+            className="w-full py-3 mt-4"
+          >
+            Save Item
           </Button>
-        </form>
+        </div>
       </Modal>
     </div>
   );
 }
+
+RestaurantDashboardPage.propTypes = {
+  activeTab: PropTypes.string.isRequired,
+  setActiveTab: PropTypes.func.isRequired,
+};

@@ -1,238 +1,202 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import Badge from "../common/Badge";
+import { orderService } from "../../services/api";
 
-export default function ActiveOrderTracker({
-  order,
-  onCancel,
-  onSubmitFeedback,
-}) {
-  const [rating, setRating] = React.useState(5);
-  const [feedback, setFeedback] = React.useState("");
-  const [submitted, setSubmitted] = React.useState(false);
+export default function ActiveOrderTracker({ orderId, onClose }) {
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const getStatusStep = (status) => {
-    const steps = [
-      "pending",
-      "preparing",
-      "ready_for_pickup",
-      "out_for_delivery",
-      "delivered",
-    ];
-    return steps.indexOf(status);
-  };
-
-  const currentStep = getStatusStep(order.status);
-
-  const steps = [
-    { label: "Placed", icon: "receipt" },
-    { label: "Preparing", icon: "cooking" },
-    { label: "Ready", icon: "inventory_2" },
-    { label: "On the Way", icon: "delivery_dining" },
-    { label: "Delivered", icon: "sports_motorsports" },
-  ];
-
-  const handleFeedbackSubmit = async (e) => {
-    e.preventDefault();
+  const fetchOrderDetails = async () => {
     try {
-      await onSubmitFeedback(order.id, rating, feedback);
-      setSubmitted(true);
+      const data = await orderService.get(orderId);
+      setOrder(data);
+      setError("");
     } catch (err) {
-      console.error("Failed to submit feedback", err);
+      setError("Failed to load order tracking details.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchOrderDetails();
+    const interval = setInterval(fetchOrderDetails, 5000); // Poll every 5s
+    return () => clearInterval(interval);
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-coral"></div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="p-6 text-center text-error bg-error-container/20 rounded-2xl border border-error/20">
+        <p className="font-semibold">{error || "Order not found"}</p>
+      </div>
+    );
+  }
+
+  const steps = [
+    { label: "Pending", status: "pending", icon: "pending_actions" },
+    { label: "Accepted", status: "accepted", icon: "thumb_up" },
+    { label: "Preparing", status: "preparing", icon: "cooking" },
+    {
+      label: "Ready for Pickup",
+      status: "ready_for_pickup",
+      icon: "local_mall",
+    },
+    {
+      label: "Out for Delivery",
+      status: "out_for_delivery",
+      icon: "delivery_dining",
+    },
+    { label: "Delivered", status: "delivered", icon: "sports_motorsports" },
+  ];
+
+  const currentStepIndex = steps.findIndex((s) => s.status === order.status);
+
   return (
-    <div className="bg-white rounded-xl border border-outline-variant p-6 shadow-sm space-y-6">
-      <div className="flex items-center justify-between border-b border-outline-variant pb-4">
+    <div className="bg-white rounded-2xl border border-outline-variant p-6 space-y-6 shadow-sm">
+      <div className="flex justify-between items-start border-b border-outline-variant pb-4">
         <div>
-          <h3 className="font-headline-md text-lg font-bold text-on-surface">
-            Order #{order.id.substring(0, 8)}
+          <h3 className="font-headline-md text-on-surface text-lg font-bold">
+            Track Order #{order.id.slice(0, 8)}
           </h3>
-          <p className="text-xs text-on-surface-variant">
+          <p className="font-body-md text-xs text-on-surface-variant mt-1">
             Placed on {new Date(order.created_at).toLocaleString()}
           </p>
         </div>
-        <Badge variant={order.status === "delivered" ? "success" : "warning"}>
-          {order.status.replace("_", " ").toUpperCase()}
-        </Badge>
-      </div>
-
-      {/* Progress Bar */}
-      {order.status !== "cancelled" && (
-        <div className="py-4">
-          <div className="relative flex items-center justify-between">
-            {/* Progress Line */}
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-surface-container-high z-0">
-              <div
-                className="h-full bg-brand-coral transition-all duration-500"
-                style={{
-                  width: `${(currentStep / (steps.length - 1)) * 100}%`,
-                }}
-              ></div>
-            </div>
-
-            {/* Steps */}
-            {steps.map((step, idx) => {
-              const isCompleted = idx <= currentStep;
-              const isActive = idx === currentStep;
-              return (
-                <div
-                  key={step.label}
-                  className="relative z-10 flex flex-col items-center"
-                >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                      isCompleted
-                        ? "bg-brand-coral text-white shadow-md"
-                        : "bg-white border-2 border-outline-variant text-on-surface-variant"
-                    } ${isActive ? "ring-4 ring-brand-coral/20 scale-110" : ""}`}
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      {step.icon}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-xs mt-2 font-medium ${
-                      isCompleted
-                        ? "text-on-surface font-bold"
-                        : "text-on-surface-variant"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Delivery Partner Info */}
-      {order.delivery && order.delivery.delivery_partner && (
-        <div className="bg-surface-container-low rounded-xl p-4 border border-outline-variant flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-brand-coral/10 flex items-center justify-center text-brand-coral">
-              <span className="material-symbols-outlined text-2xl">
-                sports_motorsports
-              </span>
-            </div>
-            <div>
-              <p className="text-xs text-on-surface-variant font-medium">
-                Your Delivery Partner
-              </p>
-              <p className="font-bold text-on-surface">
-                {order.delivery.delivery_partner.full_name}
-              </p>
-              <p className="text-xs text-on-surface-variant">
-                {order.delivery.delivery_partner.phone}
-              </p>
-            </div>
-          </div>
-          {order.status === "out_for_delivery" && (
-            <div className="text-right">
-              <span className="inline-flex items-center gap-1 text-xs text-brand-green font-bold animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-brand-green"></span>
-                Sharing Live Location
-              </span>
-              <p className="text-[10px] text-on-surface-variant mt-1">
-                Lat: {order.delivery.current_latitude?.toFixed(4)}, Lng:{" "}
-                {order.delivery.current_longitude?.toFixed(4)}
-              </p>
-            </div>
+        <div className="flex items-center gap-2">
+          <Badge status={order.status} />
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-surface-container-high text-on-surface-variant"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Order Items Summary */}
-      <div className="space-y-3">
-        <h4 className="font-bold text-sm text-on-surface">Items Summary</h4>
-        <div className="divide-y divide-outline-variant border border-outline-variant rounded-xl overflow-hidden bg-surface-container-lowest">
-          {order.items &&
-            order.items.map((item) => (
+      {/* Progress Steps */}
+      <div className="relative flex justify-between items-center max-w-xl mx-auto py-4">
+        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-surface-container-highest -z-10">
+          <div
+            className="h-full bg-brand-coral transition-all duration-500"
+            style={{
+              width: `${(Math.max(0, currentStepIndex) / (steps.length - 1)) * 100}%`,
+            }}
+          ></div>
+        </div>
+        {steps.map((step, idx) => {
+          const isCompleted = idx <= currentStepIndex;
+          const isActive = idx === currentStepIndex;
+          return (
+            <div
+              key={step.status}
+              className="flex flex-col items-center gap-2 bg-white px-2"
+            >
               <div
-                key={item.id}
-                className="flex items-center justify-between p-3 text-sm"
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
+                  isActive
+                    ? "bg-brand-coral border-brand-coral text-white scale-110 shadow-md"
+                    : isCompleted
+                      ? "bg-brand-coral/10 border-brand-coral text-brand-coral"
+                      : "bg-white border-outline-variant text-on-surface-variant"
+                }`}
               >
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-brand-coral">
-                    {item.quantity}x
-                  </span>
-                  <span className="text-on-surface">
-                    {item.menu_item?.name || "Menu Item"}
-                  </span>
-                </div>
-                <span className="font-medium text-on-surface">
-                  ${(item.price * item.quantity).toFixed(2)}
+                <span className="material-symbols-outlined text-lg">
+                  {step.icon}
                 </span>
               </div>
-            ))}
-        </div>
-        <div className="flex justify-between items-center pt-2 font-bold text-on-surface">
-          <span>Total Amount (incl. delivery)</span>
-          <span className="text-lg text-brand-coral">
-            ${order.total_amount.toFixed(2)}
-          </span>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant">
-        {order.status === "pending" && onCancel && (
-          <button
-            onClick={() => onCancel(order.id)}
-            className="px-4 py-2 border border-error text-error hover:bg-error/5 rounded-brand font-label-md text-label-md transition-all"
-          >
-            Cancel Order
-          </button>
-        )}
-
-        {order.status === "delivered" && !order.rating && !submitted && (
-          <form
-            onSubmit={handleFeedbackSubmit}
-            className="w-full space-y-4 bg-surface-container-low p-4 rounded-xl border border-outline-variant"
-          >
-            <h4 className="font-bold text-sm text-on-surface">
-              Rate your experience
-            </h4>
-            <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  className="text-2xl focus:outline-none"
-                >
-                  <span
-                    className={`material-symbols-outlined ${star <= rating ? "text-amber-500 fill-current" : "text-on-surface-variant"}`}
-                  >
-                    star
-                  </span>
-                </button>
-              ))}
+              <span
+                className={`font-label-sm text-[10px] text-center max-w-[70px] ${
+                  isActive
+                    ? "text-brand-coral font-bold"
+                    : "text-on-surface-variant"
+                }`}
+              >
+                {step.label}
+              </span>
             </div>
-            <textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Leave a comment about the food or delivery..."
-              className="w-full p-3 border border-outline-variant rounded-brand text-sm focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none bg-white"
-              rows="3"
-              required
-            />
-            <button
-              type="submit"
-              className="w-full bg-brand-coral hover:bg-brand-coral/90 text-white font-label-md text-label-md py-2 rounded-brand transition-all"
-            >
-              Submit Feedback
-            </button>
-          </form>
-        )}
-
-        {order.status === "delivered" && (order.rating || submitted) && (
-          <div className="w-full bg-brand-green/10 text-brand-green p-4 rounded-xl border border-brand-green/20 text-center text-sm font-medium">
-            Thank you for your feedback!
-          </div>
-        )}
+          );
+        })}
       </div>
+
+      {/* Simulated Map / Delivery Partner Info */}
+      {order.delivery && (
+        <div className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/50 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center">
+                <span className="material-symbols-outlined">
+                  sports_motorsports
+                </span>
+              </div>
+              <div>
+                <p className="font-label-md text-sm text-on-surface font-bold">
+                  {order.delivery.delivery_partner?.full_name ||
+                    "Delivery Partner Assigned"}
+                </p>
+                <p className="font-label-sm text-xs text-on-surface-variant mt-0.5">
+                  {order.delivery.delivery_partner?.phone ||
+                    "Contacting driver..."}
+                </p>
+              </div>
+            </div>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-brand-green/10 text-brand-green border border-brand-green/20 capitalize">
+              {order.delivery.status.replace(/_/g, " ")}
+            </span>
+          </div>
+
+          {/* Simulated Map Visual */}
+          <div className="h-48 bg-surface-container-highest rounded-lg relative overflow-hidden border border-outline-variant flex items-center justify-center">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#8e706f_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div className="absolute flex flex-col items-center gap-1 left-1/4 top-1/3">
+              <span className="material-symbols-outlined text-brand-coral text-3xl animate-bounce">
+                restaurant
+              </span>
+              <span className="bg-white px-2 py-0.5 rounded shadow-sm text-[10px] font-bold">
+                Restaurant
+              </span>
+            </div>
+            <div className="absolute flex flex-col items-center gap-1 right-1/4 bottom-1/3">
+              <span className="material-symbols-outlined text-brand-green text-3xl">
+                home
+              </span>
+              <span className="bg-white px-2 py-0.5 rounded shadow-sm text-[10px] font-bold">
+                Your Home
+              </span>
+            </div>
+            {order.status === "out_for_delivery" && (
+              <div className="absolute flex flex-col items-center gap-1 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse">
+                <span className="material-symbols-outlined text-indigo-600 text-3xl">
+                  sports_motorsports
+                </span>
+                <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded shadow-sm text-[10px] font-bold">
+                  Driver
+                </span>
+              </div>
+            )}
+            <p className="absolute bottom-3 left-3 text-[10px] font-semibold text-on-surface-variant bg-white/80 px-2 py-1 rounded backdrop-blur-sm">
+              GPS: {order.delivery.current_latitude?.toFixed(4) || "37.7749"},{" "}
+              {order.delivery.current_longitude?.toFixed(4) || "-122.4194"}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+ActiveOrderTracker.propTypes = {
+  orderId: PropTypes.string.isRequired,
+  onClose: PropTypes.func,
+};

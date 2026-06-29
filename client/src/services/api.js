@@ -6,7 +6,7 @@ const api = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
 });
 
-// Add a request interceptor to inject the JWT token
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -20,52 +20,43 @@ api.interceptors.request.use(
 
 export const authService = {
   login: async (email, password) => {
-    const params = new URLSearchParams();
-    params.append("username", email);
-    params.append("password", password);
-    const response = await api.post("/auth/login", params, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    const response = await api.post("/auth/login", { email, password });
     if (response.data.access_token) {
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
     }
     return response.data;
   },
-  register: async (userData) => {
-    const response = await api.post("/auth/register", userData);
+  register: async (email, password, fullName, phone, role) => {
+    const response = await api.post("/auth/register", {
+      email,
+      password,
+      full_name: fullName,
+      phone,
+      role,
+    });
+    return response.data;
+  },
+  getMe: async () => {
+    const response = await api.get("/users/me");
     return response.data;
   },
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   },
-  getCurrentUser: async () => {
-    const response = await api.get("/users/me");
-    localStorage.setItem("user", JSON.stringify(response.data));
-    return response.data;
-  },
-};
-
-export const userService = {
-  updateAvailability: async (isOnline) => {
-    const response = await api.put(`/users/availability?is_online=${isOnline}`);
-    return response.data;
+  getCurrentUser: () => {
+    const userStr = localStorage.getItem("user");
+    return userStr ? JSON.parse(userStr) : null;
   },
 };
 
 export const restaurantService = {
   list: async (cuisine = "", minRating = null) => {
-    let url = "/restaurants";
-    const params = [];
-    if (cuisine) params.push(`cuisine=${encodeURIComponent(cuisine)}`);
-    if (minRating !== null) params.push(`min_rating=${minRating}`);
-    if (params.length > 0) {
-      url += `?${params.join("&")}`;
-    }
-    const response = await api.get(url);
+    const params = {};
+    if (cuisine) params.cuisine = cuisine;
+    if (minRating !== null) params.min_rating = minRating;
+    const response = await api.get("/restaurants", { params });
     return response.data;
   },
   get: async (id) => {
@@ -80,22 +71,19 @@ export const restaurantService = {
     const response = await api.put(`/restaurants/${id}`, restaurantData);
     return response.data;
   },
-  addMenuItem: async (restaurantId, itemData) => {
-    const response = await api.post(
-      `/restaurants/${restaurantId}/menu`,
-      itemData,
-    );
+  addMenuItem: async (id, itemData) => {
+    const response = await api.post(`/restaurants/${id}/menu`, itemData);
     return response.data;
   },
-  updateMenuItem: async (restaurantId, menuItemId, itemData) => {
+  updateMenuItem: async (id, menuItemId, itemData) => {
     const response = await api.put(
-      `/restaurants/${restaurantId}/menu/${menuItemId}`,
+      `/restaurants/${id}/menu/${menuItemId}`,
       itemData,
     );
     return response.data;
   },
-  getAnalytics: async (restaurantId) => {
-    const response = await api.get(`/restaurants/${restaurantId}/analytics`);
+  getAnalytics: async (id) => {
+    const response = await api.get(`/restaurants/${id}/analytics`);
     return response.data;
   },
 };
@@ -105,8 +93,10 @@ export const orderService = {
     const response = await api.post("/orders", orderData);
     return response.data;
   },
-  list: async () => {
-    const response = await api.get("/orders");
+  list: async (role, statusFilter = "") => {
+    const params = { role };
+    if (statusFilter) params.status_filter = statusFilter;
+    const response = await api.get("/orders", { params });
     return response.data;
   },
   get: async (id) => {
@@ -122,13 +112,6 @@ export const orderService = {
       rating,
       feedback,
     });
-    return response.data;
-  },
-};
-
-export const paymentService = {
-  process: async (paymentData) => {
-    const response = await api.post("/payments", paymentData);
     return response.data;
   },
 };
@@ -153,6 +136,10 @@ export const deliveryService = {
     const response = await api.get(`/deliveries/${id}`);
     return response.data;
   },
+  updateAvailability: async (isOnline) => {
+    const response = await api.put(`/users/availability?is_online=${isOnline}`);
+    return response.data;
+  },
 };
 
 export const adminService = {
@@ -160,8 +147,10 @@ export const adminService = {
     const response = await api.get("/admin/metrics");
     return response.data;
   },
-  listUsers: async () => {
-    const response = await api.get("/admin/users");
+  listUsers: async (role = "") => {
+    const params = {};
+    if (role) params.role = role;
+    const response = await api.get("/admin/users", { params });
     return response.data;
   },
   updateUser: async (id, userData) => {
@@ -172,8 +161,8 @@ export const adminService = {
     const response = await api.delete(`/admin/users/${id}`);
     return response.data;
   },
-  refundOrder: async (id, reason) => {
-    const response = await api.post(`/admin/orders/${id}/refund`, { reason });
+  processRefund: async (orderId) => {
+    const response = await api.post(`/admin/orders/${orderId}/refund`);
     return response.data;
   },
   listTickets: async () => {
@@ -184,10 +173,8 @@ export const adminService = {
     const response = await api.post("/admin/tickets", ticketData);
     return response.data;
   },
-  resolveTicket: async (id, resolution) => {
-    const response = await api.put(`/admin/tickets/${id}/resolve`, {
-      resolution,
-    });
+  resolveTicket: async (id) => {
+    const response = await api.put(`/admin/tickets/${id}/resolve`);
     return response.data;
   },
 };

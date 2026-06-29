@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 export default function SearchBar({
   value,
@@ -6,8 +7,8 @@ export default function SearchBar({
   placeholder = "Search...",
 }) {
   return (
-    <div className="relative w-full">
-      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">
+    <div className="relative w-full max-w-md">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
         search
       </span>
       <input
@@ -15,8 +16,14 @@ export default function SearchBar({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-10 pl-10 pr-4 rounded-full border border-outline-variant bg-surface focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors shadow-sm"
+        className="w-full h-11 pl-10 pr-4 rounded-full border border-outline-variant bg-white focus:border-brand-coral focus:ring-1 focus:ring-brand-coral outline-none font-body-md text-sm text-on-surface transition-colors shadow-sm"
       />
     </div>
   );
 }
+
+SearchBar.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+};
