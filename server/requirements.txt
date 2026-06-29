@@ -1,6 +1,10 @@
 fastapi
-uvicorn
-sqlalchemy
+httpx
+passlib[bcrypt]
+bcrypt
 pydantic
 pydantic-settings
 pytest
+python-jose[cryptography]
+sqlalchemy
+uvicorn
