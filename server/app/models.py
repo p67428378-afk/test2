@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from server.app.database import Base
 
 
+# Helper to generate UUID as string or UUID object depending on DB
 def generate_uuid():
     return str(uuid.uuid4())
 
@@ -32,7 +33,7 @@ class Activity(Base):
     id = Column(
         String(36), primary_key=True, default=generate_uuid, unique=True, nullable=False
     )
-    module = Column(String(50), nullable=False)
+    module = Column(String(50), nullable=False)  # nutrition, exercise, hygiene
     name = Column(String(255), nullable=False)
     points = Column(Integer, default=100, nullable=False)
     description = Column(String(500), nullable=True)

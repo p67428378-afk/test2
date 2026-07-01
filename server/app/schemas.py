@@ -1,10 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Optional
 
 
+# User schemas
 class UserCreate(BaseModel):
-    username: str
+    username: str = Field(..., min_length=1, max_length=255)
 
 
 class UserResponse(BaseModel):
@@ -13,10 +14,10 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
         from_attributes = True
 
 
+# Activity schemas
 class ActivityResponse(BaseModel):
     id: str
     module: str
@@ -25,48 +26,40 @@ class ActivityResponse(BaseModel):
     description: Optional[str] = None
 
     class Config:
-        orm_mode = True
         from_attributes = True
 
 
+# Progress schemas
 class ProgressCreate(BaseModel):
-    user_id: str
     activity_id: str
     completed: bool
-    score: Optional[float] = None
+    score: float
+    user_id: str
 
 
 class ProgressResponse(BaseModel):
     id: str
     user_id: str
     activity_id: str
-    completed_at: datetime
     points_earned: int
     badge_awarded: Optional[str] = None
+    completed_at: datetime
 
     class Config:
-        orm_mode = True
         from_attributes = True
 
 
+# User Progress Summary schemas
 class CompletedActivityInfo(BaseModel):
     activity_id: str
     completed_at: datetime
     module: str
     name: str
 
-    class Config:
-        orm_mode = True
-        from_attributes = True
-
 
 class UnlockedBadgeInfo(BaseModel):
     badge_name: str
     awarded_at: datetime
-
-    class Config:
-        orm_mode = True
-        from_attributes = True
 
 
 class UserProgressSummaryResponse(BaseModel):
@@ -77,5 +70,4 @@ class UserProgressSummaryResponse(BaseModel):
     unlocked_badges: List[UnlockedBadgeInfo]
 
     class Config:
-        orm_mode = True
         from_attributes = True
