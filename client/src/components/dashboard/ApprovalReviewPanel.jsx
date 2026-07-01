@@ -148,9 +148,9 @@ ApprovalReviewPanel.propTypes = {
       swap: PropTypes.number.isRequired,
     }).isRequired,
     guardrails: PropTypes.shape({
-      private_brand_passed: PropTypes.boolean,
-      shelf_capacity_passed: PropTypes.boolean,
-      new_items_passed: PropTypes.boolean,
+      private_brand_passed: PropTypes.bool,
+      shelf_capacity_passed: PropTypes.bool,
+      new_items_passed: PropTypes.bool,
     }),
   }),
   onSubmit: PropTypes.func.isRequired,
