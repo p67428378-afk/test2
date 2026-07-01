@@ -17,15 +17,18 @@ export default function ApprovalReviewPanel({
   const { scenario_name = "", action_counts, guardrails } = scenarioData;
 
   // Safely format the scenario name
-  const formattedScenarioName = scenario_name
-    ? scenario_name.charAt(0).toUpperCase() + scenario_name.slice(1)
-    : "Selected";
+  const formattedScenarioName =
+    typeof scenario_name === "string" && scenario_name.length > 0
+      ? scenario_name.charAt(0).toUpperCase() + scenario_name.slice(1)
+      : "Selected";
 
   // Check if all guardrails passed
   const allGuardrailsPassed = guardrails
-    ? guardrails.private_brand_passed &&
-      guardrails.shelf_capacity_passed &&
-      guardrails.new_items_passed
+    ? !!(
+        guardrails.private_brand_passed &&
+        guardrails.shelf_capacity_passed &&
+        guardrails.new_items_passed
+      )
     : false;
 
   return (

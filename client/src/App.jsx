@@ -39,15 +39,24 @@ export default function App() {
 
         // Fetch all three scenarios to populate selector cards
         const [cons, bal, agg] = await Promise.all([
-          getScenario("conservative"),
-          getScenario("balanced"),
-          getScenario("aggressive"),
+          getScenario("conservative").catch((err) => {
+            console.error("Error fetching conservative scenario:", err);
+            return {};
+          }),
+          getScenario("balanced").catch((err) => {
+            console.error("Error fetching balanced scenario:", err);
+            return {};
+          }),
+          getScenario("aggressive").catch((err) => {
+            console.error("Error fetching aggressive scenario:", err);
+            return {};
+          }),
         ]);
 
         setScenariosData({
-          conservative: cons,
-          balanced: bal,
-          aggressive: agg,
+          conservative: cons || {},
+          balanced: bal || {},
+          aggressive: agg || {},
         });
 
         setError(null);
@@ -79,7 +88,7 @@ export default function App() {
         const data = await getScenario(selectedScenario, params);
         setScenariosData((prev) => ({
           ...prev,
-          [selectedScenario]: data,
+          [selectedScenario]: data || {},
         }));
       } catch (err) {
         console.error(`Error fetching scenario ${selectedScenario}:`, err);
@@ -102,10 +111,10 @@ export default function App() {
         scenario_applied: selectedScenario,
         user_name: "Sarah Chen",
         action_counts: {
-          grow: currentScenarioData.action_counts.grow,
-          maintain: currentScenarioData.action_counts.maintain,
-          reduce: currentScenarioData.action_counts.reduce,
-          swap: currentScenarioData.action_counts.swap,
+          grow: currentScenarioData.action_counts?.grow ?? 0,
+          maintain: currentScenarioData.action_counts?.maintain ?? 0,
+          reduce: currentScenarioData.action_counts?.reduce ?? 0,
+          swap: currentScenarioData.action_counts?.swap ?? 0,
         },
       };
 
