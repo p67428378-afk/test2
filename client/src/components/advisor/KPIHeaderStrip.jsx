@@ -44,14 +44,14 @@ export default function KPIHeaderStrip({ kpis, loading, error }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Card 1: Sales per Linear Ft */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-2">
+      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3">
         <span className="text-label-md text-secondary uppercase tracking-wider font-semibold">
           Sales per Linear Ft
         </span>
-        <div className="text-headline-lg font-black text-on-surface">
+        <div className="text-headline-lg font-black text-on-surface leading-none">
           {formatCurrency(kpis?.sales_per_linear_ft || 1245.5)}
         </div>
-        <div className="flex items-center text-tertiary gap-1 mt-auto">
+        <div className="flex items-center text-tertiary gap-1 mt-auto pt-1">
           <TrendingUp className="w-4 h-4" />
           <span className="text-label-sm font-semibold">
             +4.2% vs last week
@@ -60,49 +60,49 @@ export default function KPIHeaderStrip({ kpis, loading, error }) {
       </div>
 
       {/* Card 2: Private Brand % */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-2">
-        <div className="flex justify-between items-start">
+      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3">
+        <div className="flex justify-between items-center gap-2">
           <span className="text-label-md text-secondary uppercase tracking-wider font-semibold">
             Private Brand %
           </span>
-          <Badge status="PASS" />
+          <Badge status="PASS" className="shrink-0" />
         </div>
-        <div className="text-headline-lg font-black text-on-surface">
+        <div className="text-headline-lg font-black text-on-surface leading-none">
           {formatPercent(kpis?.private_brand_pct || 24.2)}
         </div>
-        <div className="text-body-sm text-secondary mt-auto">
+        <div className="text-body-sm text-secondary mt-auto pt-1">
           Target: &gt;20.0%
         </div>
       </div>
 
       {/* Card 3: In-Stock Rate */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-2">
-        <div className="flex justify-between items-start">
+      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3">
+        <div className="flex justify-between items-center gap-2">
           <span className="text-label-md text-secondary uppercase tracking-wider font-semibold">
             In-Stock Rate
           </span>
-          <Badge status="PASS" />
+          <Badge status="PASS" className="shrink-0" />
         </div>
-        <div className="text-headline-lg font-black text-on-surface">
+        <div className="text-headline-lg font-black text-on-surface leading-none">
           {formatPercent(kpis?.in_stock_rate || 96.8)}
         </div>
-        <div className="text-body-sm text-secondary mt-auto">
+        <div className="text-body-sm text-secondary mt-auto pt-1">
           Target: &gt;95.0%
         </div>
       </div>
 
       {/* Card 4: Shelf Capacity */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-2">
-        <div className="flex justify-between items-start">
+      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3">
+        <div className="flex justify-between items-center gap-2">
           <span className="text-label-md text-secondary uppercase tracking-wider font-semibold">
             Shelf Capacity
           </span>
-          <Badge status="PASS" />
+          <Badge status="PASS" className="shrink-0" />
         </div>
-        <div className="text-headline-lg font-black text-on-surface">
+        <div className="text-headline-lg font-black text-on-surface leading-none">
           {formatPercent(kpis?.shelf_capacity || 88.5)}
         </div>
-        <div className="text-body-sm text-secondary mt-auto">
+        <div className="text-body-sm text-secondary mt-auto pt-1">
           Utilized: 177 / 200 ft
         </div>
       </div>
