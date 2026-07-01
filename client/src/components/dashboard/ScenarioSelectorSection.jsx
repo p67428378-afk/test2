@@ -32,7 +32,7 @@ export default function ScenarioSelectorSection({
 
       {scenarios.map((sc) => {
         const isSelected = selectedScenario === sc.id;
-        const data = scenariosData[sc.id];
+        const data = scenariosData ? scenariosData[sc.id] : null;
 
         return (
           <div
@@ -67,8 +67,8 @@ export default function ScenarioSelectorSection({
                     Sales Impact
                   </div>
                   <div className="font-label-md text-label-md text-on-surface font-bold">
-                    {data.projected_sales_impact_pct >= 0 ? "+" : ""}
-                    {data.projected_sales_impact_pct.toFixed(1)}%
+                    {(data.projected_sales_impact_pct ?? 0) >= 0 ? "+" : ""}
+                    {(data.projected_sales_impact_pct ?? 0).toFixed(1)}%
                   </div>
                 </div>
                 <div>
@@ -76,7 +76,7 @@ export default function ScenarioSelectorSection({
                     Private Brand
                   </div>
                   <div className="font-label-md text-label-md text-on-surface font-bold">
-                    {data.projected_private_brand_pct.toFixed(1)}%
+                    {(data.projected_private_brand_pct ?? 0).toFixed(1)}%
                   </div>
                 </div>
                 <div>
@@ -84,7 +84,7 @@ export default function ScenarioSelectorSection({
                     Shelf Cap.
                   </div>
                   <div className="font-label-md text-label-md text-on-surface font-bold">
-                    {data.projected_shelf_capacity_pct.toFixed(1)}%
+                    {(data.projected_shelf_capacity_pct ?? 0).toFixed(1)}%
                   </div>
                 </div>
               </div>
@@ -101,9 +101,9 @@ ScenarioSelectorSection.propTypes = {
   setSelectedScenario: PropTypes.func.isRequired,
   scenariosData: PropTypes.objectOf(
     PropTypes.shape({
-      projected_sales_impact_pct: PropTypes.number.isRequired,
-      projected_private_brand_pct: PropTypes.number.isRequired,
-      projected_shelf_capacity_pct: PropTypes.number.isRequired,
+      projected_sales_impact_pct: PropTypes.number,
+      projected_private_brand_pct: PropTypes.number,
+      projected_shelf_capacity_pct: PropTypes.number,
     }),
   ).isRequired,
 };
