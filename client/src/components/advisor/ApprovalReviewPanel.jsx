@@ -96,12 +96,12 @@ export default function ApprovalReviewPanel({
       <Button
         onClick={onSubmit}
         disabled={submitting}
-        className="w-full mt-2 py-3 text-headline-sm font-semibold"
+        className="w-full mt-2 py-3 text-headline-sm font-semibold flex items-center justify-center gap-2"
       >
-        <span>
+        <span className="leading-none">
           {submitting ? "Submitting..." : "Submit Assortment Changes"}
         </span>
-        <Send className="w-5 h-5" />
+        <Send className="w-5 h-5 shrink-0 self-center" />
       </Button>
     </div>
   );
