@@ -219,13 +219,22 @@ export default function SKUPerformanceSection({
                     {sku.upc}
                   </td>
                   <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
-                    ${sku.weekly_sales.toLocaleString()}
+                    $
+                    {sku.weekly_sales !== undefined && sku.weekly_sales !== null
+                      ? sku.weekly_sales.toLocaleString()
+                      : "0"}
                   </td>
                   <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
-                    {sku.profit_margin.toFixed(1)}%
+                    {sku.profit_margin !== undefined &&
+                    sku.profit_margin !== null
+                      ? sku.profit_margin.toFixed(1)
+                      : "0.0"}
+                    %
                   </td>
                   <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
-                    {sku.stock_level.toLocaleString()}
+                    {sku.stock_level !== undefined && sku.stock_level !== null
+                      ? sku.stock_level.toLocaleString()
+                      : "0"}
                   </td>
                   <td className="px-4 py-3 font-body-sm text-body-sm text-secondary">
                     {sku.days_of_supply} days
