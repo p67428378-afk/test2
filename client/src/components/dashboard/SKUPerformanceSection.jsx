@@ -149,39 +149,39 @@ export default function SKUPerformanceSection({
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[120px]"
                 onClick={() => handleSort("weekly_sales")}
               >
-                <div className="flex items-center justify-end gap-1">
-                  Weekly Sales
+                <div className="inline-flex items-center justify-end gap-1 w-full">
+                  <span>Weekly Sales</span>
                   {sortBy === "weekly_sales" && (
-                    <span className="material-symbols-outlined text-xs">
+                    <span className="material-symbols-outlined text-xs shrink-0">
                       {sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}
                     </span>
                   )}
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[90px]"
                 onClick={() => handleSort("profit_margin")}
               >
-                <div className="flex items-center justify-end gap-1">
-                  Margin
+                <div className="inline-flex items-center justify-end gap-1 w-full">
+                  <span>Margin</span>
                   {sortBy === "profit_margin" && (
-                    <span className="material-symbols-outlined text-xs">
+                    <span className="material-symbols-outlined text-xs shrink-0">
                       {sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}
                     </span>
                   )}
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[120px]"
                 onClick={() => handleSort("stock_level")}
               >
-                <div className="flex items-center justify-end gap-1">
-                  Stock Level
+                <div className="inline-flex items-center justify-end gap-1 w-full">
+                  <span>Stock Level</span>
                   {sortBy === "stock_level" && (
-                    <span className="material-symbols-outlined text-xs">
+                    <span className="material-symbols-outlined text-xs shrink-0">
                       {sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}
                     </span>
                   )}

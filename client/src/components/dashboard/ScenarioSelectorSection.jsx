@@ -34,6 +34,11 @@ export default function ScenarioSelectorSection({
         const isSelected = selectedScenario === sc.id;
         const data = scenariosData ? scenariosData[sc.id] : null;
 
+        // Safely extract and default values to prevent toFixed() crashes
+        const salesImpact = data?.projected_sales_impact_pct ?? null;
+        const privateBrand = data?.projected_private_brand_pct ?? null;
+        const shelfCapacity = data?.projected_shelf_capacity_pct ?? null;
+
         return (
           <div
             key={sc.id}
@@ -67,8 +72,9 @@ export default function ScenarioSelectorSection({
                     Sales Impact
                   </div>
                   <div className="font-label-md text-label-md text-on-surface font-bold">
-                    {(data.projected_sales_impact_pct ?? 0) >= 0 ? "+" : ""}
-                    {(data.projected_sales_impact_pct ?? 0).toFixed(1)}%
+                    {salesImpact !== null
+                      ? `${salesImpact >= 0 ? "+" : ""}${salesImpact.toFixed(1)}%`
+                      : "0.0%"}
                   </div>
                 </div>
                 <div>
@@ -76,7 +82,9 @@ export default function ScenarioSelectorSection({
                     Private Brand
                   </div>
                   <div className="font-label-md text-label-md text-on-surface font-bold">
-                    {(data.projected_private_brand_pct ?? 0).toFixed(1)}%
+                    {privateBrand !== null
+                      ? `${privateBrand.toFixed(1)}%`
+                      : "0.0%"}
                   </div>
                 </div>
                 <div>
@@ -84,7 +92,9 @@ export default function ScenarioSelectorSection({
                     Shelf Cap.
                   </div>
                   <div className="font-label-md text-label-md text-on-surface font-bold">
-                    {(data.projected_shelf_capacity_pct ?? 0).toFixed(1)}%
+                    {shelfCapacity !== null
+                      ? `${shelfCapacity.toFixed(1)}%`
+                      : "0.0%"}
                   </div>
                 </div>
               </div>
