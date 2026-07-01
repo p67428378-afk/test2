@@ -14,7 +14,12 @@ export default function ApprovalReviewPanel({
     );
   }
 
-  const { scenario_name, action_counts, guardrails } = scenarioData;
+  const { scenario_name = "", action_counts, guardrails } = scenarioData;
+
+  // Safely format the scenario name
+  const formattedScenarioName = scenario_name
+    ? scenario_name.charAt(0).toUpperCase() + scenario_name.slice(1)
+    : "Selected";
 
   // Check if all guardrails passed
   const allGuardrailsPassed = guardrails
@@ -31,8 +36,7 @@ export default function ApprovalReviewPanel({
 
       <div className="bg-surface-container-low rounded-lg p-3 border border-outline-variant space-y-2">
         <div className="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-2">
-          {scenario_name.charAt(0).toUpperCase() + scenario_name.slice(1)}{" "}
-          Scenario Summary
+          {formattedScenarioName} Scenario Summary
         </div>
         <div className="flex justify-between font-body-sm text-body-sm">
           <span className="text-on-surface">GROW Actions:</span>
@@ -140,13 +144,13 @@ export default function ApprovalReviewPanel({
 
 ApprovalReviewPanel.propTypes = {
   scenarioData: PropTypes.shape({
-    scenario_name: PropTypes.string.isRequired,
+    scenario_name: PropTypes.string,
     action_counts: PropTypes.shape({
-      grow: PropTypes.number.isRequired,
-      maintain: PropTypes.number.isRequired,
-      reduce: PropTypes.number.isRequired,
-      swap: PropTypes.number.isRequired,
-    }).isRequired,
+      grow: PropTypes.number,
+      maintain: PropTypes.number,
+      reduce: PropTypes.number,
+      swap: PropTypes.number,
+    }),
     guardrails: PropTypes.shape({
       private_brand_passed: PropTypes.bool,
       shelf_capacity_passed: PropTypes.bool,
