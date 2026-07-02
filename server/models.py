@@ -1,10 +1,10 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -20,6 +20,7 @@ class User(Base):
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
 
+
 class OTP(Base):
     __tablename__ = "otps"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -31,6 +32,7 @@ class OTP(Base):
 
     user = relationship("User", back_populates="otps")
 
+
 class PasswordHistory(Base):
     __tablename__ = "password_history"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -39,3 +41,19 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(String(255), nullable=False)
+    account_number = Column(String(255), nullable=False)
+    operator = Column(String(100), nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
+    status = Column(String(50), nullable=False, default="PENDING")
+    bbps_transaction_id = Column(String(255), nullable=True)
+    operator_reference_id = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
