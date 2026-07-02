@@ -1,6 +1,10 @@
+argon2-cffi
+email-validator
 fastapi
-uvicorn
-sqlalchemy
+httpx
+passlib
 pydantic
 pydantic-settings
 pytest
+sqlalchemy
+uvicorn
