@@ -1,0 +1,644 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Retail Banking FD Microservice",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/password-reset/initiate": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Initiate Password Reset",
+        "operationId": "initiate_password_reset_api_v1_password_reset_initiate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetInitiateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordResetInitiateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/verify-otp": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Verify Otp",
+        "operationId": "verify_otp_api_v1_password_reset_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OTPVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OTPVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/verify-security-question": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Verify Security Question",
+        "operationId": "verify_security_question_api_v1_password_reset_verify_security_question_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityQuestionVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityQuestionVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/set-new-password": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Set New Password",
+        "operationId": "set_new_password_api_v1_password_reset_set_new_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetNewPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetNewPasswordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Read Root",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fd-products": {
+      "get": {
+        "tags": [
+          "fixed-deposits"
+        ],
+        "summary": "List Fd Products",
+        "operationId": "list_fd_products_api_v1_fd_products_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FDProductsListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{accountId}": {
+      "get": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Get Account",
+        "operationId": "get_account_api_v1_accounts__accountId__get",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Accountid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fds": {
+      "post": {
+        "tags": [
+          "fixed-deposits"
+        ],
+        "summary": "Create Fd",
+        "operationId": "create_fd_api_v1_fds_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FDCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FDCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccountResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "account_number": {
+            "type": "string",
+            "title": "Account Number"
+          },
+          "balance": {
+            "type": "number",
+            "title": "Balance"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "account_number",
+          "balance",
+          "currency"
+        ],
+        "title": "AccountResponse"
+      },
+      "FDCreateRequest": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "source_account_id": {
+            "type": "string",
+            "title": "Source Account Id"
+          },
+          "deposit_amount": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Deposit Amount"
+          },
+          "pin": {
+            "type": "string",
+            "title": "Pin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "source_account_id",
+          "deposit_amount",
+          "pin"
+        ],
+        "title": "FDCreateRequest"
+      },
+      "FDCreateResponse": {
+        "properties": {
+          "fd_account_number": {
+            "type": "string",
+            "title": "Fd Account Number"
+          },
+          "interest_rate": {
+            "type": "number",
+            "title": "Interest Rate"
+          },
+          "maturity_amount": {
+            "type": "number",
+            "title": "Maturity Amount"
+          },
+          "maturity_date": {
+            "type": "string",
+            "title": "Maturity Date"
+          },
+          "principal_amount": {
+            "type": "number",
+            "title": "Principal Amount"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "tenure_months": {
+            "type": "integer",
+            "title": "Tenure Months"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fd_account_number",
+          "interest_rate",
+          "maturity_amount",
+          "maturity_date",
+          "principal_amount",
+          "status",
+          "tenure_months"
+        ],
+        "title": "FDCreateResponse"
+      },
+      "FDProductResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "tenure_months": {
+            "type": "integer",
+            "title": "Tenure Months"
+          },
+          "interest_rate": {
+            "type": "number",
+            "title": "Interest Rate"
+          },
+          "min_deposit": {
+            "type": "number",
+            "title": "Min Deposit"
+          },
+          "badge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Badge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "tenure_months",
+          "interest_rate",
+          "min_deposit"
+        ],
+        "title": "FDProductResponse"
+      },
+      "FDProductsListResponse": {
+        "properties": {
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/FDProductResponse"
+            },
+            "type": "array",
+            "title": "Products"
+          }
+        },
+        "type": "object",
+        "required": [
+          "products"
+        ],
+        "title": "FDProductsListResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "OTPVerifyRequest": {
+        "properties": {
+          "otp_code": {
+            "type": "string",
+            "title": "Otp Code"
+          },
+          "otp_session_id": {
+            "type": "string",
+            "title": "Otp Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "otp_code",
+          "otp_session_id"
+        ],
+        "title": "OTPVerifyRequest"
+      },
+      "OTPVerifyResponse": {
+        "properties": {
+          "security_question_session_id": {
+            "type": "string",
+            "title": "Security Question Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "security_question_session_id"
+        ],
+        "title": "OTPVerifyResponse"
+      },
+      "PasswordResetInitiateRequest": {
+        "properties": {
+          "login_id": {
+            "type": "string",
+            "title": "Login Id"
+          },
+          "mobile_number": {
+            "type": "string",
+            "title": "Mobile Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "login_id",
+          "mobile_number"
+        ],
+        "title": "PasswordResetInitiateRequest"
+      },
+      "PasswordResetInitiateResponse": {
+        "properties": {
+          "otp_session_id": {
+            "type": "string",
+            "title": "Otp Session Id"
+          },
+          "security_question": {
+            "type": "string",
+            "title": "Security Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "otp_session_id",
+          "security_question"
+        ],
+        "title": "PasswordResetInitiateResponse"
+      },
+      "SecurityQuestionVerifyRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "security_question_session_id": {
+            "type": "string",
+            "title": "Security Question Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "security_question_session_id"
+        ],
+        "title": "SecurityQuestionVerifyRequest"
+      },
+      "SecurityQuestionVerifyResponse": {
+        "properties": {
+          "password_reset_session_id": {
+            "type": "string",
+            "title": "Password Reset Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password_reset_session_id"
+        ],
+        "title": "SecurityQuestionVerifyResponse"
+      },
+      "SetNewPasswordRequest": {
+        "properties": {
+          "new_password": {
+            "type": "string",
+            "title": "New Password"
+          },
+          "password_reset_session_id": {
+            "type": "string",
+            "title": "Password Reset Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_password",
+          "password_reset_session_id"
+        ],
+        "title": "SetNewPasswordRequest"
+      },
+      "SetNewPasswordResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "login_link": {
+            "type": "string",
+            "title": "Login Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "login_link"
+        ],
+        "title": "SetNewPasswordResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
