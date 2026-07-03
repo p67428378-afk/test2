@@ -1,6 +1,13 @@
+bcrypt
+email-validator
 fastapi
-uvicorn
-sqlalchemy
+httpx
+passlib[bcrypt]
+pg8000
 pydantic
 pydantic-settings
 pytest
+python-jose[cryptography]
+python-multipart
+sqlalchemy
+uvicorn
