@@ -5,36 +5,38 @@ export default function AppLayout({ children }) {
     <div className="min-h-screen bg-[#0f172a] text-[#f8fafc] font-sans antialiased">
       {/* TopNavBar */}
       <nav className="bg-surface border-b border-outline-variant docked full-width top-0 flat no shadows flex justify-between items-center w-full px-container-padding h-16 max-w-full gap-6">
-        <div className="flex items-center gap-6 min-w-0">
+        <div className="flex items-center gap-6 min-w-0 flex-1">
           <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2 shrink-0">
             <img
               alt="DG Logo"
               className="w-8 h-8 rounded"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp4Ucsfh9nukx5Pfz34HJxht_Q5F5FVDBepcNn8uPer0AfDDNUbYUrp7pZgIoaWHlbqcTrugpMWTYR20ytBAT3DknjGkLjAYSfjFgQ-zWNfZO2pFay4Im1hIPDcOOpZdnuskFRN6a49jRnbLo40BLuvRpKjPeoHCIHIY0RrVOZv2iKQFAozM214kbDLVdhw7WNHfLbHjniEw1CfrYkv3jcPeffndZ92R6kyKP3ekqpZZdJ-PU0pajCgWdnpAIuIURtnZ0tYOuX1X1F"
             />
-            <span className="hidden sm:inline">Cluster Assortment Advisor</span>
+            <span className="hidden sm:inline shrink-0">
+              Cluster Assortment Advisor
+            </span>
           </div>
-          <div className="hidden md:flex items-center h-full gap-8 ml-10">
+          <div className="hidden md:flex items-center h-full gap-8 ml-10 shrink-0">
             <a
-              className="h-full flex items-center text-primary border-b-2 border-primary px-2 pt-1 font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-primary border-b-2 border-primary px-2 pt-1 font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200 shrink-0"
               href="#"
             >
               Dashboard
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200 shrink-0"
               href="#"
             >
               Assortment Plan
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200 shrink-0"
               href="#"
             >
               Analytics
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200 shrink-0"
               href="#"
             >
               History
@@ -42,10 +44,10 @@ export default function AppLayout({ children }) {
           </div>
         </div>
         <div className="flex items-center gap-6 shrink-0 ml-auto">
-          <span className="bg-surface-bright px-4 py-1.5 rounded-full text-xs font-medium border border-outline-variant text-on-surface whitespace-nowrap mr-2">
+          <span className="bg-surface-bright px-4 py-1.5 rounded-full text-xs font-medium border border-outline-variant text-on-surface whitespace-nowrap mr-2 shrink-0">
             Small Town Value Cluster - Snacks Category
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button className="p-2 hover:bg-surface-variant rounded-full transition-colors text-on-surface-variant">
               <span className="material-symbols-outlined">notifications</span>
             </button>
@@ -53,7 +55,7 @@ export default function AppLayout({ children }) {
               <span className="material-symbols-outlined">settings</span>
             </button>
           </div>
-          <div className="flex items-center gap-3 pl-4 border-l border-outline-variant">
+          <div className="flex items-center gap-3 pl-4 border-l border-outline-variant shrink-0">
             <div className="text-right hidden sm:block">
               <div className="text-sm font-medium text-on-surface">
                 Aarchi Jain
