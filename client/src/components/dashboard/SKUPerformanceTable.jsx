@@ -80,7 +80,7 @@ export default function SKUPerformanceTable({
             placeholder="Search SKUs or products..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-4 pr-10 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
           />
           <span className="material-symbols-outlined absolute right-3 top-2.5 text-slate-500 text-sm">
             search
@@ -93,7 +93,7 @@ export default function SKUPerformanceTable({
             <tr className="font-label-caps text-label-caps text-slate-400 border-b border-slate-700 text-xs uppercase tracking-wider">
               <th
                 onClick={() => onSort("sku_id")}
-                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none"
+                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none min-w-[100px]"
               >
                 <div className="flex items-center">
                   SKU # {renderSortIcon("sku_id")}
@@ -101,7 +101,7 @@ export default function SKUPerformanceTable({
               </th>
               <th
                 onClick={() => onSort("product_name")}
-                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none"
+                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none min-w-[220px]"
               >
                 <div className="flex items-center">
                   Product Name {renderSortIcon("product_name")}
@@ -109,7 +109,7 @@ export default function SKUPerformanceTable({
               </th>
               <th
                 onClick={() => onSort("current_sales")}
-                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none"
+                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none min-w-[140px] px-6"
               >
                 <div className="flex items-center justify-end">
                   Current Sales {renderSortIcon("current_sales")}
@@ -117,7 +117,7 @@ export default function SKUPerformanceTable({
               </th>
               <th
                 onClick={() => onSort("sales_growth")}
-                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none"
+                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none min-w-[160px] px-6"
               >
                 <div className="flex items-center justify-end">
                   Sales Growth (YoY) {renderSortIcon("sales_growth")}
@@ -125,7 +125,7 @@ export default function SKUPerformanceTable({
               </th>
               <th
                 onClick={() => onSort("is_private_brand")}
-                className="p-4 font-medium text-center cursor-pointer hover:text-white transition-colors select-none"
+                className="p-4 font-medium text-center cursor-pointer hover:text-white transition-colors select-none min-w-[130px]"
               >
                 <div className="flex items-center justify-center">
                   Private Brand {renderSortIcon("is_private_brand")}
@@ -133,7 +133,7 @@ export default function SKUPerformanceTable({
               </th>
               <th
                 onClick={() => onSort("status")}
-                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none"
+                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none min-w-[120px]"
               >
                 <div className="flex items-center">
                   Status {renderSortIcon("status")}

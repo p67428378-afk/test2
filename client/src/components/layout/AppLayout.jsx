@@ -4,45 +4,45 @@ export default function AppLayout({ children }) {
   return (
     <div className="min-h-screen bg-[#0f172a] text-[#f8fafc] font-sans antialiased">
       {/* TopNavBar */}
-      <nav className="bg-surface border-b border-outline-variant docked full-width top-0 flat no shadows flex justify-between items-center w-full px-container-padding h-16 max-w-full">
-        <div className="flex items-center gap-6">
-          <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
+      <nav className="bg-surface border-b border-outline-variant docked full-width top-0 flat no shadows flex justify-between items-center w-full px-container-padding h-16 max-w-full gap-4">
+        <div className="flex items-center gap-6 min-w-0">
+          <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2 shrink-0">
             <img
               alt="DG Logo"
               className="w-8 h-8 rounded"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp4Ucsfh9nukx5Pfz34HJxht_Q5F5FVDBepcNn8uPer0AfDDNUbYUrp7pZgIoaWHlbqcTrugpMWTYR20ytBAT3DknjGkLjAYSfjFgQ-zWNfZO2pFay4Im1hIPDcOOpZdnuskFRN6a49jRnbLo40BLuvRpKjPeoHCIHIY0RrVOZv2iKQFAozM214kbDLVdhw7WNHfLbHjniEw1CfrYkv3jcPeffndZ92R6kyKP3ekqpZZdJ-PU0pajCgWdnpAIuIURtnZ0tYOuX1X1F"
             />
-            Cluster Assortment Advisor
+            <span className="hidden sm:inline">Cluster Assortment Advisor</span>
           </div>
           <div className="hidden md:flex items-center h-full space-x-6 ml-8">
             <a
-              className="h-full flex items-center text-primary border-b-2 border-primary pb-1 font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-primary border-b-2 border-primary px-1 font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               Dashboard
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant px-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               Assortment Plan
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant px-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               Analytics
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant px-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               History
             </a>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="bg-surface-bright px-3 py-1.5 rounded-full text-xs font-medium border border-outline-variant text-on-surface">
+        <div className="flex items-center gap-4 shrink-0">
+          <span className="bg-surface-bright px-3 py-1.5 rounded-full text-xs font-medium border border-outline-variant text-on-surface whitespace-nowrap">
             Small Town Value Cluster - Snacks Category
           </span>
           <div className="flex items-center gap-2">

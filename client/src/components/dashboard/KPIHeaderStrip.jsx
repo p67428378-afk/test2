@@ -34,11 +34,11 @@ export default function KPIHeaderStrip({ kpis }) {
 
       {/* KPI 2: Private Brand % */}
       <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-5 flex flex-col justify-between h-32 relative overflow-hidden">
-        <div className="flex justify-between items-start w-full">
-          <div className="font-label-caps text-label-caps text-slate-400">
+        <div className="flex justify-between items-start w-full gap-2">
+          <div className="font-label-caps text-label-caps text-slate-400 shrink-0">
             Private Brand %
           </div>
-          <span className="text-xs font-semibold px-2 py-1 bg-amber-500/20 text-amber-400 rounded">
+          <span className="text-xs font-semibold px-2 py-1 bg-amber-500/20 text-amber-400 rounded shrink-0 whitespace-nowrap">
             Below 25% Target
           </span>
         </div>
