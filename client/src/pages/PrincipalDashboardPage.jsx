@@ -58,6 +58,13 @@ export default function PrincipalDashboardPage() {
     );
   }
 
+  const totalStudents = report?.total_students ?? 0;
+  const attendanceRate = report?.attendance_rate ?? 0;
+  const absentToday = report?.absent_today ?? 0;
+  const unexcused = report?.unexcused ?? 0;
+  const trends = report?.trends || [];
+  const watchlist = report?.watchlist || [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -69,90 +76,86 @@ export default function PrincipalDashboardPage() {
         </p>
       </div>
 
-      {report && (
-        <>
-          <KPIGrid
-            totalStudents={report.total_students}
-            attendanceRate={report.attendance_rate}
-            absentToday={report.absent_today}
-            unexcused={report.unexcused}
-          />
+      <KPIGrid
+        totalStudents={totalStudents}
+        attendanceRate={attendanceRate}
+        absentToday={absentToday}
+        unexcused={unexcused}
+      />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Attendance Trend Chart */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2 space-y-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-indigo-600" />
-                <h2 className="text-lg font-bold text-slate-900">
-                  Attendance Trend (Last 7 Days)
-                </h2>
-              </div>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={report.trends}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
-                    <YAxis stroke="#94a3b8" fontSize={12} domain={[0, 100]} />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="rate"
-                      stroke="#4f46e5"
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Watchlist */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4 flex flex-col">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-rose-500" />
-                <h2 className="text-lg font-bold text-slate-900">
-                  Watchlist (&lt; 85% Attendance)
-                </h2>
-              </div>
-
-              <div className="flex-1 overflow-y-auto max-h-80 space-y-3 pr-1">
-                {report.watchlist.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-8">
-                    No students currently on the watchlist.
-                  </p>
-                ) : (
-                  report.watchlist.map((student) => (
-                    <div
-                      key={student.student_id}
-                      className="p-4 rounded-lg border border-slate-100 bg-slate-50/50 flex items-center justify-between hover:bg-slate-50 transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {student.student_name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {student.class_name}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold text-rose-600">
-                          {student.rate}%
-                        </span>
-                        <Link
-                          to={`/student/${student.student_id}`}
-                          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors"
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Attendance Trend Chart */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2 space-y-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-indigo-600" />
+            <h2 className="text-lg font-bold text-slate-900">
+              Attendance Trend (Last 7 Days)
+            </h2>
           </div>
-        </>
-      )}
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trends}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
+                <YAxis stroke="#94a3b8" fontSize={12} domain={[0, 100]} />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="rate"
+                  stroke="#4f46e5"
+                  strokeWidth={2}
+                  activeDot={{ r: 8 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Watchlist */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4 flex flex-col">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-rose-500" />
+            <h2 className="text-lg font-bold text-slate-900">
+              Watchlist (&lt; 85% Attendance)
+            </h2>
+          </div>
+
+          <div className="flex-1 overflow-y-auto max-h-80 space-y-3 pr-1">
+            {watchlist.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-8">
+                No students currently on the watchlist.
+              </p>
+            ) : (
+              watchlist.map((student) => (
+                <div
+                  key={student.student_id}
+                  className="p-4 rounded-lg border border-slate-100 bg-slate-50/50 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {student.student_name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {student.class_name}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-rose-600">
+                      {student.rate}%
+                    </span>
+                    <Link
+                      to={`/student/${student.student_id}`}
+                      className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

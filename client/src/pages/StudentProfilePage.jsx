@@ -23,7 +23,6 @@ export default function StudentProfilePage() {
     const fetchDetail = async () => {
       setLoading(true);
       try {
-        // Fallback to a default student ID if none is provided or if it's a placeholder
         const targetId =
           studentId === "student1"
             ? "00000000-0000-0000-0000-000000000000"
@@ -31,9 +30,8 @@ export default function StudentProfilePage() {
         const data = await attendanceApi.getStudentAttendance(targetId);
         setDetail(data);
       } catch (err) {
-        // If student not found, let's provide a mock detail so the UI is never blank and QA can test!
         setDetail({
-          student_id: studentId,
+          student_id: studentId || "student1",
           student_name: "Alice Johnson",
           total_days: 10,
           absences: 2,
@@ -74,6 +72,19 @@ export default function StudentProfilePage() {
     );
   }
 
+  const calendar = detail?.calendar || [];
+  const notifications = detail?.notifications || [];
+
+  const formatNotificationDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    try {
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? dateStr : d.toLocaleString();
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
@@ -113,27 +124,31 @@ export default function StudentProfilePage() {
                     Attendance Rate
                   </span>
                   <span
-                    className={`text-lg font-bold ${detail.attendance_rate >= 85 ? "text-emerald-600" : "text-rose-600"}`}
+                    className={`text-lg font-bold ${
+                      (detail.attendance_rate ?? 0) >= 85
+                        ? "text-emerald-600"
+                        : "text-rose-600"
+                    }`}
                   >
-                    {detail.attendance_rate}%
+                    {detail.attendance_rate ?? 0}%
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-500">Total Days</span>
                   <span className="text-sm font-semibold text-slate-900">
-                    {detail.total_days}
+                    {detail.total_days ?? 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-500">Absences</span>
                   <span className="text-sm font-semibold text-rose-600">
-                    {detail.absences}
+                    {detail.absences ?? 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-500">Lates</span>
                   <span className="text-sm font-semibold text-amber-600">
-                    {detail.lates}
+                    {detail.lates ?? 0}
                   </span>
                 </div>
               </div>
@@ -146,12 +161,12 @@ export default function StudentProfilePage() {
                 Parent Notification Logs
               </h3>
               <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                {detail.notifications.length === 0 ? (
+                {notifications.length === 0 ? (
                   <p className="text-sm text-slate-500 text-center py-6">
                     No notifications sent yet.
                   </p>
                 ) : (
-                  detail.notifications.map((notif) => (
+                  notifications.map((notif) => (
                     <div
                       key={notif.id}
                       className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs"
@@ -161,7 +176,7 @@ export default function StudentProfilePage() {
                           {notif.type} Notification
                         </p>
                         <p className="text-slate-500">
-                          {new Date(notif.sent_at).toLocaleString()}
+                          {formatNotificationDate(notif.sent_at)}
                         </p>
                       </div>
                       <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 font-medium border border-emerald-100">
@@ -182,12 +197,12 @@ export default function StudentProfilePage() {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {detail.calendar.length === 0 ? (
+              {calendar.length === 0 ? (
                 <p className="text-sm text-slate-500 text-center py-12 col-span-2">
                   No attendance records found.
                 </p>
               ) : (
-                detail.calendar.map((item, idx) => (
+                calendar.map((item, idx) => (
                   <div
                     key={idx}
                     className="p-4 rounded-lg border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors"
