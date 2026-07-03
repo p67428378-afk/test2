@@ -14,27 +14,27 @@ export default function AppLayout({ children }) {
             />
             <span className="hidden sm:inline">Cluster Assortment Advisor</span>
           </div>
-          <div className="hidden md:flex items-center h-full space-x-6 ml-8">
+          <div className="hidden md:flex items-center h-full gap-8 ml-10">
             <a
-              className="h-full flex items-center text-primary border-b-2 border-primary px-1 font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-primary border-b-2 border-primary px-2 pt-1 font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               Dashboard
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant px-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               Assortment Plan
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant px-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               Analytics
             </a>
             <a
-              className="h-full flex items-center text-on-surface-variant hover:bg-surface-variant px-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
+              className="h-full flex items-center text-on-surface-variant hover:text-white px-2 pt-1 transition-colors font-label-caps text-label-caps cursor-pointer active:scale-95 duration-200"
               href="#"
             >
               History

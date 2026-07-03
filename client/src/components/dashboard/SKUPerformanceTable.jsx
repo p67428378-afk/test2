@@ -93,50 +93,50 @@ export default function SKUPerformanceTable({
             <tr className="font-label-caps text-label-caps text-slate-400 border-b border-slate-700 text-xs uppercase tracking-wider">
               <th
                 onClick={() => onSort("sku_id")}
-                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none min-w-[100px]"
+                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none w-[12%]"
               >
-                <div className="flex items-center">
+                <div className="flex items-center gap-1">
                   SKU # {renderSortIcon("sku_id")}
                 </div>
               </th>
               <th
                 onClick={() => onSort("product_name")}
-                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none min-w-[220px]"
+                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none w-[28%]"
               >
-                <div className="flex items-center">
+                <div className="flex items-center gap-1">
                   Product Name {renderSortIcon("product_name")}
                 </div>
               </th>
               <th
                 onClick={() => onSort("current_sales")}
-                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none min-w-[140px] px-6"
+                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none w-[16%] px-4"
               >
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-end gap-1">
                   Current Sales {renderSortIcon("current_sales")}
                 </div>
               </th>
               <th
                 onClick={() => onSort("sales_growth")}
-                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none min-w-[160px] px-6"
+                className="p-4 font-medium text-right cursor-pointer hover:text-white transition-colors select-none w-[20%] px-4"
               >
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-end gap-1">
                   Sales Growth (YoY) {renderSortIcon("sales_growth")}
                 </div>
               </th>
               <th
                 onClick={() => onSort("is_private_brand")}
-                className="p-4 font-medium text-center cursor-pointer hover:text-white transition-colors select-none min-w-[130px]"
+                className="p-4 font-medium text-center cursor-pointer hover:text-white transition-colors select-none w-[12%] px-2"
               >
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center gap-1">
                   Private Brand {renderSortIcon("is_private_brand")}
                 </div>
               </th>
               <th
                 onClick={() => onSort("status")}
-                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none min-w-[120px]"
+                className="p-4 font-medium cursor-pointer hover:text-white transition-colors select-none w-[12%]"
               >
-                <div className="flex items-center">
-                  Status {renderSortIcon("status")}
+                <div className="flex items-center gap-1">
+                  STATUS {renderSortIcon("status")}
                 </div>
               </th>
             </tr>
