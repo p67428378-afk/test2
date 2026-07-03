@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
@@ -22,9 +19,9 @@ export default {
         "on-tertiary-fixed": "#002113",
         "on-primary-fixed": "#231b00",
         "on-secondary-container": "#00374d",
-        "tertiary": "#c4ffde",
+        tertiary: "#c4ffde",
         "surface-container-low": "#131b2e",
-        "outline": "#9a9077",
+        outline: "#9a9077",
         "on-tertiary-fixed-variant": "#005236",
         "on-surface": "#dae2fd",
         "inverse-on-surface": "#283044",
@@ -36,10 +33,10 @@ export default {
         "surface-variant": "#2d3449",
         "surface-container": "#171f33",
         "on-secondary-fixed-variant": "#004c69",
-        "surface": "#0b1326",
+        surface: "#0b1326",
         "on-surface-variant": "#d1c6ab",
-        "secondary": "#7bd0ff",
-        "primary": "#fff1ce",
+        secondary: "#7bd0ff",
+        primary: "#fff1ce",
         "on-secondary-fixed": "#001e2c",
         "on-primary-container": "#6f5a00",
         "on-primary": "#3c2f00",
@@ -49,22 +46,22 @@ export default {
         "secondary-fixed-dim": "#7bd0ff",
         "tertiary-fixed": "#6ffbbe",
         "on-primary-fixed-variant": "#564500",
-        "error": "#ffb4ab",
+        error: "#ffb4ab",
         "on-error": "#690005",
         "on-tertiary-container": "#006a48",
-        "background": "#0b1326",
-        "tertiary-container": "#60eeb1"
+        background: "#0b1326",
+        "tertiary-container": "#60eeb1",
       },
       borderRadius: {
-        "DEFAULT": "0.125rem",
-        "lg": "0.25rem",
-        "xl": "0.5rem",
-        "full": "0.75rem"
+        DEFAULT: "0.125rem",
+        lg: "0.25rem",
+        xl: "0.5rem",
+        full: "0.75rem",
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
-      }
+      },
     },
   },
   plugins: [],
-}
+};

@@ -211,3 +211,6 @@ application_default_credentials.json
 scratch/
 tmp/
 temp/
+
+# Frontend build artifacts (auto-added by Frontend Agent)
+client/node_modules/

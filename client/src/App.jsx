@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AppLayout from './components/layout/AppLayout';
-import DashboardPage from './pages/DashboardPage';
-import ScenarioComparisonPage from './pages/ScenarioComparisonPage';
-import ApprovalReviewPage from './pages/ApprovalReviewPage';
-import ConfirmationPage from './pages/ConfirmationPage';
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout";
+import DashboardPage from "./pages/DashboardPage";
+import ScenarioComparisonPage from "./pages/ScenarioComparisonPage";
+import ApprovalReviewPage from "./pages/ApprovalReviewPage";
+import ConfirmationPage from "./pages/ConfirmationPage";
 
 export default function App() {
   const [selectedScenario, setSelectedScenario] = useState(null);
@@ -14,9 +14,9 @@ export default function App() {
     <Router>
       <AppLayout>
         <Routes>
-          <Route path='/' element={<DashboardPage />} />
+          <Route path="/" element={<DashboardPage />} />
           <Route
-            path='/comparison'
+            path="/comparison"
             element={
               <ScenarioComparisonPage
                 selectedScenario={selectedScenario}
@@ -25,7 +25,7 @@ export default function App() {
             }
           />
           <Route
-            path='/review'
+            path="/review"
             element={
               <ApprovalReviewPage
                 selectedScenario={selectedScenario}
@@ -34,7 +34,7 @@ export default function App() {
             }
           />
           <Route
-            path='/confirmation'
+            path="/confirmation"
             element={
               <ConfirmationPage
                 submissionResult={submissionResult}
