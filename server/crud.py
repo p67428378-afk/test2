@@ -1,38 +1,42 @@
-
 from sqlalchemy.orm import Session
-from server import models, schemas
+from typing import Optional
+from server import models
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+def get_products_with_metrics(
+    db: Session,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = None,
+):
+    query = db.query(models.Product).join(models.PerformanceMetric)
 
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
-    db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    if search:
+        query = query.filter(
+            (models.Product.product_name.ilike(f"%{search}%"))
+            | (models.Product.sku_id.ilike(f"%{search}%"))
+        )
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
+    # Sorting logic
+    if sort_by:
+        col = None
+        if sort_by == "sku_id":
+            col = models.Product.sku_id
+        elif sort_by == "product_name":
+            col = models.Product.product_name
+        elif sort_by == "current_sales":
+            col = models.PerformanceMetric.current_sales
+        elif sort_by == "sales_growth":
+            col = models.PerformanceMetric.sales_growth
+        elif sort_by == "status":
+            col = models.PerformanceMetric.status
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
-    db.commit()
-    db.refresh(otp)
-    return otp
+        if col is not None:
+            if sort_order == "desc":
+                query = query.order_by(col.desc())
+            else:
+                query = query.order_by(col.asc())
+    else:
+        query = query.order_by(models.Product.sku_id.asc())
 
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
-
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
-    db.commit()
-    db.refresh(user)
-    return user
+    return query.all()
