@@ -4,7 +4,7 @@ export default function AppLayout({ children }) {
   return (
     <div className="min-h-screen bg-[#0f172a] text-[#f8fafc] font-sans antialiased">
       {/* TopNavBar */}
-      <nav className="bg-surface border-b border-outline-variant docked full-width top-0 flat no shadows flex justify-between items-center w-full px-container-padding h-16 max-w-full gap-4">
+      <nav className="bg-surface border-b border-outline-variant docked full-width top-0 flat no shadows flex justify-between items-center w-full px-container-padding h-16 max-w-full gap-6">
         <div className="flex items-center gap-6 min-w-0">
           <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2 shrink-0">
             <img
@@ -41,8 +41,8 @@ export default function AppLayout({ children }) {
             </a>
           </div>
         </div>
-        <div className="flex items-center gap-4 shrink-0">
-          <span className="bg-surface-bright px-3 py-1.5 rounded-full text-xs font-medium border border-outline-variant text-on-surface whitespace-nowrap">
+        <div className="flex items-center gap-6 shrink-0 ml-auto">
+          <span className="bg-surface-bright px-4 py-1.5 rounded-full text-xs font-medium border border-outline-variant text-on-surface whitespace-nowrap mr-2">
             Small Town Value Cluster - Snacks Category
           </span>
           <div className="flex items-center gap-2">

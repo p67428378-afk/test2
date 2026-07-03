@@ -75,16 +75,16 @@ export default function SKUPerformanceTable({
           SKU Performance Table
         </h2>
         <div className="relative max-w-xs w-full">
+          <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-500 text-sm">
+            search
+          </span>
           <input
             type="text"
             placeholder="Search SKUs or products..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-4 pr-10 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
           />
-          <span className="material-symbols-outlined absolute right-3 top-2.5 text-slate-500 text-sm">
-            search
-          </span>
         </div>
       </div>
       <div className="overflow-x-auto p-1">
