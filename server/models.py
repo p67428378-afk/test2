@@ -1,41 +1,109 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
+from sqlalchemy import Column, String, DateTime, Float, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from server.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    full_name = Column(String(255), nullable=False)
+    role = Column(String(50), nullable=False, default="user")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
+    service_requests = relationship(
+        "ServiceRequest", back_populates="assigned_technician"
+    )
 
-class OTP(Base):
-    __tablename__ = "otps"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
 
-    user = relationship("User", back_populates="otps")
+class EnergySource(Base):
+    __tablename__ = "energy_sources"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(255), nullable=False)
+    type = Column(String(50), nullable=False)  # solar, wind, battery, grid, generator
+    status = Column(String(50), nullable=False, default="active")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
+    realtime_metrics = relationship(
+        "RealtimeMetric", back_populates="energy_source", cascade="all, delete-orphan"
+    )
+    historical_metrics = relationship(
+        "HistoricalMetric", back_populates="energy_source", cascade="all, delete-orphan"
+    )
+    alerts = relationship(
+        "Alert", back_populates="energy_source", cascade="all, delete-orphan"
+    )
 
-    user = relationship("User", back_populates="password_history")
+
+class RealtimeMetric(Base):
+    __tablename__ = "realtime_metrics"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    energy_source_id = Column(
+        String(36), ForeignKey("energy_sources.id"), nullable=False
+    )
+    metric_name = Column(String(100), nullable=False)
+    metric_value = Column(Float, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    energy_source = relationship("EnergySource", back_populates="realtime_metrics")
+
+
+class HistoricalMetric(Base):
+    __tablename__ = "historical_metrics"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    energy_source_id = Column(
+        String(36), ForeignKey("energy_sources.id"), nullable=False
+    )
+    metric_name = Column(String(100), nullable=False)
+    metric_value = Column(Float, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    energy_source = relationship("EnergySource", back_populates="historical_metrics")
+
+
+class Alert(Base):
+    __tablename__ = "alerts"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    energy_source_id = Column(
+        String(36), ForeignKey("energy_sources.id"), nullable=False
+    )
+    parameter_name = Column(String(100), nullable=False)
+    parameter_value = Column(Float, nullable=False)
+    threshold_value = Column(Float, nullable=False)
+    severity = Column(String(50), nullable=False, default="warning")
+    status = Column(String(50), nullable=False, default="active")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    energy_source = relationship("EnergySource", back_populates="alerts")
+    service_request = relationship(
+        "ServiceRequest", back_populates="alert", uselist=False
+    )
+
+
+class ServiceRequest(Base):
+    __tablename__ = "service_requests"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    alert_id = Column(String(36), ForeignKey("alerts.id"), nullable=True)
+    equipment = Column(String(255), nullable=False)
+    location = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(
+        String(50), nullable=False, default="New"
+    )  # New, In Progress, Resolved
+    assigned_technician_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    activity_log_json = Column(
+        Text, nullable=True, default="[]"
+    )  # JSON string of activity logs
+
+    alert = relationship("Alert", back_populates="service_request")
+    assigned_technician = relationship("User", back_populates="service_requests")
