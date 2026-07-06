@@ -1,0 +1,762 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DG Cluster Assortment Advisor API",
+    "description": "Decision-support tool for Dollar General category managers to optimize Snacks product assortments.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/kpis": {
+      "get": {
+        "summary": "Get Kpis",
+        "operationId": "get_kpis_api_v1_kpis_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KPISchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skus": {
+      "get": {
+        "summary": "Get Skus",
+        "operationId": "get_skus_api_v1_skus_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SKUResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Skus Api V1 Skus Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/calculate": {
+      "post": {
+        "summary": "Calculate Scenario",
+        "operationId": "calculate_scenario_api_v1_scenarios_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioCalculateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioCalculateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals": {
+      "post": {
+        "summary": "Submit Approval",
+        "operationId": "submit_approval_api_v1_approvals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/initiate": {
+      "post": {
+        "summary": "Initiate Password Reset",
+        "operationId": "initiate_password_reset_api_v1_password_reset_initiate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetInitiateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordResetInitiateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/verify-otp": {
+      "post": {
+        "summary": "Verify Otp",
+        "operationId": "verify_otp_api_v1_password_reset_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OTPVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OTPVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/verify-security-question": {
+      "post": {
+        "summary": "Verify Security Question",
+        "operationId": "verify_security_question_api_v1_password_reset_verify_security_question_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityQuestionVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityQuestionVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/set-new-password": {
+      "post": {
+        "summary": "Set New Password",
+        "operationId": "set_new_password_api_v1_password_reset_set_new_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetNewPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetNewPasswordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Read Root",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApprovalRequest": {
+        "properties": {
+          "scenario_type": {
+            "type": "string",
+            "title": "Scenario Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_type"
+        ],
+        "title": "ApprovalRequest"
+      },
+      "ApprovalResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "audit_trail_id": {
+            "type": "string",
+            "title": "Audit Trail Id"
+          },
+          "submitted_by": {
+            "type": "string",
+            "title": "Submitted By"
+          },
+          "sku_changes_summary": {
+            "type": "string",
+            "title": "Sku Changes Summary"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "audit_trail_id",
+          "submitted_by",
+          "sku_changes_summary",
+          "timestamp"
+        ],
+        "title": "ApprovalResponse"
+      },
+      "GuardrailCheck": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "passed"
+        ],
+        "title": "GuardrailCheck"
+      },
+      "Guardrails": {
+        "properties": {
+          "capacity_check": {
+            "$ref": "#/components/schemas/GuardrailCheck"
+          },
+          "private_brand_check": {
+            "$ref": "#/components/schemas/GuardrailCheck"
+          },
+          "swap_limit_check": {
+            "$ref": "#/components/schemas/GuardrailCheck"
+          }
+        },
+        "type": "object",
+        "required": [
+          "capacity_check",
+          "private_brand_check",
+          "swap_limit_check"
+        ],
+        "title": "Guardrails"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "KPICardInStock": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "status"
+        ],
+        "title": "KPICardInStock"
+      },
+      "KPICardPrivateBrand": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "target": {
+            "type": "number",
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "target"
+        ],
+        "title": "KPICardPrivateBrand"
+      },
+      "KPICardSales": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "trend_yoy": {
+            "type": "number",
+            "title": "Trend Yoy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "trend_yoy"
+        ],
+        "title": "KPICardSales"
+      },
+      "KPICardShelfCapacity": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "remaining_ft": {
+            "type": "number",
+            "title": "Remaining Ft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "remaining_ft"
+        ],
+        "title": "KPICardShelfCapacity"
+      },
+      "KPISchema": {
+        "properties": {
+          "sales_per_linear_ft": {
+            "$ref": "#/components/schemas/KPICardSales"
+          },
+          "private_brand_pct": {
+            "$ref": "#/components/schemas/KPICardPrivateBrand"
+          },
+          "in_stock_rate": {
+            "$ref": "#/components/schemas/KPICardInStock"
+          },
+          "shelf_capacity_pct": {
+            "$ref": "#/components/schemas/KPICardShelfCapacity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sales_per_linear_ft",
+          "private_brand_pct",
+          "in_stock_rate",
+          "shelf_capacity_pct"
+        ],
+        "title": "KPISchema"
+      },
+      "OTPVerifyRequest": {
+        "properties": {
+          "otp_code": {
+            "type": "string",
+            "title": "Otp Code"
+          },
+          "otp_session_id": {
+            "type": "string",
+            "title": "Otp Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "otp_code",
+          "otp_session_id"
+        ],
+        "title": "OTPVerifyRequest"
+      },
+      "OTPVerifyResponse": {
+        "properties": {
+          "security_question_session_id": {
+            "type": "string",
+            "title": "Security Question Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "security_question_session_id"
+        ],
+        "title": "OTPVerifyResponse"
+      },
+      "PasswordResetInitiateRequest": {
+        "properties": {
+          "login_id": {
+            "type": "string",
+            "title": "Login Id"
+          },
+          "mobile_number": {
+            "type": "string",
+            "title": "Mobile Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "login_id",
+          "mobile_number"
+        ],
+        "title": "PasswordResetInitiateRequest"
+      },
+      "PasswordResetInitiateResponse": {
+        "properties": {
+          "otp_session_id": {
+            "type": "string",
+            "title": "Otp Session Id"
+          },
+          "security_question": {
+            "type": "string",
+            "title": "Security Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "otp_session_id",
+          "security_question"
+        ],
+        "title": "PasswordResetInitiateResponse"
+      },
+      "SKUResponse": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "title": "Sku Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "current_sales": {
+            "type": "number",
+            "title": "Current Sales"
+          },
+          "sales_trend_yoy": {
+            "type": "number",
+            "title": "Sales Trend Yoy"
+          },
+          "profit_margin": {
+            "type": "number",
+            "title": "Profit Margin"
+          },
+          "in_stock_rate": {
+            "type": "number",
+            "title": "In Stock Rate"
+          },
+          "recommendation": {
+            "type": "string",
+            "title": "Recommendation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "name",
+          "current_sales",
+          "sales_trend_yoy",
+          "profit_margin",
+          "in_stock_rate",
+          "recommendation"
+        ],
+        "title": "SKUResponse"
+      },
+      "ScenarioCalculateRequest": {
+        "properties": {
+          "scenario_type": {
+            "type": "string",
+            "title": "Scenario Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_type"
+        ],
+        "title": "ScenarioCalculateRequest"
+      },
+      "ScenarioCalculateResponse": {
+        "properties": {
+          "scenario_type": {
+            "type": "string",
+            "title": "Scenario Type"
+          },
+          "projected_sales_lift": {
+            "type": "number",
+            "title": "Projected Sales Lift"
+          },
+          "projected_private_brand_pct": {
+            "type": "number",
+            "title": "Projected Private Brand Pct"
+          },
+          "projected_shelf_capacity_pct": {
+            "type": "number",
+            "title": "Projected Shelf Capacity Pct"
+          },
+          "sku_actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sku Actions"
+          },
+          "guardrails": {
+            "$ref": "#/components/schemas/Guardrails"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_type",
+          "projected_sales_lift",
+          "projected_private_brand_pct",
+          "projected_shelf_capacity_pct",
+          "sku_actions",
+          "guardrails"
+        ],
+        "title": "ScenarioCalculateResponse"
+      },
+      "SecurityQuestionVerifyRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "security_question_session_id": {
+            "type": "string",
+            "title": "Security Question Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "security_question_session_id"
+        ],
+        "title": "SecurityQuestionVerifyRequest"
+      },
+      "SecurityQuestionVerifyResponse": {
+        "properties": {
+          "password_reset_session_id": {
+            "type": "string",
+            "title": "Password Reset Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password_reset_session_id"
+        ],
+        "title": "SecurityQuestionVerifyResponse"
+      },
+      "SetNewPasswordRequest": {
+        "properties": {
+          "new_password": {
+            "type": "string",
+            "title": "New Password"
+          },
+          "password_reset_session_id": {
+            "type": "string",
+            "title": "Password Reset Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_password",
+          "password_reset_session_id"
+        ],
+        "title": "SetNewPasswordRequest"
+      },
+      "SetNewPasswordResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "login_link": {
+            "type": "string",
+            "title": "Login Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "login_link"
+        ],
+        "title": "SetNewPasswordResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

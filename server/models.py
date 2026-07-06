@@ -1,41 +1,157 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Numeric, TIMESTAMP, ForeignKey, text
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from server.database import Base
+from .database import Base
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+# Helper to support UUIDs on both SQLite and PostgreSQL
+from sqlalchemy.types import TypeDecorator, CHAR, TEXT
+import json
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
 
-class OTP(Base):
-    __tablename__ = "otps"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
+class GUID(TypeDecorator):
+    """Platform-independent GUID type.
+    Uses PostgreSQL's UUID type, otherwise CHAR(36), storing as string.
+    """
 
-    user = relationship("User", back_populates="otps")
+    impl = CHAR
+    cache_ok = True
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(UUID())
+        else:
+            return dialect.type_descriptor(CHAR(36))
 
-    user = relationship("User", back_populates="password_history")
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == "postgresql":
+            return str(value)
+        else:
+            if not isinstance(value, uuid.UUID):
+                return str(uuid.UUID(value))
+            else:
+                return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            if not isinstance(value, uuid.UUID):
+                return uuid.UUID(value)
+            return value
+
+
+class SQLiteJSONB(TypeDecorator):
+    """Platform-independent JSONB type.
+    Uses PostgreSQL's JSONB type, otherwise TEXT, storing as string.
+    """
+
+    impl = TEXT
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(JSONB())
+        else:
+            return dialect.type_descriptor(TEXT())
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == "postgresql":
+            return value
+        else:
+            return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == "postgresql":
+            return value
+        else:
+            return json.loads(value)
+
+
+class Product(Base):
+    __tablename__ = "products"
+
+    id = Column(GUID, primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    sku_id = Column(String(50), unique=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    category = Column(String(100), nullable=False, default="Snacks")
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+    performance_metrics = relationship(
+        "PerformanceMetric", back_populates="product", uselist=False
+    )
+
+
+class PerformanceMetric(Base):
+    __tablename__ = "performance_metrics"
+
+    id = Column(GUID, primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    product_id = Column(GUID, ForeignKey("products.id"), unique=True, nullable=False)
+    current_sales = Column(Numeric(12, 2), nullable=False, default=0.00)
+    sales_trend_yoy = Column(Numeric(5, 2), nullable=False, default=0.00)
+    profit_margin = Column(Numeric(5, 2), nullable=False, default=0.00)
+    in_stock_rate = Column(Numeric(5, 2), nullable=False, default=0.00)
+    recommendation = Column(String(20), nullable=False, default="MAINTAIN")
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+    product = relationship("Product", back_populates="performance_metrics")
+
+
+class AssortmentScenario(Base):
+    __tablename__ = "assortment_scenarios"
+
+    id = Column(GUID, primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    scenario_type = Column(String(50), unique=True, nullable=False)
+    projected_sales_lift = Column(Numeric(5, 2), nullable=False, default=0.00)
+    projected_private_brand_pct = Column(Numeric(5, 2), nullable=False, default=0.00)
+    projected_shelf_capacity_pct = Column(Numeric(5, 2), nullable=False, default=0.00)
+    sku_actions = Column(SQLiteJSONB, nullable=False, default=list)
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+
+class AuditTrail(Base):
+    __tablename__ = "audit_trail"
+
+    id = Column(GUID, primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    audit_trail_id = Column(String(50), unique=True, nullable=False)
+    scenario_type = Column(String(50), nullable=False)
+    submitted_by = Column(String(100), nullable=False)
+    sku_changes_summary = Column(String(255), nullable=False)
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
