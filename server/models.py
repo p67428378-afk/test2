@@ -8,6 +8,7 @@ from sqlalchemy import (
     Numeric,
     Text,
     Integer,
+    Float,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -81,6 +82,23 @@ class PerformanceMetric(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     product = relationship("Product", back_populates="performance_metrics")
+
+
+class ProductPerformance(Base):
+    __tablename__ = "productperformance"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    sku_name = Column(String(255), nullable=False)
+    upc = Column(String(12), unique=True, nullable=False)
+    weekly_sales = Column(Float, default=0.0, nullable=False)
+    profit_margin = Column(Float, default=0.0, nullable=False)
+    stock_level = Column(Integer, default=0, nullable=False)
+    days_of_supply = Column(Integer, default=0, nullable=False)
+    is_private_brand = Column(Boolean, default=False, nullable=False)
+    linear_feet = Column(Float, default=1.0, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class AssortmentScenario(Base):
