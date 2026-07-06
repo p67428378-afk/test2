@@ -1,200 +1,223 @@
 import React, { useState, useEffect } from "react";
-import KPIHeaderStrip from "../components/advisor/KPIHeaderStrip.jsx";
-import SKUPerformanceSection from "../components/advisor/SKUPerformanceSection.jsx";
-import ScenarioSelector from "../components/advisor/ScenarioSelector.jsx";
-import ApprovalReviewPanel from "../components/advisor/ApprovalReviewPanel.jsx";
-import SuccessBanner from "../components/common/SuccessBanner.jsx";
-import {
-  getKPIs,
-  getSKUPerformance,
-  getScenarioProjections,
-  submitAssortmentDecision,
-} from "../services/api.js";
+import { getDashboardKPIs, getSKUPerformance } from "../services/api";
+import SKUPerformanceTable from "../components/assortment/SKUPerformanceTable";
 
 export default function DashboardPage() {
-  // State for KPIs
   const [kpis, setKpis] = useState(null);
-  const [kpisLoading, setKpisLoading] = useState(true);
-  const [kpisError, setKpisError] = useState(false);
-
-  // State for SKU Performance
   const [skus, setSkus] = useState([]);
-  const [skusTotal, setSkusTotal] = useState(0);
-  const [skusPage, setSkusPage] = useState(1);
-  const [skusLimit] = useState(10);
-  const [skusSearch, setSkusSearch] = useState("");
-  const [skusStatus, setSkusStatus] = useState("");
-  const [skusLoading, setSkusLoading] = useState(true);
-  const [skusError, setSkusError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // State for Scenario Selector & Projections
-  const [selectedScenario, setSelectedScenario] = useState("balanced");
-  const [projections, setProjections] = useState(null);
-  const [projectionsLoading, setProjectionsLoading] = useState(true);
-  const [projectionsError, setProjectionsError] = useState(false);
-
-  // State for Submission & Confirmation
-  const [submitting, setSubmitting] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState(null);
-  const [submissionError, setSubmissionError] = useState(null);
-
-  // Fetch KPIs on mount
   useEffect(() => {
-    const fetchKPIs = async () => {
+    const fetchData = async () => {
       try {
-        setKpisLoading(true);
-        const data = await getKPIs();
-        setKpis(data);
-        setKpisError(false);
-      } catch (err) {
-        console.error("Error fetching KPIs:", err);
-        setKpisError(true);
+        const [kpiData, skuData] = await Promise.all([
+          getDashboardKPIs(),
+          getSKUPerformance(),
+        ]);
+        setKpis(kpiData);
+        setSkus(skuData);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
       } finally {
-        setKpisLoading(false);
+        setLoading(false);
       }
     };
-
-    fetchKPIs();
+    fetchData();
   }, []);
 
-  // Fetch SKU Performance when page, search, or status changes
-  useEffect(() => {
-    const fetchSKUs = async () => {
-      try {
-        setSkusLoading(true);
-        const data = await getSKUPerformance({
-          page: skusPage,
-          limit: skusLimit,
-          search: skusSearch || undefined,
-          status: skusStatus || undefined,
-        });
-        setSkus(data.items || []);
-        setSkusTotal(data.total || 0);
-        setSkusError(false);
-      } catch (err) {
-        console.error("Error fetching SKUs:", err);
-        setSkusError(true);
-      } finally {
-        setSkusLoading(false);
-      }
-    };
-
-    fetchSKUs();
-  }, [skusPage, skusSearch, skusStatus, skusLimit]);
-
-  // Fetch Scenario Projections when selected scenario changes
-  useEffect(() => {
-    const fetchProjections = async () => {
-      try {
-        setProjectionsLoading(true);
-        const data = await getScenarioProjections(selectedScenario);
-        setProjections(data);
-        setProjectionsError(false);
-      } catch (err) {
-        console.error("Error fetching projections:", err);
-        setProjectionsError(true);
-      } finally {
-        setProjectionsLoading(false);
-      }
-    };
-
-    fetchProjections();
-  }, [selectedScenario]);
-
-  // Handle Scenario Change
-  const handleScenarioChange = (scenarioId) => {
-    setSelectedScenario(scenarioId);
-    // Clear previous submission result when scenario changes
-    setSubmissionResult(null);
-  };
-
-  // Handle Submit Assortment Changes
-  const handleSubmit = async () => {
-    try {
-      setSubmitting(true);
-      setSubmissionError(null);
-
-      const payload = {
-        action_counts: projections?.action_counts || {
-          grow: 12,
-          maintain: 24,
-          swap: 8,
-          reduce: 4,
-        },
-        scenario_applied: selectedScenario,
-        user_name: "Sarah Chen",
-      };
-
-      const result = await submitAssortmentDecision(payload);
-      setSubmissionResult(result);
-    } catch (err) {
-      console.error("Error submitting assortment decision:", err);
-      setSubmissionError(
-        err.response?.data?.detail || "Failed to submit assortment decision.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Row 1: KPI Cards */}
-      <KPIHeaderStrip kpis={kpis} loading={kpisLoading} error={kpisError} />
-
-      {/* Inline Confirmation Banner */}
-      {submissionResult && (
-        <SuccessBanner
-          summary={submissionResult.summary}
-          auditId={submissionResult.audit_id}
-          submittedAt={submissionResult.submitted_at}
-          onClose={() => setSubmissionResult(null)}
-        />
-      )}
-
-      {submissionError && (
-        <div className="bg-error-container text-on-error-container p-4 rounded-xl border border-error-container/30">
-          {submissionError}
-        </div>
-      )}
-
-      {/* Row 2: Table & Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left 8-cols: Table */}
-        <SKUPerformanceSection
-          items={skus}
-          total={skusTotal}
-          page={skusPage}
-          limit={skusLimit}
-          onPageChange={setSkusPage}
-          onSearchChange={(val) => {
-            setSkusSearch(val);
-            setSkusPage(1); // Reset to first page on search
-          }}
-          onStatusChange={(val) => {
-            setSkusStatus(val);
-            setSkusPage(1); // Reset to first page on status change
-          }}
-          loading={skusLoading}
-          error={skusError}
-        />
-
-        {/* Right 4-cols: Actions & Summaries */}
-        <div className="lg:col-span-4 space-y-6">
-          <ScenarioSelector
-            selectedScenario={selectedScenario}
-            onScenarioChange={handleScenarioChange}
-            projections={projections}
-          />
-
-          <ApprovalReviewPanel
-            scenarioType={selectedScenario}
-            projections={projections}
-            onSubmit={handleSubmit}
-            submitting={submitting}
-          />
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined animate-spin text-4xl text-primary-fixed-dim">
+            sync
+          </span>
+          <span className="text-on-surface-variant text-sm">
+            Loading dashboard data...
+          </span>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6 w-full">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-on-surface tracking-tight">
+            Assortment Advisor
+          </h1>
+          <p className="text-sm text-on-surface-variant mt-1">
+            Analyze and optimize SKU performance for Small Town Value Clusters.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button className="px-4 py-2 border border-outline-variant text-on-surface hover:bg-surface-container-low rounded text-sm font-bold transition-colors flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">
+              download
+            </span>
+            Export Data
+          </button>
+        </div>
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        {/* KPI 1 */}
+        <div className="glass-panel rounded-lg p-6 flex flex-col justify-between h-[140px] hover:bg-surface-container-high transition-colors">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-xs font-bold text-primary-fixed-dim uppercase tracking-wide">
+              Sales per Linear Ft
+            </h3>
+            <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+              point_of_sale
+            </span>
+          </div>
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-on-surface">
+                $
+                {kpis?.sales_per_linear_ft?.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="flex items-center text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded text-xs font-semibold">
+                <span className="material-symbols-outlined text-[14px] mr-1">
+                  arrow_upward
+                </span>
+                +4.2%
+              </span>
+              <span className="text-xs text-on-surface-variant ml-2">
+                vs last quarter
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 2 */}
+        <div className="glass-panel rounded-lg p-6 flex flex-col justify-between h-[140px] hover:bg-surface-container-high transition-colors">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-xs font-bold text-primary-fixed-dim uppercase tracking-wide">
+              Private Brand %
+            </h3>
+            <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+              storefront
+            </span>
+          </div>
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-on-surface">
+                {kpis?.private_brand_percent}%
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="flex items-center text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded text-xs font-semibold">
+                <span className="material-symbols-outlined text-[14px] mr-1">
+                  check_circle
+                </span>
+                Target: &gt;10.0%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 3 */}
+        <div className="glass-panel rounded-lg p-6 flex flex-col justify-between h-[140px] hover:bg-surface-container-high transition-colors">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-xs font-bold text-primary-fixed-dim uppercase tracking-wide">
+              In-Stock Rate
+            </h3>
+            <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+              inventory_2
+            </span>
+          </div>
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-on-surface">
+                {kpis?.in_stock_rate}%
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="flex items-center text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded text-xs font-semibold">
+                <span className="material-symbols-outlined text-[14px] mr-1">
+                  trending_up
+                </span>
+                Target: 95.0%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 4 */}
+        <div className="glass-panel rounded-lg p-6 flex flex-col justify-between h-[140px] hover:bg-surface-container-high transition-colors relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 h-1 bg-surface-bright w-full">
+            <div
+              className="h-full bg-primary-fixed-dim"
+              style={{ width: `${kpis?.shelf_capacity_percent}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between items-start mb-2 z-10 relative">
+            <h3 className="text-xs font-bold text-primary-fixed-dim uppercase tracking-wide">
+              Shelf Capacity
+            </h3>
+            <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+              view_week
+            </span>
+          </div>
+          <div className="z-10 relative">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-on-surface">
+                {kpis?.shelf_capacity_percent}%
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-1 text-xs text-on-surface-variant">
+              <span>
+                Utilized:{" "}
+                {((200 * (kpis?.shelf_capacity_percent || 88.2)) / 100).toFixed(
+                  1,
+                )}{" "}
+                / 200 linear ft
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 5: Vendor Fill Rate % */}
+        <div className="glass-panel rounded-lg p-6 flex flex-col justify-between h-[140px] hover:bg-surface-container-high transition-colors">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-xs font-bold text-primary-fixed-dim uppercase tracking-wide">
+              Vendor Fill Rate %
+            </h3>
+            <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+              local_shipping
+            </span>
+          </div>
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-on-surface">
+                {kpis?.vendor_fill_rate_percent !== undefined
+                  ? `${kpis.vendor_fill_rate_percent}%`
+                  : "N/A"}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="flex items-center text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded text-xs font-semibold">
+                <span className="material-symbols-outlined text-[14px] mr-1">
+                  trending_up
+                </span>
+                Target: &gt;90.0%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SKU Performance Table */}
+      <SKUPerformanceTable skus={skus} />
     </div>
   );
 }

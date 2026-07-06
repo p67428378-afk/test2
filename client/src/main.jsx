@@ -6,33 +6,46 @@ import "./index.css";
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("ErrorBoundary caught an error", error, errorInfo);
+    console.error("Uncaught error in React tree:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-          <h2 style={{ color: "#ba1a1a" }}>Something went wrong.</h2>
-          <p>Check the console for details or try refreshing the page.</p>
-          <pre
+        <div
+          style={{
+            padding: "2rem",
+            color: "#dae2fd",
+            backgroundColor: "#0b1326",
+            minHeight: "100vh",
+            fontFamily: "sans-serif",
+          }}
+        >
+          <h2>Something went wrong.</h2>
+          <p>Please check the console logs or refresh the page.</p>
+          <button
+            onClick={() => window.location.reload()}
             style={{
-              background: "#f9ecdc",
-              padding: "1rem",
+              padding: "0.5rem 1rem",
+              backgroundColor: "#ffd100",
+              color: "#000000",
+              border: "none",
               borderRadius: "4px",
-              overflowX: "auto",
+              cursor: "pointer",
+              fontWeight: "bold",
+              marginTop: "1rem",
             }}
           >
-            {this.state.error?.toString()}
-          </pre>
+            Reload Page
+          </button>
         </div>
       );
     }
@@ -40,14 +53,10 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const rootElement = document.getElementById("root");
-if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </React.StrictMode>,
-  );
-}
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>,
+);
