@@ -85,11 +85,11 @@ export default function KPIGrid({ data }) {
             key={idx}
             className="bg-[#1E293B] border border-slate-800 rounded-xl p-6 shadow-lg hover:border-slate-700 transition-all"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="flex items-center justify-between gap-4 mb-4 min-w-0">
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider truncate">
                 {card.title}
               </h3>
-              <Icon className={`h-6 w-6 ${card.iconColor}`} />
+              <Icon className={`h-6 w-6 flex-shrink-0 ${card.iconColor}`} />
             </div>
             <div className="space-y-3">
               {card.metrics.map((metric, mIdx) => (
