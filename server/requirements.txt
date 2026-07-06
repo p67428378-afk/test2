@@ -1,6 +1,9 @@
 fastapi
-uvicorn
-sqlalchemy
+httpx
+passlib
 pydantic
 pydantic-settings
+pyjwt
 pytest
+sqlalchemy
+uvicorn
