@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.bg-surface-card {
+  background-color: #1e293b;
+}
+
+.border-subtle {
+  border-color: #334155;
+}
+
+.text-semantic-success {
+  color: #10b981;
+}
+
+.text-semantic-danger {
+  color: #ef4444;
+}
+
+.text-semantic-warning {
+  color: #f59e0b;
+}
+
+.bg-semantic-success-light {
+  background-color: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+}
+
+.bg-semantic-danger-light {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+}
+
+.bg-semantic-warning-light {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+}
+
+.table-row-hover:hover {
+  background-color: #334155;
+}
