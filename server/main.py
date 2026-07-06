@@ -2,9 +2,15 @@ from fastapi import FastAPI
 from server.api.v1.endpoints import password_reset
 from server.routes import dashboard, analytics, service_requests
 from server.database import Base, engine
+
 # Import all models so Base.metadata is fully populated before create_all
 from server.models import (  # noqa: F401
-    User, EnergySource, RealtimeMetric, HistoricalMetric, Alert, ServiceRequest
+    User,
+    EnergySource,
+    RealtimeMetric,
+    HistoricalMetric,
+    Alert,
+    ServiceRequest,
 )
 
 Base.metadata.create_all(bind=engine)

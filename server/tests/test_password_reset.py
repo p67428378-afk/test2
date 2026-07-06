@@ -2,6 +2,7 @@
 test_password_reset.py — Tests for the password reset endpoints.
 Uses the shared StaticPool in-memory engine from conftest.py.
 """
+
 from fastapi.testclient import TestClient
 from server.main import app
 

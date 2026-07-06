@@ -2,6 +2,7 @@
 test_service_requests.py — Tests for the service requests CRUD endpoints.
 Uses the shared StaticPool in-memory engine from conftest.py.
 """
+
 from fastapi.testclient import TestClient
 from server.main import app
 from server.models import EnergySource, Alert, ServiceRequest

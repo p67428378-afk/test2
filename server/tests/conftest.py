@@ -4,6 +4,7 @@ conftest.py — shared pytest fixtures for the electricity monitoring platform.
 Uses a single in-memory SQLite engine with StaticPool so all connections
 (fixture setup and test requests) share the exact same in-memory database.
 """
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -14,7 +15,12 @@ from server.main import app  # noqa: F401 — ensures all models are registered 
 
 # Import all models so Base.metadata knows every table
 from server.models import (  # noqa: F401
-    User, EnergySource, RealtimeMetric, HistoricalMetric, Alert, ServiceRequest,
+    User,
+    EnergySource,
+    RealtimeMetric,
+    HistoricalMetric,
+    Alert,
+    ServiceRequest,
 )
 
 # Shared in-memory engine — StaticPool ensures every call to connect()

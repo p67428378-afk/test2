@@ -2,6 +2,7 @@
 test_analytics.py — Tests for the historical analytics endpoint.
 Uses the shared StaticPool in-memory engine from conftest.py.
 """
+
 from datetime import datetime
 from fastapi.testclient import TestClient
 from server.main import app
