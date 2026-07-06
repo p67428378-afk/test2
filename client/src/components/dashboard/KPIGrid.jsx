@@ -87,7 +87,7 @@ export default function KPIGrid({ data }) {
           >
             <div className="flex items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-800/30">
               <div className="min-w-0 flex-1">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider truncate">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   {card.title}
                 </h3>
               </div>
