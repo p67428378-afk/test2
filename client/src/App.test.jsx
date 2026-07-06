@@ -6,7 +6,7 @@ import App from "./App";
 describe("App Smoke Test", () => {
   it("renders sidebar and header", () => {
     render(<App />);
-    expect(screen.getByText("VoltMonitor")).toBeInTheDocument();
-    expect(screen.getByText("Alex Rivera")).toBeInTheDocument();
+    expect(screen.getAllByText("VoltMonitor")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Alex Rivera")[0]).toBeInTheDocument();
   });
 });
