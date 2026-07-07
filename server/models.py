@@ -56,6 +56,37 @@ class Account(Base):
     transactions = relationship("PendingTransaction", back_populates="account")
 
 
+class Card(Base):
+    __tablename__ = "cards"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), nullable=False)
+    card_number_last4 = Column(String(4), nullable=False)
+    status = Column(String(20), nullable=False, default="ACTIVE")
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    transactions = relationship("Transaction", back_populates="card")
+
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    card_id = Column(String(36), ForeignKey("cards.id"), nullable=False)
+    merchant_name = Column(String(255), nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
+    status = Column(String(20), nullable=False, default="PENDING")
+    secure_token = Column(String(100), nullable=True, unique=True)
+    expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    card = relationship("Card", back_populates="transactions")
+
+
 class PendingTransaction(Base):
     __tablename__ = "pending_transactions"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

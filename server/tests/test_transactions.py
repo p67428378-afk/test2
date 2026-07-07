@@ -7,7 +7,7 @@ import uuid
 
 from server.database import Base, get_db
 from server.main import app
-from server.models import User, Account, PendingTransaction
+from server.models import User, Account, PendingTransaction, Card
 from server.services.token_service import TokenService
 
 # Setup SQLite in-memory database for testing
@@ -122,7 +122,7 @@ def test_verify_transaction_expired(client, db):
     db.commit()
 
     response = client.get(f"/api/v1/transactions/{txn_id}/verify?token={token}")
-    assert response.status_code in [403, 400]  # Expired token or expired transaction
+    assert response.status_code == 410
 
 
 def test_perform_transaction_action_approve(client, db):
@@ -159,15 +159,79 @@ def test_perform_transaction_action_approve(client, db):
     # Approve transaction
     response = client.post(
         f"/api/v1/transactions/{txn_id}/action",
-        json={"action": "approve", "token": token},
+        json={"action": "APPROVE", "token": token},
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "approved"
+    assert data["status"] == "APPROVED"
 
     # Try to reuse the same token (should fail as single-use)
     response_retry = client.post(
         f"/api/v1/transactions/{txn_id}/action",
-        json={"action": "approve", "token": token},
+        json={"action": "APPROVE", "token": token},
     )
     assert response_retry.status_code == 400
+
+
+def test_perform_transaction_action_block(client, db):
+    user = User(
+        login_id="premier_user_4",
+        mobile_number="+15550202",
+        hashed_password="hashed_password_here",
+        security_question="What is your pet's name?",
+        security_answer_hash="hashed_answer",
+    )
+    db.add(user)
+    db.commit()
+
+    account = Account(user_id=user.id, account_type="Premier Checking", balance=5000.00)
+    db.add(account)
+    db.commit()
+
+    card = Card(
+        id=str(uuid.uuid4()),
+        user_id=str(user.id),
+        card_number_last4="4321",
+        status="ACTIVE",
+    )
+    db.add(card)
+    db.commit()
+
+    jti = str(uuid.uuid4())
+    txn_id = uuid.uuid4()
+    token = TokenService.generate_token(txn_id, jti, expires_in_minutes=10)
+
+    transaction = PendingTransaction(
+        id=txn_id,
+        account_id=account.id,
+        merchant_name="Best Buy Store #1402",
+        amount=2450.00,
+        status="pending",
+        token_jti=jti,
+        expires_at=datetime.utcnow() + timedelta(minutes=10),
+    )
+    db.add(transaction)
+    db.commit()
+
+    # Block transaction
+    response = client.post(
+        f"/api/v1/transactions/{txn_id}/action",
+        json={"action": "BLOCK", "token": token},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "BLOCKED"
+    assert data["card_status"] == "KILLED"
+    assert data["wallet_token"] is not None
+
+    # Verify card status in DB
+    db.refresh(card)
+    assert card.status == "KILLED"
+
+    # Verify a new card is reissued
+    new_card = (
+        db.query(Card)
+        .filter(Card.user_id == str(user.id), Card.status == "REISSUED")
+        .first()
+    )
+    assert new_card is not None

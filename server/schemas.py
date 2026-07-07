@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from uuid import UUID
+from typing import Optional
 
 
 class PasswordResetInitiateRequest(BaseModel):
@@ -63,6 +64,10 @@ class TransactionActionResponse(BaseModel):
     id: UUID
     status: str
     updated_at: datetime
+    card_status: Optional[str] = None
+    message: Optional[str] = None
+    transaction_id: Optional[UUID] = None
+    wallet_token: Optional[str] = None
 
     class Config:
         from_attributes = True
