@@ -112,11 +112,12 @@ describe("TransactionApprovalPage", () => {
     });
   });
 
-  it("handles block action successfully", async () => {
+  it("handles block action and shows instant digital card provisioning flow", async () => {
     vi.mocked(api.getTransactionDetails).mockResolvedValue(mockTransaction);
     vi.mocked(api.submitTransactionAction).mockResolvedValue({
       id: mockTransaction.id,
       status: "blocked",
+      wallet_token: "mock_wallet_token_123",
     });
 
     render(
@@ -130,7 +131,6 @@ describe("TransactionApprovalPage", () => {
             path="/transactions/:id/verify"
             element={<TransactionApprovalPage />}
           />
-          <Route path="/success" element={<div>Success Page</div>} />
         </Routes>
       </MemoryRouter>,
     );
@@ -151,5 +151,30 @@ describe("TransactionApprovalPage", () => {
         "valid_token",
       );
     });
+
+    // Verify that the physical card killed screen is shown instead of redirecting
+    await waitFor(() => {
+      expect(
+        screen.getByText("Physical Card Plastic Killed"),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Add to Apple Wallet/i)).toBeInTheDocument();
+      expect(screen.getByText(/Add to Google Wallet/i)).toBeInTheDocument();
+    });
+
+    // Click Add to Apple Wallet
+    const appleWalletBtn = screen.getByRole("button", {
+      name: /Add to Apple Wallet/i,
+    });
+    fireEvent.click(appleWalletBtn);
+
+    // Verify success message after simulation
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText(/Successfully added to your Wallet!/i),
+        ).toBeInTheDocument();
+      },
+      { timeout: 2000 },
+    );
   });
 });
