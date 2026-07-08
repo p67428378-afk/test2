@@ -306,13 +306,54 @@
         }
       }
     },
+    "/api/v1/roundups/calculate": {
+      "post": {
+        "tags": [
+          "roundups"
+        ],
+        "summary": "Calculate Roundup",
+        "operationId": "calculate_roundup_api_v1_roundups_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoundupCalculationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoundupCalculationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/roundups/trigger-daily-job": {
       "post": {
         "tags": [
           "roundups"
         ],
         "summary": "Trigger Daily Job",
-        "description": "Daily scheduled job trigger.\nSums up all 'Pending' round-up amounts from a 24-hour period for enabled users\nand executes a single investment transaction per user.",
+        "description": "Daily scheduled job trigger.\nSums up all 'Pending' round-up amounts from a 24-hour period for enabled users\nand executes a single investment transaction per user.\nAlso updates milestone achievements.",
         "operationId": "trigger_daily_job_api_v1_roundups_trigger_daily_job_post",
         "responses": {
           "200": {
@@ -321,6 +362,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DailyJobTriggerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/milestones": {
+      "get": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "Get Milestones",
+        "operationId": "get_milestones_api_v1_milestones_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilestoneProgressResponse"
                 }
               }
             }
@@ -382,6 +444,68 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "MilestoneItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "target_amount": {
+            "type": "number",
+            "title": "Target Amount"
+          },
+          "reward_text": {
+            "type": "string",
+            "title": "Reward Text"
+          },
+          "is_achieved": {
+            "type": "boolean",
+            "title": "Is Achieved"
+          },
+          "achieved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Achieved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "target_amount",
+          "reward_text",
+          "is_achieved"
+        ],
+        "title": "MilestoneItem"
+      },
+      "MilestoneProgressResponse": {
+        "properties": {
+          "total_invested": {
+            "type": "number",
+            "title": "Total Invested"
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/MilestoneItem"
+            },
+            "type": "array",
+            "title": "Milestones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_invested",
+          "milestones"
+        ],
+        "title": "MilestoneProgressResponse"
       },
       "OTPVerifyRequest": {
         "properties": {
@@ -450,11 +574,66 @@
         ],
         "title": "PasswordResetInitiateResponse"
       },
+      "RoundupCalculationRequest": {
+        "properties": {
+          "transaction_amount": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Transaction Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transaction_amount"
+        ],
+        "title": "RoundupCalculationRequest"
+      },
+      "RoundupCalculationResponse": {
+        "properties": {
+          "transaction_amount": {
+            "type": "number",
+            "title": "Transaction Amount"
+          },
+          "raw_roundup": {
+            "type": "number",
+            "title": "Raw Roundup"
+          },
+          "applied_multiplier": {
+            "type": "integer",
+            "title": "Applied Multiplier"
+          },
+          "is_whole_dollar_catch_all_applied": {
+            "type": "boolean",
+            "title": "Is Whole Dollar Catch All Applied"
+          },
+          "final_roundup_amount": {
+            "type": "number",
+            "title": "Final Roundup Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transaction_amount",
+          "raw_roundup",
+          "applied_multiplier",
+          "is_whole_dollar_catch_all_applied",
+          "final_roundup_amount"
+        ],
+        "title": "RoundupCalculationResponse"
+      },
       "RoundupSettingsResponse": {
         "properties": {
           "is_roundup_enabled": {
             "type": "boolean",
             "title": "Is Roundup Enabled"
+          },
+          "roundup_multiplier": {
+            "type": "integer",
+            "title": "Roundup Multiplier"
+          },
+          "is_whole_dollar_catch_all_enabled": {
+            "type": "boolean",
+            "title": "Is Whole Dollar Catch All Enabled"
           },
           "linked_account_id": {
             "anyOf": [
@@ -482,6 +661,8 @@
         "type": "object",
         "required": [
           "is_roundup_enabled",
+          "roundup_multiplier",
+          "is_whole_dollar_catch_all_enabled",
           "created_at",
           "updated_at"
         ],
@@ -492,6 +673,17 @@
           "is_roundup_enabled": {
             "type": "boolean",
             "title": "Is Roundup Enabled"
+          },
+          "roundup_multiplier": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Roundup Multiplier",
+            "default": 1
+          },
+          "is_whole_dollar_catch_all_enabled": {
+            "type": "boolean",
+            "title": "Is Whole Dollar Catch All Enabled",
+            "default": false
           }
         },
         "type": "object",

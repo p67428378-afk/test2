@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 from datetime import datetime, date as dt_date
 from uuid import UUID
@@ -55,6 +55,8 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: UUID
     is_roundup_enabled: bool
+    roundup_multiplier: int
+    is_whole_dollar_catch_all_enabled: bool
     created_at: datetime
     updated_at: datetime
 
@@ -65,6 +67,8 @@ class UserResponse(UserBase):
 # Roundup Settings Schemas
 class RoundupSettingsResponse(BaseModel):
     is_roundup_enabled: bool
+    roundup_multiplier: int
+    is_whole_dollar_catch_all_enabled: bool
     linked_account_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
@@ -75,6 +79,8 @@ class RoundupSettingsResponse(BaseModel):
 
 class RoundupSettingsUpdate(BaseModel):
     is_roundup_enabled: bool
+    roundup_multiplier: int = Field(default=1, ge=1)
+    is_whole_dollar_catch_all_enabled: bool = False
 
 
 # Roundup Summary Schema
@@ -107,3 +113,33 @@ class DailyJobTriggerResponse(BaseModel):
     status: str
     processed_users_count: int
     total_invested_amount: float
+
+
+# Roundup Calculation Schemas
+class RoundupCalculationRequest(BaseModel):
+    transaction_amount: float = Field(..., gt=0.0)
+
+
+class RoundupCalculationResponse(BaseModel):
+    transaction_amount: float
+    raw_roundup: float
+    applied_multiplier: int
+    is_whole_dollar_catch_all_applied: bool
+    final_roundup_amount: float
+
+
+# Milestone Schemas
+class MilestoneItem(BaseModel):
+    id: UUID
+    target_amount: float
+    reward_text: str
+    is_achieved: bool
+    achieved_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class MilestoneProgressResponse(BaseModel):
+    total_invested: float
+    milestones: List[MilestoneItem]

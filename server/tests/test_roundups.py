@@ -222,3 +222,99 @@ def test_trigger_daily_job(db):
         assert inv is not None
         assert inv.aggregated_amount == Decimal("1.55")
         assert inv.status == "Invested"
+
+
+def test_calculate_roundup(db):
+    user = models.User(
+        email="test@example.com",
+        is_roundup_enabled=True,
+        roundup_multiplier=2,
+        is_whole_dollar_catch_all_enabled=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    with TestClient(app) as client:
+        # Test normal fractional amount: $4.25 -> raw $0.75 -> x2 multiplier -> $1.50
+        response = client.post(
+            "/api/v1/roundups/calculate", json={"transaction_amount": 4.25}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["raw_roundup"] == 0.75
+        assert data["applied_multiplier"] == 2
+        assert data["is_whole_dollar_catch_all_applied"] is False
+        assert data["final_roundup_amount"] == 1.50
+
+        # Test whole dollar amount with catch-all enabled: $5.00 -> raw $0.00 -> catch-all $1.00 -> x2 multiplier -> $2.00
+        response = client.post(
+            "/api/v1/roundups/calculate", json={"transaction_amount": 5.00}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["raw_roundup"] == 0.0
+        assert data["applied_multiplier"] == 2
+        assert data["is_whole_dollar_catch_all_applied"] is True
+        assert data["final_roundup_amount"] == 2.00
+
+
+def test_milestones(db):
+    user = models.User(email="test@example.com", is_roundup_enabled=True)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    linked_acc = models.LinkedAccount(
+        user_id=user.id,
+        plaid_access_token="mock_plaid_token_123",
+        account_name="Primary Debit Card",
+    )
+    db.add(linked_acc)
+    db.commit()
+
+    # Seed transactions to reach $50.00
+    tx = models.Transaction(
+        user_id=user.id,
+        linked_account_id=linked_acc.id,
+        plaid_transaction_id="tx_1",
+        merchant_name="Starbucks Coffee",
+        amount=Decimal("4.00"),
+        roundup_amount=Decimal("50.00"),
+        transaction_date=date.today(),
+        status="Pending",
+    )
+    db.add(tx)
+    db.commit()
+
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    with TestClient(app) as client:
+        # Trigger daily job to process pending transactions and update milestones
+        response = client.post("/api/v1/roundups/trigger-daily-job")
+        assert response.status_code == 200
+
+        # Fetch milestones
+        response = client.get("/api/v1/milestones")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_invested"] == 50.00
+
+        # Find the $50 milestone
+        m50 = next(m for m in data["milestones"] if m["target_amount"] == 50.00)
+        assert m50["is_achieved"] is True
+        assert "10 free coffees" in m50["reward_text"]

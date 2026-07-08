@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from server.routers import users, roundups
-from server.api.v1.endpoints import password_reset
+from server.api.v1.endpoints import password_reset, users, roundups, milestones
 from server.database import Base, engine
 import os
 
@@ -26,6 +25,7 @@ app.add_middleware(
 app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(roundups.router, prefix="/api/v1")
+app.include_router(milestones.router, prefix="/api/v1")
 
 
 @app.get("/")

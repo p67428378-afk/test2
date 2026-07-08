@@ -1,5 +1,14 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Numeric, Date
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Numeric,
+    Date,
+    Integer,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -7,7 +16,7 @@ from server.database import Base
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "User"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # Original fields
     login_id = Column(String(255), unique=True, nullable=True)
@@ -19,6 +28,8 @@ class User(Base):
     # New fields
     email = Column(String(255), unique=True, nullable=False)
     is_roundup_enabled = Column(Boolean, default=False, nullable=False)
+    roundup_multiplier = Column(Integer, default=1, nullable=False)
+    is_whole_dollar_catch_all_enabled = Column(Boolean, default=False, nullable=False)
 
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at = Column(
@@ -41,12 +52,15 @@ class User(Base):
     roundup_investments = relationship(
         "RoundupInvestment", back_populates="user", cascade="all, delete-orphan"
     )
+    milestones = relationship(
+        "UserMilestone", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class OTP(Base):
     __tablename__ = "otps"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("User.id"), nullable=False)
     otp_code_hash = Column(String(255), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     is_used = Column(Boolean, default=False)
@@ -58,7 +72,7 @@ class OTP(Base):
 class PasswordHistory(Base):
     __tablename__ = "password_history"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("User.id"), nullable=False)
     hashed_password = Column(String(255), nullable=False)
     changed_at = Column(DateTime, default=func.now())
 
@@ -68,7 +82,7 @@ class PasswordHistory(Base):
 class LinkedAccount(Base):
     __tablename__ = "linked_accounts"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("User.id"), nullable=False)
     plaid_access_token = Column(String(255), nullable=False)
     account_name = Column(String(100), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
@@ -82,7 +96,7 @@ class LinkedAccount(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("User.id"), nullable=False)
     linked_account_id = Column(
         UUID(as_uuid=True), ForeignKey("linked_accounts.id"), nullable=False
     )
@@ -103,7 +117,7 @@ class Transaction(Base):
 class RoundupInvestment(Base):
     __tablename__ = "roundup_investments"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("User.id"), nullable=False)
     aggregated_amount = Column(Numeric(10, 2), nullable=False)
     investment_date = Column(Date, nullable=False)
     status = Column(
@@ -112,3 +126,15 @@ class RoundupInvestment(Base):
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
     user = relationship("User", back_populates="roundup_investments")
+
+
+class UserMilestone(Base):
+    __tablename__ = "UserMilestone"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("User.id"), nullable=False)
+    target_amount = Column(Numeric(10, 2), nullable=False)
+    reward_text = Column(String(255), nullable=False)
+    is_achieved = Column(Boolean, default=False, nullable=False)
+    achieved_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = relationship("User", back_populates="milestones")

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from server import models
+import uuid
 
 
 def get_user_by_login_id(db: Session, login_id: str):
@@ -48,3 +49,50 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+
+def get_user_milestones(db: Session, user_id):
+    # user_id can be str or UUID. Let's convert to UUID if it's a string.
+    if isinstance(user_id, str):
+        user_id = uuid.UUID(user_id)
+    return (
+        db.query(models.UserMilestone)
+        .filter(models.UserMilestone.user_id == user_id)
+        .all()
+    )
+
+
+def create_default_milestones(db: Session, user_id):
+    if isinstance(user_id, str):
+        user_id = uuid.UUID(user_id)
+    milestones = [
+        {
+            "target_amount": 10.00,
+            "reward_text": "You've invested $10 entirely from spare change! That's equivalent to 2 free coffees working for your future.",
+        },
+        {
+            "target_amount": 25.00,
+            "reward_text": "You've invested $25 entirely from spare change! That's equivalent to 5 free coffees working for your future.",
+        },
+        {
+            "target_amount": 50.00,
+            "reward_text": "You've invested $50 entirely from spare change! That's equivalent to 10 free coffees working for your future.",
+        },
+        {
+            "target_amount": 100.00,
+            "reward_text": "You've invested $100 entirely from spare change! That's equivalent to 20 free coffees working for your future.",
+        },
+    ]
+    db_milestones = []
+    for m in milestones:
+        db_m = models.UserMilestone(
+            user_id=user_id,
+            target_amount=m["target_amount"],
+            reward_text=m["reward_text"],
+            is_achieved=False,
+            achieved_at=None,
+        )
+        db.add(db_m)
+        db_milestones.append(db_m)
+    db.commit()
+    return db_milestones
