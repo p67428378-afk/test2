@@ -23,7 +23,7 @@ export default function TransactionTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-surface-container-highest/50 border-b border-outline-variant">
+            <tr className="bg-surface-container-highest/50 border-b border-outline-variant">
               <th className="py-3 px-5 font-label-sm text-label-sm text-on-surface-variant font-semibold w-32">
                 Date
               </th>

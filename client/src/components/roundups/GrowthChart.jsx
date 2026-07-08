@@ -32,7 +32,7 @@ export default function GrowthChart() {
 
       {/* Donut Chart Placeholder (4 col) */}
       <div className="lg:col-span-4 bg-surface-container-low border border-outline-variant rounded-xl p-5 flex flex-col h-[320px]">
-        <h2 class="font-headline-md text-headline-md text-on-surface text-lg mb-6">
+        <h2 className="font-headline-md text-headline-md text-on-surface text-lg mb-6">
           Asset Allocation
         </h2>
         <div className="flex-1 flex flex-col items-center justify-center relative">

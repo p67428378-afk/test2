@@ -28,9 +28,9 @@ export default function DashboardPage() {
         getRoundupSummary(),
         getTransactions(skip, limit),
       ]);
-      setSummary(summaryData);
-      setTransactions(txData.items);
-      setTotalTransactions(txData.total);
+      setSummary(summaryData || null);
+      setTransactions(txData?.items || []);
+      setTotalTransactions(txData?.total || 0);
     } catch (err) {
       console.error(err);
       setError("Could not load round-up data.");
@@ -48,8 +48,8 @@ export default function DashboardPage() {
       setTriggering(true);
       const result = await triggerDailyJob();
       if (
-        result.processed_users_count > 0 ||
-        result.total_invested_amount > 0
+        result &&
+        (result.processed_users_count > 0 || result.total_invested_amount > 0)
       ) {
         setNotification(
           `Today's round-ups ($${result.total_invested_amount.toFixed(2)}) have been invested.`,
