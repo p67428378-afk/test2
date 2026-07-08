@@ -6,14 +6,12 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState("dashboard");
 
   return (
-    <div className="bg-[#0b1326] text-[#dae2fd] font-body-md antialiased min-h-screen flex w-full">
+    <div className="bg-[#0b1326] text-[#dae2fd] text-base antialiased min-h-screen flex w-full">
       {/* SideNavBar */}
       <aside className="fixed left-0 top-0 h-screen w-[260px] bg-surface-container border-r border-outline-variant flex flex-col p-6 gap-y-4 z-50">
         <div className="mb-8">
-          <h1 className="font-headline-md text-headline-md font-bold text-primary">
-            CapitalFlow
-          </h1>
-          <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mt-1">
+          <h1 className="text-2xl font-bold text-primary">CapitalFlow</h1>
+          <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">
             Micro-investing
           </p>
         </div>
@@ -26,7 +24,7 @@ export default function App() {
                 : "text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface"
             }`}
           >
-            <span className="font-label-md text-label-md">Dashboard</span>
+            <span className="text-sm">Dashboard</span>
           </button>
           <button
             onClick={() => setCurrentTab("settings")}
@@ -36,7 +34,7 @@ export default function App() {
                 : "text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface"
             }`}
           >
-            <span className="font-label-md text-label-md">Settings</span>
+            <span className="text-sm">Settings</span>
           </button>
         </nav>
         <div className="mt-auto pt-6 border-t border-outline-variant flex items-center gap-3">
@@ -44,10 +42,8 @@ export default function App() {
             AM
           </div>
           <div className="overflow-hidden">
-            <p className="font-label-md text-label-md text-on-surface truncate">
-              Alex Mercer
-            </p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
+            <p className="text-sm text-on-surface truncate">Alex Mercer</p>
+            <p className="text-xs text-on-surface-variant truncate">
               Upgrade to Pro
             </p>
           </div>
@@ -61,7 +57,7 @@ export default function App() {
           <div className="flex items-center gap-4 flex-1">
             <div className="relative w-64">
               <input
-                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-1.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-1.5 px-4 text-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 placeholder="Search..."
                 type="text"
               />

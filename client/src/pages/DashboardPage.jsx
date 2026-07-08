@@ -80,7 +80,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="pt-24 px-margin-desktop pb-margin-desktop w-full max-w-7xl mx-auto flex flex-col gap-lg">
+    <div className="pt-24 px-6 pb-8 w-full max-w-7xl mx-auto flex flex-col gap-6">
       {/* Error Alert */}
       {error && (
         <div
@@ -88,7 +88,7 @@ export default function DashboardPage() {
           data-testid="error-banner"
         >
           <span className="text-xl">⚠️</span>
-          <p className="font-body-md text-body-md">{error}</p>
+          <p className="text-base">{error}</p>
           <button
             onClick={loadData}
             className="ml-auto bg-error/10 hover:bg-error/20 px-3 py-1 rounded text-xs font-semibold transition-colors"
@@ -105,9 +105,7 @@ export default function DashboardPage() {
           data-testid="notification-banner"
         >
           <span className="text-xl">🎉</span>
-          <p className="font-body-md text-body-md text-on-surface">
-            {notification}
-          </p>
+          <p className="text-base text-on-surface">{notification}</p>
           <button
             onClick={() => setNotification(null)}
             className="ml-auto text-on-surface-variant hover:text-on-surface transition-colors"
@@ -120,7 +118,7 @@ export default function DashboardPage() {
       {/* Header Actions */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface">
+          <h1 className="text-3xl font-bold text-on-surface">
             Portfolio Dashboard
           </h1>
           <p className="text-on-surface-variant text-sm">
@@ -140,8 +138,8 @@ export default function DashboardPage() {
       <KPIGrid summary={summary} />
 
       {/* Charts & Calculator */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-md">
-        <div className="xl:col-span-8 flex flex-col gap-md">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div className="xl:col-span-8 flex flex-col gap-6">
           <GrowthChart />
         </div>
         <div className="xl:col-span-4">

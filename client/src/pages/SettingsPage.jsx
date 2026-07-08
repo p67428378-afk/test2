@@ -47,18 +47,16 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="pt-24 px-margin-desktop pb-margin-desktop w-full max-w-3xl mx-auto">
+      <div className="pt-24 px-6 pb-8 w-full max-w-3xl mx-auto">
         <p className="text-on-surface-variant">Loading settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="pt-24 px-margin-desktop pb-margin-desktop w-full max-w-3xl mx-auto flex flex-col gap-lg">
+    <div className="pt-24 px-6 pb-8 w-full max-w-3xl mx-auto flex flex-col gap-6">
       <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">
-          Settings
-        </h1>
+        <h1 className="text-3xl font-bold text-on-surface">Settings</h1>
         <p className="text-on-surface-variant text-sm">
           Manage your micro-investing preferences and linked accounts.
         </p>
@@ -77,7 +75,7 @@ export default function SettingsPage() {
       )}
 
       <div className="bg-surface-container-low border border-outline-variant rounded-xl p-6 flex flex-col gap-6">
-        <h2 className="font-headline-md text-headline-md text-on-surface text-lg border-b border-outline-variant/50 pb-3">
+        <h2 className="text-lg font-bold text-on-surface border-b border-outline-variant/50 pb-3">
           Round-Up Investing
         </h2>
 
@@ -88,7 +86,7 @@ export default function SettingsPage() {
         />
 
         <div className="bg-surface-container rounded-xl p-4 border border-outline-variant/50 space-y-2">
-          <h3 className="font-label-md text-label-md text-on-surface font-semibold">
+          <h3 className="text-sm text-on-surface font-semibold">
             Linked Debit Card
           </h3>
           <div className="flex justify-between items-center text-sm">

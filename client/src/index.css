@@ -5,3 +5,61 @@
 body {
   font-family: "Inter", sans-serif;
 }
+
+/* Custom Utility Classes to prevent layout/rendering issues */
+.font-body-md {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+.font-headline-md {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+.text-headline-md {
+  font-size: 1.5rem;
+}
+.font-label-sm {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.text-label-sm {
+  font-size: 0.75rem;
+}
+.font-label-md {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.text-label-md {
+  font-size: 0.875rem;
+}
+.font-headline-lg {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+.text-headline-lg {
+  font-size: 1.875rem;
+}
+.font-display-lg {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+.text-display-lg {
+  font-size: 2.25rem;
+}
+.font-mono-data {
+  font-family: monospace;
+}
+.text-mono-data {
+  font-family: monospace;
+}
+
+/* Custom Clip Paths for GrowthChart */
+.clip-path-chart {
+  clip-path: ellipse(100% 100% at 50% 100%);
+}
+.clip-path-donut-1 {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.clip-path-donut-2 {
+  clip-path: polygon(50% 50%, 100% 0, 100% 100%, 50% 100%);
+}
