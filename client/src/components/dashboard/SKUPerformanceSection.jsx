@@ -147,7 +147,7 @@ export default function SKUPerformanceSection({
           <thead className="bg-surface-container-low border-b border-outline-variant">
             <tr>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-container-high transition-colors"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-container-high transition-colors min-w-[180px]"
                 onClick={() => handleSort("sku_name")}
               >
                 <div className="flex items-center gap-1">
@@ -160,7 +160,7 @@ export default function SKUPerformanceSection({
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-container-high transition-colors"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-container-high transition-colors min-w-[120px]"
                 onClick={() => handleSort("upc")}
               >
                 <div className="flex items-center gap-1">
@@ -173,7 +173,7 @@ export default function SKUPerformanceSection({
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[120px]"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[130px]"
                 onClick={() => handleSort("weekly_sales")}
               >
                 <div className="inline-flex items-center justify-end gap-1 w-full">
@@ -186,7 +186,7 @@ export default function SKUPerformanceSection({
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[90px]"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[100px]"
                 onClick={() => handleSort("profit_margin")}
               >
                 <div className="inline-flex items-center justify-end gap-1 w-full">
@@ -199,7 +199,7 @@ export default function SKUPerformanceSection({
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[120px]"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-right cursor-pointer hover:bg-surface-container-high transition-colors min-w-[140px]"
                 onClick={() => handleSort("stock_level")}
               >
                 <div className="inline-flex items-center justify-end gap-1 w-full">
@@ -212,7 +212,7 @@ export default function SKUPerformanceSection({
                 </div>
               </th>
               <th
-                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-container-high transition-colors"
+                className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-container-high transition-colors min-w-[130px]"
                 onClick={() => handleSort("days_of_supply")}
               >
                 <div className="flex items-center gap-1">
@@ -224,7 +224,7 @@ export default function SKUPerformanceSection({
                   )}
                 </div>
               </th>
-              <th className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-center">
+              <th className="px-4 py-3 font-label-sm text-label-sm text-secondary uppercase tracking-wider text-center min-w-[100px]">
                 Status
               </th>
             </tr>

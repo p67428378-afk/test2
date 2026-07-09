@@ -66,32 +66,32 @@ export default function ScenarioSelectorSection({
             </div>
 
             {data && (
-              <div className="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div className="font-label-sm text-[10px] text-secondary uppercase">
+              <div className="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2">
+                <div className="flex flex-col items-center justify-between">
+                  <div className="font-label-sm text-[10px] text-secondary uppercase tracking-wider text-center">
                     Sales Impact
                   </div>
-                  <div className="font-label-md text-label-md text-on-surface font-bold">
+                  <div className="font-label-md text-label-md text-on-surface font-bold mt-1 text-center">
                     {salesImpact !== null
                       ? `${salesImpact >= 0 ? "+" : ""}${salesImpact.toFixed(1)}%`
                       : "0.0%"}
                   </div>
                 </div>
-                <div>
-                  <div className="font-label-sm text-[10px] text-secondary uppercase">
+                <div className="flex flex-col items-center justify-between">
+                  <div className="font-label-sm text-[10px] text-secondary uppercase tracking-wider text-center">
                     Private Brand
                   </div>
-                  <div className="font-label-md text-label-md text-on-surface font-bold">
+                  <div className="font-label-md text-label-md text-on-surface font-bold mt-1 text-center">
                     {privateBrand !== null
                       ? `${privateBrand.toFixed(1)}%`
                       : "0.0%"}
                   </div>
                 </div>
-                <div>
-                  <div className="font-label-sm text-[10px] text-secondary uppercase">
+                <div className="flex flex-col items-center justify-between">
+                  <div className="font-label-sm text-[10px] text-secondary uppercase tracking-wider text-center">
                     Shelf Cap.
                   </div>
-                  <div className="font-label-md text-label-md text-on-surface font-bold">
+                  <div className="font-label-md text-label-md text-on-surface font-bold mt-1 text-center">
                     {shelfCapacity !== null
                       ? `${shelfCapacity.toFixed(1)}%`
                       : "0.0%"}
