@@ -37,12 +37,12 @@ export default function KPIHeaderStrip({ kpis }) {
 
       {/* Card 2 */}
       <div className="bg-surface border border-outline-variant rounded-xl p-5 pb-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2 min-h-[140px]">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
           <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
             PRIVATE BRAND %
           </span>
           <span
-            className={`px-2 py-0.5 rounded font-label-sm text-label-sm ${kpis?.private_brand_pct >= 20 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
+            className={`px-2 py-0.5 rounded font-label-sm text-label-sm shrink-0 ml-auto ${kpis?.private_brand_pct >= 20 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
           >
             {kpis?.private_brand_pct >= 20 ? "PASS" : "FAIL"}
           </span>
@@ -57,12 +57,12 @@ export default function KPIHeaderStrip({ kpis }) {
 
       {/* Card 3 */}
       <div className="bg-surface border border-outline-variant rounded-xl p-5 pb-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2 min-h-[140px]">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
           <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
             IN-STOCK RATE
           </span>
           <span
-            className={`px-2 py-0.5 rounded font-label-sm text-label-sm ${kpis?.in_stock_rate >= 95 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
+            className={`px-2 py-0.5 rounded font-label-sm text-label-sm shrink-0 ml-auto ${kpis?.in_stock_rate >= 95 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
           >
             {kpis?.in_stock_rate >= 95 ? "PASS" : "FAIL"}
           </span>
@@ -77,12 +77,12 @@ export default function KPIHeaderStrip({ kpis }) {
 
       {/* Card 4 */}
       <div className="bg-surface border border-outline-variant rounded-xl p-5 pb-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2 min-h-[140px]">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
           <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
             SHELF CAPACITY
           </span>
           <span
-            className={`px-2 py-0.5 rounded font-label-sm text-label-sm ${kpis?.shelf_capacity_pct <= 95 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
+            className={`px-2 py-0.5 rounded font-label-sm text-label-sm shrink-0 ml-auto ${kpis?.shelf_capacity_pct <= 95 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
           >
             {kpis?.shelf_capacity_pct <= 95 ? "PASS" : "FAIL"}
           </span>

@@ -111,7 +111,7 @@ export default function SKUPerformanceSection({
               search
             </span>
             <input
-              className="w-full pl-9 pr-3 py-1.5 bg-surface border border-outline-variant rounded-lg font-body-sm text-body-sm focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition-shadow"
+              className="w-full pl-10 pr-3 py-1.5 bg-surface border border-outline-variant rounded-lg font-body-sm text-body-sm focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition-shadow"
               placeholder="Search SKUs or UPC..."
               type="text"
               value={search}

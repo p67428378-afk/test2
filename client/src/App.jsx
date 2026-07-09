@@ -183,7 +183,7 @@ export default function App() {
       <nav className="hidden md:flex fixed left-0 top-nav-height h-[calc(100vh-nav-height)] w-64 flex-col z-40 bg-surface-container-low border-r border-outline-variant pt-4">
         <div className="px-4 pb-4 border-b border-outline-variant mb-4">
           <div className="flex items-center gap-3">
-            <div className="bg-primary-container w-8 h-8 rounded flex items-center justify-center font-bold text-sm text-on-primary-container">
+            <div className="bg-primary-container w-8 h-8 rounded flex items-center justify-center font-bold text-sm text-on-primary-container shrink-0">
               DG
             </div>
             <div>

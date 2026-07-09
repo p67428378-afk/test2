@@ -49,14 +49,14 @@ export default function ScenarioSelectorSection({
                 : "border-outline-variant hover:bg-surface-container"
             }`}
           >
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-center">
               <div
                 className={`font-label-md text-label-md text-on-surface ${isSelected ? "font-bold" : ""}`}
               >
                 {sc.name}
               </div>
               {isSelected && (
-                <span className="material-symbols-outlined text-primary-container filled-icon text-sm">
+                <span className="material-symbols-outlined text-primary-container filled-icon text-sm leading-none">
                   check_circle
                 </span>
               )}

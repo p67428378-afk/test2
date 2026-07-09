@@ -74,9 +74,9 @@ export default function ApprovalReviewPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span
-              className={`material-symbols-outlined filled-icon text-sm ${guardrails?.private_brand_passed ? "text-tertiary" : "text-error"}`}
+              className={`material-symbols-outlined filled-icon text-sm shrink-0 ${guardrails?.private_brand_passed ? "text-tertiary" : "text-error"}`}
             >
               {guardrails?.private_brand_passed ? "check_circle" : "cancel"}
             </span>
@@ -92,9 +92,9 @@ export default function ApprovalReviewPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span
-              className={`material-symbols-outlined filled-icon text-sm ${guardrails?.shelf_capacity_passed ? "text-tertiary" : "text-error"}`}
+              className={`material-symbols-outlined filled-icon text-sm shrink-0 ${guardrails?.shelf_capacity_passed ? "text-tertiary" : "text-error"}`}
             >
               {guardrails?.shelf_capacity_passed ? "check_circle" : "cancel"}
             </span>
@@ -110,9 +110,9 @@ export default function ApprovalReviewPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span
-              className={`material-symbols-outlined filled-icon text-sm ${guardrails?.new_items_passed ? "text-tertiary" : "text-error"}`}
+              className={`material-symbols-outlined filled-icon text-sm shrink-0 ${guardrails?.new_items_passed ? "text-tertiary" : "text-error"}`}
             >
               {guardrails?.new_items_passed ? "check_circle" : "cancel"}
             </span>
@@ -129,9 +129,9 @@ export default function ApprovalReviewPanel({
 
         {/* New Guardrail Check: Aisle Layout Score */}
         <div className="flex items-center justify-between border-t border-outline-variant/50 pt-2 mt-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span
-              className={`material-symbols-outlined filled-icon text-sm ${guardrails?.aisle_layout_score_passed ? "text-tertiary" : "text-error"}`}
+              className={`material-symbols-outlined filled-icon text-sm shrink-0 ${guardrails?.aisle_layout_score_passed ? "text-tertiary" : "text-error"}`}
             >
               {guardrails?.aisle_layout_score_passed
                 ? "check_circle"
@@ -158,13 +158,13 @@ export default function ApprovalReviewPanel({
         <button
           onClick={onSubmit}
           disabled={!allGuardrailsPassed || isSubmitting}
-          className={`w-full max-w-xs font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-3 text-sm sm:text-base ${
+          className={`w-full font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-3 text-sm sm:text-base ${
             allGuardrailsPassed
               ? "bg-primary-container text-on-primary-fixed cursor-pointer"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span className="truncate">
+          <span className="whitespace-nowrap">
             {isSubmitting ? "Submitting..." : "Submit Assortment Changes"}
           </span>
           <span className="material-symbols-outlined shrink-0">send</span>
