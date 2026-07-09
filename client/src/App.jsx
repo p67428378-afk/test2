@@ -244,7 +244,8 @@ export default function App() {
             onClick={handleSubmit}
             disabled={
               isSubmitting ||
-              !currentScenarioData?.guardrails?.private_brand_passed
+              !currentScenarioData?.guardrails?.private_brand_passed ||
+              !currentScenarioData?.guardrails?.aisle_layout_score_passed
             }
             className="w-full bg-primary-container text-on-primary-container font-bold py-2 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >

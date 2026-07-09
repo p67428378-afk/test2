@@ -14,23 +14,22 @@ export const getKPIs = async () => {
   return response.data;
 };
 
+export const getSKUMappings = async () => {
+  try {
+    const response = await api.get("/api/v1/assortment/sku-mappings");
+    return response.data;
+  } catch (err) {
+    console.error("Error fetching SKU mappings:", err);
+    return [];
+  }
+};
+
 export const getScenario = async (scenarioName, params = {}) => {
   // The backend has /api/v1/assortment/scenario (POST) to apply a scenario and get recalculated SKU statuses.
-  // Let's fetch the recalculated SKUs for the scenario.
   const response = await api.post("/api/v1/assortment/scenario", {
     scenario: scenarioName,
   });
 
-  // Let's construct a mock/calculated scenario response that matches what the frontend expects:
-  // {
-  //   scenario_name: scenarioName,
-  //   projected_sales_impact_pct: float,
-  //   projected_private_brand_pct: float,
-  //   projected_shelf_capacity_pct: float,
-  //   action_counts: { grow, maintain, reduce, swap },
-  //   guardrails: { private_brand_passed, shelf_capacity_passed, new_items_passed },
-  //   skus: [...]
-  // }
   const skus = response.data;
 
   // Calculate action counts
@@ -61,10 +60,53 @@ export const getScenario = async (scenarioName, params = {}) => {
     projected_shelf_capacity_pct = 96.5; // Fails shelf capacity guardrail (>95%)
   }
 
+  // Calculate Aisle Layout Score
+  let aisleLayoutScore = 100.0;
+  let aisleLayoutScorePassed = true;
+
+  try {
+    const mappings = await getSKUMappings();
+    const mappingDict = {};
+    mappings.forEach((m) => {
+      mappingDict[m.private_sku_upc] = m.national_benchmark_upc;
+    });
+
+    // Map skus for quick lookup
+    const skuDict = {};
+    skus.forEach((s) => {
+      skuDict[s.upc] = s.status;
+    });
+
+    // Filter private brand SKUs (UPCs starting with '0122')
+    const privateSkus = skus.filter((s) => s.upc.startsWith("0122"));
+    let correctAdjacencyCount = 0;
+    const totalPrivateBrands = privateSkus.length;
+
+    privateSkus.forEach((p) => {
+      const nationalUpc = mappingDict[p.upc];
+      if (nationalUpc) {
+        const pAction = skuDict[p.upc];
+        const nAction = skuDict[nationalUpc];
+        if (pAction && nAction && pAction === nAction) {
+          correctAdjacencyCount++;
+        }
+      }
+    });
+
+    if (totalPrivateBrands > 0) {
+      aisleLayoutScore = (correctAdjacencyCount / totalPrivateBrands) * 100.0;
+    }
+    aisleLayoutScorePassed = aisleLayoutScore >= 90.0;
+  } catch (err) {
+    console.error("Error calculating Aisle Layout Score on frontend:", err);
+  }
+
   const guardrails = {
     private_brand_passed: projected_private_brand_pct > 20.0,
     shelf_capacity_passed: projected_shelf_capacity_pct < 95.0,
     new_items_passed: (grow / (skus.length || 1)) * 100.0 < 10.0,
+    aisle_layout_score_passed: aisleLayoutScorePassed,
+    aisle_layout_score: aisleLayoutScore,
   };
 
   return {

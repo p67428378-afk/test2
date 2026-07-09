@@ -22,12 +22,13 @@ export default function ApprovalReviewPanel({
       ? scenario_name.charAt(0).toUpperCase() + scenario_name.slice(1)
       : "Selected";
 
-  // Check if all guardrails passed
+  // Check if all guardrails passed (including the new Aisle Layout Score)
   const allGuardrailsPassed = guardrails
     ? !!(
         guardrails.private_brand_passed &&
         guardrails.shelf_capacity_passed &&
-        guardrails.new_items_passed
+        guardrails.new_items_passed &&
+        guardrails.aisle_layout_score_passed !== false // Default to true if undefined
       )
     : false;
 
@@ -125,6 +126,32 @@ export default function ApprovalReviewPanel({
             {guardrails?.new_items_passed ? "PASSED" : "FAILED"}
           </span>
         </div>
+
+        {/* New Guardrail Check: Aisle Layout Score */}
+        <div className="flex items-center justify-between border-t border-outline-variant/50 pt-2 mt-2">
+          <div className="flex items-center gap-2">
+            <span
+              className={`material-symbols-outlined filled-icon text-sm ${guardrails?.aisle_layout_score_passed ? "text-tertiary" : "text-error"}`}
+            >
+              {guardrails?.aisle_layout_score_passed
+                ? "check_circle"
+                : "cancel"}
+            </span>
+            <span className="font-body-sm text-body-sm text-on-surface">
+              Aisle Layout Score &gt; 90%
+              {guardrails?.aisle_layout_score !== undefined && (
+                <span className="text-secondary ml-1">
+                  ({guardrails.aisle_layout_score.toFixed(1)}%)
+                </span>
+              )}
+            </span>
+          </div>
+          <span
+            className={`font-label-sm text-label-sm px-1.5 py-0.5 rounded ${guardrails?.aisle_layout_score_passed ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
+          >
+            {guardrails?.aisle_layout_score_passed ? "PASSED" : "FAILED"}
+          </span>
+        </div>
       </div>
 
       <button
@@ -158,6 +185,8 @@ ApprovalReviewPanel.propTypes = {
       private_brand_passed: PropTypes.bool,
       shelf_capacity_passed: PropTypes.bool,
       new_items_passed: PropTypes.bool,
+      aisle_layout_score_passed: PropTypes.bool,
+      aisle_layout_score: PropTypes.number,
     }),
   }),
   onSubmit: PropTypes.func.isRequired,
