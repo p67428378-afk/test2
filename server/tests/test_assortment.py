@@ -81,6 +81,15 @@ def test_apply_scenario_invalid(client):
     assert response.status_code == 400
 
 
+def test_get_sku_mappings(client):
+    response = client.get("/api/v1/assortment/sku-mappings")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) > 0
+    assert "private_sku_upc" in data[0]
+    assert "national_benchmark_upc" in data[0]
+
+
 def test_submit_changes_success(client):
     payload = {
         "scenario_applied": "Balanced",

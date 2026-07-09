@@ -207,13 +207,31 @@ def apply_scenario(
         )
 
 
+@router.get(
+    "/assortment/sku-mappings",
+    response_model=List[schemas.PrivateNationalBrandMappingSchema],
+)
+def read_sku_mappings(db: Session = Depends(get_db)):
+    """
+    Retrieves the mapping of private brand SKUs to their national brand benchmarks.
+    """
+    try:
+        mappings = crud.get_sku_mappings(db)
+        return mappings
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection fails: {str(e)}",
+        )
+
+
 @router.post("/assortment/submit", response_model=schemas.AssortmentSubmitResponse)
 def submit_changes(
     req: schemas.AssortmentSubmitRequest,
     db: Session = Depends(get_db),
 ):
     """
-    Submits the final set of proposed changes for implementation.
+    Submits the final set of proposed changes for implementation, including Aisle Layout Score validation.
     """
     scenario_name = req.scenario_applied.lower()
     if scenario_name not in ["conservative", "balanced", "aggressive"]:
@@ -240,15 +258,80 @@ def submit_changes(
         new_items_pct = (grow_count / total_changes) * 100.0
         new_items_passed = new_items_pct < 10.0
 
+        # Calculate Aisle Layout Score
+        # Fetch all mappings
+        mappings = crud.get_sku_mappings(db)
+        mapping_dict = {m.private_sku_upc: m.national_benchmark_upc for m in mappings}
+
+        # Map changes for quick lookup
+        changes_dict = {c.upc: c.action for c in req.changes}
+
+        # Fetch all products to know which ones are private brand
+        products = crud.get_products_with_metrics(db)
+        private_products = [p for p in products if p.is_private_brand]
+
+        correct_adjacency_count = 0
+        total_private_brands = len(private_products)
+
+        for p in private_products:
+            # Adjacency is correct if:
+            # 1. The private brand SKU is mapped to a national benchmark SKU.
+            # 2. Both the private brand SKU and its national benchmark SKU have the SAME action/status in the scenario.
+            national_upc = mapping_dict.get(p.upc)
+            if national_upc:
+                # Get status/action in the scenario
+                # If it's in the changes list, use that action. Otherwise, calculate its default status under this scenario.
+                p_action = changes_dict.get(p.upc)
+                if not p_action:
+                    # Calculate default status
+                    metric = p.performance_metrics[0] if p.performance_metrics else None
+                    p_action = get_sku_status(
+                        scenario_name,
+                        p.is_private_brand,
+                        float(metric.weekly_sales) if metric else 0.0,
+                        float(metric.profit_margin) if metric else 0.0,
+                        int(metric.days_of_supply) if metric else 0,
+                    )
+
+                n_action = changes_dict.get(national_upc)
+                if not n_action:
+                    # Find national product
+                    n_prod = next(
+                        (prod for prod in products if prod.upc == national_upc), None
+                    )
+                    n_metric = (
+                        n_prod.performance_metrics[0]
+                        if n_prod and n_prod.performance_metrics
+                        else None
+                    )
+                    n_action = get_sku_status(
+                        scenario_name,
+                        n_prod.is_private_brand if n_prod else False,
+                        float(n_metric.weekly_sales) if n_metric else 0.0,
+                        float(n_metric.profit_margin) if n_metric else 0.0,
+                        int(n_metric.days_of_supply) if n_metric else 0,
+                    )
+
+                if p_action == n_action:
+                    correct_adjacency_count += 1
+
+        aisle_layout_score = (
+            (correct_adjacency_count / total_private_brands * 100.0)
+            if total_private_brands > 0
+            else 100.0
+        )
+        aisle_layout_score_passed = aisle_layout_score > 90.0
+
         # For testing purposes, let's bypass guardrails if scenario is Balanced or Conservative
         if scenario_name == "aggressive" and (
             not private_brand_passed
             or not shelf_capacity_passed
             or not new_items_passed
+            or not aisle_layout_score_passed
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Guardrail check fails. Cannot submit assortment changes.",
+                detail=f"Guardrail check fails. Aisle Layout Score is {aisle_layout_score:.1f}%, which is below the required 90% threshold.",
             )
 
         # Create scenario submission record

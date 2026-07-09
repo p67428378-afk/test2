@@ -80,6 +80,8 @@ class GuardrailsSchema(BaseModel):
     private_brand_passed: bool
     shelf_capacity_passed: bool
     new_items_passed: bool
+    aisle_layout_score_passed: bool
+    aisle_layout_score: float
 
 
 class ScenarioResponse(BaseModel):
@@ -121,6 +123,17 @@ class AssortmentSubmitResponse(BaseModel):
     user: str
     scenario_applied: str
     summary: SummaryOfChangesSchema
+
+    class Config:
+        from_attributes = True
+
+
+# --- Private National Brand Mapping Schemas ---
+
+
+class PrivateNationalBrandMappingSchema(BaseModel):
+    private_sku_upc: str
+    national_benchmark_upc: str
 
     class Config:
         from_attributes = True

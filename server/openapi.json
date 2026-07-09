@@ -307,13 +307,39 @@
         }
       }
     },
+    "/api/v1/assortment/sku-mappings": {
+      "get": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Read Sku Mappings",
+        "description": "Retrieves the mapping of private brand SKUs to their national brand benchmarks.",
+        "operationId": "read_sku_mappings_api_v1_assortment_sku_mappings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PrivateNationalBrandMappingSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Read Sku Mappings Api V1 Assortment Sku Mappings Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/assortment/submit": {
       "post": {
         "tags": [
           "assortment"
         ],
         "summary": "Submit Changes",
-        "description": "Submits the final set of proposed changes for implementation.",
+        "description": "Submits the final set of proposed changes for implementation, including Aisle Layout Score validation.",
         "operationId": "submit_changes_api_v1_assortment_submit_post",
         "requestBody": {
           "content": {
@@ -559,6 +585,24 @@
           "security_question"
         ],
         "title": "PasswordResetInitiateResponse"
+      },
+      "PrivateNationalBrandMappingSchema": {
+        "properties": {
+          "private_sku_upc": {
+            "type": "string",
+            "title": "Private Sku Upc"
+          },
+          "national_benchmark_upc": {
+            "type": "string",
+            "title": "National Benchmark Upc"
+          }
+        },
+        "type": "object",
+        "required": [
+          "private_sku_upc",
+          "national_benchmark_upc"
+        ],
+        "title": "PrivateNationalBrandMappingSchema"
       },
       "SKUPerformanceSchema": {
         "properties": {

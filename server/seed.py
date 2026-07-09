@@ -329,6 +329,51 @@ def seed_data(db: Session):
                 metric.days_of_supply = m_data["days_of_supply"]
                 db.commit()
 
+    # 3. Seed Private-National Brand Mappings
+    mappings = [
+        {
+            "private_sku_upc": "012200001234",  # Clover Valley Potato Chips 10oz
+            "national_benchmark_upc": "028400091561",  # Lay's Classic Potato Chips 8oz
+        },
+        {
+            "private_sku_upc": "012200005678",  # Clover Valley Cheese Crackers 12oz
+            "national_benchmark_upc": "024100122113",  # Cheez-It Original 12.4oz
+        },
+        {
+            "private_sku_upc": "012200004680",  # Clover Valley Pretzel Twists 16oz
+            "national_benchmark_upc": "071100004321",  # Generic Pretzel Sticks 16oz
+        },
+        {
+            "private_sku_upc": "012200005791",  # Clover Valley Roasted Peanuts 16oz
+            "national_benchmark_upc": "029000016112",  # Planters Peanuts Salted 16oz
+        },
+        {
+            "private_sku_upc": "012200006802",  # Clover Valley Microwave Popcorn 6ct
+            "national_benchmark_upc": "027000481115",  # Orville Redenbacher Popcorn 3ct
+        },
+        {
+            "private_sku_upc": "012200007913",  # Clover Valley Beef Jerky Original 3oz
+            "national_benchmark_upc": "017082871116",  # Jack Link's Beef Jerky Original 3.25oz
+        },
+    ]
+
+    for m in mappings:
+        existing_mapping = (
+            db.query(models.PrivateNationalBrandMapping)
+            .filter(
+                models.PrivateNationalBrandMapping.private_sku_upc
+                == m["private_sku_upc"]
+            )
+            .first()
+        )
+        if not existing_mapping:
+            db_mapping = models.PrivateNationalBrandMapping(
+                private_sku_upc=m["private_sku_upc"],
+                national_benchmark_upc=m["national_benchmark_upc"],
+            )
+            db.add(db_mapping)
+    db.commit()
+
 
 if __name__ == "__main__":
     models.Base.metadata.create_all(bind=engine)

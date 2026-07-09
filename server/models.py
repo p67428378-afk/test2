@@ -134,3 +134,16 @@ class ScenarioSubmission(Base):
     user_id = Column(String(255), nullable=False)
     scenario_applied = Column(String(50), nullable=False)
     changes_summary = Column(Text, nullable=False)  # JSON string or text representation
+
+
+class PrivateNationalBrandMapping(Base):
+    __tablename__ = "private_national_brand_mapping"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    private_sku_upc = Column(
+        String(50), ForeignKey("products.upc"), unique=True, nullable=False
+    )
+    national_benchmark_upc = Column(
+        String(50), ForeignKey("products.upc"), nullable=False
+    )
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
