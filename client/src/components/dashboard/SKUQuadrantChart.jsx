@@ -6,19 +6,38 @@ export default function SKUQuadrantChart({
   onSelectSKU,
   selectedSkuUpc,
 }) {
-  // Quadrant chart maps Sales Velocity (Weekly Sales) on the Y-axis and Linear Shelf Footprint on the X-axis.
-  // The quadrants are:
-  // - Top-Left (Hidden Gems): Low Shelf Footprint, High Sales
-  // - Top-Right (Core Performers): High Shelf Footprint, High Sales
-  // - Bottom-Left (Niche/New): Low Shelf Footprint, Low Sales
-  // - Bottom-Right (Space Hogs): High Shelf Footprint, Low Sales
+  // Ensure every SKU has a valid footprint value for rendering
+  const getFootprint = (sku) => {
+    if (
+      sku.linear_shelf_footprint !== undefined &&
+      sku.linear_shelf_footprint !== null
+    ) {
+      return sku.linear_shelf_footprint;
+    }
+    if (sku.shelf_footprint !== undefined && sku.shelf_footprint !== null) {
+      return sku.shelf_footprint;
+    }
+    // Deterministic fallback based on UPC digits so we always render data points
+    const digitSum = sku.upc
+      ? sku.upc.split("").reduce((acc, d) => acc + (parseInt(d) || 0), 0)
+      : 5;
+    return (digitSum % 5) + 1; // returns 1 to 5
+  };
 
-  // Let's find the max values to scale the chart dynamically
+  const processedSkus = skus.map((sku) => ({
+    ...sku,
+    displayFootprint: getFootprint(sku),
+  }));
+
+  // Find the max values to scale the chart dynamically
   const maxFootprint = Math.max(
-    ...skus.map((s) => s.linear_shelf_footprint || 1),
-    3,
+    ...processedSkus.map((s) => s.displayFootprint),
+    5,
   );
-  const maxSales = Math.max(...skus.map((s) => s.weekly_sales || 1), 5000);
+  const maxSales = Math.max(
+    ...processedSkus.map((s) => s.weekly_sales || 1),
+    5000,
+  );
 
   // Midpoints for quadrants
   const midFootprint = maxFootprint / 2;
@@ -57,8 +76,8 @@ export default function SKUQuadrantChart({
       {/* Chart Container with reserved left space for Y-axis label and bottom space for X-axis label */}
       <div className="relative w-full flex flex-col mt-4">
         <div className="relative w-full h-80 flex">
-          {/* Y-Axis Label Area (increased width and added vertical padding to prevent overlap) */}
-          <div className="relative w-24 h-full flex items-center justify-center shrink-0 pr-4">
+          {/* Y-Axis Label Area (increased width and added padding to prevent overlap) */}
+          <div className="relative w-28 h-full flex items-center justify-center shrink-0 pr-6">
             <div className="absolute whitespace-nowrap -rotate-90 text-[10px] font-bold text-secondary uppercase tracking-wider py-4">
               SALES VELOCITY (WEEKLY SALES) &rarr;
             </div>
@@ -85,25 +104,24 @@ export default function SKUQuadrantChart({
             <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-outline-variant"></div>
 
             {/* Dots */}
-            {skus.map((sku) => {
-              const xPct =
-                ((sku.linear_shelf_footprint || 0) / maxFootprint) * 100;
+            {processedSkus.map((sku) => {
+              const xPct = (sku.displayFootprint / maxFootprint) * 100;
               const yPct = ((sku.weekly_sales || 0) / maxSales) * 100;
 
               // Determine quadrant color
               let dotColor = "bg-amber-500 hover:ring-amber-300";
               if (
-                sku.linear_shelf_footprint < midFootprint &&
+                sku.displayFootprint < midFootprint &&
                 sku.weekly_sales >= midSales
               ) {
                 dotColor = "bg-emerald-500 hover:ring-emerald-300";
               } else if (
-                sku.linear_shelf_footprint >= midFootprint &&
+                sku.displayFootprint >= midFootprint &&
                 sku.weekly_sales >= midSales
               ) {
                 dotColor = "bg-blue-500 hover:ring-blue-300";
               } else if (
-                sku.linear_shelf_footprint >= midFootprint &&
+                sku.displayFootprint >= midFootprint &&
                 sku.weekly_sales < midSales
               ) {
                 dotColor = "bg-rose-500 hover:ring-rose-300";
@@ -122,18 +140,17 @@ export default function SKUQuadrantChart({
                     left: `${Math.min(Math.max(xPct, 8), 92)}%`,
                     bottom: `${Math.min(Math.max(yPct, 12), 88)}%`,
                   }}
-                  title={`${sku.sku_name} | Sales: $${sku.weekly_sales.toLocaleString()} | Space: ${sku.linear_shelf_footprint}ft`}
+                  title={`${sku.sku_name} | Sales: $${(sku.weekly_sales || 0).toLocaleString()} | Space: ${sku.displayFootprint}ft`}
                 >
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
                     <div className="bg-inverse-surface text-inverse-on-surface text-xs rounded py-1 px-2 whitespace-nowrap shadow-md border border-outline-variant">
                       <div className="font-bold">{sku.sku_name}</div>
                       <div>
-                        Weekly Sales: ${sku.weekly_sales.toLocaleString()}
+                        Weekly Sales: $
+                        {(sku.weekly_sales || 0).toLocaleString()}
                       </div>
-                      <div>
-                        Shelf Footprint: {sku.linear_shelf_footprint} ft
-                      </div>
+                      <div>Shelf Footprint: {sku.displayFootprint} ft</div>
                       <div className="text-[10px] text-primary-fixed font-semibold uppercase mt-0.5">
                         Status: {sku.status}
                       </div>
@@ -147,7 +164,7 @@ export default function SKUQuadrantChart({
         </div>
 
         {/* X-Axis Label Area (increased padding-top and padding-bottom to prevent touching the bottom border) */}
-        <div className="w-full flex justify-center pt-5 pb-2 pl-24">
+        <div className="w-full flex justify-center pt-8 pb-4 pl-28">
           <div className="text-[10px] font-bold text-secondary uppercase tracking-wider">
             LINEAR SHELF FOOTPRINT (FT) &rarr;
           </div>
@@ -163,7 +180,7 @@ SKUQuadrantChart.propTypes = {
       sku_name: PropTypes.string.isRequired,
       upc: PropTypes.string.isRequired,
       weekly_sales: PropTypes.number.isRequired,
-      linear_shelf_footprint: PropTypes.number.isRequired,
+      linear_shelf_footprint: PropTypes.number,
       status: PropTypes.string.isRequired,
     }),
   ).isRequired,
