@@ -14,11 +14,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    # Truncate to 72 bytes to prevent bcrypt ValueError
+    truncated_password = plain_password.encode("utf-8")[:72].decode(
+        "utf-8", errors="ignore"
+    )
+    return pwd_context.verify(truncated_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    # Truncate to 72 bytes to prevent bcrypt ValueError
+    truncated_password = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+    return pwd_context.hash(truncated_password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
