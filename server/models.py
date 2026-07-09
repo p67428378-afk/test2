@@ -1,41 +1,59 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, Float, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
 
+
 class User(Base):
     __tablename__ = "users"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
+    email = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    name = Column(String(255), nullable=False)
+    is_admin = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
 
-class OTP(Base):
-    __tablename__ = "otps"
+class Pet(Base):
+    __tablename__ = "pets"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
+    name = Column(String(255), nullable=False)
+    breed = Column(String(255), nullable=False)
+    age = Column(Float, nullable=False)
+    location = Column(String(255), nullable=False)
+    status = Column(String(50), default="Available", nullable=False)
+    photo_url = Column(String(1024), nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
 
-    user = relationship("User", back_populates="otps")
+    applications = relationship(
+        "AdoptionApplication", back_populates="pet", cascade="all, delete-orphan"
+    )
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
+
+class AdoptionApplication(Base):
+    __tablename__ = "adoption_applications"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
+    pet_id = Column(UUID(as_uuid=True), ForeignKey("pets.id"), nullable=False)
+    applicant_name = Column(String(255), nullable=False)
+    applicant_email = Column(String(255), nullable=False)
+    applicant_phone = Column(String(50), nullable=False)
+    reason = Column(Text, nullable=False)
+    has_other_pets = Column(Boolean, nullable=False)
+    visit_date = Column(DateTime, nullable=False)  # Stored as DateTime/Date
+    visit_time = Column(String(50), nullable=False)
+    status = Column(String(50), default="Pending", nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
 
-    user = relationship("User", back_populates="password_history")
+    pet = relationship("Pet", back_populates="applications")
