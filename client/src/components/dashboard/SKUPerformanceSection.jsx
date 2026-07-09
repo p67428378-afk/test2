@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 
 export default function SKUPerformanceSection({
@@ -11,9 +11,12 @@ export default function SKUPerformanceSection({
   setSortBy,
   sortOrder,
   setSortOrder,
+  selectedSkuUpc,
+  onSelectSKU,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const rowRefs = useRef({});
 
   // Handle sort click
   const handleSort = (field) => {
@@ -60,16 +63,37 @@ export default function SKUPerformanceSection({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedSkus = sortedSkus.slice(startIndex, startIndex + itemsPerPage);
 
+  // Scroll to selected SKU if it changes
+  useEffect(() => {
+    if (selectedSkuUpc) {
+      // Find which page the selected SKU is on
+      const index = sortedSkus.findIndex((sku) => sku.upc === selectedSkuUpc);
+      if (index !== -1) {
+        const page = Math.floor(index / itemsPerPage) + 1;
+        if (page !== currentPage) {
+          setCurrentPage(page);
+        }
+        // Scroll to the row element
+        setTimeout(() => {
+          const element = rowRefs.current[selectedSkuUpc];
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 100);
+      }
+    }
+  }, [selectedSkuUpc, sortedSkus]);
+
   const getStatusBadgeClass = (status) => {
     switch (status?.toUpperCase()) {
       case "GROW":
-        return "bg-tertiary/10 text-tertiary border-tertiary/20";
+        return "bg-emerald-100 text-emerald-800 border-emerald-200";
       case "MAINTAIN":
-        return "bg-secondary-fixed/50 text-on-secondary-fixed border-secondary-fixed";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "SWAP":
-        return "bg-primary-container/30 text-primary border-primary-container";
+        return "bg-amber-100 text-amber-800 border-amber-200";
       case "REDUCE":
-        return "bg-error-container text-on-error-container border-error-container";
+        return "bg-rose-100 text-rose-800 border-rose-200";
       default:
         return "bg-slate-100 text-slate-600 border-slate-200";
     }
@@ -207,47 +231,55 @@ export default function SKUPerformanceSection({
           </thead>
           <tbody className="divide-y divide-outline-variant">
             {paginatedSkus.length > 0 ? (
-              paginatedSkus.map((sku) => (
-                <tr
-                  key={sku.upc}
-                  className="hover:bg-surface-container-lowest transition-colors"
-                >
-                  <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface">
-                    {sku.sku_name}
-                  </td>
-                  <td className="px-4 py-3 font-body-sm text-body-sm text-secondary">
-                    {sku.upc}
-                  </td>
-                  <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
-                    $
-                    {sku.weekly_sales !== undefined && sku.weekly_sales !== null
-                      ? sku.weekly_sales.toLocaleString()
-                      : "0"}
-                  </td>
-                  <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
-                    {sku.profit_margin !== undefined &&
-                    sku.profit_margin !== null
-                      ? sku.profit_margin.toFixed(1)
-                      : "0.0"}
-                    %
-                  </td>
-                  <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
-                    {sku.stock_level !== undefined && sku.stock_level !== null
-                      ? sku.stock_level.toLocaleString()
-                      : "0"}
-                  </td>
-                  <td className="px-4 py-3 font-body-sm text-body-sm text-secondary">
-                    {sku.days_of_supply} days
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded font-label-sm text-label-sm border ${getStatusBadgeClass(sku.status)}`}
-                    >
-                      {sku.status}
-                    </span>
-                  </td>
-                </tr>
-              ))
+              paginatedSkus.map((sku) => {
+                const isSelected = selectedSkuUpc === sku.upc;
+                return (
+                  <tr
+                    key={sku.upc}
+                    ref={(el) => (rowRefs.current[sku.upc] = el)}
+                    onClick={() => onSelectSKU(sku)}
+                    className={`hover:bg-surface-container-lowest transition-colors cursor-pointer ${
+                      isSelected ? "bg-primary-fixed/30 font-semibold" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface">
+                      {sku.sku_name}
+                    </td>
+                    <td className="px-4 py-3 font-body-sm text-body-sm text-secondary">
+                      {sku.upc}
+                    </td>
+                    <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
+                      $
+                      {sku.weekly_sales !== undefined &&
+                      sku.weekly_sales !== null
+                        ? sku.weekly_sales.toLocaleString()
+                        : "0"}
+                    </td>
+                    <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
+                      {sku.profit_margin !== undefined &&
+                      sku.profit_margin !== null
+                        ? sku.profit_margin.toFixed(1)
+                        : "0.0"}
+                      %
+                    </td>
+                    <td className="px-4 py-3 font-body-sm text-body-sm text-on-surface text-right">
+                      {sku.stock_level !== undefined && sku.stock_level !== null
+                        ? sku.stock_level.toLocaleString()
+                        : "0"}
+                    </td>
+                    <td className="px-4 py-3 font-body-sm text-body-sm text-secondary">
+                      {sku.days_of_supply} days
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded font-label-sm text-label-sm border ${getStatusBadgeClass(sku.status)}`}
+                      >
+                        {sku.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td
@@ -309,4 +341,6 @@ SKUPerformanceSection.propTypes = {
   setSortBy: PropTypes.func.isRequired,
   sortOrder: PropTypes.string.isRequired,
   setSortOrder: PropTypes.func.isRequired,
+  selectedSkuUpc: PropTypes.string,
+  onSelectSKU: PropTypes.func.isRequired,
 };

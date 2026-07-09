@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TopNavBar from "./components/layout/TopNavBar.jsx";
 import KPIHeaderStrip from "./components/dashboard/KPIHeaderStrip.jsx";
+import SKUQuadrantChart from "./components/dashboard/SKUQuadrantChart.jsx";
 import SKUPerformanceSection from "./components/dashboard/SKUPerformanceSection.jsx";
 import ScenarioSelectorSection from "./components/dashboard/ScenarioSelectorSection.jsx";
 import ApprovalReviewPanel from "./components/dashboard/ApprovalReviewPanel.jsx";
@@ -23,6 +24,9 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
+
+  // Interactive selection state
+  const [selectedSkuUpc, setSelectedSkuUpc] = useState(null);
 
   // Submission states
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,21 +105,26 @@ export default function App() {
     }
   }, [selectedScenario, search, statusFilter, sortBy, sortOrder]);
 
+  const handleSelectSKU = (sku) => {
+    setSelectedSkuUpc(sku.upc);
+  };
+
   const handleSubmit = async () => {
     const currentScenarioData = scenariosData[selectedScenario];
     if (!currentScenarioData) return;
 
     try {
       setIsSubmitting(true);
+
+      // Map changes payload to match backend expectations
+      const changesPayload = (currentScenarioData.skus || []).map((sku) => ({
+        upc: sku.upc,
+        action: sku.status,
+      }));
+
       const payload = {
         scenario_applied: selectedScenario,
-        user_name: "Sarah Chen",
-        action_counts: {
-          grow: currentScenarioData.action_counts?.grow ?? 0,
-          maintain: currentScenarioData.action_counts?.maintain ?? 0,
-          reduce: currentScenarioData.action_counts?.reduce ?? 0,
-          swap: currentScenarioData.action_counts?.swap ?? 0,
-        },
+        changes: changesPayload,
       };
 
       const response = await submitAssortmentDecision(payload);
@@ -250,7 +259,14 @@ export default function App() {
           {/* Row 1: KPI Cards */}
           <KPIHeaderStrip kpis={kpis} />
 
-          {/* Row 2: Table & Sidebar */}
+          {/* Row 2: Quadrant Chart */}
+          <SKUQuadrantChart
+            skus={currentScenarioData?.skus ?? []}
+            onSelectSKU={handleSelectSKU}
+            selectedSkuUpc={selectedSkuUpc}
+          />
+
+          {/* Row 3: Table & Sidebar */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left 8-cols: Table */}
             <SKUPerformanceSection
@@ -263,6 +279,8 @@ export default function App() {
               setSortBy={setSortBy}
               sortOrder={sortOrder}
               setSortOrder={setSortOrder}
+              selectedSkuUpc={selectedSkuUpc}
+              onSelectSKU={handleSelectSKU}
             />
 
             {/* Right 4-cols: Actions & Summaries */}
@@ -293,8 +311,8 @@ export default function App() {
       >
         {confirmationData && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 bg-tertiary/10 text-on-tertiary-container p-3 rounded-lg border border-tertiary/20">
-              <span className="material-symbols-outlined text-tertiary filled-icon text-2xl">
+            <div className="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-3 rounded-lg border border-emerald-200">
+              <span className="material-symbols-outlined text-emerald-600 filled-icon text-2xl">
                 check_circle
               </span>
               <div>
@@ -339,28 +357,28 @@ export default function App() {
                 Summary of Changes
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-tertiary/10 p-2 rounded border border-tertiary/20">
+                <div className="bg-emerald-50 p-2 rounded border border-emerald-200">
                   <div className="font-label-sm text-[10px] text-secondary uppercase">
                     Added
                   </div>
-                  <div className="font-headline-sm text-headline-sm text-tertiary font-bold">
-                    {confirmationData.summary_of_changes?.added ?? 0}
+                  <div className="font-headline-sm text-headline-sm text-emerald-600 font-bold">
+                    {confirmationData.summary?.added ?? 0}
                   </div>
                 </div>
-                <div className="bg-error-container p-2 rounded border border-error-container/20">
+                <div className="bg-rose-50 p-2 rounded border border-rose-200">
                   <div className="font-label-sm text-[10px] text-secondary uppercase">
                     Removed
                   </div>
-                  <div className="font-headline-sm text-headline-sm text-error font-bold">
-                    {confirmationData.summary_of_changes?.removed ?? 0}
+                  <div className="font-headline-sm text-headline-sm text-rose-600 font-bold">
+                    {confirmationData.summary?.removed ?? 0}
                   </div>
                 </div>
-                <div className="bg-primary-container/10 p-2 rounded border border-primary-container/20">
+                <div className="bg-amber-50 p-2 rounded border border-amber-200">
                   <div className="font-label-sm text-[10px] text-secondary uppercase">
                     Swapped
                   </div>
-                  <div className="font-headline-sm text-headline-sm text-primary font-bold">
-                    {confirmationData.summary_of_changes?.swapped ?? 0}
+                  <div className="font-headline-sm text-headline-sm text-amber-600 font-bold">
+                    {confirmationData.summary?.swapped ?? 0}
                   </div>
                 </div>
               </div>
