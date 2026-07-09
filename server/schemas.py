@@ -47,9 +47,9 @@ class SetNewPasswordResponse(BaseModel):
 
 class KPIResponse(BaseModel):
     sales_per_linear_ft: float
-    private_brand_pct: float
+    private_brand_percentage: float
     in_stock_rate: float
-    shelf_capacity_pct: float
+    shelf_capacity: float
 
     class Config:
         from_attributes = True
@@ -62,6 +62,7 @@ class SKUPerformanceSchema(BaseModel):
     profit_margin: float
     stock_level: int
     days_of_supply: int
+    linear_shelf_footprint: float
     status: str
 
     class Config:
@@ -94,16 +95,44 @@ class ScenarioResponse(BaseModel):
         from_attributes = True
 
 
-class AssortmentDecisionRequest(BaseModel):
+class ChangeItem(BaseModel):
+    upc: str
+    action: str
+
+
+class AssortmentScenarioRequest(BaseModel):
+    scenario: str
+
+
+class AssortmentSubmitRequest(BaseModel):
     scenario_applied: str
-    user_name: str
-    action_counts: ActionCountsSchema
+    changes: List[ChangeItem]
 
 
 class SummaryOfChangesSchema(BaseModel):
     added: int
     removed: int
     swapped: int
+
+
+class AssortmentSubmitResponse(BaseModel):
+    confirmation_id: str
+    timestamp: str
+    user: str
+    scenario_applied: str
+    summary: SummaryOfChangesSchema
+
+    class Config:
+        from_attributes = True
+
+
+# --- Legacy / Compatibility Schemas ---
+
+
+class AssortmentDecisionRequest(BaseModel):
+    scenario_applied: str
+    user_name: str
+    action_counts: ActionCountsSchema
 
 
 class AssortmentDecisionResponse(BaseModel):

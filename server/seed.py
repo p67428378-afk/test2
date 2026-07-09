@@ -48,6 +48,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Potato Chips 10oz",
             "upc": "012200001234",
             "is_private_brand": True,
+            "linear_shelf_footprint": 1.5,
             "metrics": {
                 "weekly_sales": 4250.00,
                 "profit_margin": 34.5,
@@ -59,6 +60,7 @@ def seed_data(db: Session):
             "sku_name": "Lay's Classic Potato Chips 8oz",
             "upc": "028400091561",
             "is_private_brand": False,
+            "linear_shelf_footprint": 1.2,
             "metrics": {
                 "weekly_sales": 3800.00,
                 "profit_margin": 28.0,
@@ -70,6 +72,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Cheese Crackers 12oz",
             "upc": "012200005678",
             "is_private_brand": True,
+            "linear_shelf_footprint": 0.8,
             "metrics": {
                 "weekly_sales": 2100.00,
                 "profit_margin": 32.0,
@@ -81,6 +84,7 @@ def seed_data(db: Session):
             "sku_name": "Doritos Nacho Cheese 9.25oz",
             "upc": "028400091899",
             "is_private_brand": False,
+            "linear_shelf_footprint": 1.0,
             "metrics": {
                 "weekly_sales": 3100.00,
                 "profit_margin": 25.5,
@@ -92,6 +96,7 @@ def seed_data(db: Session):
             "sku_name": "Generic Pretzel Sticks 16oz",
             "upc": "071100004321",
             "is_private_brand": False,
+            "linear_shelf_footprint": 0.6,
             "metrics": {
                 "weekly_sales": 450.00,
                 "profit_margin": 18.0,
@@ -103,6 +108,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Gummy Bears 8oz",
             "upc": "012200009876",
             "is_private_brand": True,
+            "linear_shelf_footprint": 0.4,
             "metrics": {
                 "weekly_sales": 250.00,
                 "profit_margin": 15.0,
@@ -114,6 +120,7 @@ def seed_data(db: Session):
             "sku_name": "Lay's Classic Potato Chips 13oz",
             "upc": "028400310413",
             "is_private_brand": False,
+            "linear_shelf_footprint": 1.8,
             "metrics": {
                 "weekly_sales": 1250.00,
                 "profit_margin": 28.5,
@@ -125,6 +132,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Tortilla Chips 13oz",
             "upc": "012200002468",
             "is_private_brand": True,
+            "linear_shelf_footprint": 1.4,
             "metrics": {
                 "weekly_sales": 1850.00,
                 "profit_margin": 31.0,
@@ -137,6 +145,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Animal Crackers 11oz",
             "upc": "012200003579",
             "is_private_brand": True,
+            "linear_shelf_footprint": 0.7,
             "metrics": {
                 "weekly_sales": 1100.00,
                 "profit_margin": 29.0,
@@ -148,6 +157,7 @@ def seed_data(db: Session):
             "sku_name": "Ritz Crackers Original 13.7oz",
             "upc": "044000031114",
             "is_private_brand": False,
+            "linear_shelf_footprint": 1.1,
             "metrics": {
                 "weekly_sales": 1500.00,
                 "profit_margin": 24.0,
@@ -159,6 +169,7 @@ def seed_data(db: Session):
             "sku_name": "Cheez-It Original 12.4oz",
             "upc": "024100122113",
             "is_private_brand": False,
+            "linear_shelf_footprint": 1.0,
             "metrics": {
                 "weekly_sales": 1750.00,
                 "profit_margin": 23.5,
@@ -170,6 +181,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Pretzel Twists 16oz",
             "upc": "012200004680",
             "is_private_brand": True,
+            "linear_shelf_footprint": 0.9,
             "metrics": {
                 "weekly_sales": 950.00,
                 "profit_margin": 33.0,
@@ -181,6 +193,7 @@ def seed_data(db: Session):
             "sku_name": "Pringles Sour Cream & Onion 5.5oz",
             "upc": "038000138411",
             "is_private_brand": False,
+            "linear_shelf_footprint": 0.5,
             "metrics": {
                 "weekly_sales": 1350.00,
                 "profit_margin": 22.0,
@@ -192,6 +205,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Roasted Peanuts 16oz",
             "upc": "012200005791",
             "is_private_brand": True,
+            "linear_shelf_footprint": 0.6,
             "metrics": {
                 "weekly_sales": 850.00,
                 "profit_margin": 35.0,
@@ -203,6 +217,7 @@ def seed_data(db: Session):
             "sku_name": "Planters Peanuts Salted 16oz",
             "upc": "029000016112",
             "is_private_brand": False,
+            "linear_shelf_footprint": 0.6,
             "metrics": {
                 "weekly_sales": 1200.00,
                 "profit_margin": 21.0,
@@ -214,6 +229,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Microwave Popcorn 6ct",
             "upc": "012200006802",
             "is_private_brand": True,
+            "linear_shelf_footprint": 1.2,
             "metrics": {
                 "weekly_sales": 750.00,
                 "profit_margin": 36.0,
@@ -225,6 +241,7 @@ def seed_data(db: Session):
             "sku_name": "Orville Redenbacher Popcorn 3ct",
             "upc": "027000481115",
             "is_private_brand": False,
+            "linear_shelf_footprint": 1.2,
             "metrics": {
                 "weekly_sales": 900.00,
                 "profit_margin": 20.5,
@@ -236,6 +253,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Beef Jerky Original 3oz",
             "upc": "012200007913",
             "is_private_brand": True,
+            "linear_shelf_footprint": 0.3,
             "metrics": {
                 "weekly_sales": 650.00,
                 "profit_margin": 38.0,
@@ -247,6 +265,7 @@ def seed_data(db: Session):
             "sku_name": "Jack Link's Beef Jerky Original 3.25oz",
             "upc": "017082871116",
             "is_private_brand": False,
+            "linear_shelf_footprint": 0.4,
             "metrics": {
                 "weekly_sales": 1400.00,
                 "profit_margin": 19.0,
@@ -258,6 +277,7 @@ def seed_data(db: Session):
             "sku_name": "Clover Valley Trail Mix Sweet & Salty 14oz",
             "upc": "012200008024",
             "is_private_brand": True,
+            "linear_shelf_footprint": 0.5,
             "metrics": {
                 "weekly_sales": 550.00,
                 "profit_margin": 32.5,
@@ -276,6 +296,7 @@ def seed_data(db: Session):
                 sku_name=p_data["sku_name"],
                 upc=p_data["upc"],
                 is_private_brand=p_data["is_private_brand"],
+                linear_shelf_footprint=p_data["linear_shelf_footprint"],
             )
             db.add(product)
             db.commit()
@@ -294,6 +315,7 @@ def seed_data(db: Session):
             db.commit()
         else:
             # Update metrics if product already exists
+            existing_product.linear_shelf_footprint = p_data["linear_shelf_footprint"]
             metric = (
                 db.query(models.PerformanceMetric)
                 .filter(models.PerformanceMetric.product_id == existing_product.id)

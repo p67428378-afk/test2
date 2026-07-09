@@ -169,14 +169,14 @@
         }
       }
     },
-    "/api/v1/kpis": {
+    "/api/v1/assortment/kpis": {
       "get": {
         "tags": [
           "assortment"
         ],
         "summary": "Read Kpis",
         "description": "Retrieves the four main KPI values for the header strip.",
-        "operationId": "read_kpis_api_v1_kpis_get",
+        "operationId": "read_kpis_api_v1_assortment_kpis_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -191,24 +191,15 @@
         }
       }
     },
-    "/api/v1/scenarios/{scenario_name}": {
+    "/api/v1/assortment/skus": {
       "get": {
         "tags": [
           "assortment"
         ],
-        "summary": "Read Scenario",
-        "description": "Retrieves the SKU list and projected impacts for a given scenario.\nSupports sorting, filtering, and searching.",
-        "operationId": "read_scenario_api_v1_scenarios__scenario_name__get",
+        "summary": "Read Skus",
+        "description": "Fetches the full list of SKUs, with support for sorting and filtering.",
+        "operationId": "read_skus_api_v1_assortment_skus_get",
         "parameters": [
-          {
-            "name": "scenario_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Scenario Name"
-            }
-          },
           {
             "name": "sort_by",
             "in": "query",
@@ -226,7 +217,7 @@
             }
           },
           {
-            "name": "sort_order",
+            "name": "filter_by_status",
             "in": "query",
             "required": false,
             "schema": {
@@ -238,40 +229,7 @@
                   "type": "null"
                 }
               ],
-              "default": "asc",
-              "title": "Sort Order"
-            }
-          },
-          {
-            "name": "status_filter",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status Filter"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
+              "title": "Filter By Status"
             }
           }
         ],
@@ -281,7 +239,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ScenarioResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SKUPerformanceSchema"
+                  },
+                  "title": "Response Read Skus Api V1 Assortment Skus Get"
                 }
               }
             }
@@ -299,31 +261,77 @@
         }
       }
     },
-    "/api/v1/assortment-decisions": {
+    "/api/v1/assortment/scenario": {
       "post": {
         "tags": [
           "assortment"
         ],
-        "summary": "Create Decision",
-        "description": "Submits the final assortment decision for auditing.",
-        "operationId": "create_decision_api_v1_assortment_decisions_post",
+        "summary": "Apply Scenario",
+        "description": "Applies a selected scenario to recalculate SKU statuses.",
+        "operationId": "apply_scenario_api_v1_assortment_scenario_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AssortmentDecisionRequest"
+                "$ref": "#/components/schemas/AssortmentScenarioRequest"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AssortmentDecisionResponse"
+                  "items": {
+                    "$ref": "#/components/schemas/SKUPerformanceSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Apply Scenario Api V1 Assortment Scenario Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assortment/submit": {
+      "post": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Submit Changes",
+        "description": "Submits the final set of proposed changes for implementation.",
+        "operationId": "submit_changes_api_v1_assortment_submit_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssortmentSubmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssortmentSubmitResponse"
                 }
               }
             }
@@ -360,110 +368,89 @@
   },
   "components": {
     "schemas": {
-      "ActionCountsSchema": {
+      "AssortmentScenarioRequest": {
         "properties": {
-          "grow": {
-            "type": "integer",
-            "title": "Grow"
-          },
-          "maintain": {
-            "type": "integer",
-            "title": "Maintain"
-          },
-          "reduce": {
-            "type": "integer",
-            "title": "Reduce"
-          },
-          "swap": {
-            "type": "integer",
-            "title": "Swap"
+          "scenario": {
+            "type": "string",
+            "title": "Scenario"
           }
         },
         "type": "object",
         "required": [
-          "grow",
-          "maintain",
-          "reduce",
-          "swap"
+          "scenario"
         ],
-        "title": "ActionCountsSchema"
+        "title": "AssortmentScenarioRequest"
       },
-      "AssortmentDecisionRequest": {
+      "AssortmentSubmitRequest": {
         "properties": {
           "scenario_applied": {
             "type": "string",
             "title": "Scenario Applied"
           },
-          "user_name": {
-            "type": "string",
-            "title": "User Name"
-          },
-          "action_counts": {
-            "$ref": "#/components/schemas/ActionCountsSchema"
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/ChangeItem"
+            },
+            "type": "array",
+            "title": "Changes"
           }
         },
         "type": "object",
         "required": [
           "scenario_applied",
-          "user_name",
-          "action_counts"
+          "changes"
         ],
-        "title": "AssortmentDecisionRequest"
+        "title": "AssortmentSubmitRequest"
       },
-      "AssortmentDecisionResponse": {
+      "AssortmentSubmitResponse": {
         "properties": {
           "confirmation_id": {
             "type": "string",
             "title": "Confirmation Id"
           },
-          "scenario_applied": {
+          "timestamp": {
             "type": "string",
-            "title": "Scenario Applied"
+            "title": "Timestamp"
           },
           "user": {
             "type": "string",
             "title": "User"
           },
-          "timestamp": {
+          "scenario_applied": {
             "type": "string",
-            "title": "Timestamp"
+            "title": "Scenario Applied"
           },
-          "summary_of_changes": {
+          "summary": {
             "$ref": "#/components/schemas/SummaryOfChangesSchema"
           }
         },
         "type": "object",
         "required": [
           "confirmation_id",
-          "scenario_applied",
-          "user",
           "timestamp",
-          "summary_of_changes"
+          "user",
+          "scenario_applied",
+          "summary"
         ],
-        "title": "AssortmentDecisionResponse"
+        "title": "AssortmentSubmitResponse"
       },
-      "GuardrailsSchema": {
+      "ChangeItem": {
         "properties": {
-          "private_brand_passed": {
-            "type": "boolean",
-            "title": "Private Brand Passed"
+          "upc": {
+            "type": "string",
+            "title": "Upc"
           },
-          "shelf_capacity_passed": {
-            "type": "boolean",
-            "title": "Shelf Capacity Passed"
-          },
-          "new_items_passed": {
-            "type": "boolean",
-            "title": "New Items Passed"
+          "action": {
+            "type": "string",
+            "title": "Action"
           }
         },
         "type": "object",
         "required": [
-          "private_brand_passed",
-          "shelf_capacity_passed",
-          "new_items_passed"
+          "upc",
+          "action"
         ],
-        "title": "GuardrailsSchema"
+        "title": "ChangeItem"
       },
       "HTTPValidationError": {
         "properties": {
@@ -484,25 +471,25 @@
             "type": "number",
             "title": "Sales Per Linear Ft"
           },
-          "private_brand_pct": {
+          "private_brand_percentage": {
             "type": "number",
-            "title": "Private Brand Pct"
+            "title": "Private Brand Percentage"
           },
           "in_stock_rate": {
             "type": "number",
             "title": "In Stock Rate"
           },
-          "shelf_capacity_pct": {
+          "shelf_capacity": {
             "type": "number",
-            "title": "Shelf Capacity Pct"
+            "title": "Shelf Capacity"
           }
         },
         "type": "object",
         "required": [
           "sales_per_linear_ft",
-          "private_brand_pct",
+          "private_brand_percentage",
           "in_stock_rate",
-          "shelf_capacity_pct"
+          "shelf_capacity"
         ],
         "title": "KPIResponse"
       },
@@ -599,6 +586,10 @@
             "type": "integer",
             "title": "Days Of Supply"
           },
+          "linear_shelf_footprint": {
+            "type": "number",
+            "title": "Linear Shelf Footprint"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -612,53 +603,10 @@
           "profit_margin",
           "stock_level",
           "days_of_supply",
+          "linear_shelf_footprint",
           "status"
         ],
         "title": "SKUPerformanceSchema"
-      },
-      "ScenarioResponse": {
-        "properties": {
-          "scenario_name": {
-            "type": "string",
-            "title": "Scenario Name"
-          },
-          "projected_sales_impact_pct": {
-            "type": "number",
-            "title": "Projected Sales Impact Pct"
-          },
-          "projected_private_brand_pct": {
-            "type": "number",
-            "title": "Projected Private Brand Pct"
-          },
-          "projected_shelf_capacity_pct": {
-            "type": "number",
-            "title": "Projected Shelf Capacity Pct"
-          },
-          "action_counts": {
-            "$ref": "#/components/schemas/ActionCountsSchema"
-          },
-          "guardrails": {
-            "$ref": "#/components/schemas/GuardrailsSchema"
-          },
-          "skus": {
-            "items": {
-              "$ref": "#/components/schemas/SKUPerformanceSchema"
-            },
-            "type": "array",
-            "title": "Skus"
-          }
-        },
-        "type": "object",
-        "required": [
-          "scenario_name",
-          "projected_sales_impact_pct",
-          "projected_private_brand_pct",
-          "projected_shelf_capacity_pct",
-          "action_counts",
-          "guardrails",
-          "skus"
-        ],
-        "title": "ScenarioResponse"
       },
       "SecurityQuestionVerifyRequest": {
         "properties": {

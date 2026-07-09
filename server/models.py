@@ -62,6 +62,7 @@ class Product(Base):
     sku_name = Column(String(255), nullable=False)
     upc = Column(String(50), unique=True, nullable=False)
     is_private_brand = Column(Boolean, default=False, nullable=False)
+    linear_shelf_footprint = Column(Numeric(5, 2), default=1.0, nullable=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
@@ -123,3 +124,13 @@ class AuditTrail(Base):
     removed_count = Column(Integer, nullable=False)
     swapped_count = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=func.now())
+
+
+class ScenarioSubmission(Base):
+    __tablename__ = "scenario_submissions"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    confirmation_id = Column(String(36), unique=True, nullable=False)
+    submitted_at = Column(DateTime, default=func.now(), nullable=False)
+    user_id = Column(String(255), nullable=False)
+    scenario_applied = Column(String(50), nullable=False)
+    changes_summary = Column(Text, nullable=False)  # JSON string or text representation
