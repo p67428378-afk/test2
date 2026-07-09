@@ -1,0 +1,310 @@
+
+============================================================
+Attempt 1 at 2026-07-09T15:56:28.217712
+Status: FAILED
+Errors:
+  CHECK 5 FAILED — quality gate:
+QUALITY GATE — SCRUM-481 — FAILED
+
+  [WARN] ruff-format (level=advisory, exit 1)
+  [WARN] ruff-lint (level=advisory, exit 1)
+  [WARN] mypy (level=advisory, exit 1)
+  [FAIL] pytest (level=block, exit 1)
+
+BLOCKING FAILURES — must fix before this gate passes:
+
+### pytest (exit 1)
+--- stderr ---
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Viswa\AppData\Local\Temp\sdlc_sandbox\venv\Scripts\pytest.exe\__main__.py", line 4, in <module>
+    from _pytest.config import _console_main
+  File "C:\Users\Viswa\AppData\Local\Temp\sdlc_sandbox\venv\Lib\site-packages\_pytest\config\__init__.py", line 42, in <module>
+    from pluggy import HookimplMarker
+ImportError: cannot import name 'HookimplMarker' from 'pluggy' (unknown location)
+
+ADVISORY (does not block, but fix for quality):
+
+### ruff-format (exit 1)
+Would reformat: server\api\v1\endpoints\password_reset.py
+Would reformat: server\auth.py
+Would reformat: server\config.py
+Would reformat: server\core\config.py
+Would reformat: server\crud.py
+Would reformat: server\database.py
+Would reformat: server\main.py
+Would reformat: server\models.py
+Would reformat: server\routers\auth.py
+Would reformat: server\routers\expenses.py
+Would reformat: server\schemas.py
+Would reformat: server\tests\test_auth.py
+Would reformat: server\tests\test_expenses.py
+Would reformat: server\tests\test_password_reset.py
+14 files would be reformatted, 7 files already formatted
+
+### ruff-lint (exit 1)
+F401 [*] `fastapi.HTTPException` imported but unused
+ --> server\api\v1\endpoints\password_reset.py:2:41
+  |
+2 | from fastapi import APIRouter, Depends, HTTPException
+  |                                         ^^^^^^^^^^^^^
+3 | from sqlalchemy.orm import Session
+4 | from server import schemas, crud
+  |
+help: Remove unused import: `fastapi.HTTPException`
+
+F401 [*] `server.crud` imported but unused
+ --> server\api\v1\endpoints\password_reset.py:4:29
+  |
+2 | from fastapi import APIRouter, Depends, HTTPException
+3 | from sqlalchemy.orm import Session
+4 | from server import schemas, crud
+  |                             ^^^^
+5 | from server.database import get_db
+  |
+help: Remove unused import: `server.crud`
+
+F401 [*] `server.schemas` imported but unused
+ --> server\crud.py:3:28
+  |
+2 | from sqlalchemy.orm import Session
+3 | from server import models, schemas
+  |                            ^^^^^^^
+4 |
+5 | def get_user_by_login_id(db: Session, login_id: str):
+  |
+help: Remove unused import: `server.schemas`
+
+F401 [*] `typing.List` imported but unused
+ --> server\schemas.py:2:30
+  |
+1 | from pydantic import BaseModel, EmailStr, Field
+2 | from typing import Optional, List
+  |              
+
+### mypy (exit 1)
+server\crud.py:12: error: Module has no attribute "OTP"  [attr-defined]
+server\crud.py:19: error: Module has no attribute "OTP"  [attr-defined]
+server\crud.py:21: error: Name "models.OTP" is not defined  [name-defined]
+server\crud.py:28: error: Module has no attribute "PasswordHistory"  [attr-defined]
+server\crud.py:35: error: Incompatible types in assignment (expression has type "str", variable has type "Column[str]")  [assignment]
+server\api\v1\endpoints\password_reset.py:9: error: Module has no attribute "PasswordResetInitiateResponse"  [attr-defined]
+server\api\v1\endpoints\password_reset.py:10: error: Name "schemas.PasswordResetInitiateRequest" is not defined  [name-defined]
+server\api\v1\endpoints\password_reset.py:16: error: Module has no attribute "PasswordResetInitiateResponse"  [attr-defined]
+server\api\v1\endpoints\password_reset.py:18: error: Module has no attribute "OTPVerifyResponse"  [attr-defined]
+server\api\v1\endpoints\password_reset.py:19: error: Name "schemas.OTPVerifyRequest" is not defined  [name-defined]
+server\api\v1\endpoints\password_reset.py:24: error: Module has no attribute "OTPVerifyResponse"  [attr-defined]
+server\api\v1\endpoints\password_reset.py:26
+
+Skipped: frontend (not detected or out of scope)
+
+============================================================
+Attempt 2 at 2026-07-09T16:10:05.342483
+Status: FAILED
+Errors:
+  CHECK 2 FAILED — Unresolved imports:
+  server/auth.py:3 — import 'jose' not in requirements
+  server/auth.py:4 — import 'passlib' not in requirements
+
+FIX: Add each missing package to requirements.txt.
+
+============================================================
+Attempt 3 at 2026-07-09T16:10:39.431032
+Status: FAILED
+Errors:
+  CHECK 5 FAILED — quality gate:
+QUALITY GATE — SCRUM-481 — FAILED
+
+  [PASS] ruff-format (level=advisory, exit 0)
+  [PASS] ruff-lint (level=advisory, exit 0)
+  [WARN] mypy (level=advisory, exit 1)
+  [FAIL] pytest (level=block, exit 1)
+
+BLOCKING FAILURES — must fix before this gate passes:
+
+### pytest (exit 1)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py:421: in _finalize_backend_mixin
+    if detect_wrap_bug(IDENT_2A):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py:380: in detect_wrap_bug
+    if verify(secret, bug_hash):
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\utils\handlers.py:792: in verify
+    return consteq(self._calc_checksum(secret), chk)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <passlib.handlers.bcrypt._BcryptBackend object at 0x000001E60574B5B0>
+secret = b'01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345...7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234'
+
+    def _calc_checksum(self, secret):
+        # bcrypt behavior:
+        #   secret must be bytes
+        #   config must be ascii bytes
+        #   returns ascii bytes
+        secret, ident = self._prepare_digest_args(secret)
+        config = self._get_config(ident)
+        if isinstance(config, unicode):
+            config = config.encode("ascii")
+>       hash = _bcrypt.hashpw(secret, config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: password cannot be longer than 72 bytes, truncate manually if necessary (e.g. my_password[:72])
+
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py:655: ValueError
+----------------------------- Captured log setup ------------------------------
+WARNING  passlib.handlers.bcrypt:bcrypt.py:622 (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\Viswa\AppData\Local\Temp\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+=========================== short test summary info ===========================
+ERROR server/tests/test_auth.py::test_signup_success - ValueError: password c...
+ERROR server/tests/test_auth.py::test_signup_duplicate_email - ValueError: pa...
+ERROR server/tests/test_auth.py::test_login_success - ValueError: password ca...
+ERROR server/tests/test_auth.py::test_login_incorrect_password - ValueError: ...
+ERROR
+
+ADVISORY (does not block, but fix for quality):
+
+### mypy (exit 1)
+server\routers\auth.py:35: error: Argument 2 to "verify_password" has incompatible type "Column[str]"; expected "str"  [arg-type]
+
+Skipped: frontend (not detected or out of scope)
+
+============================================================
+Attempt 4 at 2026-07-09T16:11:18.749983
+Status: FAILED
+Errors:
+  CHECK 5 FAILED — quality gate:
+QUALITY GATE — SCRUM-481 — FAILED
+
+  [PASS] ruff-format (level=advisory, exit 0)
+  [PASS] ruff-lint (level=advisory, exit 0)
+  [PASS] mypy (level=advisory, exit 0)
+  [FAIL] pytest (level=block, exit 1)
+
+BLOCKING FAILURES — must fix before this gate passes:
+
+### pytest (exit 1)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py:421: in _finalize_backend_mixin
+    if detect_wrap_bug(IDENT_2A):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py:380: in detect_wrap_bug
+    if verify(secret, bug_hash):
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\utils\handlers.py:792: in verify
+    return consteq(self._calc_checksum(secret), chk)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <passlib.handlers.bcrypt._BcryptBackend object at 0x000002335299D630>
+secret = b'01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345...7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234'
+
+    def _calc_checksum(self, secret):
+        # bcrypt behavior:
+        #   secret must be bytes
+        #   config must be ascii bytes
+        #   returns ascii bytes
+        secret, ident = self._prepare_digest_args(secret)
+        config = self._get_config(ident)
+        if isinstance(config, unicode):
+            config = config.encode("ascii")
+>       hash = _bcrypt.hashpw(secret, config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: password cannot be longer than 72 bytes, truncate manually if necessary (e.g. my_password[:72])
+
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py:655: ValueError
+----------------------------- Captured log setup ------------------------------
+WARNING  passlib.handlers.bcrypt:bcrypt.py:622 (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\Viswa\AppData\Local\Temp\sdlc_sandbox\venv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+=========================== short test summary info ===========================
+ERROR server/tests/test_auth.py::test_signup_success - ValueError: password c...
+ERROR server/tests/test_auth.py::test_signup_duplicate_email - ValueError: pa...
+ERROR server/tests/test_auth.py::test_login_success - ValueError: password ca...
+ERROR server/tests/test_auth.py::test_login_incorrect_password - ValueError: ...
+ERROR
+
+Skipped: frontend (not detected or out of scope)
+
+============================================================
+Attempt 5 at 2026-07-09T16:11:49.035530
+Status: FAILED
+Errors:
+  CHECK 5 FAILED — quality gate:
+QUALITY GATE — SCRUM-481 — FAILED
+
+  [PASS] ruff-format (level=advisory, exit 0)
+  [PASS] ruff-lint (level=advisory, exit 0)
+  [PASS] mypy (level=advisory, exit 0)
+  [FAIL] pytest (level=block, exit 1)
+
+BLOCKING FAILURES — must fix before this gate passes:
+
+### pytest (exit 1)
+ckages\pydantic\type_adapter.py:441: in validate_python
+    return self.validator.validate_python(
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\pydantic\networks.py:1019: in _validate
+    return validate_email(input_value)[1]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = 'login2@example.com'
+
+    def validate_email(value: str) -> tuple[str, str]:
+        """Email address validation using [email-validator](https://pypi.org/project/email-validator/).
+    
+        Returns:
+            A tuple containing the local part of the email (or the name for "pretty" email addresses)
+                and the normalized email.
+    
+        Raises:
+            PydanticCustomError: If the email is invalid.
+    
+        Note:
+            Note that:
+    
+            * Raw IP address (literal) domain parts are not allowed.
+            * `"John Doe <local_part@domain.com>"` style "pretty" email addresses are processed.
+            * Spaces are striped from the beginning and end of addresses, but no error is raised.
+        """
+        if email_validator is None:
+            import_email_validator()
+    
+        if len(value) > MAX_EMAIL_LENGTH:
+            raise PydanticCustomError(
+                'value_error',
+                'value is not a valid email address: {reason}',
+                {'reason': f'Length must not exceed {MAX_EMAIL_LENGTH} characters'},
+            )
+    
+        m = pretty_email_regex.fullmatch(value)
+        name: str | None = None
+        if m:
+            unquoted_name, quoted_name, value = m.groups()
+            name = unquoted_name or quoted_name
+    
+        email = value.strip()
+    
+        try:
+            parts = email_validator.validate_email(email, check_deliverability=False)
+>       except email_validator.EmailNotValidError as e:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'email_validator' has no attribute 'EmailNotValidError'
+
+..\..\..\sdlc_sandbox\venv\Lib\site-packages\pydantic\networks.py:1321: AttributeError
+=========================== short test summary info ===========================
+FAILED server/tests/test_auth.py::test_signup_success - AttributeError: modul...
+FAILED server/tests/test_auth.py::test_signup_duplicate_email - AttributeErro...
+FAILED server/tests/test_auth.py::test_login_success - AttributeError: module...
+FAILED server/tests/test_auth.py::test_login_incorrect_password - AttributeEr...
+ERROR server/t
+
+Skipped: frontend (not detected or out of scope)
