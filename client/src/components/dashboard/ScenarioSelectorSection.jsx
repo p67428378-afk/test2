@@ -89,7 +89,7 @@ export default function ScenarioSelectorSection({
                 </div>
                 <div className="flex flex-col items-center justify-between">
                   <div className="font-label-sm text-[10px] text-secondary uppercase tracking-wider text-center">
-                    Shelf Cap.
+                    SHELF CAPACITY
                   </div>
                   <div className="font-label-md text-label-md text-on-surface font-bold mt-1 text-center">
                     {shelfCapacity !== null

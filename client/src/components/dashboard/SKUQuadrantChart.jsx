@@ -77,9 +77,10 @@ export default function SKUQuadrantChart({
       <div className="relative w-full flex flex-col mt-4">
         <div className="relative w-full h-80 flex">
           {/* Y-Axis Label Area (increased width and added padding to prevent overlap) */}
-          <div className="relative w-28 h-full flex items-center justify-center shrink-0 pr-6">
-            <div className="absolute whitespace-nowrap -rotate-90 text-[10px] font-bold text-secondary uppercase tracking-wider py-4">
-              SALES VELOCITY (WEEKLY SALES) &rarr;
+          <div className="relative w-48 h-full flex items-center justify-center shrink-0 pr-20 pl-10">
+            <div className="absolute whitespace-nowrap -rotate-90 text-[10px] font-bold text-secondary uppercase tracking-wider py-10">
+              SALES VELOCITY (WEEKLY SALES)
+              &rarr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div>
           </div>
 
@@ -164,9 +165,10 @@ export default function SKUQuadrantChart({
         </div>
 
         {/* X-Axis Label Area (increased padding-top and padding-bottom to prevent touching the bottom border) */}
-        <div className="w-full flex justify-center pt-8 pb-4 pl-28">
+        <div className="w-full flex justify-center pt-16 pb-12 pl-48 pr-12">
           <div className="text-[10px] font-bold text-secondary uppercase tracking-wider">
-            LINEAR SHELF FOOTPRINT (FT) &rarr;
+            LINEAR SHELF FOOTPRINT (FT)
+            &rarr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           </div>
         </div>
       </div>

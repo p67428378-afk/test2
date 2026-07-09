@@ -101,11 +101,12 @@ export default function SKUPerformanceSection({
 
   return (
     <div className="lg:col-span-8 bg-surface border border-outline-variant rounded-xl shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="p-4 border-b border-outline-variant flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-container-lowest">
+      {/* Increased right padding from pr-8 to pr-16 and pr-4 to pr-12 to prevent tight spacing */}
+      <div className="p-4 pr-16 border-b border-outline-variant flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-container-lowest">
         <h2 className="font-headline-sm text-headline-sm text-on-surface">
           Snacks SKU Performance
         </h2>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-3 w-full sm:w-auto pr-12">
           <div className="relative flex-1 sm:w-64">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm">
               search
@@ -203,7 +204,7 @@ export default function SKUPerformanceSection({
                 onClick={() => handleSort("stock_level")}
               >
                 <div className="inline-flex items-center justify-end gap-1 w-full">
-                  <span>Stock Level</span>
+                  <span>STOCK</span>
                   {sortBy === "stock_level" && (
                     <span className="material-symbols-outlined text-xs shrink-0">
                       {sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}
@@ -293,12 +294,13 @@ export default function SKUPerformanceSection({
           </tbody>
         </table>
       </div>
-      <div className="p-4 border-t border-outline-variant bg-surface-container-lowest flex justify-between items-center text-secondary font-body-sm text-body-sm">
+      {/* Increased right padding from pr-8 to pr-16 and pr-4 to pr-12 to prevent tight spacing */}
+      <div className="p-4 pr-16 border-t border-outline-variant bg-surface-container-lowest flex justify-between items-center text-secondary font-body-sm text-body-sm">
         <span className="flex items-center">
           Showing {totalItems > 0 ? startIndex + 1 : 0}-
           {Math.min(startIndex + itemsPerPage, totalItems)} of {totalItems} SKUs
         </span>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-4 items-center pr-12">
           <button
             className="hover:text-primary hover:bg-surface-container-high px-3 py-1.5 rounded border border-outline-variant transition-colors disabled:opacity-50 font-semibold flex items-center justify-center h-9"
             disabled={currentPage === 1}

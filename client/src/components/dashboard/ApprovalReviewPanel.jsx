@@ -158,7 +158,7 @@ export default function ApprovalReviewPanel({
         <button
           onClick={onSubmit}
           disabled={!allGuardrailsPassed || isSubmitting}
-          className={`w-full font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-2 text-sm sm:text-base ${
+          className={`w-full font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-3 text-sm sm:text-base ${
             allGuardrailsPassed
               ? "bg-primary-container text-on-primary-fixed cursor-pointer"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
@@ -167,7 +167,7 @@ export default function ApprovalReviewPanel({
           <span className="whitespace-nowrap">
             {isSubmitting ? "Submitting..." : "Submit Assortment Changes"}
           </span>
-          <span className="material-symbols-outlined shrink-0 align-middle leading-none">
+          <span className="material-symbols-outlined shrink-0 align-middle leading-none ml-4">
             send
           </span>
         </button>

@@ -239,7 +239,8 @@ export default function App() {
             <span className="font-label-md text-label-md">History</span>
           </a>
         </div>
-        <div className="p-4 border-t border-outline-variant">
+        {/* Increased vertical spacing from mt-12 pt-6 to mt-24 pt-12 to prevent tight spacing from History menu item */}
+        <div className="p-4 border-t border-outline-variant mt-24 pt-12">
           <button
             onClick={handleSubmit}
             disabled={
@@ -247,7 +248,7 @@ export default function App() {
               !currentScenarioData?.guardrails?.private_brand_passed ||
               !currentScenarioData?.guardrails?.aisle_layout_score_passed
             }
-            className="w-full bg-primary-container text-on-primary-container font-bold py-2 px-4 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary-container text-on-primary-container font-bold py-2.5 px-4 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit Changes
           </button>

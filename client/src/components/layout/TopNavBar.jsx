@@ -21,8 +21,13 @@ export default function TopNavBar() {
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right hidden md:block">
-          <div className="font-label-md text-label-md text-on-surface">
-            Sarah Chen
+          <div className="flex items-center justify-end gap-4">
+            <div className="font-label-md text-label-md text-on-surface">
+              Sarah Chen
+            </div>
+            <span className="bg-primary-container text-on-primary-container text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ml-3">
+              8
+            </span>
           </div>
           <div className="font-body-sm text-body-sm text-secondary">
             Category Manager - Snacks
