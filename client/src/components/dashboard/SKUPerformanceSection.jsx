@@ -294,20 +294,20 @@ export default function SKUPerformanceSection({
         </table>
       </div>
       <div className="p-4 border-t border-outline-variant bg-surface-container-lowest flex justify-between items-center text-secondary font-body-sm text-body-sm">
-        <span>
+        <span className="flex items-center">
           Showing {totalItems > 0 ? startIndex + 1 : 0}-
           {Math.min(startIndex + itemsPerPage, totalItems)} of {totalItems} SKUs
         </span>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button
-            className="hover:text-primary hover:bg-surface-container-high px-3 py-1.5 rounded border border-outline-variant transition-colors disabled:opacity-50 font-semibold"
+            className="hover:text-primary hover:bg-surface-container-high px-3 py-1.5 rounded border border-outline-variant transition-colors disabled:opacity-50 font-semibold flex items-center justify-center h-9"
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           >
             Previous
           </button>
           <button
-            className="hover:text-primary hover:bg-surface-container-high px-3 py-1.5 rounded border border-outline-variant transition-colors disabled:opacity-50 font-semibold"
+            className="hover:text-primary hover:bg-surface-container-high px-3 py-1.5 rounded border border-outline-variant transition-colors disabled:opacity-50 font-semibold flex items-center justify-center h-9"
             disabled={currentPage === totalPages}
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))

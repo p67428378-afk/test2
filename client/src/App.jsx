@@ -186,11 +186,11 @@ export default function App() {
             <div className="bg-primary-container w-8 h-8 rounded flex items-center justify-center font-bold text-sm text-on-primary-container shrink-0">
               DG
             </div>
-            <div>
-              <div className="font-headline-sm text-headline-sm font-bold text-on-surface text-sm">
+            <div className="flex flex-col justify-center">
+              <div className="font-headline-sm text-headline-sm font-bold text-on-surface text-sm leading-tight">
                 Dollar General
               </div>
-              <div className="font-body-sm text-body-sm text-secondary">
+              <div className="font-body-sm text-body-sm text-secondary leading-tight">
                 Category Management
               </div>
             </div>
@@ -239,7 +239,7 @@ export default function App() {
             <span className="font-label-md text-label-md">History</span>
           </a>
         </div>
-        <div className="p-4 border-t border-outline-variant flex justify-center">
+        <div className="p-4 border-t border-outline-variant">
           <button
             onClick={handleSubmit}
             disabled={
@@ -247,7 +247,7 @@ export default function App() {
               !currentScenarioData?.guardrails?.private_brand_passed ||
               !currentScenarioData?.guardrails?.aisle_layout_score_passed
             }
-            className="w-full max-w-xs bg-primary-container text-on-primary-container font-bold py-2 px-4 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary-container text-on-primary-container font-bold py-2 px-4 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit Changes
           </button>
