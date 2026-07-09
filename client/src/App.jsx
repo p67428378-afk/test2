@@ -239,7 +239,7 @@ export default function App() {
             <span className="font-label-md text-label-md">History</span>
           </a>
         </div>
-        <div className="p-4 border-t border-outline-variant">
+        <div className="p-4 border-t border-outline-variant flex justify-center">
           <button
             onClick={handleSubmit}
             disabled={
@@ -247,7 +247,7 @@ export default function App() {
               !currentScenarioData?.guardrails?.private_brand_passed ||
               !currentScenarioData?.guardrails?.aisle_layout_score_passed
             }
-            className="w-full bg-primary-container text-on-primary-container font-bold py-2 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full max-w-xs bg-primary-container text-on-primary-container font-bold py-2 px-4 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit Changes
           </button>

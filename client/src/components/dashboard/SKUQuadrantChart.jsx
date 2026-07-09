@@ -55,11 +55,11 @@ export default function SKUQuadrantChart({
       </div>
 
       {/* Chart Container with reserved left space for Y-axis label */}
-      <div className="relative w-full h-64 flex mt-2">
+      <div className="relative w-full h-72 flex mt-2 pb-4">
         {/* Y-Axis Label Area (fully unclipped) */}
-        <div className="relative w-12 h-full flex items-center justify-center shrink-0">
-          <div className="absolute whitespace-nowrap -rotate-90 text-[10px] font-bold text-secondary uppercase tracking-wider">
-            Sales Velocity (Weekly Sales) &rarr;
+        <div className="relative w-16 h-full flex items-center justify-center shrink-0">
+          <div className="absolute whitespace-nowrap -rotate-90 text-[10px] font-bold text-secondary uppercase tracking-wider py-2">
+            SALES VELOCITY (WEEKLY SALES) &rarr;
           </div>
         </div>
 
@@ -72,10 +72,10 @@ export default function SKUQuadrantChart({
           <div className="absolute top-2 right-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded z-10">
             Core Performers (High Space, High Sales)
           </div>
-          <div className="absolute bottom-6 left-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded z-10">
+          <div className="absolute bottom-8 left-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded z-10">
             Niche / New (Low Space, Low Sales)
           </div>
-          <div className="absolute bottom-6 right-2 text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded z-10">
+          <div className="absolute bottom-8 right-2 text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded z-10">
             Space Hogs (High Space, Low Sales)
           </div>
 
@@ -84,8 +84,8 @@ export default function SKUQuadrantChart({
           <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-outline-variant"></div>
 
           {/* X-Axis Label */}
-          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-secondary uppercase tracking-wider z-10">
-            Linear Shelf Footprint (ft) &rarr;
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-secondary uppercase tracking-wider z-10">
+            LINEAR SHELF FOOTPRINT (FT) &rarr;
           </div>
 
           {/* Dots */}

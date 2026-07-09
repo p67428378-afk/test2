@@ -81,7 +81,7 @@ export default function ApprovalReviewPanel({
               {guardrails?.private_brand_passed ? "check_circle" : "cancel"}
             </span>
             <span className="font-body-sm text-body-sm text-on-surface">
-              Private Brand % &gt; 20%
+              PRIVATE BRAND % &gt; 20%
             </span>
           </div>
           <span
@@ -154,20 +154,22 @@ export default function ApprovalReviewPanel({
         </div>
       </div>
 
-      <button
-        onClick={onSubmit}
-        disabled={!allGuardrailsPassed || isSubmitting}
-        className={`w-full mt-2 font-headline-sm text-headline-sm py-3 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-2 ${
-          allGuardrailsPassed
-            ? "bg-primary-container text-on-primary-fixed cursor-pointer"
-            : "bg-slate-200 text-slate-400 cursor-not-allowed"
-        }`}
-      >
-        <span>
-          {isSubmitting ? "Submitting..." : "Submit Assortment Changes"}
-        </span>
-        <span className="material-symbols-outlined">send</span>
-      </button>
+      <div className="flex justify-center w-full mt-2">
+        <button
+          onClick={onSubmit}
+          disabled={!allGuardrailsPassed || isSubmitting}
+          className={`w-full max-w-xs font-headline-sm text-headline-sm py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-2 ${
+            allGuardrailsPassed
+              ? "bg-primary-container text-on-primary-fixed cursor-pointer"
+              : "bg-slate-200 text-slate-400 cursor-not-allowed"
+          }`}
+        >
+          <span>
+            {isSubmitting ? "Submitting..." : "Submit Assortment Changes"}
+          </span>
+          <span className="material-symbols-outlined">send</span>
+        </button>
+      </div>
     </div>
   );
 }

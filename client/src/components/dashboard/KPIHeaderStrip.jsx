@@ -18,10 +18,12 @@ export default function KPIHeaderStrip({ kpis }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Card 1 */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2">
-        <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
-          Sales per Linear Ft
-        </span>
+      <div className="bg-surface border border-outline-variant rounded-xl p-5 pb-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2 min-h-[140px]">
+        <div className="flex justify-between items-start">
+          <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
+            SALES PER LINEAR FT
+          </span>
+        </div>
         <div className="font-headline-lg text-headline-lg text-on-surface">
           {formatCurrency(kpis?.sales_per_linear_ft)}
         </div>
@@ -34,10 +36,10 @@ export default function KPIHeaderStrip({ kpis }) {
       </div>
 
       {/* Card 2 */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2">
+      <div className="bg-surface border border-outline-variant rounded-xl p-5 pb-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2 min-h-[140px]">
         <div className="flex justify-between items-start">
           <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
-            Private Brand %
+            PRIVATE BRAND %
           </span>
           <span
             className={`px-2 py-0.5 rounded font-label-sm text-label-sm ${kpis?.private_brand_pct >= 20 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
@@ -54,10 +56,10 @@ export default function KPIHeaderStrip({ kpis }) {
       </div>
 
       {/* Card 3 */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2">
+      <div className="bg-surface border border-outline-variant rounded-xl p-5 pb-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2 min-h-[140px]">
         <div className="flex justify-between items-start">
           <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
-            In-Stock Rate
+            IN-STOCK RATE
           </span>
           <span
             className={`px-2 py-0.5 rounded font-label-sm text-label-sm ${kpis?.in_stock_rate >= 95 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
@@ -74,10 +76,10 @@ export default function KPIHeaderStrip({ kpis }) {
       </div>
 
       {/* Card 4 */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2">
+      <div className="bg-surface border border-outline-variant rounded-xl p-5 pb-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col gap-2 min-h-[140px]">
         <div className="flex justify-between items-start">
           <span className="font-label-md text-label-md text-secondary uppercase tracking-wider">
-            Shelf Capacity
+            SHELF CAPACITY
           </span>
           <span
             className={`px-2 py-0.5 rounded font-label-sm text-label-sm ${kpis?.shelf_capacity_pct <= 95 ? "bg-tertiary/10 text-tertiary" : "bg-error-container text-on-error-container"}`}
@@ -93,7 +95,7 @@ export default function KPIHeaderStrip({ kpis }) {
           {kpis?.shelf_capacity_pct
             ? Math.round(kpis.shelf_capacity_pct * 2)
             : 0}{" "}
-          / 200 ft
+          / 200 FT
         </div>
       </div>
     </div>

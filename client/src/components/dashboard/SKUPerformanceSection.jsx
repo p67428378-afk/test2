@@ -121,9 +121,9 @@ export default function SKUPerformanceSection({
               }}
             />
           </div>
-          <div className="relative">
+          <div className="relative min-w-[140px]">
             <select
-              className="appearance-none pl-3 pr-8 py-1.5 bg-surface border border-outline-variant rounded-lg font-label-sm text-label-sm text-secondary hover:bg-surface-container transition-colors outline-none cursor-pointer"
+              className="appearance-none w-full pl-3 pr-10 py-1.5 bg-surface border border-outline-variant rounded-lg font-label-sm text-label-sm text-secondary hover:bg-surface-container transition-colors outline-none cursor-pointer"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -298,16 +298,16 @@ export default function SKUPerformanceSection({
           Showing {totalItems > 0 ? startIndex + 1 : 0}-
           {Math.min(startIndex + itemsPerPage, totalItems)} of {totalItems} SKUs
         </span>
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           <button
-            className="hover:text-primary transition-colors disabled:opacity-50 font-semibold"
+            className="hover:text-primary hover:bg-surface-container-high px-3 py-1.5 rounded border border-outline-variant transition-colors disabled:opacity-50 font-semibold"
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           >
             Previous
           </button>
           <button
-            className="hover:text-primary transition-colors disabled:opacity-50 font-semibold"
+            className="hover:text-primary hover:bg-surface-container-high px-3 py-1.5 rounded border border-outline-variant transition-colors disabled:opacity-50 font-semibold"
             disabled={currentPage === totalPages}
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
