@@ -158,16 +158,16 @@ export default function ApprovalReviewPanel({
         <button
           onClick={onSubmit}
           disabled={!allGuardrailsPassed || isSubmitting}
-          className={`w-full max-w-xs font-headline-sm text-headline-sm py-3 px-6 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-2 ${
+          className={`w-full max-w-xs font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex justify-center items-center gap-3 text-sm sm:text-base ${
             allGuardrailsPassed
               ? "bg-primary-container text-on-primary-fixed cursor-pointer"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span>
+          <span className="truncate">
             {isSubmitting ? "Submitting..." : "Submit Assortment Changes"}
           </span>
-          <span className="material-symbols-outlined pr-1">send</span>
+          <span className="material-symbols-outlined shrink-0">send</span>
         </button>
       </div>
     </div>

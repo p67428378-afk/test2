@@ -115,7 +115,7 @@ export default function SKUQuadrantChart({
                 <button
                   key={sku.upc}
                   onClick={() => onSelectSKU(sku)}
-                  className={`absolute w-3.5 h-3.5 rounded-full -translate-x-1/2 translate-y-1/2 transition-all duration-200 hover:scale-150 hover:ring-4 z-20 group ${dotColor} ${
+                  className={`absolute w-3.5 h-3.5 rounded-full -translate-x-1/2 -translate-y-1/2 transition-all duration-200 hover:scale-150 hover:ring-4 z-20 group ${dotColor} ${
                     isSelected ? "ring-4 ring-primary scale-150 z-30" : ""
                   }`}
                   style={{
