@@ -63,6 +63,7 @@ class Product(Base):
     upc = Column(String(50), unique=True, nullable=False)
     is_private_brand = Column(Boolean, default=False, nullable=False)
     linear_shelf_footprint = Column(Numeric(5, 2), default=1.0, nullable=False)
+    shelf_position = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
@@ -145,5 +146,3 @@ class PrivateNationalBrandMapping(Base):
     national_benchmark_upc = Column(
         String(50), ForeignKey("products.upc"), nullable=False
     )
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

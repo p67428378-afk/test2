@@ -49,6 +49,7 @@ def seed_data(db: Session):
             "upc": "012200001234",
             "is_private_brand": True,
             "linear_shelf_footprint": 1.5,
+            "shelf_position": 1,
             "metrics": {
                 "weekly_sales": 4250.00,
                 "profit_margin": 34.5,
@@ -61,6 +62,7 @@ def seed_data(db: Session):
             "upc": "028400091561",
             "is_private_brand": False,
             "linear_shelf_footprint": 1.2,
+            "shelf_position": 2,
             "metrics": {
                 "weekly_sales": 3800.00,
                 "profit_margin": 28.0,
@@ -73,6 +75,7 @@ def seed_data(db: Session):
             "upc": "012200005678",
             "is_private_brand": True,
             "linear_shelf_footprint": 0.8,
+            "shelf_position": 3,
             "metrics": {
                 "weekly_sales": 2100.00,
                 "profit_margin": 32.0,
@@ -85,6 +88,7 @@ def seed_data(db: Session):
             "upc": "028400091899",
             "is_private_brand": False,
             "linear_shelf_footprint": 1.0,
+            "shelf_position": 4,
             "metrics": {
                 "weekly_sales": 3100.00,
                 "profit_margin": 25.5,
@@ -97,6 +101,7 @@ def seed_data(db: Session):
             "upc": "071100004321",
             "is_private_brand": False,
             "linear_shelf_footprint": 0.6,
+            "shelf_position": 5,
             "metrics": {
                 "weekly_sales": 450.00,
                 "profit_margin": 18.0,
@@ -109,6 +114,7 @@ def seed_data(db: Session):
             "upc": "012200009876",
             "is_private_brand": True,
             "linear_shelf_footprint": 0.4,
+            "shelf_position": 6,
             "metrics": {
                 "weekly_sales": 250.00,
                 "profit_margin": 15.0,
@@ -121,6 +127,7 @@ def seed_data(db: Session):
             "upc": "028400310413",
             "is_private_brand": False,
             "linear_shelf_footprint": 1.8,
+            "shelf_position": 7,
             "metrics": {
                 "weekly_sales": 1250.00,
                 "profit_margin": 28.5,
@@ -133,6 +140,7 @@ def seed_data(db: Session):
             "upc": "012200002468",
             "is_private_brand": True,
             "linear_shelf_footprint": 1.4,
+            "shelf_position": 8,
             "metrics": {
                 "weekly_sales": 1850.00,
                 "profit_margin": 31.0,
@@ -146,6 +154,7 @@ def seed_data(db: Session):
             "upc": "012200003579",
             "is_private_brand": True,
             "linear_shelf_footprint": 0.7,
+            "shelf_position": 9,
             "metrics": {
                 "weekly_sales": 1100.00,
                 "profit_margin": 29.0,
@@ -158,6 +167,7 @@ def seed_data(db: Session):
             "upc": "044000031114",
             "is_private_brand": False,
             "linear_shelf_footprint": 1.1,
+            "shelf_position": 10,
             "metrics": {
                 "weekly_sales": 1500.00,
                 "profit_margin": 24.0,
@@ -170,6 +180,7 @@ def seed_data(db: Session):
             "upc": "024100122113",
             "is_private_brand": False,
             "linear_shelf_footprint": 1.0,
+            "shelf_position": 11,
             "metrics": {
                 "weekly_sales": 1750.00,
                 "profit_margin": 23.5,
@@ -182,6 +193,7 @@ def seed_data(db: Session):
             "upc": "012200004680",
             "is_private_brand": True,
             "linear_shelf_footprint": 0.9,
+            "shelf_position": 12,
             "metrics": {
                 "weekly_sales": 950.00,
                 "profit_margin": 33.0,
@@ -194,6 +206,7 @@ def seed_data(db: Session):
             "upc": "038000138411",
             "is_private_brand": False,
             "linear_shelf_footprint": 0.5,
+            "shelf_position": 13,
             "metrics": {
                 "weekly_sales": 1350.00,
                 "profit_margin": 22.0,
@@ -206,6 +219,7 @@ def seed_data(db: Session):
             "upc": "012200005791",
             "is_private_brand": True,
             "linear_shelf_footprint": 0.6,
+            "shelf_position": 14,
             "metrics": {
                 "weekly_sales": 850.00,
                 "profit_margin": 35.0,
@@ -218,6 +232,7 @@ def seed_data(db: Session):
             "upc": "029000016112",
             "is_private_brand": False,
             "linear_shelf_footprint": 0.6,
+            "shelf_position": 15,
             "metrics": {
                 "weekly_sales": 1200.00,
                 "profit_margin": 21.0,
@@ -230,6 +245,7 @@ def seed_data(db: Session):
             "upc": "012200006802",
             "is_private_brand": True,
             "linear_shelf_footprint": 1.2,
+            "shelf_position": 16,
             "metrics": {
                 "weekly_sales": 750.00,
                 "profit_margin": 36.0,
@@ -242,6 +258,7 @@ def seed_data(db: Session):
             "upc": "027000481115",
             "is_private_brand": False,
             "linear_shelf_footprint": 1.2,
+            "shelf_position": 17,
             "metrics": {
                 "weekly_sales": 900.00,
                 "profit_margin": 20.5,
@@ -254,6 +271,7 @@ def seed_data(db: Session):
             "upc": "012200007913",
             "is_private_brand": True,
             "linear_shelf_footprint": 0.3,
+            "shelf_position": 18,
             "metrics": {
                 "weekly_sales": 650.00,
                 "profit_margin": 38.0,
@@ -266,6 +284,7 @@ def seed_data(db: Session):
             "upc": "017082871116",
             "is_private_brand": False,
             "linear_shelf_footprint": 0.4,
+            "shelf_position": 19,
             "metrics": {
                 "weekly_sales": 1400.00,
                 "profit_margin": 19.0,
@@ -278,6 +297,7 @@ def seed_data(db: Session):
             "upc": "012200008024",
             "is_private_brand": True,
             "linear_shelf_footprint": 0.5,
+            "shelf_position": 20,
             "metrics": {
                 "weekly_sales": 550.00,
                 "profit_margin": 32.5,
@@ -297,6 +317,7 @@ def seed_data(db: Session):
                 upc=p_data["upc"],
                 is_private_brand=p_data["is_private_brand"],
                 linear_shelf_footprint=p_data["linear_shelf_footprint"],
+                shelf_position=p_data["shelf_position"],
             )
             db.add(product)
             db.commit()
@@ -316,6 +337,7 @@ def seed_data(db: Session):
         else:
             # Update metrics if product already exists
             existing_product.linear_shelf_footprint = p_data["linear_shelf_footprint"]
+            existing_product.shelf_position = p_data["shelf_position"]
             metric = (
                 db.query(models.PerformanceMetric)
                 .filter(models.PerformanceMetric.product_id == existing_product.id)
@@ -329,49 +351,30 @@ def seed_data(db: Session):
                 metric.days_of_supply = m_data["days_of_supply"]
                 db.commit()
 
-    # 3. Seed Private-National Brand Mappings
-    mappings = [
-        {
-            "private_sku_upc": "012200001234",  # Clover Valley Potato Chips 10oz
-            "national_benchmark_upc": "028400091561",  # Lay's Classic Potato Chips 8oz
-        },
-        {
-            "private_sku_upc": "012200005678",  # Clover Valley Cheese Crackers 12oz
-            "national_benchmark_upc": "024100122113",  # Cheez-It Original 12.4oz
-        },
-        {
-            "private_sku_upc": "012200004680",  # Clover Valley Pretzel Twists 16oz
-            "national_benchmark_upc": "071100004321",  # Generic Pretzel Sticks 16oz
-        },
-        {
-            "private_sku_upc": "012200005791",  # Clover Valley Roasted Peanuts 16oz
-            "national_benchmark_upc": "029000016112",  # Planters Peanuts Salted 16oz
-        },
-        {
-            "private_sku_upc": "012200006802",  # Clover Valley Microwave Popcorn 6ct
-            "national_benchmark_upc": "027000481115",  # Orville Redenbacher Popcorn 3ct
-        },
-        {
-            "private_sku_upc": "012200007913",  # Clover Valley Beef Jerky Original 3oz
-            "national_benchmark_upc": "017082871116",  # Jack Link's Beef Jerky Original 3.25oz
-        },
+    # 3. Seed PrivateNationalBrandMapping
+    mappings_data = [
+        {"private_sku_upc": "012200001234", "national_benchmark_upc": "028400091561"},
+        {"private_sku_upc": "012200005678", "national_benchmark_upc": "028400091899"},
+        {"private_sku_upc": "012200005791", "national_benchmark_upc": "029000016112"},
+        {"private_sku_upc": "012200006802", "national_benchmark_upc": "027000481115"},
+        {"private_sku_upc": "012200007913", "national_benchmark_upc": "017082871116"},
     ]
 
-    for m in mappings:
+    for m_data in mappings_data:
         existing_mapping = (
             db.query(models.PrivateNationalBrandMapping)
             .filter(
                 models.PrivateNationalBrandMapping.private_sku_upc
-                == m["private_sku_upc"]
+                == m_data["private_sku_upc"]
             )
             .first()
         )
         if not existing_mapping:
-            db_mapping = models.PrivateNationalBrandMapping(
-                private_sku_upc=m["private_sku_upc"],
-                national_benchmark_upc=m["national_benchmark_upc"],
+            mapping = models.PrivateNationalBrandMapping(
+                private_sku_upc=m_data["private_sku_upc"],
+                national_benchmark_upc=m_data["national_benchmark_upc"],
             )
-            db.add(db_mapping)
+            db.add(mapping)
     db.commit()
 
 

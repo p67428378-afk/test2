@@ -191,6 +191,25 @@
         }
       }
     },
+    "/api/v1/kpis": {
+      "get": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Read Kpis Legacy",
+        "operationId": "read_kpis_legacy_api_v1_kpis_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/assortment/skus": {
       "get": {
         "tags": [
@@ -261,6 +280,80 @@
         }
       }
     },
+    "/api/v1/scenarios/{scenario_name}": {
+      "get": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Get Scenario Details",
+        "operationId": "get_scenario_details_api_v1_scenarios__scenario_name__get",
+        "parameters": [
+          {
+            "name": "scenario_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scenario Name"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/assortment/scenario": {
       "post": {
         "tags": [
@@ -307,39 +400,13 @@
         }
       }
     },
-    "/api/v1/assortment/sku-mappings": {
-      "get": {
-        "tags": [
-          "assortment"
-        ],
-        "summary": "Read Sku Mappings",
-        "description": "Retrieves the mapping of private brand SKUs to their national brand benchmarks.",
-        "operationId": "read_sku_mappings_api_v1_assortment_sku_mappings_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PrivateNationalBrandMappingSchema"
-                  },
-                  "type": "array",
-                  "title": "Response Read Sku Mappings Api V1 Assortment Sku Mappings Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/assortment/submit": {
       "post": {
         "tags": [
           "assortment"
         ],
         "summary": "Submit Changes",
-        "description": "Submits the final set of proposed changes for implementation, including Aisle Layout Score validation.",
+        "description": "Submits the final set of proposed changes for implementation.",
         "operationId": "submit_changes_api_v1_assortment_submit_post",
         "requestBody": {
           "content": {
@@ -375,6 +442,74 @@
         }
       }
     },
+    "/api/v1/assortment-decisions": {
+      "post": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Create Assortment Decision Endpoint",
+        "description": "Legacy endpoint for submitting assortment decisions.",
+        "operationId": "create_assortment_decision_endpoint_api_v1_assortment_decisions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssortmentDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssortmentDecisionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assortment/sku-mappings": {
+      "get": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Get Sku Mappings Endpoint",
+        "description": "Retrieves the mapping of private brand SKUs to their national brand benchmarks.",
+        "operationId": "get_sku_mappings_endpoint_api_v1_assortment_sku_mappings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PrivateNationalBrandMappingSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Get Sku Mappings Endpoint Api V1 Assortment Sku Mappings Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Read Root",
@@ -394,6 +529,88 @@
   },
   "components": {
     "schemas": {
+      "ActionCountsSchema": {
+        "properties": {
+          "grow": {
+            "type": "integer",
+            "title": "Grow"
+          },
+          "maintain": {
+            "type": "integer",
+            "title": "Maintain"
+          },
+          "reduce": {
+            "type": "integer",
+            "title": "Reduce"
+          },
+          "swap": {
+            "type": "integer",
+            "title": "Swap"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grow",
+          "maintain",
+          "reduce",
+          "swap"
+        ],
+        "title": "ActionCountsSchema"
+      },
+      "AssortmentDecisionRequest": {
+        "properties": {
+          "scenario_applied": {
+            "type": "string",
+            "title": "Scenario Applied"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "action_counts": {
+            "$ref": "#/components/schemas/ActionCountsSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_applied",
+          "user_name",
+          "action_counts"
+        ],
+        "title": "AssortmentDecisionRequest"
+      },
+      "AssortmentDecisionResponse": {
+        "properties": {
+          "confirmation_id": {
+            "type": "string",
+            "title": "Confirmation Id"
+          },
+          "scenario_applied": {
+            "type": "string",
+            "title": "Scenario Applied"
+          },
+          "user": {
+            "type": "string",
+            "title": "User"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "summary_of_changes": {
+            "$ref": "#/components/schemas/SummaryOfChangesSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confirmation_id",
+          "scenario_applied",
+          "user",
+          "timestamp",
+          "summary_of_changes"
+        ],
+        "title": "AssortmentDecisionResponse"
+      },
       "AssortmentScenarioRequest": {
         "properties": {
           "scenario": {
@@ -477,6 +694,39 @@
           "action"
         ],
         "title": "ChangeItem"
+      },
+      "GuardrailsSchema": {
+        "properties": {
+          "private_brand_passed": {
+            "type": "boolean",
+            "title": "Private Brand Passed"
+          },
+          "shelf_capacity_passed": {
+            "type": "boolean",
+            "title": "Shelf Capacity Passed"
+          },
+          "new_items_passed": {
+            "type": "boolean",
+            "title": "New Items Passed"
+          },
+          "aisle_layout_score": {
+            "type": "number",
+            "title": "Aisle Layout Score"
+          },
+          "aisle_layout_score_passed": {
+            "type": "boolean",
+            "title": "Aisle Layout Score Passed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "private_brand_passed",
+          "shelf_capacity_passed",
+          "new_items_passed",
+          "aisle_layout_score",
+          "aisle_layout_score_passed"
+        ],
+        "title": "GuardrailsSchema"
       },
       "HTTPValidationError": {
         "properties": {
@@ -651,6 +901,50 @@
           "status"
         ],
         "title": "SKUPerformanceSchema"
+      },
+      "ScenarioResponse": {
+        "properties": {
+          "scenario_name": {
+            "type": "string",
+            "title": "Scenario Name"
+          },
+          "projected_sales_impact_pct": {
+            "type": "number",
+            "title": "Projected Sales Impact Pct"
+          },
+          "projected_private_brand_pct": {
+            "type": "number",
+            "title": "Projected Private Brand Pct"
+          },
+          "projected_shelf_capacity_pct": {
+            "type": "number",
+            "title": "Projected Shelf Capacity Pct"
+          },
+          "action_counts": {
+            "$ref": "#/components/schemas/ActionCountsSchema"
+          },
+          "guardrails": {
+            "$ref": "#/components/schemas/GuardrailsSchema"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/SKUPerformanceSchema"
+            },
+            "type": "array",
+            "title": "Skus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_name",
+          "projected_sales_impact_pct",
+          "projected_private_brand_pct",
+          "projected_shelf_capacity_pct",
+          "action_counts",
+          "guardrails",
+          "skus"
+        ],
+        "title": "ScenarioResponse"
       },
       "SecurityQuestionVerifyRequest": {
         "properties": {

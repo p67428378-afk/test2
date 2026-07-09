@@ -171,8 +171,5 @@ def create_assortment_decision(
     }
 
 
-# --- Private National Brand Mapping CRUD ---
-
-
 def get_sku_mappings(db: Session):
     return db.query(models.PrivateNationalBrandMapping).all()
