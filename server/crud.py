@@ -1,38 +1,62 @@
-
 from sqlalchemy.orm import Session
-from server import models, schemas
+from sqlalchemy import func
+from server.models import Task
+from server.schemas import TaskCreate, TaskUpdate
+from uuid import UUID
+from datetime import datetime, timezone
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+def get_tasks(db: Session, skip: int = 0, limit: int = 100):
+    return (
+        db.query(Task)
+        .order_by(Task.position.asc(), Task.created_at.asc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
+
+def create_task(db: Session, task_in: TaskCreate):
+    # Get the max position to place the new task at the end
+    max_pos = db.query(func.max(Task.position)).scalar()
+    next_pos = (max_pos + 1) if max_pos is not None else 0
+
+    db_task = Task(text=task_in.text, is_completed=False, position=next_pos)
+    db.add(db_task)
     db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    db.refresh(db_task)
+    return db_task
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
+def update_task(db: Session, task_id: UUID, task_in: TaskUpdate):
+    db_task = db.query(Task).filter(Task.id == task_id).first()
+    if not db_task:
+        return None
+
+    update_data = task_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_task, field, value)
+
+    db_task.updated_at = datetime.now(timezone.utc)
     db.commit()
-    db.refresh(otp)
-    return otp
+    db.refresh(db_task)
+    return db_task
 
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
 
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
+def delete_task(db: Session, task_id: UUID):
+    db_task = db.query(Task).filter(Task.id == task_id).first()
+    if not db_task:
+        return False
+    db.delete(db_task)
     db.commit()
-    db.refresh(user)
-    return user
+    return True
+
+
+def reorder_tasks(db: Session, task_ids: list):
+    # Update positions based on the order of IDs in the list
+    for index, task_id in enumerate(task_ids):
+        db.query(Task).filter(Task.id == task_id).update(
+            {Task.position: index, Task.updated_at: datetime.now(timezone.utc)}
+        )
+    db.commit()
+    return True

@@ -1,33 +1,34 @@
+from pydantic import BaseModel, Field
+from uuid import UUID
+from datetime import datetime
+from typing import Optional, List
 
-from pydantic import BaseModel
-from typing import Optional
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class TaskBase(BaseModel):
+    text: str = Field(..., min_length=1, description="The description of the task.")
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class TaskCreate(TaskBase):
+    pass
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+class TaskUpdate(BaseModel):
+    text: Optional[str] = Field(None, min_length=1)
+    is_completed: Optional[bool] = None
+    position: Optional[int] = None
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+class TaskReorder(BaseModel):
+    task_ids: List[UUID]
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+
+class TaskResponse(BaseModel):
+    id: UUID
+    text: str
+    is_completed: bool
+    position: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
