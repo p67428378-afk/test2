@@ -1,33 +1,51 @@
-
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional
+from datetime import datetime
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class UserRegister(BaseModel):
+    email: EmailStr
+    master_password: str = Field(..., min_length=8)
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+class UserLogin(BaseModel):
+    email: str
+    master_password: str
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    created_at: datetime
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+    model_config = ConfigDict(from_attributes=True)
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class CredentialCreate(BaseModel):
+    title: str
+    username: str
+    password: str
+    url: Optional[str] = None
+
+
+class CredentialUpdate(BaseModel):
+    title: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    url: Optional[str] = None
+
+
+class CredentialResponse(BaseModel):
+    id: str
+    title: str
+    username: str
+    password: str
+    url: Optional[str] = None
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
