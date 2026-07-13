@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from server.database import Base, engine, get_db

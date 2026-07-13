@@ -6,4 +6,5 @@ pydantic-settings
 pytest
 python-jose
 sqlalchemy
+starlette
 uvicorn
