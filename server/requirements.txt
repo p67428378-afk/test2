@@ -3,4 +3,8 @@ uvicorn
 sqlalchemy
 pydantic
 pydantic-settings
+bcrypt
+python-jose[cryptography]
 pytest
+httpx
+starlette

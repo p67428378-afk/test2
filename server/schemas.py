@@ -1,33 +1,73 @@
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
+import datetime
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+# Auth Schemas
+class UserRegister(BaseModel):
+    username: str = Field(..., description="User's chosen username or email")
+    master_password: str = Field(..., description="User's master password")
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    created_at: datetime.datetime
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+    class Config:
+        from_attributes = True
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
+class UserLogin(BaseModel):
+    username: str
+    master_password: str
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
+
+
+# Credential Schemas
+class CredentialCreate(BaseModel):
+    title: str = Field(..., description="Title of the credential")
+    username: str = Field(..., description="Encrypted username")
+    password: str = Field(..., description="Encrypted password")
+    url: Optional[str] = Field(None, description="Encrypted URL")
+    notes: Optional[str] = Field(None, description="Encrypted notes")
+
+
+class CredentialUpdate(BaseModel):
+    title: Optional[str] = Field(None, description="Title of the credential")
+    username: Optional[str] = Field(None, description="Encrypted username")
+    password: Optional[str] = Field(None, description="Encrypted password")
+    url: Optional[str] = Field(None, description="Encrypted URL")
+    notes: Optional[str] = Field(None, description="Encrypted notes")
+
+
+class CredentialResponse(BaseModel):
+    id: str
+    title: str
+    username: str
+    password: str
+    url: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Password Generator Schemas
+class PasswordGenerateRequest(BaseModel):
+    length: int = Field(16, ge=8, le=128, description="Length of the password")
+    lowercase: bool = Field(True, description="Include lowercase letters")
+    uppercase: bool = Field(True, description="Include uppercase letters")
+    numbers: bool = Field(True, description="Include numbers")
+    symbols: bool = Field(True, description="Include symbols")
+
+
+class PasswordGenerateResponse(BaseModel):
+    password: str
+    strength: str
