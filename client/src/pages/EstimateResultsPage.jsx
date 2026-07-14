@@ -7,6 +7,8 @@ import { getClaimEstimate } from "../services/api.js";
 export default function EstimateResultsPage({ claimId, onReset }) {
   const [status, setStatus] = useState("PROCESSING");
   const [estimate, setEstimate] = useState(null);
+  const [hasConflict, setHasConflict] = useState(false);
+  const [manualEstimateDetails, setManualEstimateDetails] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -18,7 +20,9 @@ export default function EstimateResultsPage({ claimId, onReset }) {
         setStatus(data.status);
 
         if (data.status === "READY") {
-          setEstimate(data.estimate);
+          setEstimate(data.ai_estimate || data.estimate);
+          setHasConflict(!!data.has_conflict);
+          setManualEstimateDetails(data.manual_estimate_details || null);
           clearInterval(intervalId);
         } else if (data.status === "FAILED") {
           setError(data.reason || "AI analysis failed to assess the damage.");
@@ -114,6 +118,8 @@ export default function EstimateResultsPage({ claimId, onReset }) {
             <TotalCostCard
               totalCost={estimate.total_cost}
               currency={estimate.currency}
+              hasConflict={hasConflict}
+              manualEstimateDetails={manualEstimateDetails}
             />
             <BreakdownList
               breakdown={estimate.breakdown}
