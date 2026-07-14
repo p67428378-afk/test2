@@ -1,6 +1,8 @@
 fastapi
-uvicorn
-sqlalchemy
+httpx
 pydantic
 pydantic-settings
 pytest
+pytz
+sqlalchemy
+uvicorn
