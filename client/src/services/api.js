@@ -25,4 +25,45 @@ export const getClaimEstimate = async (claimId) => {
   return response.data;
 };
 
+export const requestTowDispatch = async (
+  claimId,
+  latitude,
+  longitude,
+  idempotencyKey,
+) => {
+  const headers = {};
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
+  const response = await api.post(
+    "/api/v1/claims/dispatch/request_tow",
+    {
+      claim_id: claimId,
+      gps_latitude: latitude,
+      gps_longitude: longitude,
+    },
+    { headers },
+  );
+  return response.data;
+};
+
+export const getDispatchStatus = async (dispatchId) => {
+  const response = await api.get(
+    `/api/v1/claims/dispatch/${dispatchId}/status`,
+  );
+  return response.data;
+};
+
+export const cancelTowDispatch = async (dispatchId) => {
+  const response = await api.post(
+    `/api/v1/claims/dispatch/${dispatchId}/cancel`,
+  );
+  return response.data;
+};
+
+export const getActiveIncident = async () => {
+  const response = await api.get("/api/v1/claims/active_incident");
+  return response.data;
+};
+
 export default api;
