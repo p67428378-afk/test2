@@ -169,6 +169,228 @@
         }
       }
     },
+    "/api/v1/users/me/upsell-eligibility": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Get Upsell Eligibility",
+        "operationId": "get_upsell_eligibility_api_v1_users_me_upsell_eligibility_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpsellEligibilityResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/me/upsell-banner/dismiss": {
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Dismiss Upsell Banner",
+        "operationId": "dismiss_upsell_banner_api_v1_users_me_upsell_banner_dismiss_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DismissResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/subscriptions/{userId}": {
+      "get": {
+        "summary": "Get Subscription By User Id",
+        "operationId": "get_subscription_by_user_id_api_v1_subscriptions__userId__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Userid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/{subscriptionId}/pause": {
+      "put": {
+        "summary": "Pause Subscription By Id",
+        "operationId": "pause_subscription_by_id_api_v1_subscriptions__subscriptionId__pause_put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscriptionid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/{subscriptionId}/skip": {
+      "put": {
+        "summary": "Skip Subscription By Id",
+        "operationId": "skip_subscription_by_id_api_v1_subscriptions__subscriptionId__skip_put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscriptionid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/{subscriptionId}": {
+      "delete": {
+        "summary": "Cancel Subscription By Id",
+        "operationId": "cancel_subscription_by_id_api_v1_subscriptions__subscriptionId__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscriptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscriptionid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Read Root",
@@ -367,6 +589,25 @@
         ],
         "title": "BillingHistoryItem"
       },
+      "DismissResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "dismissed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Dismissed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "dismissed_at"
+        ],
+        "title": "DismissResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -379,6 +620,35 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "LastOrderResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "box_size": {
+            "type": "string",
+            "title": "Box Size"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "box_size",
+          "price",
+          "product_id"
+        ],
+        "title": "LastOrderResponse"
       },
       "OTPVerifyRequest": {
         "properties": {
@@ -583,6 +853,28 @@
             "type": "integer",
             "title": "Frequency Weeks"
           },
+          "frequency": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -671,6 +963,29 @@
         ],
         "title": "SubscriptionUpdateResponse"
       },
+      "UpsellEligibilityResponse": {
+        "properties": {
+          "is_eligible": {
+            "type": "boolean",
+            "title": "Is Eligible"
+          },
+          "last_order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastOrderResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_eligible"
+        ],
+        "title": "UpsellEligibilityResponse"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -725,6 +1040,17 @@
           "amount": {
             "type": "number",
             "title": "Amount"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
           }
         },
         "type": "object",

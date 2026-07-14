@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Depends, HTTPException, status
 from starlette.middleware.cors import CORSMiddleware
@@ -17,7 +18,7 @@ from server.schemas import (
 )
 from server.auth import get_current_user, get_password_hash
 from server.email_service import send_email
-from server.api.v1.endpoints import password_reset
+from server.api.v1.endpoints import password_reset, subscriptions
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -38,6 +39,117 @@ app.add_middleware(
 
 # Include existing routers
 app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
+app.include_router(subscriptions.router, prefix="/api/v1", tags=["subscriptions"])
+
+
+# Compatibility endpoints for WorkSpec contracts
+@app.get("/api/v1/subscriptions/{userId}", response_model=SubscriptionResponse)
+def get_subscription_by_user_id(
+    userId: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if userId == "me":
+        sub = (
+            db.query(Subscription)
+            .filter(Subscription.user_id == current_user.id)
+            .order_by(Subscription.created_at.desc())
+            .first()
+        )
+    else:
+        try:
+            user_uuid = uuid.UUID(userId)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid user ID format")
+        sub = db.query(Subscription).filter(Subscription.user_id == user_uuid).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    sub.frequency = sub.frequency_weeks
+    sub.product_id = ""
+    return sub
+
+
+@app.put("/api/v1/subscriptions/{subscriptionId}/pause")
+def pause_subscription_by_id(
+    subscriptionId: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        sub_uuid = uuid.UUID(subscriptionId)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid subscription ID format")
+    sub = db.query(Subscription).filter(Subscription.id == sub_uuid).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+
+    now = datetime.utcnow()
+    if sub.next_payment_date - now < timedelta(hours=48):
+        raise HTTPException(
+            status_code=400,
+            detail="Action requested less than 48 hours before scheduled payment",
+        )
+
+    sub.status = "paused"
+    db.commit()
+    return {"id": str(sub.id), "status": "paused", "message": "Subscription paused"}
+
+
+@app.put("/api/v1/subscriptions/{subscriptionId}/skip")
+def skip_subscription_by_id(
+    subscriptionId: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        sub_uuid = uuid.UUID(subscriptionId)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid subscription ID format")
+    sub = db.query(Subscription).filter(Subscription.id == sub_uuid).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+
+    now = datetime.utcnow()
+    if sub.next_payment_date - now < timedelta(hours=48):
+        raise HTTPException(
+            status_code=400,
+            detail="Action requested less than 48 hours before scheduled payment",
+        )
+
+    sub.skip_next = True
+    sub.next_payment_date = sub.next_payment_date + timedelta(weeks=sub.frequency_weeks)
+    db.commit()
+    return {"id": str(sub.id), "status": sub.status, "message": "Subscription skipped"}
+
+
+@app.delete("/api/v1/subscriptions/{subscriptionId}")
+def cancel_subscription_by_id(
+    subscriptionId: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        sub_uuid = uuid.UUID(subscriptionId)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid subscription ID format")
+    sub = db.query(Subscription).filter(Subscription.id == sub_uuid).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+
+    now = datetime.utcnow()
+    if sub.next_payment_date - now < timedelta(hours=48):
+        raise HTTPException(
+            status_code=400,
+            detail="Action requested less than 48 hours before scheduled payment",
+        )
+
+    sub.status = "cancelled"
+    db.commit()
+    return {
+        "id": str(sub.id),
+        "status": "cancelled",
+        "message": "Subscription cancelled",
+    }
 
 
 # Seed test account in lifespan/startup
@@ -129,6 +241,10 @@ def create_subscription(
     db.commit()
     db.refresh(new_sub)
 
+    # Set compatibility fields
+    new_sub.frequency = payload.frequency_weeks
+    new_sub.product_id = ""
+
     # Log history
     history = SubscriptionHistory(
         subscription_id=new_sub.id,
@@ -183,6 +299,10 @@ def get_my_subscription(
         )
         for o in orders
     ]
+
+    # Set compatibility fields
+    sub.frequency = sub.frequency_weeks
+    sub.product_id = ""
 
     return SubscriptionMeResponse(
         subscription=SubscriptionResponse.from_orm(sub), billing_history=billing_history
@@ -270,6 +390,10 @@ def update_my_subscription(
     sub.updated_at = now
     db.commit()
     db.refresh(sub)
+
+    # Set compatibility fields
+    sub.frequency = sub.frequency_weeks
+    sub.product_id = ""
 
     # Send email notification
     email = getattr(current_user, "email", getattr(current_user, "login_id", ""))

@@ -75,6 +75,8 @@ class SubscriptionResponse(BaseModel):
     user_id: UUID
     box_size: str
     frequency_weeks: int
+    frequency: Optional[int] = None
+    product_id: Optional[str] = None
     status: str
     next_payment_date: datetime
     skip_next: bool
@@ -110,3 +112,22 @@ class WebhookPayload(BaseModel):
     subscription_id: UUID
     event_type: str
     amount: float
+    status: Optional[str] = None
+
+
+# Upsell Schemas
+class LastOrderResponse(BaseModel):
+    id: UUID
+    box_size: str
+    price: float
+    product_id: str
+
+
+class UpsellEligibilityResponse(BaseModel):
+    is_eligible: bool
+    last_order: Optional[LastOrderResponse] = None
+
+
+class DismissResponse(BaseModel):
+    status: str
+    dismissed_at: datetime

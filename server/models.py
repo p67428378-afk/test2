@@ -19,6 +19,7 @@ class User(Base):
     security_answer_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    upsell_banner_dismissed_at = Column(DateTime, nullable=True)
 
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
@@ -70,14 +71,27 @@ class Order(Base):
     __tablename__ = "orders"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     subscription_id = Column(
-        UUID(as_uuid=True), ForeignKey("subscriptions.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("subscriptions.id"), nullable=True
     )
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=True)
+    order_type = Column(String(50), nullable=False, default="one-time")
     amount = Column(Numeric(10, 2), nullable=False)
     status = Column(String(50), nullable=False, default="pending")
     payment_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
     subscription = relationship("Subscription", back_populates="orders")
+    user = relationship("User", foreign_keys=[user_id])
+    product = relationship("Product", foreign_keys=[product_id])
+
+
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    size = Column(String(50), nullable=False)
+    price = Column(Numeric(10, 2), nullable=False, default=0.0)
 
 
 class SubscriptionHistory(Base):
