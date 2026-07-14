@@ -36,4 +36,9 @@ export const cancelAppointment = async (appointmentId) => {
   return response.data;
 };
 
+export const verifyInsurance = async (verificationData) => {
+  const response = await api.post("/api/v1/insurance/verify", verificationData);
+  return response.data;
+};
+
 export default api;

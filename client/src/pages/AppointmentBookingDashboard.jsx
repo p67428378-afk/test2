@@ -5,9 +5,11 @@ import {
   createAppointment,
   getPatientAppointments,
   cancelAppointment,
+  verifyInsurance,
 } from "../services/api";
 import WeeklyCalendar from "../components/appointments/WeeklyCalendar";
-import DoctorProfileCard from "../components/appointments/DoctorProfileCard";
+import InsuranceForm from "../components/appointments/InsuranceForm";
+import BookingReview from "../components/appointments/BookingReview";
 
 export default function AppointmentBookingDashboard() {
   // State
@@ -26,9 +28,16 @@ export default function AppointmentBookingDashboard() {
   ); // Default seed patient
   const [customPatientId, setCustomPatientId] = useState("");
   const [wsConnected, setWsConnected] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Insurance Pre-Verification State
+  const [insuranceProvider, setInsuranceProvider] = useState("");
+  const [policyId, setPolicyId] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState(null);
+  const [verificationError, setVerificationError] = useState("");
+  const [isBooking, setIsBooking] = useState(false);
 
   const wsRef = useRef(null);
 
@@ -174,15 +183,41 @@ export default function AppointmentBookingDashboard() {
     setSelectedSlot({ iso, label });
   };
 
-  const handleBookClick = () => {
-    if (!selectedSlot) return;
-    setShowConfirmModal(true);
+  const handleVerifyInsurance = async (provider, policy) => {
+    try {
+      setVerificationError("");
+      setVerificationResult(null);
+      setIsVerifying(true);
+
+      const activePatientId =
+        role === "coordinator" && customPatientId ? customPatientId : patientId;
+
+      const result = await verifyInsurance({
+        patient_id: activePatientId,
+        insurance_provider: provider,
+        policy_id: policy,
+      });
+
+      setInsuranceProvider(provider);
+      setPolicyId(policy);
+      setVerificationResult(result);
+    } catch (err) {
+      console.error("Insurance verification failed", err);
+      setVerificationError(
+        err.response?.data?.detail ||
+          "Insurance verification failed. Please try again.",
+      );
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleConfirmBooking = async () => {
+    if (!selectedSlot) return;
     try {
       setErrorMessage("");
       setSuccessMessage("");
+      setIsBooking(true);
       const activePatientId =
         role === "coordinator" && customPatientId ? customPatientId : patientId;
 
@@ -190,12 +225,16 @@ export default function AppointmentBookingDashboard() {
         doctorId: selectedDoctorId,
         patientId: activePatientId,
         startTime: selectedSlot.iso,
+        insurance_provider: insuranceProvider || null,
+        policy_id: policyId || null,
       };
 
       await createAppointment(payload);
       setSuccessMessage("Appointment booked successfully!");
-      setShowConfirmModal(false);
       setSelectedSlot(null);
+      setVerificationResult(null);
+      setInsuranceProvider("");
+      setPolicyId("");
 
       // Refresh appointments
       const updated = await getPatientAppointments(activePatientId);
@@ -206,7 +245,8 @@ export default function AppointmentBookingDashboard() {
         err.response?.data?.detail ||
           "Failed to book appointment. Slot might be double-booked.",
       );
-      setShowConfirmModal(false);
+    } finally {
+      setIsBooking(false);
     }
   };
 
@@ -388,12 +428,20 @@ export default function AppointmentBookingDashboard() {
           />
         </div>
 
-        {/* Right (4/12): Doctor Profile Card */}
-        <div class="lg:col-span-4">
-          <DoctorProfileCard
-            doctor={selectedDoctor}
+        {/* Right (4/12): Split Pane Layout for Insurance & Review */}
+        <div class="lg:col-span-4 space-y-6">
+          <InsuranceForm
+            onVerify={handleVerifyInsurance}
+            isVerifying={isVerifying}
+            verificationResult={verificationResult}
+            error={verificationError}
+          />
+          <BookingReview
             selectedSlot={selectedSlot}
-            onBook={handleBookClick}
+            selectedDoctor={selectedDoctor}
+            verificationResult={verificationResult}
+            onConfirm={handleConfirmBooking}
+            isBooking={isBooking}
           />
         </div>
       </div>
@@ -504,60 +552,6 @@ export default function AppointmentBookingDashboard() {
           </table>
         </div>
       </div>
-
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-outline-variant">
-            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-4">
-              Confirm Appointment
-            </h3>
-            <div class="space-y-3 mb-6">
-              <p class="text-body-md text-on-surface-variant">
-                Are you sure you want to book this consultation slot?
-              </p>
-              <div class="bg-surface-variant/20 p-4 rounded-lg space-y-2">
-                <div class="flex justify-between">
-                  <span class="text-sm text-on-surface-variant">Doctor:</span>
-                  <span class="text-sm font-semibold text-on-surface">
-                    {selectedDoctor?.name}
-                  </span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-on-surface-variant">
-                    Specialty:
-                  </span>
-                  <span class="text-sm font-semibold text-on-surface">
-                    {selectedDoctor?.specialty}
-                  </span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-on-surface-variant">
-                    Date & Time:
-                  </span>
-                  <span class="text-sm font-semibold text-on-surface">
-                    {selectedSlot?.label}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmBooking}
-                class="px-4 py-2 bg-[#0D9488] hover:bg-[#0F766E] text-white rounded-lg transition-colors"
-              >
-                Confirm Booking
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ vi.mock("../services/api", () => ({
   createAppointment: vi.fn(),
   getPatientAppointments: vi.fn(),
   cancelAppointment: vi.fn(),
+  verifyInsurance: vi.fn(),
 }));
 
 describe("AppointmentBookingDashboard", () => {
@@ -39,6 +40,10 @@ describe("AppointmentBookingDashboard", () => {
     api.getDoctors.mockResolvedValue(mockDoctors);
     api.getDoctorAvailability.mockResolvedValue(mockAvailability);
     api.getPatientAppointments.mockResolvedValue(mockAppointments);
+    api.verifyInsurance.mockResolvedValue({
+      estimated_copay: 25.0,
+      message: "Insurance Verified Successfully via Clearinghouse API",
+    });
   });
 
   it("renders the dashboard with doctors and appointments", async () => {
@@ -51,7 +56,6 @@ describe("AppointmentBookingDashboard", () => {
 
     // Check if upcoming appointments are rendered
     expect(screen.getByText("Dr. Robert Chen")).toBeInTheDocument();
-    expect(screen.getByText("Pediatrics")).toBeInTheDocument();
   });
 
   it("allows switching roles and entering custom patient ID", async () => {
@@ -66,5 +70,37 @@ describe("AppointmentBookingDashboard", () => {
 
     fireEvent.change(input, { target: { value: "custom-patient-123" } });
     expect(input.value).toBe("custom-patient-123");
+  });
+
+  it("allows verifying insurance and displays estimated co-pay", async () => {
+    render(<AppointmentBookingDashboard />);
+
+    // Wait for doctors to load
+    await waitFor(() => {
+      expect(screen.getByText("Dr. Alice Smith")).toBeInTheDocument();
+    });
+
+    // Fill in insurance details
+    const providerSelect = screen.getByLabelText("Insurance Provider");
+    const policyInput = screen.getByPlaceholderText("Enter Policy ID");
+    const verifyBtn = screen.getByText("Verify Insurance");
+
+    fireEvent.change(providerSelect, { target: { value: "Aetna" } });
+    fireEvent.change(policyInput, { target: { value: "AETNA-12345" } });
+    fireEvent.click(verifyBtn);
+
+    await waitFor(() => {
+      expect(api.verifyInsurance).toHaveBeenCalledWith({
+        patient_id: "00000000-0000-0000-0000-000000000001",
+        insurance_provider: "Aetna",
+        policy_id: "AETNA-12345",
+      });
+    });
+
+    // Check if co-pay is displayed
+    expect(screen.getByText("$25.00")).toBeInTheDocument();
+    expect(
+      screen.getByText("Insurance Verified Successfully via Clearinghouse API"),
+    ).toBeInTheDocument();
   });
 });
