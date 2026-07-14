@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 
 
@@ -61,3 +61,44 @@ class ClaimEstimateResponse(BaseModel):
     status: str
     estimate: Optional[EstimateResponse] = None
     reason: Optional[str] = None
+
+
+# Dispatch schemas
+class TowTruck(BaseModel):
+    driver_name: str
+    license_plate: str
+    phone_number: str
+    latitude: float
+    longitude: float
+
+
+class DispatchRequest(BaseModel):
+    claim_id: UUID
+    gps_latitude: float
+    gps_longitude: float
+
+
+class DispatchResponse(BaseModel):
+    dispatch_id: UUID
+    status: str
+    eta: str
+    tow_truck: TowTruck
+
+
+class DispatchStatusResponse(BaseModel):
+    dispatch_id: UUID
+    status: str
+    resolved_address: str
+    tow_truck: TowTruck
+
+
+class DispatchCancelResponse(BaseModel):
+    status: str
+    message: str
+
+
+# Active Incident schema
+class ActiveIncidentResponse(BaseModel):
+    isActiveIncident: bool
+    claim: Optional[Dict[str, Any]] = None
+    dispatch: Optional[Dict[str, Any]] = None

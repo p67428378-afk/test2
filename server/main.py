@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import uuid
 
 from server.api.v1.endpoints import password_reset
 from server.routes import claims
-from server.database import Base, engine
+from server.database import Base, engine, get_db
 
 Base.metadata.create_all(bind=engine)
 
@@ -24,6 +25,30 @@ app.add_middleware(
 
 app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
 app.include_router(claims.router, prefix="/api/v1", tags=["claims"])
+
+
+# Add aliases/redirects to match the exact paths in WorkSpec
+@app.post("/api/v1/dispatch/request_tow", tags=["dispatch"], include_in_schema=True)
+def request_tow_alias(
+    request: claims.DispatchRequest,
+    db=Depends(get_db),
+    idempotency_key=Header(None, alias="Idempotency-Key"),
+):
+    return claims.request_tow_dispatch(request, idempotency_key, db)
+
+
+@app.get(
+    "/api/v1/dispatch/{dispatch_id}/status", tags=["dispatch"], include_in_schema=True
+)
+def get_dispatch_status_alias(dispatch_id: uuid.UUID, db=Depends(get_db)):
+    return claims.get_dispatch_status(dispatch_id, db)
+
+
+@app.post(
+    "/api/v1/dispatch/{dispatch_id}/cancel", tags=["dispatch"], include_in_schema=True
+)
+def cancel_tow_dispatch_alias(dispatch_id: uuid.UUID, db=Depends(get_db)):
+    return claims.cancel_tow_dispatch(dispatch_id, db)
 
 
 @app.get("/")

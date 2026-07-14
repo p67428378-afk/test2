@@ -1,5 +1,14 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Numeric, JSON
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Numeric,
+    JSON,
+    Float,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -63,6 +72,9 @@ class Claim(Base):
     images = relationship(
         "ClaimImage", back_populates="claim", cascade="all, delete-orphan"
     )
+    dispatch = relationship(
+        "Dispatch", back_populates="claim", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class ClaimImage(Base):
@@ -75,3 +87,34 @@ class ClaimImage(Base):
     )
 
     claim = relationship("Claim", back_populates="images")
+
+
+class Dispatch(Base):
+    __tablename__ = "dispatches"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    claim_id = Column(
+        UUID(as_uuid=True), ForeignKey("claims.id"), nullable=False, unique=True
+    )
+    status = Column(String(50), nullable=False, default="PENDING")
+    gps_latitude = Column(Float, nullable=False)
+    gps_longitude = Column(Float, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    claim = relationship("Claim", back_populates="dispatch")
+
+
+class IdempotencyKey(Base):
+    __tablename__ = "idempotency_keys"
+    key = Column(String(255), primary_key=True)
+    response_body = Column(String, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

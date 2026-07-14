@@ -254,6 +254,307 @@
         }
       }
     },
+    "/api/v1/claims/dispatch/request_tow": {
+      "post": {
+        "tags": [
+          "claims",
+          "claims"
+        ],
+        "summary": "Request Tow Dispatch",
+        "operationId": "request_tow_dispatch_api_v1_claims_dispatch_request_tow_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/claims/dispatch/{dispatch_id}/status": {
+      "get": {
+        "tags": [
+          "claims",
+          "claims"
+        ],
+        "summary": "Get Dispatch Status",
+        "operationId": "get_dispatch_status_api_v1_claims_dispatch__dispatch_id__status_get",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/claims/dispatch/{dispatch_id}/cancel": {
+      "post": {
+        "tags": [
+          "claims",
+          "claims"
+        ],
+        "summary": "Cancel Tow Dispatch",
+        "operationId": "cancel_tow_dispatch_api_v1_claims_dispatch__dispatch_id__cancel_post",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchCancelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/claims/active_incident": {
+      "get": {
+        "tags": [
+          "claims",
+          "claims"
+        ],
+        "summary": "Get Active Incident",
+        "operationId": "get_active_incident_api_v1_claims_active_incident_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveIncidentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dispatch/request_tow": {
+      "post": {
+        "tags": [
+          "dispatch"
+        ],
+        "summary": "Request Tow Alias",
+        "operationId": "request_tow_alias_api_v1_dispatch_request_tow_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dispatch/{dispatch_id}/status": {
+      "get": {
+        "tags": [
+          "dispatch"
+        ],
+        "summary": "Get Dispatch Status Alias",
+        "operationId": "get_dispatch_status_alias_api_v1_dispatch__dispatch_id__status_get",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dispatch/{dispatch_id}/cancel": {
+      "post": {
+        "tags": [
+          "dispatch"
+        ],
+        "summary": "Cancel Tow Dispatch Alias",
+        "operationId": "cancel_tow_dispatch_alias_api_v1_dispatch__dispatch_id__cancel_post",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Read Root",
@@ -273,6 +574,43 @@
   },
   "components": {
     "schemas": {
+      "ActiveIncidentResponse": {
+        "properties": {
+          "isActiveIncident": {
+            "type": "boolean",
+            "title": "Isactiveincident"
+          },
+          "claim": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim"
+          },
+          "dispatch": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispatch"
+          }
+        },
+        "type": "object",
+        "required": [
+          "isActiveIncident"
+        ],
+        "title": "ActiveIncidentResponse"
+      },
       "Body_upload_damage_photos_api_v1_claims_upload_post": {
         "properties": {
           "files": {
@@ -359,6 +697,104 @@
           "cost"
         ],
         "title": "DamageBreakdownItem"
+      },
+      "DispatchCancelResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "title": "DispatchCancelResponse"
+      },
+      "DispatchRequest": {
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Claim Id"
+          },
+          "gps_latitude": {
+            "type": "number",
+            "title": "Gps Latitude"
+          },
+          "gps_longitude": {
+            "type": "number",
+            "title": "Gps Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "claim_id",
+          "gps_latitude",
+          "gps_longitude"
+        ],
+        "title": "DispatchRequest"
+      },
+      "DispatchResponse": {
+        "properties": {
+          "dispatch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dispatch Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "eta": {
+            "type": "string",
+            "title": "Eta"
+          },
+          "tow_truck": {
+            "$ref": "#/components/schemas/TowTruck"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispatch_id",
+          "status",
+          "eta",
+          "tow_truck"
+        ],
+        "title": "DispatchResponse"
+      },
+      "DispatchStatusResponse": {
+        "properties": {
+          "dispatch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dispatch Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "resolved_address": {
+            "type": "string",
+            "title": "Resolved Address"
+          },
+          "tow_truck": {
+            "$ref": "#/components/schemas/TowTruck"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispatch_id",
+          "status",
+          "resolved_address",
+          "tow_truck"
+        ],
+        "title": "DispatchStatusResponse"
       },
       "EstimateResponse": {
         "properties": {
@@ -532,6 +968,39 @@
           "login_link"
         ],
         "title": "SetNewPasswordResponse"
+      },
+      "TowTruck": {
+        "properties": {
+          "driver_name": {
+            "type": "string",
+            "title": "Driver Name"
+          },
+          "license_plate": {
+            "type": "string",
+            "title": "License Plate"
+          },
+          "phone_number": {
+            "type": "string",
+            "title": "Phone Number"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "driver_name",
+          "license_plate",
+          "phone_number",
+          "latitude",
+          "longitude"
+        ],
+        "title": "TowTruck"
       },
       "ValidationError": {
         "properties": {
