@@ -76,6 +76,14 @@ export const subscriptionService = {
     });
     return response.data;
   },
+  getUpsellEligibility: async () => {
+    const response = await api.get("/api/v1/users/me/upsell-eligibility");
+    return response.data;
+  },
+  dismissUpsellBanner: async () => {
+    const response = await api.post("/api/v1/users/me/upsell-banner/dismiss");
+    return response.data;
+  },
 };
 
 export default api;
