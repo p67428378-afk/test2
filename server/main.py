@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, Header
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 import os
 import uuid
 

@@ -57,9 +57,18 @@ class ClaimUploadResponse(BaseModel):
     claim_id: UUID
 
 
+class ManualEstimateDetails(BaseModel):
+    amount: float
+    currency: str
+    date: str
+
+
 class ClaimEstimateResponse(BaseModel):
     status: str
-    estimate: Optional[EstimateResponse] = None
+    submission_id: Optional[UUID] = None
+    ai_estimate: Optional[EstimateResponse] = None
+    has_conflict: Optional[bool] = False
+    manual_estimate_details: Optional[ManualEstimateDetails] = None
     reason: Optional[str] = None
 
 

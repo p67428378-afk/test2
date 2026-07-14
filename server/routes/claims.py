@@ -25,6 +25,7 @@ from server.schemas import (
 )
 from server.services.gcs import gcs_service
 from server.services.ai_analysis import ai_analysis_service
+from server.services.core_insurance import core_insurance_client
 
 router = APIRouter(prefix="/claims", tags=["claims"])
 
@@ -42,8 +43,31 @@ async def run_ai_analysis_task(
         if claim:
             if result["status"] == "READY":
                 claim.status = "READY"
-                claim.estimated_cost = result["estimate"]["total_cost"]
+                ai_amount = result["estimate"]["total_cost"]
+                claim.estimated_cost = ai_amount
                 claim.damage_breakdown = result["estimate"]
+
+                # Query Core Insurance System for manual estimate
+                manual_est = await core_insurance_client.get_manual_estimate(
+                    str(claim.policyholder_id)
+                )
+                if manual_est:
+                    claim.manual_amount = manual_est.get("amount")
+                    # Parse date if present
+                    date_str = manual_est.get("date")
+                    if date_str:
+                        from datetime import datetime
+
+                        try:
+                            claim.manual_date = datetime.strptime(date_str, "%Y-%m-%d")
+                        except Exception:
+                            pass
+
+                    # Check conflict
+                    if claim.manual_amount is not None:
+                        claim.has_conflict = core_insurance_client.check_conflict(
+                            float(ai_amount), float(claim.manual_amount)
+                        )
             else:
                 claim.status = "FAILED"
                 claim.damage_breakdown = {
@@ -110,11 +134,28 @@ def get_claim_estimate(claim_id: uuid.UUID, db: Session = Depends(get_db)):
     if claim.status == "PROCESSING":
         return {"status": "PROCESSING"}
     elif claim.status == "READY":
+        ai_est = (
+            claim.damage_breakdown.get("estimate")
+            if "estimate" in claim.damage_breakdown
+            else claim.damage_breakdown
+        )
+
+        manual_details = None
+        if claim.manual_amount is not None:
+            manual_details = {
+                "amount": float(claim.manual_amount),
+                "currency": "USD",
+                "date": claim.manual_date.strftime("%Y-%m-%d")
+                if claim.manual_date
+                else "2025-10-20",
+            }
+
         return {
             "status": "READY",
-            "estimate": claim.damage_breakdown.get("estimate")
-            if "estimate" in claim.damage_breakdown
-            else claim.damage_breakdown,
+            "submission_id": claim.id,
+            "ai_estimate": ai_est,
+            "has_conflict": claim.has_conflict,
+            "manual_estimate_details": manual_details,
         }
     else:
         reason = (

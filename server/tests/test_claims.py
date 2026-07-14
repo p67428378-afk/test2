@@ -154,3 +154,36 @@ def test_active_incident():
     assert response.json()["isActiveIncident"] is True
     assert response.json()["claim"]["id"] == str(claim.id)
     db.close()
+
+
+@pytest.mark.anyio
+async def test_estimate_conflict_detection():
+    # Create a claim with status READY, AI estimate total_cost = 1250.00
+    db = TestingSessionLocal()
+    claim = Claim(
+        policyholder_id=uuid.uuid4(),
+        status="READY",
+        estimated_cost=1250.00,
+        damage_breakdown={
+            "total_cost": 1250.00,
+            "currency": "USD",
+            "breakdown": [
+                {"part": "Front Bumper", "cost": 700.00},
+                {"part": "Right Headlight", "cost": 550.00},
+            ],
+        },
+        manual_amount=1500.00,
+        has_conflict=True,
+    )
+    db.add(claim)
+    db.commit()
+    db.refresh(claim)
+
+    response = client.get(f"/api/v1/claims/{claim.id}/estimate")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "READY"
+    assert data["has_conflict"] is True
+    assert data["manual_estimate_details"]["amount"] == 1500.00
+    assert data["manual_estimate_details"]["currency"] == "USD"
+    db.close()

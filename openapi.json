@@ -638,10 +638,44 @@
             "type": "string",
             "title": "Status"
           },
-          "estimate": {
+          "submission_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submission Id"
+          },
+          "ai_estimate": {
             "anyOf": [
               {
                 "$ref": "#/components/schemas/EstimateResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_conflict": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Conflict",
+            "default": false
+          },
+          "manual_estimate_details": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ManualEstimateDetails"
               },
               {
                 "type": "null"
@@ -834,6 +868,29 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ManualEstimateDetails": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "currency",
+          "date"
+        ],
+        "title": "ManualEstimateDetails"
       },
       "OTPVerifyRequest": {
         "properties": {

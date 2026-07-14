@@ -59,6 +59,9 @@ class Claim(Base):
     status = Column(String(50), nullable=False, default="PROCESSING")
     estimated_cost = Column(Numeric(10, 2), nullable=True)
     damage_breakdown = Column(JSON, nullable=True)
+    has_conflict = Column(Boolean, nullable=False, default=False)
+    manual_amount = Column(Numeric(10, 2), nullable=True)
+    manual_date = Column(DateTime, nullable=True)
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -74,6 +77,31 @@ class Claim(Base):
     )
     dispatch = relationship(
         "Dispatch", back_populates="claim", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class Estimate(Base):
+    __tablename__ = "estimates"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claims.id"), nullable=False)
+    ai_amount = Column(Numeric(10, 2), nullable=False, default=0.00)
+    currency = Column(String(10), nullable=False, default="USD")
+    details = Column(String, nullable=True)
+    has_conflict = Column(Boolean, nullable=False, default=False)
+    manual_amount = Column(Numeric(10, 2), nullable=True)
+    manual_date = Column(DateTime, nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class Photo(Base):
+    __tablename__ = "photos"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claims.id"), nullable=False)
+    gcs_url = Column(String(512), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
 
