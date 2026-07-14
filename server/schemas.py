@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 # --- EXISTING PASSWORD RESET SCHEMAS ---
@@ -73,6 +73,8 @@ class PatientCreate(PatientBase):
 
 class PatientResponse(PatientBase):
     id: UUID
+    insurance_provider: Optional[str] = None
+    policy_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -84,6 +86,8 @@ class AppointmentCreate(BaseModel):
     doctorId: UUID = Field(..., alias="doctorId")
     patientId: UUID = Field(..., alias="patientId")
     startTime: datetime = Field(..., alias="startTime")
+    insurance_provider: Optional[str] = None
+    policy_id: Optional[str] = None
 
     class Config:
         populate_by_name = True
@@ -117,3 +121,15 @@ class PatientAppointmentResponse(BaseModel):
 class AvailabilityResponse(BaseModel):
     doctorId: UUID
     slots: List[datetime]
+
+
+# --- NEW INSURANCE SCHEMAS ---
+class InsuranceVerifyRequest(BaseModel):
+    patient_id: UUID
+    insurance_provider: str
+    policy_id: str
+
+
+class InsuranceVerifyResponse(BaseModel):
+    estimated_copay: float
+    message: str

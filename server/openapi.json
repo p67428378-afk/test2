@@ -171,6 +171,9 @@
     },
     "/api/v1/doctors": {
       "get": {
+        "tags": [
+          "appointments"
+        ],
         "summary": "Get Doctors",
         "operationId": "get_doctors_api_v1_doctors_get",
         "responses": {
@@ -193,6 +196,9 @@
     },
     "/api/v1/doctors/{doctorId}/availability": {
       "get": {
+        "tags": [
+          "appointments"
+        ],
         "summary": "Get Doctor Availability",
         "operationId": "get_doctor_availability_api_v1_doctors__doctorId__availability_get",
         "parameters": [
@@ -255,6 +261,9 @@
     },
     "/api/v1/appointments": {
       "post": {
+        "tags": [
+          "appointments"
+        ],
         "summary": "Create Appointment",
         "operationId": "create_appointment_api_v1_appointments_post",
         "requestBody": {
@@ -293,6 +302,9 @@
     },
     "/api/v1/patients/{patientId}/appointments": {
       "get": {
+        "tags": [
+          "appointments"
+        ],
         "summary": "Get Patient Appointments",
         "operationId": "get_patient_appointments_api_v1_patients__patientId__appointments_get",
         "parameters": [
@@ -337,6 +349,9 @@
     },
     "/api/v1/appointments/{appointmentId}": {
       "delete": {
+        "tags": [
+          "appointments"
+        ],
         "summary": "Cancel Appointment",
         "operationId": "cancel_appointment_api_v1_appointments__appointmentId__delete",
         "parameters": [
@@ -354,6 +369,47 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance/verify": {
+      "post": {
+        "tags": [
+          "insurance"
+        ],
+        "summary": "Verify Insurance",
+        "operationId": "verify_insurance_api_v1_insurance_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsuranceVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsuranceVerifyResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -403,6 +459,28 @@
             "type": "string",
             "format": "date-time",
             "title": "Starttime"
+          },
+          "insurance_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance Provider"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
           }
         },
         "type": "object",
@@ -527,6 +605,48 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "InsuranceVerifyRequest": {
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Patient Id"
+          },
+          "insurance_provider": {
+            "type": "string",
+            "title": "Insurance Provider"
+          },
+          "policy_id": {
+            "type": "string",
+            "title": "Policy Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient_id",
+          "insurance_provider",
+          "policy_id"
+        ],
+        "title": "InsuranceVerifyRequest"
+      },
+      "InsuranceVerifyResponse": {
+        "properties": {
+          "estimated_copay": {
+            "type": "number",
+            "title": "Estimated Copay"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estimated_copay",
+          "message"
+        ],
+        "title": "InsuranceVerifyResponse"
       },
       "OTPVerifyRequest": {
         "properties": {

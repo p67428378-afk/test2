@@ -130,6 +130,14 @@ def create_appointment(db: Session, appointment: schemas.AppointmentCreate):
     if existing:
         return "double_booked"
 
+    # Update patient's insurance info if provided
+    if appointment.insurance_provider:
+        patient.insurance_provider = appointment.insurance_provider
+    if appointment.policy_id:
+        patient.policy_id = appointment.policy_id
+    if appointment.insurance_provider or appointment.policy_id:
+        db.add(patient)
+
     db_appt = models.Appointment(
         doctor_id=appointment.doctorId,
         patient_id=appointment.patientId,

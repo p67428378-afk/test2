@@ -1,13 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from typing import List
-from uuid import UUID
 import os
 
 from server.database import Base, engine, get_db
-from server import models, schemas, crud, websocket
-from server.api.v1.endpoints import password_reset
+from server import models, websocket
+from server.api.v1.endpoints import password_reset, appointments, insurance
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -26,8 +23,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include existing routers
+# Include routers
 app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
+app.include_router(appointments.router, prefix="/api/v1", tags=["appointments"])
+app.include_router(insurance.router, prefix="/api/v1", tags=["insurance"])
 
 # Include WebSocket router
 app.include_router(websocket.router)
@@ -62,79 +61,6 @@ def startup_populate():
         print(f"Error seeding database: {e}")
     finally:
         db.close()
-
-
-# API Endpoints
-
-
-@app.get("/api/v1/doctors", response_model=List[schemas.DoctorResponse])
-def get_doctors(db: Session = Depends(get_db)):
-    return crud.get_doctors(db)
-
-
-@app.get(
-    "/api/v1/doctors/{doctorId}/availability",
-    response_model=schemas.AvailabilityResponse,
-)
-def get_doctor_availability(
-    doctorId: UUID,
-    start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(..., description="End date (YYYY-MM-DD)"),
-    db: Session = Depends(get_db),
-):
-    doctor = crud.get_doctor(db, doctorId)
-    if not doctor:
-        raise HTTPException(status_code=404, detail="Doctor not found")
-    slots = crud.get_doctor_availability(db, doctorId, start_date, end_date)
-    return {"doctorId": doctorId, "slots": slots}
-
-
-@app.post(
-    "/api/v1/appointments", response_model=schemas.AppointmentResponse, status_code=201
-)
-async def create_appointment(
-    appointment: schemas.AppointmentCreate, db: Session = Depends(get_db)
-):
-    result = crud.create_appointment(db, appointment)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Doctor or Patient not found")
-    if result == "double_booked":
-        raise HTTPException(
-            status_code=400, detail="The selected time slot is already booked"
-        )
-
-    # Broadcast real-time update via WebSocket
-    await websocket.manager.broadcast_availability_change(
-        str(appointment.doctorId),
-        {"event": "availability_changed", "doctorId": str(appointment.doctorId)},
-    )
-
-    return result
-
-
-@app.get(
-    "/api/v1/patients/{patientId}/appointments",
-    response_model=List[schemas.PatientAppointmentResponse],
-)
-def get_patient_appointments(patientId: UUID, db: Session = Depends(get_db)):
-    patient = crud.get_patient(db, patientId)
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    return crud.get_appointments_by_patient(db, patientId)
-
-
-@app.delete("/api/v1/appointments/{appointmentId}", status_code=204)
-async def cancel_appointment(appointmentId: UUID, db: Session = Depends(get_db)):
-    appt = crud.cancel_appointment(db, appointmentId)
-    if not appt:
-        raise HTTPException(status_code=404, detail="Appointment not found")
-
-    # Broadcast real-time update via WebSocket
-    await websocket.manager.broadcast_availability_change(
-        str(appt.doctor_id),
-        {"event": "availability_changed", "doctorId": str(appt.doctor_id)},
-    )
-    return None
 
 
 @app.get("/")
