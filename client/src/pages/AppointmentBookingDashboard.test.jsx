@@ -11,6 +11,7 @@ vi.mock("../services/api", () => ({
   createAppointment: vi.fn(),
   getPatientAppointments: vi.fn(),
   cancelAppointment: vi.fn(),
+  rescheduleAppointment: vi.fn(),
   verifyInsurance: vi.fn(),
 }));
 
@@ -31,7 +32,7 @@ describe("AppointmentBookingDashboard", () => {
       doctorName: "Dr. Robert Chen",
       start_time: "2026-07-18T14:00:00",
       end_time: "2026-07-18T14:30:00",
-      status: "confirmed",
+      status: "booked",
     },
   ];
 
@@ -102,5 +103,22 @@ describe("AppointmentBookingDashboard", () => {
     expect(
       screen.getByText("Insurance Verified Successfully via Clearinghouse API"),
     ).toBeInTheDocument();
+  });
+
+  it("allows initiating rescheduling and displays side-by-side comparison", async () => {
+    render(<AppointmentBookingDashboard />);
+
+    // Wait for appointments to load
+    await waitFor(() => {
+      expect(screen.getByText("Dr. Robert Chen")).toBeInTheDocument();
+    });
+
+    // Click Reschedule button
+    const rescheduleBtn = screen.getByText("Reschedule");
+    fireEvent.click(rescheduleBtn);
+
+    // Should show side-by-side comparison headers
+    expect(screen.getByText("Current Slot")).toBeInTheDocument();
+    expect(screen.getByText("New Slot")).toBeInTheDocument();
   });
 });

@@ -6,6 +6,8 @@ export default function BookingReview({
   verificationResult,
   onConfirm,
   isBooking,
+  reschedulingAppointment = null,
+  onCancelReschedule = null,
 }) {
   const formatSlotDisplay = (slotIso) => {
     if (!slotIso) return "None selected";
@@ -26,33 +28,72 @@ export default function BookingReview({
 
   return (
     <div class="bg-surface rounded-xl border border-outline-variant p-6 shadow-sm flex flex-col h-full">
-      <div class="border-b border-outline-variant pb-4 mb-6">
-        <h3 class="font-h3 text-h3 text-on-background">Booking Review</h3>
+      <div class="border-b border-outline-variant pb-4 mb-6 flex justify-between items-center">
+        <h3 class="font-h3 text-h3 text-on-background">
+          {reschedulingAppointment ? "Reschedule Review" : "Booking Review"}
+        </h3>
+        {reschedulingAppointment && (
+          <button
+            onClick={onCancelReschedule}
+            class="text-xs text-error hover:underline"
+          >
+            Cancel Rescheduling
+          </button>
+        )}
       </div>
 
-      {/* Selected Slot Summary */}
-      <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant flex items-start gap-4 mb-6">
-        <div class="p-3 bg-primary/10 rounded-full text-primary">
-          <span class="material-symbols-outlined" data-icon="schedule">
-            schedule
-          </span>
+      {/* Rescheduling Side-by-Side Comparison */}
+      {reschedulingAppointment ? (
+        <div class="space-y-4 mb-6">
+          <div class="bg-gray-100 p-3 rounded-lg border border-outline-variant">
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              Current Slot
+            </p>
+            <p class="text-sm font-medium text-gray-700">
+              {formatSlotDisplay(reschedulingAppointment.start_time)}
+            </p>
+          </div>
+          <div class="flex justify-center">
+            <span class="material-symbols-outlined text-primary rotate-90 lg:rotate-0">
+              arrow_downward
+            </span>
+          </div>
+          <div class="bg-primary/5 p-3 rounded-lg border border-primary/20">
+            <p class="text-xs font-bold text-primary uppercase tracking-wider mb-1">
+              New Slot
+            </p>
+            <p class="text-sm font-bold text-primary">
+              {selectedSlot
+                ? formatSlotDisplay(selectedSlot.iso)
+                : "Select a new slot from calendar"}
+            </p>
+          </div>
         </div>
-        <div>
-          <p class="font-label-sm text-label-sm text-on-surface-variant mb-1 uppercase tracking-wide">
-            Selected Slot
-          </p>
-          <p class="font-body-lg text-body-lg text-on-background font-medium">
-            {selectedSlot
-              ? formatSlotDisplay(selectedSlot.iso)
-              : "No slot selected"}
-          </p>
-          <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
-            {selectedDoctor
-              ? `with ${selectedDoctor.name} (${selectedDoctor.specialty})`
-              : "Please select a doctor"}
-          </p>
+      ) : (
+        /* Selected Slot Summary */
+        <div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant flex items-start gap-4 mb-6">
+          <div class="p-3 bg-primary/10 rounded-full text-primary">
+            <span class="material-symbols-outlined" data-icon="schedule">
+              schedule
+            </span>
+          </div>
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant mb-1 uppercase tracking-wide">
+              Selected Slot
+            </p>
+            <p class="font-body-lg text-body-lg text-on-background font-medium">
+              {selectedSlot
+                ? formatSlotDisplay(selectedSlot.iso)
+                : "No slot selected"}
+            </p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              {selectedDoctor
+                ? `with ${selectedDoctor.name} (${selectedDoctor.specialty})`
+                : "Please select a doctor"}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Verification Status Badge */}
       {verificationResult && (
@@ -95,7 +136,9 @@ export default function BookingReview({
           </div>
           <div class="text-right">
             <span class="font-h1 text-h1 text-primary font-bold tracking-tight">
-              {copay !== null ? `$${copay.toFixed(2)}` : "N/A"}
+              {copay !== null
+                ? `$${copay.toFixed(2)}`
+                : "Co-pay estimate unavailable"}
             </span>
           </div>
         </div>
@@ -114,7 +157,13 @@ export default function BookingReview({
         <span class="material-symbols-outlined" data-icon="check">
           check
         </span>
-        {isBooking ? "Booking..." : "Confirm & Book Appointment"}
+        {isBooking
+          ? reschedulingAppointment
+            ? "Rescheduling..."
+            : "Booking..."
+          : reschedulingAppointment
+            ? "Confirm & Reschedule"
+            : "Confirm & Book Appointment"}
       </button>
     </div>
   );

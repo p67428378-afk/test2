@@ -5,6 +5,7 @@ export default function WeeklyCalendar({
   onSelectSlot,
   availableSlots = [],
   wsConnected = false,
+  reschedulingAppointment = null,
 }) {
   // Generate 7 days starting from Monday, July 13, 2026 (as in the Stitch HTML)
   const baseDate = new Date("2026-07-13T00:00:00");
@@ -39,7 +40,9 @@ export default function WeeklyCalendar({
     <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-unit-lg flex flex-col">
       <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
         <h2 class="font-headline-sm text-headline-sm text-on-surface">
-          Select a Time Slot
+          {reschedulingAppointment
+            ? "Select a New Time Slot"
+            : "Select a Time Slot"}
         </h2>
         <div
           class={`flex items-center gap-2 px-3 py-1 rounded-full border ${

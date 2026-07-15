@@ -5,6 +5,7 @@ import {
   createAppointment,
   getPatientAppointments,
   cancelAppointment,
+  rescheduleAppointment,
   verifyInsurance,
 } from "../services/api";
 import WeeklyCalendar from "../components/appointments/WeeklyCalendar";
@@ -30,6 +31,9 @@ export default function AppointmentBookingDashboard() {
   const [wsConnected, setWsConnected] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Rescheduling State
+  const [reschedulingAppointment, setReschedulingAppointment] = useState(null);
 
   // Insurance Pre-Verification State
   const [insuranceProvider, setInsuranceProvider] = useState("");
@@ -221,16 +225,30 @@ export default function AppointmentBookingDashboard() {
       const activePatientId =
         role === "coordinator" && customPatientId ? customPatientId : patientId;
 
-      const payload = {
-        doctorId: selectedDoctorId,
-        patientId: activePatientId,
-        startTime: selectedSlot.iso,
-        insurance_provider: insuranceProvider || null,
-        policy_id: policyId || null,
-      };
+      if (reschedulingAppointment) {
+        // Reschedule flow
+        const payload = {
+          new_start_time: selectedSlot.iso,
+          new_end_time: new Date(
+            new Date(selectedSlot.iso).getTime() + 30 * 60000,
+          ).toISOString(),
+        };
+        await rescheduleAppointment(reschedulingAppointment.id, payload);
+        setSuccessMessage("Appointment rescheduled successfully!");
+        setReschedulingAppointment(null);
+      } else {
+        // Standard booking flow
+        const payload = {
+          doctorId: selectedDoctorId,
+          patientId: activePatientId,
+          startTime: selectedSlot.iso,
+          insurance_provider: insuranceProvider || null,
+          policy_id: policyId || null,
+        };
+        await createAppointment(payload);
+        setSuccessMessage("Appointment booked successfully!");
+      }
 
-      await createAppointment(payload);
-      setSuccessMessage("Appointment booked successfully!");
       setSelectedSlot(null);
       setVerificationResult(null);
       setInsuranceProvider("");
@@ -240,10 +258,10 @@ export default function AppointmentBookingDashboard() {
       const updated = await getPatientAppointments(activePatientId);
       setAppointments(updated);
     } catch (err) {
-      console.error("Booking failed", err);
+      console.error("Booking/Rescheduling failed", err);
       setErrorMessage(
         err.response?.data?.detail ||
-          "Failed to book appointment. Slot might be double-booked.",
+          "Failed to complete action. Slot might be double-booked or rule violated.",
       );
     } finally {
       setIsBooking(false);
@@ -268,8 +286,47 @@ export default function AppointmentBookingDashboard() {
     }
   };
 
+  const handleStartReschedule = (appt) => {
+    setErrorMessage("");
+    setSuccessMessage("");
+    setReschedulingAppointment(appt);
+    setSelectedSlot(null);
+
+    // Pre-filter to the same doctor
+    const doc = doctors.find((d) => d.name === appt.doctorName);
+    if (doc) {
+      setSelectedDoctorId(doc.id);
+      setSelectedSpecialty(doc.specialty);
+    }
+
+    // Pre-populate co-pay estimate if available
+    if (appt.estimated_copay !== null && appt.estimated_copay !== undefined) {
+      setVerificationResult({
+        estimated_copay: parseFloat(appt.estimated_copay),
+        message: "Estimated co-pay loaded from existing appointment",
+      });
+    } else {
+      setVerificationResult(null);
+    }
+  };
+
+  const handleCancelReschedule = () => {
+    setReschedulingAppointment(null);
+    setSelectedSlot(null);
+    setVerificationResult(null);
+  };
+
   const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
   const specialties = Array.from(new Set(doctors.map((d) => d.specialty)));
+
+  // Helper to check if appointment is within 24 hours
+  const isWithin24Hours = (startTimeStr) => {
+    const now = new Date();
+    const apptTime = new Date(startTimeStr);
+    const diffMs = apptTime.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    return diffHours < 24;
+  };
 
   return (
     <div class="max-w-7xl mx-auto space-y-unit-lg">
@@ -353,7 +410,8 @@ export default function AppointmentBookingDashboard() {
             <select
               value={selectedSpecialty}
               onChange={handleSpecialtyChange}
-              class="block w-full pl-3 pr-10 py-2 text-body-md font-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none bg-white"
+              disabled={!!reschedulingAppointment}
+              class="block w-full pl-3 pr-10 py-2 text-body-md font-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none bg-white disabled:opacity-50"
             >
               <option value="">All Specialties</option>
               {specialties.map((spec) => (
@@ -376,7 +434,8 @@ export default function AppointmentBookingDashboard() {
             <select
               value={selectedDoctorId}
               onChange={handleDoctorChange}
-              class="block w-full pl-3 pr-10 py-2 text-body-md font-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none bg-white"
+              disabled={!!reschedulingAppointment}
+              class="block w-full pl-3 pr-10 py-2 text-body-md font-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none bg-white disabled:opacity-50"
             >
               <option value="">Select Doctor</option>
               {doctors
@@ -425,23 +484,28 @@ export default function AppointmentBookingDashboard() {
             onSelectSlot={handleSelectSlot}
             availableSlots={availableSlots}
             wsConnected={wsConnected}
+            reschedulingAppointment={reschedulingAppointment}
           />
         </div>
 
         {/* Right (4/12): Split Pane Layout for Insurance & Review */}
         <div class="lg:col-span-4 space-y-6">
-          <InsuranceForm
-            onVerify={handleVerifyInsurance}
-            isVerifying={isVerifying}
-            verificationResult={verificationResult}
-            error={verificationError}
-          />
+          {!reschedulingAppointment && (
+            <InsuranceForm
+              onVerify={handleVerifyInsurance}
+              isVerifying={isVerifying}
+              verificationResult={verificationResult}
+              error={verificationError}
+            />
+          )}
           <BookingReview
             selectedSlot={selectedSlot}
             selectedDoctor={selectedDoctor}
             verificationResult={verificationResult}
             onConfirm={handleConfirmBooking}
             isBooking={isBooking}
+            reschedulingAppointment={reschedulingAppointment}
+            onCancelReschedule={handleCancelReschedule}
           />
         </div>
       </div>
@@ -488,65 +552,92 @@ export default function AppointmentBookingDashboard() {
                   </td>
                 </tr>
               ) : (
-                appointments.map((appt) => (
-                  <tr
-                    key={appt.id}
-                    class="hover:bg-[#F1F5F9] transition-colors"
-                  >
-                    <td class="p-4">
-                      <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold font-label-sm">
-                          {appt.doctorName
-                            ? appt.doctorName
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                            : "DR"}
+                appointments.map((appt) => {
+                  const isCancelled = appt.status === "cancelled";
+                  const isUpcoming =
+                    !isCancelled && !isWithin24Hours(appt.start_time);
+                  const showReschedule =
+                    isUpcoming &&
+                    (appt.status === "booked" ||
+                      appt.status === "rescheduled" ||
+                      appt.status === "confirmed");
+
+                  return (
+                    <tr
+                      key={appt.id}
+                      class="hover:bg-[#F1F5F9] transition-colors"
+                    >
+                      <td class="p-4">
+                        <div class="flex items-center gap-3">
+                          <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold font-label-sm">
+                            {appt.doctorName
+                              ? appt.doctorName
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                              : "DR"}
+                          </div>
+                          <span class="font-body-md text-body-md text-on-surface font-medium">
+                            {appt.doctorName}
+                          </span>
                         </div>
-                        <span class="font-body-md text-body-md text-on-surface font-medium">
-                          {appt.doctorName}
-                        </span>
-                      </div>
-                    </td>
-                    <td class="p-4 font-body-sm text-body-sm text-on-surface-variant">
-                      {doctors.find((d) => d.name === appt.doctorName)
-                        ?.specialty || "General Medicine"}
-                    </td>
-                    <td class="p-4 font-body-sm text-body-sm text-on-surface-variant">
-                      {new Date(appt.start_time).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                      <br />
-                      <span class="text-xs">
-                        {new Date(appt.start_time).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
+                      </td>
+                      <td class="p-4 font-body-sm text-body-sm text-on-surface-variant">
+                        {doctors.find((d) => d.name === appt.doctorName)
+                          ?.specialty || "General Medicine"}
+                      </td>
+                      <td class="p-4 font-body-sm text-body-sm text-on-surface-variant">
+                        {new Date(appt.start_time).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
                         })}
-                      </span>
-                    </td>
-                    <td class="p-4">
-                      <span
-                        class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                          appt.status === "confirmed"
-                            ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                            : "bg-amber-100 text-amber-800 border-amber-200"
-                        }`}
-                      >
-                        {appt.status}
-                      </span>
-                    </td>
-                    <td class="p-4 text-right">
-                      <button
-                        onClick={() => handleCancelAppointment(appt.id)}
-                        class="text-error hover:text-error-container font-label-sm text-label-sm bg-error/10 hover:bg-error/20 px-3 py-1.5 rounded transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        <br />
+                        <span class="text-xs">
+                          {new Date(appt.start_time).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span
+                          class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                            appt.status === "booked" ||
+                            appt.status === "confirmed"
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                              : appt.status === "rescheduled"
+                                ? "bg-blue-100 text-blue-800 border-blue-200"
+                                : "bg-gray-100 text-gray-800 border-gray-200"
+                          }`}
+                        >
+                          {appt.status}
+                        </span>
+                      </td>
+                      <td class="p-4 text-right space-x-2">
+                        {showReschedule && (
+                          <button
+                            onClick={() => handleStartReschedule(appt)}
+                            class="text-primary hover:text-primary-container font-label-sm text-label-sm bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded transition-colors"
+                          >
+                            Reschedule
+                          </button>
+                        )}
+                        {!isCancelled && (
+                          <button
+                            onClick={() => handleCancelAppointment(appt.id)}
+                            class="text-error hover:text-error-container font-label-sm text-label-sm bg-error/10 hover:bg-error/20 px-3 py-1.5 rounded transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
