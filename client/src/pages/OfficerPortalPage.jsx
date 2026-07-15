@@ -41,7 +41,7 @@ export default function OfficerPortalPage({ officerEmail }) {
 
   const handleDecisionSuccess = () => {
     setSelectedApp(null);
-    setSuccessMessage("Decision submitted successfully!");
+    setSuccessMessage("Action submitted successfully!");
     fetchApplications();
     setTimeout(() => setSuccessMessage(""), 4000);
   };

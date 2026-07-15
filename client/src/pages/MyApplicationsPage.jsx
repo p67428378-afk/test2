@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { loanService } from "../services/api";
 import ApplicationsTable from "../components/loans/ApplicationsTable";
+import LoanOfferPage from "./LoanOfferPage";
 import { RefreshCw, AlertCircle, ShieldCheck } from "lucide-react";
 
 export default function MyApplicationsPage({ customerId, userEmail }) {
   const [applications, setApplications] = useState([]);
+  const [selectedOfferApp, setSelectedOfferApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -29,6 +31,22 @@ export default function MyApplicationsPage({ customerId, userEmail }) {
       fetchApplications();
     }
   }, [customerId, userEmail]);
+
+  const handleDecisionSuccess = () => {
+    setSelectedOfferApp(null);
+    fetchApplications();
+  };
+
+  if (selectedOfferApp) {
+    return (
+      <LoanOfferPage
+        application={selectedOfferApp}
+        userEmail={userEmail}
+        onBack={() => setSelectedOfferApp(null)}
+        onDecisionSubmitted={handleDecisionSuccess}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -62,7 +80,10 @@ export default function MyApplicationsPage({ customerId, userEmail }) {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
       ) : (
-        <ApplicationsTable applications={applications} />
+        <ApplicationsTable
+          applications={applications}
+          onViewOffer={(app) => setSelectedOfferApp(app)}
+        />
       )}
 
       <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 flex items-start gap-3">

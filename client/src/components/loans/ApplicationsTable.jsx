@@ -6,13 +6,33 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Gift,
+  ThumbsUp,
 } from "lucide-react";
 
 export default function ApplicationsTable({
   applications,
   onSelectApplication,
+  onViewOffer,
 }) {
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, offerStatus) => {
+    if (status === "Approved" && offerStatus === "Offer Made") {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+          <Gift className="w-3 h-3 mr-1" />
+          Offer Made
+        </span>
+      );
+    }
+    if (status === "Approved" && offerStatus === "Offer Accepted") {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">
+          <ThumbsUp className="w-3 h-3 mr-1" />
+          Offer Accepted
+        </span>
+      );
+    }
+
     switch (status) {
       case "Approved":
         return (
@@ -61,47 +81,65 @@ export default function ApplicationsTable({
             <tr>
               <th className="px-6 py-4">Product</th>
               <th className="px-6 py-4">Requested Amount</th>
+              <th className="px-6 py-4">Offered Amount</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Submitted At</th>
-              {onSelectApplication && (
-                <th className="px-6 py-4 text-right">Actions</th>
-              )}
+              <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 text-slate-700">
-            {applications.map((app) => (
-              <tr
-                key={app.application_id}
-                className="hover:bg-slate-50 transition-colors"
-              >
-                <td className="px-6 py-4 font-medium text-slate-900">
-                  {app.product_name}
-                </td>
-                <td className="px-6 py-4 font-semibold">
-                  ${parseFloat(app.requested_amount).toLocaleString()}
-                </td>
-                <td className="px-6 py-4">{getStatusBadge(app.status)}</td>
-                <td className="px-6 py-4 text-slate-500">
-                  {new Date(app.submitted_at).toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </td>
-                {onSelectApplication && (
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => onSelectApplication(app)}
-                      className="text-indigo-600 hover:text-indigo-900 font-medium text-xs"
-                    >
-                      Evaluate
-                    </button>
+            {applications.map((app) => {
+              const isOfferMade =
+                app.status === "Approved" && app.offer_status === "Offer Made";
+              return (
+                <tr
+                  key={app.application_id}
+                  className="hover:bg-slate-50 transition-colors"
+                >
+                  <td className="px-6 py-4 font-medium text-slate-900">
+                    {app.product_name}
                   </td>
-                )}
-              </tr>
-            ))}
+                  <td className="px-6 py-4 font-semibold">
+                    ${parseFloat(app.requested_amount).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 font-semibold text-indigo-600">
+                    {app.offered_amount
+                      ? `$${parseFloat(app.offered_amount).toLocaleString()}`
+                      : "-"}
+                  </td>
+                  <td className="px-6 py-4">
+                    {getStatusBadge(app.status, app.offer_status)}
+                  </td>
+                  <td className="px-6 py-4 text-slate-500">
+                    {new Date(app.submitted_at).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    {isOfferMade && onViewOffer && (
+                      <button
+                        onClick={() => onViewOffer(app)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs px-3 py-1.5 rounded-lg transition-colors mr-2"
+                      >
+                        View Offer
+                      </button>
+                    )}
+                    {onSelectApplication && (
+                      <button
+                        onClick={() => onSelectApplication(app)}
+                        className="text-indigo-600 hover:text-indigo-900 font-medium text-xs"
+                      >
+                        Evaluate
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

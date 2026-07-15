@@ -47,6 +47,37 @@ export const loanService = {
     );
     return response.data;
   },
+
+  createOffer: async (applicationId, officerEmail, payload) => {
+    const response = await api.post(
+      `/api/v1/loans/applications/${applicationId}/offer`,
+      payload,
+      {
+        params: { officer_email: officerEmail },
+      },
+    );
+    return response.data;
+  },
+
+  getSchedule: async (applicationId) => {
+    const response = await api.get(
+      `/api/v1/loans/applications/${applicationId}/schedule`,
+    );
+    return response.data;
+  },
+
+  submitOfferDecision: async (applicationId, userEmail, payload) => {
+    const headers = {};
+    if (userEmail) {
+      headers["x-user-email"] = userEmail;
+    }
+    const response = await api.post(
+      `/api/v1/loans/applications/${applicationId}/offer-decision`,
+      payload,
+      { headers },
+    );
+    return response.data;
+  },
 };
 
 export default api;
