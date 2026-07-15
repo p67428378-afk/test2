@@ -32,11 +32,14 @@ export default function App() {
         getSKUPerformance(),
       ]);
       setKpis(kpiData);
-      setSkus(skuData);
+      // Guard against a non-array API payload so downstream `.map`/`.forEach`
+      // calls never throw "skus.map is not a function".
+      const skuList = Array.isArray(skuData) ? skuData : [];
+      setSkus(skuList);
 
       // Initialize actions with the pre-selected scenario actions
       const initialActions = {};
-      skuData.forEach((sku) => {
+      skuList.forEach((sku) => {
         initialActions[sku.sku_id] =
           sku.scenarios?.Balanced?.action || "MAINTAIN";
       });

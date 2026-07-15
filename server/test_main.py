@@ -2,13 +2,19 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 from server.database import Base, get_db
 from server.main import app
 
-# Setup in-memory SQLite database for testing
+# Setup in-memory SQLite database for testing.
+# StaticPool keeps a single shared connection so tables created in the fixture
+# are visible to the request sessions (each new :memory: connection would
+# otherwise be a separate, empty database -> "no such table" errors).
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

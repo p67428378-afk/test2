@@ -1,5 +1,4 @@
 import React from "react";
-import { Shield, ShieldAlert, ShieldCheck } from "lucide-react";
 
 export default function ScenarioSelector({
   selectedScenario,

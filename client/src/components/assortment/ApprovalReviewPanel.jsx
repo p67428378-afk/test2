@@ -4,16 +4,17 @@ import { ShieldCheck, ShieldAlert, Play, Loader2 } from "lucide-react";
 export default function ApprovalReviewPanel({
   selectedScenario,
   skuActions,
-  skus,
+  skus = [],
   onSubmit,
   submitting,
 }) {
+  const skuList = Array.isArray(skus) ? skus : [];
   // Calculate projected Private Brand % based on current actions
   const calculateProjectedPB = () => {
     let totalProjectedSales = 0;
     let pbProjectedSales = 0;
 
-    skus.forEach((sku) => {
+    skuList.forEach((sku) => {
       const action =
         skuActions[sku.sku_id] ||
         sku.scenarios?.[selectedScenario]?.action ||
@@ -40,7 +41,7 @@ export default function ApprovalReviewPanel({
 
   // Count actions
   const actionCounts = { GROW: 0, MAINTAIN: 0, SWAP: 0, REDUCE: 0 };
-  skus.forEach((sku) => {
+  skuList.forEach((sku) => {
     const action =
       skuActions[sku.sku_id] ||
       sku.scenarios?.[selectedScenario]?.action ||

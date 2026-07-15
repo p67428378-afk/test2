@@ -48,7 +48,7 @@ export default function KPIHeaderStrip({ metrics, loading }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map((card, idx) => {
+      {cards.map((card) => {
         const Icon = card.icon;
         return (
           <div

@@ -13,7 +13,7 @@ class ErrorBoundary extends React.Component {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch() {
     // Silent error boundary as per standards
   }
 

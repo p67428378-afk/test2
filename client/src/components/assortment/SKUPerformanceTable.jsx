@@ -1,18 +1,13 @@
 import React from "react";
-import {
-  ArrowUpRight,
-  ArrowDownRight,
-  RefreshCw,
-  Check,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, RefreshCw, Check } from "lucide-react";
 
 export default function SKUPerformanceTable({
-  skus,
+  skus = [],
   loading,
   currentScenario,
   onActionChange,
 }) {
+  const skuList = Array.isArray(skus) ? skus : [];
   const getBadgeColor = (action) => {
     switch (action) {
       case "GROW":
@@ -126,7 +121,7 @@ export default function SKUPerformanceTable({
                   </td>
                 </tr>
               ))
-            ) : skus.length === 0 ? (
+            ) : skuList.length === 0 ? (
               <tr>
                 <td
                   colSpan="7"
@@ -136,7 +131,7 @@ export default function SKUPerformanceTable({
                 </td>
               </tr>
             ) : (
-              skus.map((sku) => {
+              skuList.map((sku) => {
                 const scenarioAction =
                   sku.scenarios?.[currentScenario]?.action || "MAINTAIN";
                 const currentAction = sku.currentAction || scenarioAction;
