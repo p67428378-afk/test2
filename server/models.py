@@ -1,10 +1,10 @@
-
 import uuid
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -20,6 +20,7 @@ class User(Base):
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
 
+
 class OTP(Base):
     __tablename__ = "otps"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -31,6 +32,7 @@ class OTP(Base):
 
     user = relationship("User", back_populates="otps")
 
+
 class PasswordHistory(Base):
     __tablename__ = "password_history"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -39,3 +41,34 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+
+# --- DG Cluster Assortment Advisor Models ---
+
+
+class AssortmentPlan(Base):
+    __tablename__ = "assortment_plans"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_name = Column(String(50), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    submitted_by = Column(String(255), nullable=False)
+    audit_trail_id = Column(String(50), nullable=False)
+    guardrail_status = Column(
+        String, nullable=False
+    )  # Stored as JSON string for SQLite compatibility
+
+    sku_actions = relationship(
+        "PlanSKUAction", back_populates="assortment_plan", cascade="all, delete-orphan"
+    )
+
+
+class PlanSKUAction(Base):
+    __tablename__ = "plan_sku_actions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    assortment_plan_id = Column(
+        UUID(as_uuid=True), ForeignKey("assortment_plans.id"), nullable=False
+    )
+    sku = Column(String(255), nullable=False)
+    action = Column(String(50), nullable=False)
+
+    assortment_plan = relationship("AssortmentPlan", back_populates="sku_actions")
