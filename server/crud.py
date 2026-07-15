@@ -1,38 +1,96 @@
-
 from sqlalchemy.orm import Session
+from uuid import UUID
 from server import models, schemas
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+def get_loan_products(
+    db: Session,
+    skip: int = 0,
+    limit: int = 20,
+    type_filter: str = None,
+    tenure_filter: int = None,
+    max_emi_filter: float = None,
+):
+    query = db.query(models.LoanProduct)
+    if type_filter:
+        query = query.filter(models.LoanProduct.name.ilike(f"%{type_filter}%"))
 
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
-    db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    products = query.offset(skip).limit(limit).all()
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
+    # If max_emi_filter or tenure_filter is provided, we can filter programmatically or via query.
+    # Let's filter programmatically to ensure accurate reducing-balance EMI calculation.
+    filtered_products = []
+    for p in products:
+        if tenure_filter:
+            if not (p.min_tenure_months <= tenure_filter <= p.max_tenure_months):
+                continue
+        if max_emi_filter:
+            # Calculate EMI for max_loan_amount or a standard amount to see if it fits?
+            # Usually, filtering by max_emi means: "Is there a configuration where EMI <= max_emi?"
+            # Let's calculate EMI for the minimum possible or standard amount, or just check if EMI for max_loan_amount at max_tenure is within limit.
+            # Let's calculate EMI for max_loan_amount at max_tenure_months.
+            rate = float(p.interest_rate) / 12 / 100
+            if rate > 0:
+                emi = (
+                    float(p.max_loan_amount)
+                    * rate
+                    * ((1 + rate) ** p.max_tenure_months)
+                ) / (((1 + rate) ** p.max_tenure_months) - 1)
+            else:
+                emi = float(p.max_loan_amount) / p.max_tenure_months
+            if emi > max_emi_filter:
+                # If even the max loan EMI is too high, but maybe they can borrow less?
+                # Let's assume if they can borrow at least some amount with EMI <= max_emi, it's fine.
+                # So we check if the minimum loan amount (e.g. 1000 or 10% of max) has EMI <= max_emi.
+                min_possible_loan = min(10000.0, float(p.max_loan_amount))
+                if rate > 0:
+                    min_emi = (
+                        min_possible_loan * rate * ((1 + rate) ** p.max_tenure_months)
+                    ) / (((1 + rate) ** p.max_tenure_months) - 1)
+                else:
+                    min_emi = min_possible_loan / p.max_tenure_months
+                if min_emi > max_emi_filter:
+                    continue
+        filtered_products.append(p)
+    return filtered_products
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
-    db.commit()
-    db.refresh(otp)
-    return otp
 
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
+def get_customer_applications(
+    db: Session, customer_id: UUID, skip: int = 0, limit: int = 20
+):
+    apps = (
+        db.query(models.LoanApplication)
+        .filter(models.LoanApplication.customer_id == customer_id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    results = []
+    for app in apps:
+        results.append(
+            schemas.CustomerApplicationResponse(
+                application_id=app.id,
+                product_name=app.product.name,
+                requested_amount=float(app.requested_amount),
+                status=app.status,
+                submitted_at=app.created_at,
+            )
+        )
+    return results
 
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
-    db.commit()
-    db.refresh(user)
-    return user
+
+def check_duplicate_application(
+    db: Session, customer_id: UUID, product_id: UUID
+) -> bool:
+    # Check if there is an active application (status not in Approved, Rejected)
+    active_statuses = ["Submitted", "Under Review"]
+    exists = (
+        db.query(models.LoanApplication)
+        .filter(
+            models.LoanApplication.customer_id == customer_id,
+            models.LoanApplication.product_id == product_id,
+            models.LoanApplication.status.in_(active_statuses),
+        )
+        .first()
+    )
+    return exists is not None
