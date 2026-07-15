@@ -4,3 +4,9 @@ sqlalchemy
 pydantic
 pydantic-settings
 pytest
+bcrypt
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+email-validator
+httpx
