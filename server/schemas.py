@@ -100,6 +100,8 @@ class AppointmentResponse(BaseModel):
     startTime: datetime = Field(..., alias="start_time")
     endTime: datetime = Field(..., alias="end_time")
     status: str
+    rescheduled_from_id: Optional[UUID] = None
+    estimated_copay: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -112,10 +114,17 @@ class PatientAppointmentResponse(BaseModel):
     startTime: datetime = Field(..., alias="start_time")
     endTime: datetime = Field(..., alias="end_time")
     status: str
+    rescheduled_from_id: Optional[UUID] = None
+    estimated_copay: Optional[float] = None
 
     class Config:
         from_attributes = True
         populate_by_name = True
+
+
+class AppointmentRescheduleRequest(BaseModel):
+    new_start_time: datetime
+    new_end_time: datetime
 
 
 class AvailabilityResponse(BaseModel):

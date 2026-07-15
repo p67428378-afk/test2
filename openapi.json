@@ -383,6 +383,59 @@
         }
       }
     },
+    "/api/v1/appointments/{appointmentId}/reschedule": {
+      "patch": {
+        "tags": [
+          "appointments"
+        ],
+        "summary": "Reschedule Appointment",
+        "operationId": "reschedule_appointment_api_v1_appointments__appointmentId__reschedule_patch",
+        "parameters": [
+          {
+            "name": "appointmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Appointmentid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentRescheduleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/insurance/verify": {
       "post": {
         "tags": [
@@ -491,6 +544,26 @@
         ],
         "title": "AppointmentCreate"
       },
+      "AppointmentRescheduleRequest": {
+        "properties": {
+          "new_start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "New Start Time"
+          },
+          "new_end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "New End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_start_time",
+          "new_end_time"
+        ],
+        "title": "AppointmentRescheduleRequest"
+      },
       "AppointmentResponse": {
         "properties": {
           "id": {
@@ -521,6 +594,29 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "rescheduled_from_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rescheduled From Id"
+          },
+          "estimated_copay": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Copay"
           }
         },
         "type": "object",
@@ -739,6 +835,29 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "rescheduled_from_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rescheduled From Id"
+          },
+          "estimated_copay": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Copay"
           }
         },
         "type": "object",

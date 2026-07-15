@@ -25,6 +25,13 @@ def get_appointments_by_patient(db: Session, patient_id: UUID):
     )
     result = []
     for appt in appointments:
+        # Convert estimated_copay to float if present
+        copay_val = None
+        if appt.estimated_copay is not None:
+            try:
+                copay_val = float(appt.estimated_copay)
+            except ValueError:
+                pass
         result.append(
             {
                 "id": appt.id,
@@ -32,6 +39,8 @@ def get_appointments_by_patient(db: Session, patient_id: UUID):
                 "start_time": appt.start_time,
                 "end_time": appt.end_time,
                 "status": appt.status,
+                "rescheduled_from_id": appt.rescheduled_from_id,
+                "estimated_copay": copay_val,
             }
         )
     return result
@@ -73,12 +82,12 @@ def get_doctor_availability(
                     all_slots.append(slot)
         current_day += timedelta(days=1)
 
-    # Get existing confirmed appointments for this doctor in the range
+    # Get existing confirmed/booked/rescheduled appointments for this doctor in the range
     booked_appts = (
         db.query(models.Appointment)
         .filter(
             models.Appointment.doctor_id == doctor_id,
-            models.Appointment.status == "confirmed",
+            models.Appointment.status.in_(["confirmed", "booked", "rescheduled"]),
             models.Appointment.start_time >= start_dt,
             models.Appointment.start_time <= end_dt,
         )
@@ -121,7 +130,7 @@ def create_appointment(db: Session, appointment: schemas.AppointmentCreate):
         db.query(models.Appointment)
         .filter(
             models.Appointment.doctor_id == appointment.doctorId,
-            models.Appointment.status == "confirmed",
+            models.Appointment.status.in_(["confirmed", "booked", "rescheduled"]),
             models.Appointment.start_time == start_time,
         )
         .first()
@@ -138,12 +147,26 @@ def create_appointment(db: Session, appointment: schemas.AppointmentCreate):
     if appointment.insurance_provider or appointment.policy_id:
         db.add(patient)
 
+    # Estimate co-pay if insurance is provided
+    estimated_copay = None
+    if appointment.insurance_provider and appointment.policy_id:
+        provider_lower = appointment.insurance_provider.lower()
+        if "blue cross" in provider_lower or "bcbs" in provider_lower:
+            estimated_copay = 25.0
+        elif "aetna" in provider_lower:
+            estimated_copay = 30.0
+        elif "cigna" in provider_lower:
+            estimated_copay = 35.0
+        else:
+            estimated_copay = 40.0
+
     db_appt = models.Appointment(
         doctor_id=appointment.doctorId,
         patient_id=appointment.patientId,
         start_time=start_time,
         end_time=end_time,
         status="confirmed",
+        estimated_copay=str(estimated_copay) if estimated_copay is not None else None,
     )
     db.add(db_appt)
     db.commit()

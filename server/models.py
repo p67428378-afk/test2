@@ -118,6 +118,8 @@ class Appointment(Base):
     start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=False)
     status = Column(String(50), nullable=False, default="confirmed")
+    rescheduled_from_id = Column(GUID, ForeignKey("appointments.id"), nullable=True)
+    estimated_copay = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
@@ -125,3 +127,4 @@ class Appointment(Base):
 
     doctor = relationship("Doctor", back_populates="appointments")
     patient = relationship("Patient", back_populates="appointments")
+    rescheduled_from = relationship("Appointment", remote_side=[id])
