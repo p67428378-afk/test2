@@ -3,4 +3,6 @@ uvicorn
 sqlalchemy
 pydantic
 pydantic-settings
+email-validator
 pytest
+httpx

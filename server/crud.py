@@ -1,38 +1,43 @@
-
 from sqlalchemy.orm import Session
 from server import models, schemas
+from uuid import UUID
 
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+def get_products(db: Session, skip: int = 0, limit: int = 20):
+    return db.query(models.Product).offset(skip).limit(limit).all()
 
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at)
-    db.add(db_otp)
+
+def get_product(db: Session, product_id: UUID):
+    return db.query(models.Product).filter(models.Product.id == product_id).first()
+
+
+def create_product(db: Session, product: schemas.ProductCreate):
+    db_product = models.Product(
+        name=product.name,
+        price=product.price,
+        image_url=product.image_url,
+        stock_quantity=product.stock_quantity,
+    )
+    db.add(db_product)
     db.commit()
-    db.refresh(db_otp)
-    return db_otp
+    db.refresh(db_product)
+    return db_product
 
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
 
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
+def create_order(
+    db: Session,
+    cart_contents: list,
+    total_price: float,
+    shipping_address: str,
+    payment_status: str,
+):
+    db_order = models.Order(
+        cart_contents=cart_contents,
+        total_price=total_price,
+        shipping_address=shipping_address,
+        payment_status=payment_status,
+    )
+    db.add(db_order)
     db.commit()
-    db.refresh(otp)
-    return otp
-
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(user_id=user_id, hashed_password=hashed_password)
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
-
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
-    db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(db_order)
+    return db_order

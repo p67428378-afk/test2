@@ -1,33 +1,72 @@
+from pydantic import BaseModel, Field, EmailStr
+from typing import List, Optional
+from uuid import UUID
+from datetime import datetime
 
-from pydantic import BaseModel
-from typing import Optional
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+class ProductBase(BaseModel):
+    name: str
+    price: float
+    image_url: Optional[str] = None
+    stock_quantity: int
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class ProductCreate(ProductBase):
+    pass
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+class ProductResponse(ProductBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+    class Config:
+        from_attributes = True
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+class CartItemAdd(BaseModel):
+    product_id: UUID
+    quantity: int = Field(..., ge=1)
+
+
+class CartItemResponse(BaseModel):
+    product_id: UUID
+    name: str
+    price: float
+    quantity: int
+    subtotal: float
+
+
+class CartResponse(BaseModel):
+    cart_id: UUID
+    items: List[CartItemResponse]
+    total_price: float
+
+
+class ShippingAddress(BaseModel):
+    name: str
+    email: EmailStr
+    address: str
+    city: str
+    state: str
+    zip: str
+
+
+class PaymentDetails(BaseModel):
+    card_number: str
+    cardholder_name: str
+    expiry: str
+    cvc: str
+
+
+class OrderCreate(BaseModel):
+    cart_id: UUID
+    shipping_address: ShippingAddress
+    payment_details: PaymentDetails
+
+
+class OrderResponse(BaseModel):
+    order_id: UUID
+    total_price: float
+    payment_status: str
+    created_at: datetime
