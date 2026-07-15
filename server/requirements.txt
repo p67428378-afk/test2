@@ -1,6 +1,12 @@
+cryptography
 fastapi
-uvicorn
-sqlalchemy
+httpx
+passlib[argon2]
 pydantic
 pydantic-settings
 pytest
+python-jose
+sqlalchemy
+starlette
+uvicorn
+argon2-cffi
