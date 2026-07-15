@@ -5,11 +5,13 @@ import Header from "../components/layout/Header.jsx";
 import ScheduleTimeline from "../components/schedule/ScheduleTimeline.jsx";
 import DayCard from "../components/schedule/DayCard.jsx";
 import ScheduleFormModal from "../components/schedule/ScheduleFormModal.jsx";
+import CompletionConfirmationModal from "../components/schedule/CompletionConfirmationModal.jsx";
 import {
   getScheduleSlots,
   createScheduleSlot,
   updateScheduleSlot,
   deleteScheduleSlot,
+  toggleScheduleSlotCompletion,
 } from "../services/api.js";
 
 const DAYS = [
@@ -28,6 +30,10 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState(null);
+
+  // Completion toggle state
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
   const fetchSlots = async () => {
     setLoading(true);
@@ -89,6 +95,24 @@ export default function DashboardPage() {
       alert(
         serverMsg || "Failed to save schedule slot. Please check your inputs.",
       );
+    }
+  };
+
+  const handleToggleClick = (slot) => {
+    setSelectedSlot(slot);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmToggle = async () => {
+    if (!selectedSlot) return;
+    try {
+      const updated = await toggleScheduleSlotCompletion(selectedSlot.id);
+      setSlots(slots.map((s) => (s.id === selectedSlot.id ? updated : s)));
+      setIsConfirmOpen(false);
+      setSelectedSlot(null);
+    } catch (err) {
+      console.error("Error toggling slot completion:", err);
+      alert("Failed to update slot completion status. Please try again.");
     }
   };
 
@@ -189,6 +213,7 @@ export default function DashboardPage() {
                     events={getEventsForDay(day)}
                     onEdit={handleEditClick}
                     onDelete={handleDeleteClick}
+                    onToggleCompletion={handleToggleClick}
                   />
                 ))}
               </div>
@@ -205,6 +230,16 @@ export default function DashboardPage() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveSlot}
         initialData={editingSlot}
+      />
+
+      <CompletionConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => {
+          setIsConfirmOpen(false);
+          setSelectedSlot(null);
+        }}
+        onConfirm={handleConfirmToggle}
+        isCompleted={selectedSlot?.is_completed || false}
       />
     </div>
   );

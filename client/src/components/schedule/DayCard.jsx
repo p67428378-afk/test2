@@ -1,7 +1,13 @@
 import React from "react";
 import EventCard from "./EventCard.jsx";
 
-export default function DayCard({ day, events, onEdit, onDelete }) {
+export default function DayCard({
+  day,
+  events,
+  onEdit,
+  onDelete,
+  onToggleCompletion,
+}) {
   return (
     <div className="lg:col-span-3 flex flex-col gap-4 relative">
       <h3 className="text-sm font-semibold text-[#F8FAFC] border-b border-[#334155] pb-2 mb-1 sticky top-0 bg-[#0F172A] z-10 lg:static">
@@ -16,6 +22,7 @@ export default function DayCard({ day, events, onEdit, onDelete }) {
               event={event}
               onEdit={onEdit}
               onDelete={onDelete}
+              onToggleCompletion={onToggleCompletion}
             />
           ))
         ) : (

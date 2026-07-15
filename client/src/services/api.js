@@ -28,4 +28,11 @@ export const deleteScheduleSlot = async (slotId) => {
   await api.delete(`/api/v1/schedule/${slotId}`);
 };
 
+export const toggleScheduleSlotCompletion = async (slotId) => {
+  const response = await api.patch(
+    `/api/v1/schedule/${slotId}/toggle-completion`,
+  );
+  return response.data;
+};
+
 export default api;
