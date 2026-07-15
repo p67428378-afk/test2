@@ -206,3 +206,132 @@ def test_officer_decision_forbidden():
         json=decision_payload,
     )
     assert response.status_code == 403
+
+
+def test_loan_offer_and_schedule_flow():
+    # 1. Create application
+    payload = {
+        "product_id": "11111111-1111-1111-1111-111111111111",
+        "customer_id": "00000000-0000-0000-0000-000000000001",
+        "requested_amount": 120000.00,
+        "tenure_months": 12,
+        "monthly_income": 80000.00,
+        "employment_type": "salaried",
+    }
+    create_resp = client.post("/api/v1/loans/applications", json=payload)
+    app_id = create_resp.json()["application_id"]
+
+    # 2. Try to make offer on non-approved application (should fail with 409)
+    offer_payload = {"offered_amount": 100000.00}
+    response = client.post(
+        f"/api/v1/loans/applications/{app_id}/offer?officer_email=officer@example.com",
+        json=offer_payload,
+    )
+    assert response.status_code == 409
+
+    # 3. Approve application
+    decision_payload = {"decision": "Approved", "remarks": "Approved for offer"}
+    client.patch(
+        f"/api/v1/loans/applications/{app_id}/decision?officer_email=officer@example.com",
+        json=decision_payload,
+    )
+
+    # 4. Make offer exceeding requested amount (should fail with 409)
+    invalid_offer_payload = {"offered_amount": 130000.00}
+    response = client.post(
+        f"/api/v1/loans/applications/{app_id}/offer?officer_email=officer@example.com",
+        json=invalid_offer_payload,
+    )
+    assert response.status_code == 409
+
+    # 5. Make valid offer
+    valid_offer_payload = {"offered_amount": 100000.00}
+    response = client.post(
+        f"/api/v1/loans/applications/{app_id}/offer?officer_email=officer@example.com",
+        json=valid_offer_payload,
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["offer_status"] == "Offer Made"
+    assert data["offered_amount"] == 100000.00
+
+    # 6. Get amortization schedule
+    response = client.get(f"/api/v1/loans/applications/{app_id}/schedule")
+    assert response.status_code == 200
+    schedule_data = response.json()
+    assert schedule_data["application_id"] == app_id
+    schedule = schedule_data["schedule"]
+    assert len(schedule) == 12
+
+    # Verify sum of principal components equals offered amount exactly
+    total_principal = sum(row["principal"] for row in schedule)
+    assert abs(total_principal - 100000.00) < 0.01
+    assert schedule[-1]["balance"] == 0.0
+
+    # 7. Accept offer (owning customer)
+    decision_payload = {"decision": "Accepted"}
+    response = client.post(
+        f"/api/v1/loans/applications/{app_id}/offer-decision",
+        json=decision_payload,
+        headers={"x-user-email": "test@example.com"},
+    )
+    assert response.status_code == 204
+
+    # 8. Try to decide already-decided offer (should fail with 409)
+    response = client.post(
+        f"/api/v1/loans/applications/{app_id}/offer-decision",
+        json=decision_payload,
+        headers={"x-user-email": "test@example.com"},
+    )
+    assert response.status_code == 409
+
+
+def test_decline_offer_flow():
+    # 1. Create and approve application
+    payload = {
+        "product_id": "11111111-1111-1111-1111-111111111111",
+        "customer_id": "00000000-0000-0000-0000-000000000001",
+        "requested_amount": 120000.00,
+        "tenure_months": 12,
+        "monthly_income": 80000.00,
+        "employment_type": "salaried",
+    }
+    create_resp = client.post("/api/v1/loans/applications", json=payload)
+    app_id = create_resp.json()["application_id"]
+
+    client.patch(
+        f"/api/v1/loans/applications/{app_id}/decision?officer_email=officer@example.com",
+        json={"decision": "Approved", "remarks": "Approved"},
+    )
+
+    # 2. Make offer
+    client.post(
+        f"/api/v1/loans/applications/{app_id}/offer?officer_email=officer@example.com",
+        json={"offered_amount": 100000.00},
+    )
+
+    # 3. Decline offer (should fail if reason is missing)
+    response = client.post(
+        f"/api/v1/loans/applications/{app_id}/offer-decision",
+        json={"decision": "Declined"},
+        headers={"x-user-email": "test@example.com"},
+    )
+    assert response.status_code == 400
+
+    # 4. Decline offer with reason
+    response = client.post(
+        f"/api/v1/loans/applications/{app_id}/offer-decision",
+        json={"decision": "Declined", "decline_reason": "Interest rate too high"},
+        headers={"x-user-email": "test@example.com"},
+    )
+    assert response.status_code == 204
+
+    # 5. Verify application status moved back to Approved
+    response = client.get(
+        "/api/v1/customers/00000000-0000-0000-0000-000000000001/applications",
+        headers={"x-user-email": "test@example.com"},
+    )
+    apps = response.json()
+    app_record = next(a for a in apps if a["application_id"] == app_id)
+    assert app_record["status"] == "Approved"
+    assert app_record["offer_status"] == "Declined"

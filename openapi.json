@@ -502,6 +502,168 @@
           }
         }
       }
+    },
+    "/api/v1/loans/applications/{applicationId}/offer": {
+      "post": {
+        "summary": "Create Loan Offer",
+        "operationId": "create_loan_offer_api_v1_loans_applications__applicationId__offer_post",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Applicationid"
+            }
+          },
+          {
+            "name": "officer_email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Email of the officer making the offer",
+              "title": "Officer Email"
+            },
+            "description": "Email of the officer making the offer"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanOfferCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanOfferCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/loans/applications/{applicationId}/schedule": {
+      "get": {
+        "summary": "Get Loan Schedule",
+        "operationId": "get_loan_schedule_api_v1_loans_applications__applicationId__schedule_get",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Applicationid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/loans/applications/{applicationId}/offer-decision": {
+      "post": {
+        "summary": "Decide Loan Offer",
+        "operationId": "decide_loan_offer_api_v1_loans_applications__applicationId__offer_decision_post",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Applicationid"
+            }
+          },
+          {
+            "name": "x-user-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Email of the customer making the decision",
+              "title": "X-User-Email"
+            },
+            "description": "Email of the customer making the decision"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -529,6 +691,28 @@
             "type": "string",
             "format": "date-time",
             "title": "Submitted At"
+          },
+          "offered_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered Amount"
+          },
+          "offer_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Status"
           }
         },
         "type": "object",
@@ -683,6 +867,43 @@
         ],
         "title": "LoanApplicationCreateResponse"
       },
+      "LoanOfferCreateRequest": {
+        "properties": {
+          "offered_amount": {
+            "type": "number",
+            "title": "Offered Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offered_amount"
+        ],
+        "title": "LoanOfferCreateRequest"
+      },
+      "LoanOfferCreateResponse": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "offer_status": {
+            "type": "string",
+            "title": "Offer Status"
+          },
+          "offered_amount": {
+            "type": "number",
+            "title": "Offered Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "offer_status",
+          "offered_amount"
+        ],
+        "title": "LoanOfferCreateResponse"
+      },
       "LoanProductResponse": {
         "properties": {
           "name": {
@@ -734,6 +955,61 @@
         ],
         "title": "LoanProductResponse"
       },
+      "LoanScheduleResponse": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "schedule": {
+            "items": {
+              "$ref": "#/components/schemas/LoanScheduleRow"
+            },
+            "type": "array",
+            "title": "Schedule"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "schedule"
+        ],
+        "title": "LoanScheduleResponse"
+      },
+      "LoanScheduleRow": {
+        "properties": {
+          "month": {
+            "type": "integer",
+            "title": "Month"
+          },
+          "emi": {
+            "type": "number",
+            "title": "Emi"
+          },
+          "principal": {
+            "type": "number",
+            "title": "Principal"
+          },
+          "interest": {
+            "type": "number",
+            "title": "Interest"
+          },
+          "balance": {
+            "type": "number",
+            "title": "Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "emi",
+          "principal",
+          "interest",
+          "balance"
+        ],
+        "title": "LoanScheduleRow"
+      },
       "OTPVerifyRequest": {
         "properties": {
           "otp_code": {
@@ -764,6 +1040,30 @@
           "security_question_session_id"
         ],
         "title": "OTPVerifyResponse"
+      },
+      "OfferDecisionRequest": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decline Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "OfferDecisionRequest"
       },
       "PasswordResetInitiateRequest": {
         "properties": {

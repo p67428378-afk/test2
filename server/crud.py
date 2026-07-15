@@ -27,7 +27,6 @@ def get_loan_products(
         if max_emi_filter:
             # Calculate EMI for max_loan_amount or a standard amount to see if it fits?
             # Usually, filtering by max_emi means: "Is there a configuration where EMI <= max_emi?"
-            # Let's calculate EMI for the minimum possible or standard amount, or just check if EMI for max_loan_amount at max_tenure is within limit.
             # Let's calculate EMI for max_loan_amount at max_tenure_months.
             rate = float(p.interest_rate) / 12 / 100
             if rate > 0:
@@ -74,6 +73,10 @@ def get_customer_applications(
                 requested_amount=float(app.requested_amount),
                 status=app.status,
                 submitted_at=app.created_at,
+                offered_amount=float(app.offered_amount)
+                if app.offered_amount is not None
+                else None,
+                offer_status=app.offer_status,
             )
         )
     return results

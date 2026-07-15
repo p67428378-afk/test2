@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from uuid import UUID
 import uuid
+import math
 from typing import List, Optional
 
 from server.database import Base, engine, get_db
@@ -331,6 +332,256 @@ def decide_loan_application(
     try:
         services.send_status_notification(
             str(app_record.customer_id), str(app_record.id), payload.decision
+        )
+    except Exception as e:
+        print(f"Failed to send notification: {e}")
+
+    return
+
+
+# 6. POST /api/v1/loans/applications/{applicationId}/offer
+@app.post(
+    "/api/v1/loans/applications/{applicationId}/offer",
+    response_model=schemas.LoanOfferCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_loan_offer(
+    applicationId: UUID,
+    payload: schemas.LoanOfferCreateRequest,
+    officer_email: str = Query(
+        ..., description="Email of the officer making the offer"
+    ),
+    db: Session = Depends(get_db),
+):
+    # Verify officer role
+    officer = (
+        db.query(models.Customer).filter(models.Customer.email == officer_email).first()
+    )
+    if not officer or officer.role != "loan officer":
+        raise HTTPException(
+            status_code=403, detail="Access restricted to loan officers only"
+        )
+
+    # Fetch application
+    app_record = (
+        db.query(models.LoanApplication)
+        .filter(models.LoanApplication.id == applicationId)
+        .first()
+    )
+    if not app_record:
+        raise HTTPException(status_code=404, detail="Loan application not found")
+
+    # Validate application status is Approved
+    if app_record.status != "Approved":
+        raise HTTPException(
+            status_code=409,
+            detail="Offers can only be created for Approved applications",
+        )
+
+    # Validate offered amount does not exceed requested amount
+    if payload.offered_amount <= 0 or payload.offered_amount > float(
+        app_record.requested_amount
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="Offered amount must be greater than 0 and cannot exceed the requested amount",
+        )
+
+    # Update application fields
+    app_record.offered_amount = payload.offered_amount
+    app_record.status = "Offer Made"
+    app_record.offer_status = "Offer Made"
+    app_record.decline_reason = None  # Clear any previous decline reason
+
+    # Clear existing schedules if any
+    db.query(models.LoanSchedule).filter(
+        models.LoanSchedule.application_id == applicationId
+    ).delete()
+
+    # Generate Amortization Schedule
+    P = float(payload.offered_amount)
+    R = (float(app_record.snapshot_interest_rate) / 12) / 100
+    N = app_record.tenure_months
+
+    if R == 0:
+        base_emi = P / N
+    else:
+        base_emi = (P * R * math.pow(1 + R, N)) / (math.pow(1 + R, N) - 1)
+
+    rounded_emi = round(base_emi, 2)
+    remaining_balance = P
+    total_principal_paid = 0.0
+
+    for m in range(1, N + 1):
+        if m == N:
+            # Final installment: absorb rounding differences
+            interest_comp = round(remaining_balance * R, 2)
+            principal_comp = round(P - total_principal_paid, 2)
+            emi_comp = round(principal_comp + interest_comp, 2)
+            remaining_balance = 0.0
+        else:
+            interest_comp = round(remaining_balance * R, 2)
+            principal_comp = round(rounded_emi - interest_comp, 2)
+            # Ensure we don't overpay principal
+            if total_principal_paid + principal_comp > P:
+                principal_comp = round(P - total_principal_paid, 2)
+            remaining_balance = round(remaining_balance - principal_comp, 2)
+            emi_comp = rounded_emi
+            total_principal_paid = round(total_principal_paid + principal_comp, 2)
+
+        schedule_row = models.LoanSchedule(
+            id=uuid.uuid4(),
+            application_id=applicationId,
+            month=m,
+            emi=emi_comp,
+            principal=principal_comp,
+            interest=interest_comp,
+            balance=remaining_balance,
+        )
+        db.add(schedule_row)
+
+    db.commit()
+    db.refresh(app_record)
+
+    # Trigger notification
+    try:
+        services.send_status_notification(
+            str(app_record.customer_id), str(app_record.id), "Offer Made"
+        )
+    except Exception as e:
+        print(f"Failed to send notification: {e}")
+
+    return schemas.LoanOfferCreateResponse(
+        application_id=app_record.id,
+        offer_status=app_record.offer_status,
+        offered_amount=float(app_record.offered_amount),
+    )
+
+
+# 7. GET /api/v1/loans/applications/{applicationId}/schedule
+@app.get(
+    "/api/v1/loans/applications/{applicationId}/schedule",
+    response_model=schemas.LoanScheduleResponse,
+)
+def get_loan_schedule(
+    applicationId: UUID,
+    db: Session = Depends(get_db),
+):
+    # Fetch application
+    app_record = (
+        db.query(models.LoanApplication)
+        .filter(models.LoanApplication.id == applicationId)
+        .first()
+    )
+    if not app_record:
+        raise HTTPException(status_code=404, detail="Loan application not found")
+
+    # Fetch schedule rows
+    schedules = (
+        db.query(models.LoanSchedule)
+        .filter(models.LoanSchedule.application_id == applicationId)
+        .order_by(models.LoanSchedule.month.asc())
+        .all()
+    )
+
+    if not schedules:
+        raise HTTPException(
+            status_code=404,
+            detail="No amortization schedule exists for this application",
+        )
+
+    schedule_rows = []
+    for row in schedules:
+        schedule_rows.append(
+            schemas.LoanScheduleRow(
+                month=row.month,
+                emi=float(row.emi),
+                principal=float(row.principal),
+                interest=float(row.interest),
+                balance=float(row.balance),
+            )
+        )
+
+    return schemas.LoanScheduleResponse(
+        application_id=applicationId, schedule=schedule_rows
+    )
+
+
+# 8. POST /api/v1/loans/applications/{applicationId}/offer-decision
+@app.post(
+    "/api/v1/loans/applications/{applicationId}/offer-decision",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def decide_loan_offer(
+    applicationId: UUID,
+    payload: schemas.OfferDecisionRequest,
+    x_user_email: Optional[str] = Header(
+        None,
+        alias="x-user-email",
+        description="Email of the customer making the decision",
+    ),
+    db: Session = Depends(get_db),
+):
+    # Fetch application
+    app_record = (
+        db.query(models.LoanApplication)
+        .filter(models.LoanApplication.id == applicationId)
+        .first()
+    )
+    if not app_record:
+        raise HTTPException(status_code=404, detail="Loan application not found")
+
+    # Enforce security: only the owning customer can accept/decline
+    if not x_user_email:
+        raise HTTPException(
+            status_code=403, detail="Access denied: Missing user email header"
+        )
+
+    requesting_user = (
+        db.query(models.Customer).filter(models.Customer.email == x_user_email).first()
+    )
+    if not requesting_user or requesting_user.id != app_record.customer_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: Only the owning customer can make a decision on this offer",
+        )
+
+    # Validate offer exists and is not already decided
+    if not app_record.offer_status or app_record.offer_status in [
+        "Accepted",
+        "Declined",
+    ]:
+        raise HTTPException(
+            status_code=409, detail="Offer has already been decided or no offer exists"
+        )
+
+    # Process decision
+    if payload.decision == "Accepted":
+        app_record.status = "Offer Accepted"
+        app_record.offer_status = "Accepted"
+        app_record.decline_reason = None
+    elif payload.decision == "Declined":
+        if not payload.decline_reason:
+            raise HTTPException(
+                status_code=400,
+                detail="Decline reason is required when declining an offer",
+            )
+        app_record.status = (
+            "Approved"  # Moves back to Approved so officer can make a revised offer
+        )
+        app_record.offer_status = "Declined"
+        app_record.decline_reason = payload.decline_reason
+    else:
+        raise HTTPException(
+            status_code=400, detail="Invalid decision. Must be 'Accepted' or 'Declined'"
+        )
+
+    db.commit()
+
+    # Trigger notification
+    try:
+        services.send_status_notification(
+            str(app_record.customer_id), str(app_record.id), f"Offer {payload.decision}"
         )
     except Exception as e:
         print(f"Failed to send notification: {e}")

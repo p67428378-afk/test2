@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
+from typing import List, Optional
 
 
 # --- PASSWORD RESET SCHEMAS (EXISTING) ---
@@ -99,6 +100,8 @@ class CustomerApplicationResponse(BaseModel):
     requested_amount: float
     status: str
     submitted_at: datetime
+    offered_amount: Optional[float] = None
+    offer_status: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -107,3 +110,35 @@ class CustomerApplicationResponse(BaseModel):
 class DecisionRequest(BaseModel):
     decision: str
     remarks: str
+
+
+# --- NEW SCHEMAS FOR LOAN OFFER & AMORTIZATION SCHEDULE ---
+class LoanOfferCreateRequest(BaseModel):
+    offered_amount: float
+
+
+class LoanOfferCreateResponse(BaseModel):
+    application_id: UUID
+    offer_status: str
+    offered_amount: float
+
+
+class LoanScheduleRow(BaseModel):
+    month: int
+    emi: float
+    principal: float
+    interest: float
+    balance: float
+
+    class Config:
+        from_attributes = True
+
+
+class LoanScheduleResponse(BaseModel):
+    application_id: UUID
+    schedule: List[LoanScheduleRow]
+
+
+class OfferDecisionRequest(BaseModel):
+    decision: str
+    decline_reason: Optional[str] = None

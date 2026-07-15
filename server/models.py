@@ -136,6 +136,12 @@ class LoanApplication(Base):
     snapshot_interest_rate = Column(Numeric(5, 2), nullable=False)
     decision_remarks = Column(Text, nullable=True)
     credit_score = Column(Integer, nullable=True)
+
+    # New fields for offer management
+    offered_amount = Column(Numeric(12, 2), nullable=True)
+    offer_status = Column(String(50), nullable=True)
+    decline_reason = Column(Text, nullable=True)
+
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
@@ -143,3 +149,20 @@ class LoanApplication(Base):
 
     customer = relationship("Customer", back_populates="applications")
     product = relationship("LoanProduct", back_populates="applications")
+    schedules = relationship(
+        "LoanSchedule", back_populates="application", cascade="all, delete-orphan"
+    )
+
+
+class LoanSchedule(Base):
+    __tablename__ = "loan_schedules"
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
+    application_id = Column(GUID, ForeignKey("loan_applications.id"), nullable=False)
+    month = Column(Integer, nullable=False)
+    emi = Column(Numeric(12, 2), nullable=False)
+    principal = Column(Numeric(12, 2), nullable=False)
+    interest = Column(Numeric(12, 2), nullable=False)
+    balance = Column(Numeric(12, 2), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    application = relationship("LoanApplication", back_populates="schedules")
