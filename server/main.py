@@ -7,6 +7,8 @@ from server.api.v1.endpoints import password_reset
 from server.app.api.v1.endpoints import schedule
 from server.database import Base, engine
 
+# Import models to ensure they are registered on Base.metadata before creation
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
