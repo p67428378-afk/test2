@@ -40,10 +40,11 @@ export default function DashboardPage() {
     setError("");
     try {
       const data = await getScheduleSlots();
-      setSlots(data);
+      setSlots(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching schedule slots:", err);
       setError("Failed to load schedule slots. Please try again.");
+      setSlots([]); // Fallback to empty array to prevent rendering crashes
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ export default function DashboardPage() {
     ) {
       try {
         await deleteScheduleSlot(slotId);
-        setSlots(slots.filter((s) => s.id !== slotId));
+        setSlots((prev) => prev.filter((s) => s.id !== slotId));
       } catch (err) {
         console.error("Error deleting slot:", err);
         alert("Failed to delete schedule slot. Please try again.");
@@ -83,10 +84,12 @@ export default function DashboardPage() {
     try {
       if (editingSlot) {
         const updated = await updateScheduleSlot(editingSlot.id, slotData);
-        setSlots(slots.map((s) => (s.id === editingSlot.id ? updated : s)));
+        setSlots((prev) =>
+          prev.map((s) => (s.id === editingSlot.id ? updated : s)),
+        );
       } else {
         const created = await createScheduleSlot(slotData);
-        setSlots([...slots, created]);
+        setSlots((prev) => [...prev, created]);
       }
       setIsModalOpen(false);
     } catch (err) {
@@ -107,7 +110,9 @@ export default function DashboardPage() {
     if (!selectedSlot) return;
     try {
       const updated = await toggleScheduleSlotCompletion(selectedSlot.id);
-      setSlots(slots.map((s) => (s.id === selectedSlot.id ? updated : s)));
+      setSlots((prev) =>
+        prev.map((s) => (s.id === selectedSlot.id ? updated : s)),
+      );
       setIsConfirmOpen(false);
       setSelectedSlot(null);
     } catch (err) {
@@ -116,11 +121,16 @@ export default function DashboardPage() {
     }
   };
 
-  // Group and sort slots by day
+  // Group and sort slots by day safely
   const getEventsForDay = (dayName) => {
-    return slots
-      .filter((s) => s.day_of_week === dayName)
-      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+    const safeSlots = Array.isArray(slots) ? slots : [];
+    return safeSlots
+      .filter((s) => s && s.day_of_week === dayName)
+      .sort((a, b) => {
+        const timeA = a.start_time || "";
+        const timeB = b.start_time || "";
+        return timeA.localeCompare(timeB);
+      });
   };
 
   return (
@@ -200,13 +210,13 @@ export default function DashboardPage() {
               <p className="text-sm text-[#94A3B8]">Loading your schedule...</p>
             </div>
           ) : (
-            /* Schedule Grid Layout */
+            /* Schedule Grid Layout - Renders all 7 days */
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <ScheduleTimeline />
 
-              {/* Monday, Tuesday, Wednesday Columns */}
-              <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-3 gap-6">
-                {DAYS.slice(0, 3).map((day) => (
+              {/* All 7 Days Columns */}
+              <div className="lg:col-span-11 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                {DAYS.map((day) => (
                   <DayCard
                     key={day}
                     day={day}
@@ -217,9 +227,6 @@ export default function DashboardPage() {
                   />
                 ))}
               </div>
-
-              {/* Spacer for grid alignment */}
-              <div className="hidden lg:block lg:col-span-2"></div>
             </div>
           )}
         </div>
