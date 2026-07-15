@@ -169,6 +169,70 @@
         }
       }
     },
+    "/api/v1/schedule-slots": {
+      "get": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Get Schedule Slots",
+        "operationId": "get_schedule_slots_api_v1_schedule_slots_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduleSlotResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Schedule Slots Api V1 Schedule Slots Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Create Schedule Slot",
+        "operationId": "create_schedule_slot_api_v1_schedule_slots_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleSlotCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleSlotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/schedule": {
       "get": {
         "tags": [
@@ -219,6 +283,93 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedule-slots/{slot_id}": {
+      "put": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Update Schedule Slot",
+        "operationId": "update_schedule_slot_api_v1_schedule_slots__slot_id__put",
+        "parameters": [
+          {
+            "name": "slot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slot Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleSlotUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleSlotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Delete Schedule Slot",
+        "operationId": "delete_schedule_slot_api_v1_schedule_slots__slot_id__delete",
+        "parameters": [
+          {
+            "name": "slot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slot Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -306,6 +457,92 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedule-slots/{slot_id}/toggle-completion": {
+      "patch": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Toggle Schedule Slot Completion",
+        "operationId": "toggle_schedule_slot_completion_api_v1_schedule_slots__slot_id__toggle_completion_patch",
+        "parameters": [
+          {
+            "name": "slot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleSlotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedule/{slot_id}/toggle-completion": {
+      "patch": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Toggle Schedule Slot Completion",
+        "operationId": "toggle_schedule_slot_completion_api_v1_schedule__slot_id__toggle_completion_patch",
+        "parameters": [
+          {
+            "name": "slot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleSlotResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -507,6 +744,10 @@
             "format": "uuid",
             "title": "User Id"
           },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -526,6 +767,7 @@
           "end_time",
           "id",
           "user_id",
+          "is_completed",
           "created_at",
           "updated_at"
         ],

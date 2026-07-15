@@ -35,6 +35,7 @@ def get_current_user(db: Session = Depends(get_db)) -> User:
 
 
 @router.get("/schedule", response_model=List[ScheduleSlotResponse])
+@router.get("/schedule-slots", response_model=List[ScheduleSlotResponse])
 def get_schedule_slots(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
@@ -58,6 +59,11 @@ def get_schedule_slots(
     response_model=ScheduleSlotResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@router.post(
+    "/schedule-slots",
+    response_model=ScheduleSlotResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_schedule_slot(
     slot_in: ScheduleSlotCreate,
     db: Session = Depends(get_db),
@@ -77,6 +83,7 @@ def create_schedule_slot(
         start_time=slot_in.start_time,
         end_time=slot_in.end_time,
         notes=slot_in.notes,
+        is_completed=False,
     )
     db.add(db_slot)
     db.commit()
@@ -85,6 +92,7 @@ def create_schedule_slot(
 
 
 @router.put("/schedule/{slot_id}", response_model=ScheduleSlotResponse)
+@router.put("/schedule-slots/{slot_id}", response_model=ScheduleSlotResponse)
 def update_schedule_slot(
     slot_id: UUID,
     slot_in: ScheduleSlotUpdate,
@@ -119,6 +127,7 @@ def update_schedule_slot(
 
 
 @router.delete("/schedule/{slot_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/schedule-slots/{slot_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_schedule_slot(
     slot_id: UUID,
     db: Session = Depends(get_db),
@@ -136,3 +145,29 @@ def delete_schedule_slot(
     db.delete(db_slot)
     db.commit()
     return None
+
+
+@router.patch(
+    "/schedule/{slot_id}/toggle-completion", response_model=ScheduleSlotResponse
+)
+@router.patch(
+    "/schedule-slots/{slot_id}/toggle-completion", response_model=ScheduleSlotResponse
+)
+def toggle_schedule_slot_completion(
+    slot_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_slot = (
+        db.query(ScheduleSlot)
+        .filter(ScheduleSlot.id == slot_id, ScheduleSlot.user_id == current_user.id)
+        .first()
+    )
+    if not db_slot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Schedule slot not found"
+        )
+    db_slot.is_completed = not db_slot.is_completed
+    db.commit()
+    db.refresh(db_slot)
+    return db_slot

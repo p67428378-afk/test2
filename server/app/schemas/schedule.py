@@ -33,6 +33,7 @@ class ScheduleSlotUpdate(ScheduleSlotBase):
 class ScheduleSlotResponse(ScheduleSlotBase):
     id: UUID
     user_id: UUID
+    is_completed: bool
     created_at: datetime
     updated_at: datetime
 

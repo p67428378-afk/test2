@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Time, ForeignKey, DateTime
+from sqlalchemy import Column, String, Time, ForeignKey, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -16,6 +16,7 @@ class ScheduleSlot(Base):
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
     notes = Column(String, nullable=True)
+    is_completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
