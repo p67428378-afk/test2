@@ -1,33 +1,136 @@
+from datetime import datetime
+from typing import List, Optional
+from pydantic import BaseModel, EmailStr, Field
+from uuid import UUID
 
-from pydantic import BaseModel
-from typing import Optional
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+# Auth Schemas
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    role: str = Field(..., description="'broker' or 'buyer'")
+    full_name: str
+    phone: Optional[str] = None
+    broker_license: Optional[str] = None
+    broker_agency: Optional[str] = None
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class UserResponse(BaseModel):
+    id: UUID
+    email: EmailStr
+    role: str
+    full_name: str
+    created_at: datetime
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
+    class Config:
+        from_attributes = True
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
 
-class SetNewPasswordResponse(BaseModel):
+# Property Schemas
+class PropertyCreate(BaseModel):
+    address: str
+    price: float
+    property_type: str
+    status: str = "ACTIVE"
+    bedrooms: int
+    bathrooms: int
+    description: Optional[str] = None
+    images: Optional[List[str]] = []
+
+
+class PropertyUpdate(BaseModel):
+    address: Optional[str] = None
+    price: Optional[float] = None
+    property_type: Optional[str] = None
+    status: Optional[str] = None
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[int] = None
+    description: Optional[str] = None
+    images: Optional[List[str]] = None
+
+
+class BrokerInfo(BaseModel):
+    id: UUID
+    email: EmailStr
+    full_name: str
+    phone: Optional[str] = None
+    broker_agency: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PropertyResponse(BaseModel):
+    id: UUID
+    address: str
+    price: float
+    property_type: str
     status: str
-    login_link: str
+    bedrooms: int
+    bathrooms: int
+    description: Optional[str] = None
+    broker_id: UUID
+    created_at: datetime
+    images: List[str] = []
+
+    class Config:
+        from_attributes = True
+
+
+class PropertyDetailResponse(BaseModel):
+    id: UUID
+    address: str
+    price: float
+    property_type: str
+    status: str
+    bedrooms: int
+    bathrooms: int
+    description: Optional[str] = None
+    created_at: datetime
+    images: List[str] = []
+    broker: BrokerInfo
+
+    class Config:
+        from_attributes = True
+
+
+# Message Schemas
+class MessageCreate(BaseModel):
+    content: str
+    property_id: UUID
+    receiver_id: UUID
+
+
+class MessageResponse(BaseModel):
+    id: UUID
+    content: str
+    property_id: UUID
+    receiver_id: UUID
+    sender_id: UUID
+    timestamp: datetime = Field(..., alias="created_at")
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+
+class MessageListResponse(BaseModel):
+    id: UUID
+    content: str
+    property_id: UUID
+    property_address: str
+    receiver_id: UUID
+    receiver_name: str
+    sender_id: UUID
+    sender_name: str
+    timestamp: datetime = Field(..., alias="created_at")
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
