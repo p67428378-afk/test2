@@ -1,41 +1,57 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, Numeric, Integer, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
 
-class User(Base):
-    __tablename__ = "users"
+
+class Property(Base):
+    __tablename__ = "properties"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    title = Column(String(255), nullable=False)
+    location = Column(String(255), nullable=False)
+    price = Column(Numeric(12, 2), nullable=False)
+    bedrooms = Column(Integer, nullable=False)
+    bathrooms = Column(Numeric(3, 1), nullable=False)
+    description = Column(Text, nullable=True)
+    # Store image URLs as a comma-separated string or JSON-like string for SQLite compatibility,
+    # but we can parse it in schemas.
+    image_urls_raw = Column(Text, nullable=False, default="")
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
+    contacts = relationship(
+        "Contact", back_populates="property", cascade="all, delete-orphan"
+    )
 
-class OTP(Base):
-    __tablename__ = "otps"
+    @property
+    def image_urls(self):
+        if not self.image_urls_raw:
+            return []
+        return [url.strip() for url in self.image_urls_raw.split(",") if url.strip()]
+
+    @image_urls.setter
+    def image_urls(self, value):
+        if isinstance(value, list):
+            self.image_urls_raw = ",".join(value)
+        elif isinstance(value, str):
+            self.image_urls_raw = value
+        else:
+            self.image_urls_raw = ""
+
+
+class Contact(Base):
+    __tablename__ = "contacts"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
+    property_id = Column(
+        UUID(as_uuid=True), ForeignKey("properties.id"), nullable=False
+    )
+    user_name = Column(String(255), nullable=False)
+    user_email = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
-    user = relationship("User", back_populates="otps")
-
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="password_history")
+    property = relationship("Property", back_populates="contacts")

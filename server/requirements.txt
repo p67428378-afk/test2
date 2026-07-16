@@ -1,6 +1,8 @@
+email-validator
 fastapi
-uvicorn
-sqlalchemy
-pydantic
-pydantic-settings
+httpx
+pydantic[email]
+pydantic_settings
 pytest
+sqlalchemy
+starlette

@@ -1,33 +1,46 @@
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import List, Optional
+from uuid import UUID
+from datetime import datetime
 
-from pydantic import BaseModel
-from typing import Optional
 
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+# Property Schemas
+class PropertyBase(BaseModel):
+    title: str
+    location: str
+    price: float
+    bedrooms: int
+    bathrooms: float
+    description: Optional[str] = None
+    image_urls: List[str] = []
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class PropertyCreate(PropertyBase):
+    pass
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
 
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
+class PropertyResponse(PropertyBase):
+    model_config = ConfigDict(from_attributes=True)
 
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
+    id: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
 
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
+# Contact Schemas
+class ContactCreate(BaseModel):
+    property_id: UUID
+    user_name: str = Field(..., min_length=1)
+    user_email: EmailStr
+    message: str = Field(..., min_length=1)
+
+
+class ContactResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    property_id: UUID
+    user_name: str
+    user_email: str
+    message: str
+    created_at: datetime
