@@ -1,6 +1,10 @@
 fastapi
-uvicorn
-sqlalchemy
+httpx
 pydantic
 pydantic-settings
 pytest
+python-multipart
+reportlab
+sqlalchemy
+starlette
+uvicorn
