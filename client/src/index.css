@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f8fafc;
+}
+
+.text-gold {
+  color: #d97706;
+}
+
+.bg-gold {
+  background-color: #d97706;
+}
+
+.bg-gold:hover {
+  background-color: #b45309;
+}
+
+.border-gold {
+  border-color: #d97706;
+}
+
+.magic-chip {
+  background-color: #fef3c7;
+  color: #b45309;
+}
