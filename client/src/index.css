@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0f172a; /* Slate-950 Override for Base Map */
+}
+
+.card-bg {
+  background-color: #1e293b; /* Slate-900 */
+}
+
+.modal-bg {
+  background-color: #334155; /* Slate-800 */
+}
+
+.table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #1e293b;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 3px;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: inherit;
+}
+
+.sticky-col::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #334155;
+}
