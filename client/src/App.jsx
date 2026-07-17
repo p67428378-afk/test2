@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import KPIHeaderStrip from "./components/assortment/KPIHeaderStrip.jsx";
 import SKUPerformanceSection from "./components/assortment/SKUPerformanceSection.jsx";
