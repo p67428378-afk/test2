@@ -1,10 +1,10 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -20,6 +20,7 @@ class User(Base):
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
 
+
 class OTP(Base):
     __tablename__ = "otps"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -31,6 +32,7 @@ class OTP(Base):
 
     user = relationship("User", back_populates="otps")
 
+
 class PasswordHistory(Base):
     __tablename__ = "password_history"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -39,3 +41,33 @@ class PasswordHistory(Base):
     changed_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="password_history")
+
+
+# --- New Models for SCRUM-537 ---
+
+
+class SKU(Base):
+    __tablename__ = "skus"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    sales = Column(Numeric(10, 2), nullable=False)
+    profit_margin = Column(Numeric(5, 2), nullable=False)
+    units_sold = Column(Integer, nullable=False)
+    status = Column(String(50), nullable=False)
+
+
+class KPI(Base):
+    __tablename__ = "kpis"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sales_per_linear_ft = Column(Numeric(10, 2), nullable=False)
+    private_brand_percentage = Column(Numeric(5, 2), nullable=False)
+    in_stock_rate = Column(Numeric(5, 2), nullable=False)
+    shelf_capacity = Column(Numeric(5, 2), nullable=False)
+
+
+class AssortmentReview(Base):
+    __tablename__ = "assortment_reviews"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_name = Column(String(50), nullable=False)
+    submitted_by = Column(String(100), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
