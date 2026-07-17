@@ -1,6 +1,6 @@
-# DG Cluster Assortment Advisor Dashboard
+# DG Cluster Assortment Advisor Frontend
 
-This is the frontend client for the DG Cluster Assortment Advisor Dashboard.
+This is the frontend client for the DG Cluster Assortment Advisor dashboard.
 
 ## Setup and Installation
 
