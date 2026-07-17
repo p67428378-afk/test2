@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #0b1326;
+  color: #dae2fd;
+}
+
+/* Custom styles for layout borders to match the #334155 requirement */
+.border-level-1 {
+  border-color: #334155;
+}
+.bg-level-1 {
+  background-color: #1e293b;
+}
+
+/* Table styles */
+.data-table th {
+  background-color: #1e293b;
+}
+.data-table tr {
+  border-bottom: 1px solid #334155;
+}
+.data-table td,
+.data-table th {
+  padding: 8px 16px;
+}
