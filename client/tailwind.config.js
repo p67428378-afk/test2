@@ -52,6 +52,33 @@ export default {
         "on-tertiary": "#ffffff",
         "tertiary-fixed-dim": "#eec200",
       },
+      spacing: {
+        "margin-mobile": "16px",
+        lg: "24px",
+        xs: "4px",
+        base: "8px",
+        md: "16px",
+        xl: "32px",
+        "container-max": "1280px",
+        sm: "8px",
+        gutter: "24px",
+      },
+      fontSize: {
+        "label-sm": ["14px", { lineHeight: "1.4", fontWeight: "500" }],
+        caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+        "h1-mobile": ["32px", { lineHeight: "1.2", fontWeight: "700" }],
+        h1: [
+          "48px",
+          { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" },
+        ],
+        h2: [
+          "30px",
+          { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600" },
+        ],
+        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+        h3: ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+        "body-md": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+      },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
