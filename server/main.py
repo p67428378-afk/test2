@@ -3,6 +3,8 @@ from starlette.middleware.cors import CORSMiddleware
 import os
 
 from server.database import Base, engine
+
+# Import models to register them on Base.metadata before calling create_all
 from server.api.v1.endpoints import password_reset
 from server.routes import schemas, logs
 
