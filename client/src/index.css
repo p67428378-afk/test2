@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0f1413;
+  color: #dee4e1;
+}
+
+.glow-effect:hover {
+  box-shadow: inset 0 0 10px rgba(107, 216, 203, 0.2);
+}
+
+.donut-segment-ready {
+  stroke-dasharray: 88 100;
+  stroke-dashoffset: 25;
+}
+.donut-segment-maint {
+  stroke-dasharray: 8 100;
+  stroke-dashoffset: -63;
+}
+.donut-segment-out {
+  stroke-dasharray: 4 100;
+  stroke-dashoffset: -71;
+}
