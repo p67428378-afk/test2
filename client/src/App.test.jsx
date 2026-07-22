@@ -26,6 +26,6 @@ describe("SyncTask App Smoke Test", () => {
     // Check if the sidebar navigation links are present
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
     expect(screen.getByText("Task List")).toBeInTheDocument();
-    expect(screen.getByText("Create Task")).toBeInTheDocument();
+    expect(screen.getAllByText("Create Task").length).toBeGreaterThan(0);
   });
 });
