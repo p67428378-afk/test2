@@ -26,6 +26,21 @@ class User(Base):
     hives = relationship("Hive", back_populates="user", cascade="all, delete-orphan")
 
 
+class PersistentSession(Base):
+    __tablename__ = "persistent_sessions"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    token_hash = Column(String, unique=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    user = relationship("User")
+
+
 class Hive(Base):
     __tablename__ = "hives"
 

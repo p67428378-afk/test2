@@ -23,6 +23,7 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+    rememberMe: Optional[bool] = False
 
 
 class TokenResponse(BaseModel):
