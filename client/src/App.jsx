@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,16 +12,47 @@ import DashboardPage from "./pages/DashboardPage";
 import HiveDetailPage from "./pages/HiveDetailPage";
 import InspectionsPage from "./pages/InspectionsPage";
 
-function ProtectedRoute({ children }) {
-  const isAuthenticated = authService.isAuthenticated();
-  return isAuthenticated ? (
-    <AppLayout>{children}</AppLayout>
-  ) : (
-    <Navigate to="/login" replace />
-  );
-}
-
 export default function App() {
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!authService.isAuthenticated()) {
+        try {
+          await authService.refreshToken();
+        } catch {
+          // Ignore error, user is just not logged in or cookie expired
+        }
+      }
+      setCheckingSession(false);
+    };
+    checkSession();
+  }, []);
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-beekeeper-bg flex items-center justify-center text-beekeeper-amber">
+        <div className="flex flex-col items-center gap-md">
+          <span className="material-symbols-outlined animate-spin text-[48px]">
+            sync
+          </span>
+          <span className="font-label-md text-label-md uppercase tracking-wider">
+            Restoring Session...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  function ProtectedRoute({ children }) {
+    const isAuthenticated = authService.isAuthenticated();
+    return isAuthenticated ? (
+      <AppLayout>{children}</AppLayout>
+    ) : (
+      <Navigate to="/login" replace />
+    );
+  }
+
   return (
     <Router>
       <Routes>

@@ -9,8 +9,8 @@ export default function Sidebar() {
     email: "test@example.com",
   };
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     navigate("/login");
   };
 

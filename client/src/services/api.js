@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Critical for sending/receiving cookies (remember_me)
 });
 
 // Request interceptor to add auth token
@@ -32,10 +33,11 @@ export const authService = {
     });
     return response.data;
   },
-  login: async (username, password) => {
+  login: async (username, password, rememberMe = false) => {
     const response = await api.post("/api/v1/auth/login", {
       username,
       password,
+      rememberMe,
     });
     if (response.data && response.data.access_token) {
       localStorage.setItem("token", response.data.access_token);
@@ -43,9 +45,23 @@ export const authService = {
     }
     return response.data;
   },
-  logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  refreshToken: async () => {
+    const response = await api.post("/api/v1/auth/refresh-token");
+    if (response.data && response.data.access_token) {
+      localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+  logout: async () => {
+    try {
+      await api.post("/api/v1/auth/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
   },
   getCurrentUser: () => {
     const userStr = localStorage.getItem("user");
