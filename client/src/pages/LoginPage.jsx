@@ -244,18 +244,18 @@ export default function LoginPage() {
             {/* Remember Me & Forgot Password */}
             {!isRegister && (
               <div className="flex items-center justify-between pt-sm">
-                <label
-                  htmlFor="rememberMe"
-                  className="flex items-center gap-sm cursor-pointer group"
-                >
-                  <div className="relative flex items-center">
-                    <input
-                      id="rememberMe"
-                      className="peer sr-only"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                    />
+                <div className="flex items-center">
+                  <input
+                    id="rememberMe"
+                    className="peer sr-only"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <label
+                    htmlFor="rememberMe"
+                    className="flex items-center gap-sm cursor-pointer group"
+                  >
                     <div className="w-5 h-5 rounded border border-beekeeper-border bg-beekeeper-panel peer-checked:bg-beekeeper-amber peer-checked:border-beekeeper-amber transition-colors flex items-center justify-center group-hover:border-beekeeper-amber/70">
                       <span
                         className="material-symbols-outlined text-[14px] text-beekeeper-bg opacity-0 peer-checked:opacity-100 transition-opacity"
@@ -267,11 +267,11 @@ export default function LoginPage() {
                         check
                       </span>
                     </div>
-                  </div>
-                  <span className="font-label-sm text-label-sm text-beekeeper-text-secondary group-hover:text-beekeeper-text-primary transition-colors">
-                    Remember me for 30 days
-                  </span>
-                </label>
+                    <span className="font-label-sm text-label-sm text-beekeeper-text-secondary group-hover:text-beekeeper-text-primary transition-colors">
+                      Remember me for 30 days
+                    </span>
+                  </label>
+                </div>
                 <a
                   className="font-label-sm text-label-sm text-beekeeper-amber hover:text-beekeeper-amber/80 hover:underline transition-all"
                   href="#"
