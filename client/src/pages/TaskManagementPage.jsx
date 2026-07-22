@@ -16,7 +16,6 @@ const TaskManagementPage = ({ searchQuery = "" }) => {
       const data = await getTasks(statusFilter || null, sortOrder);
       setTasks(data);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
       setError("Backend server is unavailable. Please check your connection.");
     } finally {
       setIsLoading(false);
@@ -35,7 +34,6 @@ const TaskManagementPage = ({ searchQuery = "" }) => {
         prevTasks.map((task) => (task.id === taskId ? updatedTask : task)),
       );
     } catch (err) {
-      console.error("Error updating task status:", err);
       setError("Failed to update task status. Server might be offline.");
     }
   };

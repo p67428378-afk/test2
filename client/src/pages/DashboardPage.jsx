@@ -25,7 +25,6 @@ const DashboardPage = ({ searchQuery = "" }) => {
       const data = await getTasks(statusFilter || null, sortOrder);
       setTasks(data);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
       setError("Backend server is unavailable. Please check your connection.");
     } finally {
       setIsLoading(false);
@@ -41,19 +40,16 @@ const DashboardPage = ({ searchQuery = "" }) => {
   useEffect(() => {
     const connectWebSocket = () => {
       const wsUrl = getWebSocketUrl();
-      console.log("Connecting to WebSocket:", wsUrl);
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("WebSocket connected");
         setIsWsConnected(true);
       };
 
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          console.log("WebSocket message received:", message);
 
           if (message.event === "task_created") {
             setTasks((prevTasks) => {
@@ -77,18 +73,16 @@ const DashboardPage = ({ searchQuery = "" }) => {
             });
           }
         } catch (err) {
-          console.error("Error parsing WebSocket message:", err);
+          // Silent catch to avoid console pollution
         }
       };
 
       ws.onclose = () => {
-        console.log("WebSocket disconnected, retrying in 5s...");
         setIsWsConnected(false);
         setTimeout(connectWebSocket, 5000);
       };
 
-      ws.onerror = (err) => {
-        console.error("WebSocket error:", err);
+      ws.onerror = () => {
         ws.close();
       };
     };
@@ -110,7 +104,6 @@ const DashboardPage = ({ searchQuery = "" }) => {
         prevTasks.map((task) => (task.id === taskId ? updatedTask : task)),
       );
     } catch (err) {
-      console.error("Error updating task status:", err);
       setError("Failed to update task status. Server might be offline.");
     }
   };

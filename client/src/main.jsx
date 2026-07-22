@@ -14,7 +14,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Uncaught error in React tree:", error, errorInfo);
+    // Error caught by boundary
   }
 
   render() {
