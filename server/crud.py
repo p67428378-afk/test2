@@ -58,6 +58,7 @@ def update_user_password(db: Session, user: models.User, hashed_password: str):
 def get_tasks(
     db: Session, status: Optional[str] = None, sort: str = "desc"
 ) -> List[models.Task]:
+    db.commit()
     query = db.query(models.Task)
     if status:
         query = query.filter(models.Task.status == status)

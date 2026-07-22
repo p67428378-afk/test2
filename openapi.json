@@ -2,7 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Real-Time Worklist Updater API",
-    "version": "0.1.0"
+    "description": "API for Real-Time Worklist Updater",
+    "version": "1.0.0"
   },
   "paths": {
     "/api/v1/password-reset/initiate": {
@@ -187,8 +188,8 @@
     },
     "/api/v1/tasks": {
       "get": {
-        "summary": "Get Tasks",
-        "operationId": "get_tasks_api_v1_tasks_get",
+        "summary": "Get Tasks Endpoint",
+        "operationId": "get_tasks_endpoint_api_v1_tasks_get",
         "parameters": [
           {
             "name": "status",
@@ -197,37 +198,28 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "To Do",
-                    "In Progress",
-                    "Done"
-                  ],
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Filter tasks by status",
+              "description": "Filter tasks by status ('To Do', 'In Progress', 'Done')",
               "title": "Status"
             },
-            "description": "Filter tasks by status"
+            "description": "Filter tasks by status ('To Do', 'In Progress', 'Done')"
           },
           {
             "name": "sort",
             "in": "query",
             "required": false,
             "schema": {
-              "enum": [
-                "asc",
-                "desc"
-              ],
               "type": "string",
-              "description": "Sort order by creation date",
+              "description": "Sort order by creation date ('asc', 'desc')",
               "default": "desc",
               "title": "Sort"
             },
-            "description": "Sort order by creation date"
+            "description": "Sort order by creation date ('asc', 'desc')"
           }
         ],
         "responses": {
@@ -240,7 +232,7 @@
                   "items": {
                     "$ref": "#/components/schemas/TaskResponse"
                   },
-                  "title": "Response Get Tasks Api V1 Tasks Get"
+                  "title": "Response Get Tasks Endpoint Api V1 Tasks Get"
                 }
               }
             }
@@ -258,8 +250,8 @@
         }
       },
       "post": {
-        "summary": "Create Task",
-        "operationId": "create_task_api_v1_tasks_post",
+        "summary": "Create Task Endpoint",
+        "operationId": "create_task_endpoint_api_v1_tasks_post",
         "requestBody": {
           "required": true,
           "content": {
@@ -296,8 +288,8 @@
     },
     "/api/v1/tasks/{task_id}": {
       "patch": {
-        "summary": "Update Task Status",
-        "operationId": "update_task_status_api_v1_tasks__task_id__patch",
+        "summary": "Update Task Status Endpoint",
+        "operationId": "update_task_status_endpoint_api_v1_tasks__task_id__patch",
         "parameters": [
           {
             "name": "task_id",
@@ -346,19 +338,11 @@
     },
     "/ws/v1/worklist": {
       "get": {
-        "summary": "Websocket Info",
-        "description": "Establish a WebSocket connection to receive real-time task updates.\nThis endpoint is a WebSocket endpoint. Connect using ws:// or wss://.",
-        "operationId": "websocket_info_ws_v1_worklist_get",
+        "summary": "Establish a WebSocket connection to receive real-time task updates.",
+        "description": "Establish a WebSocket connection to receive real-time task updates.",
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WebSocketMessage"
-                }
-              }
-            }
+          "101": {
+            "description": "Switching Protocols to WebSocket"
           }
         }
       }
@@ -518,7 +502,8 @@
           "title": {
             "type": "string",
             "minLength": 1,
-            "title": "Title"
+            "title": "Title",
+            "description": "The title of the task"
           },
           "assignee": {
             "anyOf": [
@@ -529,7 +514,8 @@
                 "type": "null"
               }
             ],
-            "title": "Assignee"
+            "title": "Assignee",
+            "description": "The assignee of the task"
           }
         },
         "type": "object",
@@ -549,15 +535,6 @@
             "type": "string",
             "title": "Title"
           },
-          "status": {
-            "type": "string",
-            "enum": [
-              "To Do",
-              "In Progress",
-              "Done"
-            ],
-            "title": "Status"
-          },
           "assignee": {
             "anyOf": [
               {
@@ -568,6 +545,10 @@
               }
             ],
             "title": "Assignee"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
           },
           "created_at": {
             "type": "string",
@@ -594,30 +575,18 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "To Do",
-              "In Progress",
-              "Done"
-            ],
-            "title": "Status"
-          },
-          "assignee": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee"
+            "title": "Status",
+            "description": "The status of the task"
           }
         },
         "type": "object",
         "required": [
           "status"
         ],
-        "title": "TaskUpdate"
+        "title": "TaskUpdate",
+        "example": {
+          "status": "In Progress"
+        }
       },
       "ValidationError": {
         "properties": {
@@ -658,27 +627,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "WebSocketMessage": {
-        "properties": {
-          "event": {
-            "type": "string",
-            "enum": [
-              "task_created",
-              "task_updated"
-            ],
-            "title": "Event"
-          },
-          "data": {
-            "$ref": "#/components/schemas/TaskResponse"
-          }
-        },
-        "type": "object",
-        "required": [
-          "event",
-          "data"
-        ],
-        "title": "WebSocketMessage"
       }
     }
   }
