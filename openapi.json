@@ -1,0 +1,820 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DG Cluster Assortment Advisor API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/password-reset/initiate": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Initiate Password Reset",
+        "operationId": "initiate_password_reset_api_v1_password_reset_initiate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetInitiateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordResetInitiateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/verify-otp": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Verify Otp",
+        "operationId": "verify_otp_api_v1_password_reset_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OTPVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OTPVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/verify-security-question": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Verify Security Question",
+        "operationId": "verify_security_question_api_v1_password_reset_verify_security_question_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityQuestionVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityQuestionVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password-reset/set-new-password": {
+      "post": {
+        "tags": [
+          "password-reset"
+        ],
+        "summary": "Set New Password",
+        "operationId": "set_new_password_api_v1_password_reset_set_new_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetNewPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetNewPasswordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assortment/kpis": {
+      "get": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Get Kpis",
+        "operationId": "get_kpis_api_v1_assortment_kpis_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KPIResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assortment/skus": {
+      "get": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Get Skus",
+        "operationId": "get_skus_api_v1_assortment_skus_get",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sortby"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "asc",
+              "title": "Sortorder"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SKUResponse"
+                  },
+                  "title": "Response Get Skus Api V1 Assortment Skus Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assortment/scenario": {
+      "post": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Get Scenario Projection",
+        "operationId": "get_scenario_projection_api_v1_assortment_scenario_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assortment/submit": {
+      "post": {
+        "tags": [
+          "assortment"
+        ],
+        "summary": "Submit Assortment Plan",
+        "operationId": "submit_assortment_plan_api_v1_assortment_submit_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Read Root",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GuardrailCheck": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "pass": {
+            "type": "boolean",
+            "title": "Pass"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "pass"
+        ],
+        "title": "GuardrailCheck"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "KPIResponse": {
+        "properties": {
+          "sales_per_linear_ft": {
+            "type": "number",
+            "title": "Sales Per Linear Ft"
+          },
+          "private_brand_percentage": {
+            "type": "number",
+            "title": "Private Brand Percentage"
+          },
+          "in_stock_rate": {
+            "type": "number",
+            "title": "In Stock Rate"
+          },
+          "shelf_capacity_utilized": {
+            "type": "number",
+            "title": "Shelf Capacity Utilized"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sales_per_linear_ft",
+          "private_brand_percentage",
+          "in_stock_rate",
+          "shelf_capacity_utilized"
+        ],
+        "title": "KPIResponse"
+      },
+      "OTPVerifyRequest": {
+        "properties": {
+          "otp_code": {
+            "type": "string",
+            "title": "Otp Code"
+          },
+          "otp_session_id": {
+            "type": "string",
+            "title": "Otp Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "otp_code",
+          "otp_session_id"
+        ],
+        "title": "OTPVerifyRequest"
+      },
+      "OTPVerifyResponse": {
+        "properties": {
+          "security_question_session_id": {
+            "type": "string",
+            "title": "Security Question Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "security_question_session_id"
+        ],
+        "title": "OTPVerifyResponse"
+      },
+      "PasswordResetInitiateRequest": {
+        "properties": {
+          "login_id": {
+            "type": "string",
+            "title": "Login Id"
+          },
+          "mobile_number": {
+            "type": "string",
+            "title": "Mobile Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "login_id",
+          "mobile_number"
+        ],
+        "title": "PasswordResetInitiateRequest"
+      },
+      "PasswordResetInitiateResponse": {
+        "properties": {
+          "otp_session_id": {
+            "type": "string",
+            "title": "Otp Session Id"
+          },
+          "security_question": {
+            "type": "string",
+            "title": "Security Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "otp_session_id",
+          "security_question"
+        ],
+        "title": "PasswordResetInitiateResponse"
+      },
+      "SKUActionItem": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "title": "Sku Id"
+          },
+          "sku_name": {
+            "type": "string",
+            "title": "Sku Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "sku_name"
+        ],
+        "title": "SKUActionItem"
+      },
+      "SKUResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "sku_name": {
+            "type": "string",
+            "title": "Sku Name"
+          },
+          "upc": {
+            "type": "string",
+            "title": "Upc"
+          },
+          "sales_rank_percentile": {
+            "type": "number",
+            "title": "Sales Rank Percentile"
+          },
+          "weekly_sales": {
+            "type": "number",
+            "title": "Weekly Sales"
+          },
+          "margin_percentage": {
+            "type": "number",
+            "title": "Margin Percentage"
+          },
+          "is_private_brand": {
+            "type": "boolean",
+            "title": "Is Private Brand"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sku_name",
+          "upc",
+          "sales_rank_percentile",
+          "weekly_sales",
+          "margin_percentage",
+          "is_private_brand",
+          "status"
+        ],
+        "title": "SKUResponse"
+      },
+      "ScenarioActions": {
+        "properties": {
+          "add": {
+            "items": {
+              "$ref": "#/components/schemas/SKUActionItem"
+            },
+            "type": "array",
+            "title": "Add",
+            "default": []
+          },
+          "reduce": {
+            "items": {
+              "$ref": "#/components/schemas/SKUActionItem"
+            },
+            "type": "array",
+            "title": "Reduce",
+            "default": []
+          },
+          "swap": {
+            "items": {
+              "$ref": "#/components/schemas/SKUActionItem"
+            },
+            "type": "array",
+            "title": "Swap",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ScenarioActions"
+      },
+      "ScenarioRequest": {
+        "properties": {
+          "scenario_name": {
+            "type": "string",
+            "title": "Scenario Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_name"
+        ],
+        "title": "ScenarioRequest"
+      },
+      "ScenarioResponse": {
+        "properties": {
+          "scenario_name": {
+            "type": "string",
+            "title": "Scenario Name"
+          },
+          "projected_private_brand_percentage": {
+            "type": "number",
+            "title": "Projected Private Brand Percentage"
+          },
+          "projected_total_sales": {
+            "type": "number",
+            "title": "Projected Total Sales"
+          },
+          "guardrails": {
+            "items": {
+              "$ref": "#/components/schemas/GuardrailCheck"
+            },
+            "type": "array",
+            "title": "Guardrails"
+          },
+          "actions": {
+            "$ref": "#/components/schemas/ScenarioActions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_name",
+          "projected_private_brand_percentage",
+          "projected_total_sales",
+          "guardrails",
+          "actions"
+        ],
+        "title": "ScenarioResponse"
+      },
+      "SecurityQuestionVerifyRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "security_question_session_id": {
+            "type": "string",
+            "title": "Security Question Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "security_question_session_id"
+        ],
+        "title": "SecurityQuestionVerifyRequest"
+      },
+      "SecurityQuestionVerifyResponse": {
+        "properties": {
+          "password_reset_session_id": {
+            "type": "string",
+            "title": "Password Reset Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password_reset_session_id"
+        ],
+        "title": "SecurityQuestionVerifyResponse"
+      },
+      "SetNewPasswordRequest": {
+        "properties": {
+          "new_password": {
+            "type": "string",
+            "title": "New Password"
+          },
+          "password_reset_session_id": {
+            "type": "string",
+            "title": "Password Reset Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_password",
+          "password_reset_session_id"
+        ],
+        "title": "SetNewPasswordRequest"
+      },
+      "SetNewPasswordResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "login_link": {
+            "type": "string",
+            "title": "Login Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "login_link"
+        ],
+        "title": "SetNewPasswordResponse"
+      },
+      "SubmitRequest": {
+        "properties": {
+          "scenario_name": {
+            "type": "string",
+            "title": "Scenario Name"
+          },
+          "projected_private_brand_percentage": {
+            "type": "number",
+            "title": "Projected Private Brand Percentage"
+          },
+          "projected_total_sales": {
+            "type": "number",
+            "title": "Projected Total Sales"
+          },
+          "guardrails": {
+            "items": {
+              "$ref": "#/components/schemas/GuardrailCheck"
+            },
+            "type": "array",
+            "title": "Guardrails"
+          },
+          "actions": {
+            "$ref": "#/components/schemas/ScenarioActions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_name",
+          "projected_private_brand_percentage",
+          "projected_total_sales",
+          "guardrails",
+          "actions"
+        ],
+        "title": "SubmitRequest"
+      },
+      "SubmitResponse": {
+        "properties": {
+          "audit_trail_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Audit Trail Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "audit_trail_id",
+          "status",
+          "submitted_at"
+        ],
+        "title": "SubmitResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
