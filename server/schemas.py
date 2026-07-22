@@ -1,9 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import Optional, Literal
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
+from typing import Optional
 
 
+# Existing Password Reset Schemas
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
     mobile_number: str
@@ -42,27 +43,31 @@ class SetNewPasswordResponse(BaseModel):
     login_link: str
 
 
+# Task Schemas
 class TaskCreate(BaseModel):
-    title: str = Field(..., min_length=1)
-    assignee: Optional[str] = None
+    title: str = Field(..., min_length=1, description="The title of the task")
+    assignee: Optional[str] = Field(None, description="The assignee of the task")
 
 
 class TaskUpdate(BaseModel):
-    status: Literal["To Do", "In Progress", "Done"]
-    assignee: Optional[str] = None
+    status: str = Field(..., description="The status of the task")
+
+    class Config:
+        json_schema_extra = {"example": {"status": "In Progress"}}
 
 
 class TaskResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: uuid.UUID
     title: str
-    status: Literal["To Do", "In Progress", "Done"]
     assignee: Optional[str] = None
+    status: str
     created_at: datetime
     updated_at: datetime
 
+    class Config:
+        from_attributes = True
 
-class WebSocketMessage(BaseModel):
-    event: Literal["task_created", "task_updated"]
+
+class WebSocketResponse(BaseModel):
+    event: str
     data: TaskResponse

@@ -1,34 +1,4 @@
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import Base, get_db
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-Base.metadata.create_all(bind=engine)
-
-
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-client = TestClient(app)
-
-
-def test_initiate_password_reset():
+def test_initiate_password_reset(client):
     response = client.post(
         "/api/v1/password-reset/initiate",
         json={"login_id": "testuser", "mobile_number": "1234567890"},
@@ -40,7 +10,7 @@ def test_initiate_password_reset():
     }
 
 
-def test_verify_otp():
+def test_verify_otp(client):
     response = client.post(
         "/api/v1/password-reset/verify-otp",
         json={"otp_code": "123456", "otp_session_id": "dummy_otp_session_id"},
@@ -49,7 +19,7 @@ def test_verify_otp():
     assert response.json() == {"security_question_session_id": "dummy_sq_session_id"}
 
 
-def test_verify_security_question():
+def test_verify_security_question(client):
     response = client.post(
         "/api/v1/password-reset/verify-security-question",
         json={
@@ -61,7 +31,7 @@ def test_verify_security_question():
     assert response.json() == {"password_reset_session_id": "dummy_pr_session_id"}
 
 
-def test_set_new_password():
+def test_set_new_password(client):
     response = client.post(
         "/api/v1/password-reset/set-new-password",
         json={

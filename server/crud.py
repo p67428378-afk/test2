@@ -1,9 +1,11 @@
 import uuid
-from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import desc, asc
+from typing import Optional, List
 from server import models, schemas
 
 
+# Existing Password Reset CRUD
 def get_user_by_login_id(db: Session, login_id: str):
     return db.query(models.User).filter(models.User.login_id == login_id).first()
 
@@ -29,7 +31,7 @@ def get_otp(db: Session, otp_session_id: str):
 
 
 def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
+    otp.is_used = True  # type: ignore
     db.commit()
     db.refresh(otp)
     return otp
@@ -46,41 +48,49 @@ def create_password_history(db: Session, user_id: str, hashed_password: str):
 
 
 def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
+    user.hashed_password = hashed_password  # type: ignore
     db.commit()
     db.refresh(user)
     return user
 
 
-def get_tasks(db: Session, status: Optional[str] = None, sort: str = "desc"):
+# Task CRUD
+def get_tasks(
+    db: Session, status: Optional[str] = None, sort: str = "desc"
+) -> List[models.Task]:
     query = db.query(models.Task)
     if status:
         query = query.filter(models.Task.status == status)
-    if sort == "asc":
-        query = query.order_by(models.Task.created_at.asc())
+
+    if sort.lower() == "asc":
+        query = query.order_by(asc(models.Task.created_at))
     else:
-        query = query.order_by(models.Task.created_at.desc())
+        query = query.order_by(desc(models.Task.created_at))
+
     return query.all()
 
 
-def get_task(db: Session, task_id: uuid.UUID):
-    return db.query(models.Task).filter(models.Task.id == task_id).first()
-
-
-def create_task(db: Session, task: schemas.TaskCreate):
-    db_task = models.Task(title=task.title, status="To Do", assignee=task.assignee)
+def create_task(db: Session, task_in: schemas.TaskCreate) -> models.Task:
+    db_task = models.Task(
+        title=task_in.title, assignee=task_in.assignee, status="To Do"
+    )
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
 
 
+def get_task(db: Session, task_id: uuid.UUID) -> Optional[models.Task]:
+    return db.query(models.Task).filter(models.Task.id == task_id).first()
+
+
 def update_task_status(
-    db: Session, db_task: models.Task, status: str, assignee: Optional[str] = None
-):
-    db_task.status = status
-    if assignee is not None:
-        db_task.assignee = assignee
+    db: Session, task_id: uuid.UUID, status: str
+) -> Optional[models.Task]:
+    db_task = get_task(db, task_id)
+    if not db_task:
+        return None
+    db_task.status = status  # type: ignore
     db.commit()
     db.refresh(db_task)
     return db_task

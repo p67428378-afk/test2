@@ -1,13 +1,22 @@
 import os
 import uuid
-from typing import List, Optional, Literal
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, Query
-from starlette.middleware.cors import CORSMiddleware
+import asyncio
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    Query,
+)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
+from typing import List, Optional
 
-from server import crud, schemas
 from server.database import Base, engine, get_db
 from server.api.v1.endpoints import password_reset
+from server import crud, schemas
 
 # Ensure tables are created
 Base.metadata.create_all(bind=engine)
@@ -26,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include existing password reset router
+# Include existing routers
 app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
 
 
@@ -59,101 +68,90 @@ def read_root():
     return {"message": "Welcome to the Real-Time Worklist Updater API"}
 
 
-# Task REST Endpoints
+# Task Endpoints
 @app.get("/api/v1/tasks", response_model=List[schemas.TaskResponse])
-def get_tasks(
-    status: Optional[Literal["To Do", "In Progress", "Done"]] = Query(
-        None, description="Filter tasks by status"
+def get_tasks_endpoint(
+    status: Optional[str] = Query(
+        None, description="Filter tasks by status ('To Do', 'In Progress', 'Done')"
     ),
-    sort: Literal["asc", "desc"] = Query(
-        "desc", description="Sort order by creation date"
+    sort: str = Query(
+        "desc", description="Sort order by creation date ('asc', 'desc')"
     ),
     db: Session = Depends(get_db),
 ):
-    try:
-        return crud.get_tasks(db, status=status, sort=sort)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error occurs while fetching tasks: {str(e)}",
-        )
+    if status and status not in ["To Do", "In Progress", "Done"]:
+        raise HTTPException(status_code=400, detail="Invalid status filter value")
+    if sort not in ["asc", "desc"]:
+        raise HTTPException(status_code=400, detail="Invalid sort value")
+    return crud.get_tasks(db, status=status, sort=sort)
 
 
 @app.post("/api/v1/tasks", response_model=schemas.TaskResponse, status_code=201)
-async def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
-    try:
-        db_task = crud.create_task(db, task)
-        task_resp = schemas.TaskResponse.model_validate(db_task)
-        message = {
-            "event": "task_created",
-            "data": {
-                "id": str(task_resp.id),
-                "title": task_resp.title,
-                "status": task_resp.status,
-                "assignee": task_resp.assignee,
-                "created_at": task_resp.created_at.isoformat(),
-                "updated_at": task_resp.updated_at.isoformat(),
-            },
-        }
-        await manager.broadcast(message)
-        return db_task
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid input data: {str(e)}")
+async def create_task_endpoint(
+    task_in: schemas.TaskCreate, db: Session = Depends(get_db)
+):
+    db_task = crud.create_task(db, task_in)
+    task_resp = schemas.TaskResponse.model_validate(db_task)
+
+    # Broadcast creation event
+    await manager.broadcast({"event": "task_created", "data": task_resp.model_dump()})
+
+    return db_task
 
 
 @app.patch("/api/v1/tasks/{task_id}", response_model=schemas.TaskResponse)
-async def update_task_status(
-    task_id: uuid.UUID, task_update: schemas.TaskUpdate, db: Session = Depends(get_db)
+async def update_task_status_endpoint(
+    task_id: uuid.UUID, task_in: schemas.TaskUpdate, db: Session = Depends(get_db)
 ):
+    if task_in.status not in ["To Do", "In Progress", "Done"]:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+
     db_task = crud.get_task(db, task_id)
     if not db_task:
-        raise HTTPException(
-            status_code=404, detail="Task with the specified ID not found."
-        )
+        raise HTTPException(status_code=404, detail="Task not found")
 
-    try:
-        db_task = crud.update_task_status(
-            db, db_task, task_update.status, task_update.assignee
-        )
-        task_resp = schemas.TaskResponse.model_validate(db_task)
-        message = {
-            "event": "task_updated",
-            "data": {
-                "id": str(task_resp.id),
-                "title": task_resp.title,
-                "status": task_resp.status,
-                "assignee": task_resp.assignee,
-                "created_at": task_resp.created_at.isoformat(),
-                "updated_at": task_resp.updated_at.isoformat(),
-            },
-        }
-        await manager.broadcast(message)
-        return db_task
-    except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Invalid status value provided: {str(e)}"
-        )
+    updated_task = crud.update_task_status(db, task_id, task_in.status)
+    task_resp = schemas.TaskResponse.model_validate(updated_task)
+
+    # Broadcast update event
+    await manager.broadcast({"event": "task_updated", "data": task_resp.model_dump()})
+
+    return updated_task
 
 
+# WebSocket Endpoint
 @app.websocket("/ws/v1/worklist")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text()
+            await asyncio.sleep(0.1)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
     except Exception:
-        pass
-    finally:
         manager.disconnect(websocket)
 
 
-@app.get("/ws/v1/worklist", response_model=schemas.WebSocketMessage)
-def websocket_info():
-    """
-    Establish a WebSocket connection to receive real-time task updates.
-    This endpoint is a WebSocket endpoint. Connect using ws:// or wss://.
-    """
-    raise HTTPException(
-        status_code=400,
-        detail="Websocket connection expected. Please connect using ws:// or wss:// protocols.",
+# Custom OpenAPI Schema to include WebSocket endpoint
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Real-Time Worklist Updater API",
+        version="1.0.0",
+        description="API for Real-Time Worklist Updater",
+        routes=app.routes,
     )
+    # Add the WebSocket endpoint to paths
+    openapi_schema["paths"]["/ws/v1/worklist"] = {
+        "get": {
+            "summary": "Establish a WebSocket connection to receive real-time task updates.",
+            "description": "Establish a WebSocket connection to receive real-time task updates.",
+            "responses": {"101": {"description": "Switching Protocols to WebSocket"}},
+        }
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi

@@ -1,9 +1,9 @@
+# Merged server/requirements.txt
 fastapi
 httpx
 pydantic
 pydantic-settings
 pytest
 sqlalchemy
-starlette
 uvicorn
 websockets
