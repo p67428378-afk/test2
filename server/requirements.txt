@@ -1,6 +1,10 @@
+bcrypt
 fastapi
-uvicorn
-sqlalchemy
+httpx
 pydantic
 pydantic-settings
+pyjwt
 pytest
+sqlalchemy
+starlette
+uvicorn
