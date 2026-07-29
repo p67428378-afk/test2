@@ -1,41 +1,71 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, Integer, Numeric, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
 
+
 class User(Base):
     __tablename__ = "users"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
+    username = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    role = Column(String(50), nullable=False, default="admin")
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
 
-class OTP(Base):
-    __tablename__ = "otps"
+class PlotType(Base):
+    __tablename__ = "plot_types"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
+    name = Column(String(255), unique=True, nullable=False)
+    description = Column(String, nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
-    user = relationship("User", back_populates="otps")
+    plots = relationship("Plot", back_populates="plot_type")
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
+
+class Plot(Base):
+    __tablename__ = "plots"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
+    plot_id = Column(String(100), unique=True, nullable=False)
+    plot_type_id = Column(
+        UUID(as_uuid=True), ForeignKey("plot_types.id"), nullable=False
+    )
+    status = Column(String(50), nullable=False, default="Available")
+    section = Column(String(50), nullable=False)
+    lot = Column(String(50), nullable=False)
+    plot_number = Column(String(50), nullable=False)
+    dimensions = Column(String(100), nullable=False)
+    capacity = Column(Integer, nullable=False, default=1)
+    price = Column(Numeric(10, 2), nullable=False, default=0.00)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
-    user = relationship("User", back_populates="password_history")
+    plot_type = relationship("PlotType", back_populates="plots")
