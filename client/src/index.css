@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .soft-loom-shadow {
+    box-shadow: 0px 4px 20px rgba(15, 118, 110, 0.06);
+  }
+}
