@@ -1,3 +1,5 @@
+# Project Features
+
 # SCRUM-638 Features
 
 ## Feature Summary
@@ -103,4 +105,67 @@ Not yet authored.
 Not yet authored.
 
 ## Deployment Notes
+Not yet authored.
+
+## SCRUM-642 — User Story: Inventory Management Module
+
+### Feature Summary
+User Story: Inventory Management Module
+
+### User Stories
+## User Story: Inventory Management Module
+
+**As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
+
+### Acceptance Criteria
+
+#### **Frontend**
+*   **Explanation**: The user interface should provide a dashboard to view and manage inventory. It should allow for adding, editing, and deleting inventory items. A search and filtering functionality should also be present.
+*   **Example**: A hospital staff member can search for "sterile gloves," see the current stock level, and update the count after a new shipment arrives.
+*   **Edge Cases**:
+    *   If the search returns no results, a "No items found" message is displayed.
+    *   Forms should have validation to prevent invalid data entry (e.g., negative stock quantities).
+
+#### **Backend**
+*   **Explanation**: The backend will provide APIs for all inventory management operations. It will handle the business logic for tracking stock levels, managing item data, and generating alerts for low stock.
+*   **Example**: When a user updates the stock of an item, the backend validates the input, updates the database, and logs the transaction.
+*   **Low Stock Alerts**: A system should be in place to automatically notify relevant personnel when the stock of an item falls below a predefined threshold.
+
+#### **API**
+*   **Explanation**: A RESTful API will be developed to expose inventory data and operations.
+*   **Example**:
+    *   `GET /api/v1/inventory`: Retrieves a list of all inventory items.
+    *   `POST /api/v1/inventory`: Adds a new item to the inventory.
+    *   `PUT /api/v1/inventory/{item_id}`: Updates an existing inventory item.
+    *   `DELETE /api/v1/inventory/{item_id}`: Removes an item from the inventory.
+
+#### **Database**
+*   **Explanation**: The database will store all inventory-related data. A main `inventory_items` table will exist, with columns for item details.
+*   **Example**: The `inventory_items` table will have columns such as `item_id` (UUID, Primary Key), `name` (String), `description` (Text), `quantity` (Integer), `unit` (String, e.g., "box", "piece"), `supplier` (String), `last_updated` (Timestamp).
+
+### Acceptance Criteria
+- **Frontend**: The user interface should provide a dashboard to view and manage inventory. It should allow for adding, editing, and deleting inventory items. A search and filtering functionality should also be present.
+- **Backend**: The backend will provide APIs for all inventory management operations. It will handle the business logic for tracking stock levels, managing item data, and generating alerts for low stock.
+- **API**: A RESTful API will be developed to expose inventory data and operations.
+- **Database**: The database will store all inventory-related data. A main `inventory_items` table will exist, with columns for item details.
+
+### Backend Tasks
+- None specified
+
+### Frontend Tasks
+- None specified
+
+### Database Changes
+Not yet authored.
+
+### API Endpoints
+Not yet authored.
+
+### UI Components
+Not yet authored.
+
+### Test Coverage
+Not yet authored.
+
+### Deployment Notes
 Not yet authored.

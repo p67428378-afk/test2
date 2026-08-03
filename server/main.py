@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 import os
-from server.api.v1.endpoints import password_reset, auth, books, members, loans, fines
+from server.api.v1.endpoints import (
+    password_reset,
+    auth,
+    books,
+    members,
+    loans,
+    fines,
+    inventory,
+)
 from server.database import init_db, seed_data, SessionLocal
 
 # Initialize database tables
@@ -35,6 +43,7 @@ app.include_router(books.router, prefix="/api/v1", tags=["books"])
 app.include_router(members.router, prefix="/api/v1", tags=["members"])
 app.include_router(loans.router, prefix="/api/v1", tags=["loans"])
 app.include_router(fines.router, prefix="/api/v1", tags=["fines"])
+app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
 
 
 @app.get("/")

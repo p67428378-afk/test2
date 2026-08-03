@@ -239,3 +239,67 @@ def pay_fine(db: Session, db_fine: models.Fine):
     db.commit()
     db.refresh(db_fine)
     return db_fine
+
+
+# Inventory Item CRUD
+def get_inventory_item_by_id(db: Session, item_id):
+    return (
+        db.query(models.InventoryItem)
+        .filter(models.InventoryItem.item_id == _to_uuid(item_id))
+        .first()
+    )
+
+
+def get_inventory_items(
+    db: Session,
+    search: str = None,
+    category: str = None,
+    skip: int = 0,
+    limit: int = 100,
+):
+    query = db.query(models.InventoryItem)
+    if search:
+        query = query.filter(
+            or_(
+                models.InventoryItem.name.ilike(f"%{search}%"),
+                models.InventoryItem.supplier.ilike(f"%{search}%"),
+                models.InventoryItem.category.ilike(f"%{search}%"),
+            )
+        )
+    if category:
+        query = query.filter(models.InventoryItem.category.ilike(f"%{category}%"))
+    return query.offset(skip).limit(limit).all()
+
+
+def create_inventory_item(db: Session, item: schemas.InventoryItemCreate):
+    db_item = models.InventoryItem(
+        name=item.name,
+        description=item.description,
+        quantity=item.quantity,
+        unit=item.unit,
+        supplier=item.supplier,
+        category=item.category,
+        low_stock_threshold=item.low_stock_threshold,
+    )
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def update_inventory_item(
+    db: Session,
+    db_item: models.InventoryItem,
+    item_update: schemas.InventoryItemUpdate,
+):
+    update_data = item_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_item, key, value)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def delete_inventory_item(db: Session, db_item: models.InventoryItem):
+    db.delete(db_item)
+    db.commit()

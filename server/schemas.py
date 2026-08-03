@@ -178,3 +178,66 @@ class FineResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Inventory Item schemas
+class InventoryItemBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    quantity: int = 0
+    unit: str
+    supplier: Optional[str] = None
+    category: Optional[str] = None
+    low_stock_threshold: int = 10
+
+    @field_validator("quantity")
+    @classmethod
+    def validate_quantity(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("Quantity cannot be negative")
+        return v
+
+    @field_validator("low_stock_threshold")
+    @classmethod
+    def validate_threshold(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("Low stock threshold cannot be negative")
+        return v
+
+
+class InventoryItemCreate(InventoryItemBase):
+    pass
+
+
+class InventoryItemUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    quantity: Optional[int] = None
+    unit: Optional[str] = None
+    supplier: Optional[str] = None
+    category: Optional[str] = None
+    low_stock_threshold: Optional[int] = None
+
+    @field_validator("quantity")
+    @classmethod
+    def validate_quantity(cls, v: Optional[int]) -> Optional[int]:
+        if v is not None and v < 0:
+            raise ValueError("Quantity cannot be negative")
+        return v
+
+    @field_validator("low_stock_threshold")
+    @classmethod
+    def validate_threshold(cls, v: Optional[int]) -> Optional[int]:
+        if v is not None and v < 0:
+            raise ValueError("Low stock threshold cannot be negative")
+        return v
+
+
+class InventoryItemResponse(InventoryItemBase):
+    item_id: UUID
+    created_at: datetime
+    updated_at: datetime
+    is_low_stock: bool = False
+
+    class Config:
+        from_attributes = True

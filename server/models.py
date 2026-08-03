@@ -104,3 +104,19 @@ class Fine(Base):
     )
 
     loan = relationship("Loan", back_populates="fine")
+
+
+class InventoryItem(Base):
+    __tablename__ = "inventory_items"
+    item_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    description = Column(String, nullable=True)
+    quantity = Column(Integer, nullable=False, default=0)
+    unit = Column(String(50), nullable=False)
+    supplier = Column(String(255), nullable=True)
+    category = Column(String(100), nullable=True)
+    low_stock_threshold = Column(Integer, nullable=False, default=10)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
