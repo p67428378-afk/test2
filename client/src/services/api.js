@@ -21,6 +21,29 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+export const busService = {
+  getRoutes: async (search = "") => {
+    const params = search ? { search } : {};
+    const response = await api.get("/api/v1/routes", { params });
+    return response.data;
+  },
+
+  getRouteStops: async (routeId) => {
+    const response = await api.get(`/api/v1/routes/${routeId}/stops`);
+    return response.data;
+  },
+
+  getRouteBuses: async (routeId) => {
+    const response = await api.get(`/api/v1/routes/${routeId}/buses`);
+    return response.data;
+  },
+
+  getStopEta: async (stopId) => {
+    const response = await api.get(`/api/v1/stops/${stopId}/eta`);
+    return response.data;
+  },
+};
+
 export const authService = {
   login: async (email, password) => {
     const response = await api.post("/api/v1/auth/login", { email, password });
@@ -29,13 +52,16 @@ export const authService = {
     }
     return response.data;
   },
+
   getCurrentUser: async () => {
     const response = await api.get("/api/v1/users/me");
     return response.data;
   },
+
   logout: () => {
     localStorage.removeItem("token");
   },
+
   initiatePasswordReset: async (login_id, mobile_number) => {
     const response = await api.post("/api/v1/password-reset/initiate", {
       login_id,
@@ -43,6 +69,7 @@ export const authService = {
     });
     return response.data;
   },
+
   verifyOtp: async (otp_code, otp_session_id) => {
     const response = await api.post("/api/v1/password-reset/verify-otp", {
       otp_code,
@@ -50,6 +77,7 @@ export const authService = {
     });
     return response.data;
   },
+
   verifySecurityQuestion: async (answer, security_question_session_id) => {
     const response = await api.post(
       "/api/v1/password-reset/verify-security-question",
@@ -57,6 +85,7 @@ export const authService = {
     );
     return response.data;
   },
+
   setNewPassword: async (new_password, password_reset_session_id) => {
     const response = await api.post("/api/v1/password-reset/set-new-password", {
       new_password,

@@ -1,40 +1,32 @@
 import React from "react";
 import {
+  MapPin,
+  Settings,
   BookOpen,
-  Users,
-  FileText,
-  DollarSign,
   LogOut,
   User,
-  Package,
+  Bus,
+  Navigation,
 } from "lucide-react";
 
 export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
   const isLibrarian = user?.role === "librarian";
 
-  const menuItems = isLibrarian
-    ? [
-        { id: "dashboard", label: "Dashboard", icon: BookOpen },
-        { id: "catalog", label: "Book Catalog", icon: FileText },
-        { id: "inventory", label: "Inventory", icon: Package },
-        { id: "members", label: "Members", icon: Users },
-        { id: "fines", label: "Fines", icon: DollarSign },
-      ]
-    : [
-        { id: "portal", label: "My Portal", icon: User },
-        { id: "catalog", label: "Search Books", icon: BookOpen },
-        { id: "inventory", label: "Inventory", icon: Package },
-      ];
+  const menuItems = [
+    { id: "commuter-dashboard", label: "Bus Tracker", icon: Navigation },
+    { id: "admin-dashboard", label: "Route Manager", icon: Settings },
+    { id: "library-dashboard", label: "Library System", icon: BookOpen },
+  ];
 
   return (
-    <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col h-screen sticky top-0">
-      <div className="p-6 border-b border-slate-700 flex items-center gap-3">
-        <BookOpen className="h-8 w-8 text-emerald-500" />
+    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen sticky top-0">
+      <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+        <Bus className="h-8 w-8 text-indigo-500" />
         <div>
           <h1 className="font-bold text-lg text-slate-100 leading-none">
-            LibMax
+            TransitMax
           </h1>
-          <span className="text-xs text-slate-400">Library System</span>
+          <span className="text-xs text-slate-400">Bus Tracking App</span>
         </div>
       </div>
 
@@ -48,8 +40,8 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-200"
+                  ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -59,9 +51,9 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-4 border-t border-slate-800">
         <div className="flex items-center gap-3 px-4 py-3 mb-2">
-          <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center text-slate-200 font-semibold">
+          <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-200 font-semibold border border-slate-700">
             {user?.full_name?.charAt(0) || "U"}
           </div>
           <div className="overflow-hidden">

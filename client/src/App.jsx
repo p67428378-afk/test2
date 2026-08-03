@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./components/layout/Sidebar.jsx";
 import Header from "./components/layout/Header.jsx";
+import CommuterDashboard from "./pages/CommuterDashboard.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+
+// Import existing library pages
 import LibrarianDashboard from "./pages/LibrarianDashboard.jsx";
 import MemberPortal from "./pages/MemberPortal.jsx";
 import BookCatalogManagement from "./pages/BookCatalogManagement.jsx";
 import InventoryDashboardPage from "./pages/InventoryDashboardPage.jsx";
 import InventoryFormPage from "./pages/InventoryFormPage.jsx";
+
 import Button from "./components/common/Button.jsx";
 import { authService } from "./services/api.js";
-import { BookOpen, Lock, Mail, Phone, Key, HelpCircle } from "lucide-react";
+import { Bus, Lock, Mail, Phone, Key, HelpCircle } from "lucide-react";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -18,7 +23,7 @@ export default function App() {
     }
     return null;
   });
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("commuter-dashboard");
   const [loading, setLoading] = useState(true);
   const [editingItemId, setEditingItemId] = useState(null);
 
@@ -40,13 +45,15 @@ export default function App() {
   const [passwordResetSessionId, setPasswordResetSessionId] = useState("");
   const [resetSuccessMessage, setResetSuccessMessage] = useState("");
 
+  // Library sub-tab state
+  const [libraryTab, setLibraryTab] = useState("dashboard");
+
   useEffect(() => {
     const checkAuth = async () => {
       if (token) {
         try {
           const userData = await authService.getCurrentUser();
           setUser(userData);
-          setActiveTab(userData.role === "librarian" ? "dashboard" : "portal");
         } catch (err) {
           console.error(err);
           authService.logout();
@@ -142,7 +149,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-height-screen bg-slate-950 flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
         Loading application...
       </div>
     );
@@ -153,14 +160,14 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
           <div className="flex flex-col items-center text-center">
-            <div className="h-12 w-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 border border-emerald-500/20">
-              <BookOpen className="h-6 w-6" />
+            <div className="h-12 w-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4 border border-indigo-500/20">
+              <Bus className="h-6 w-6" />
             </div>
             <h2 className="text-2xl font-bold text-slate-100">
-              Welcome to LibMax
+              Welcome to TransitMax
             </h2>
             <p className="text-sm text-slate-400 mt-1">
-              Library Management System
+              Real-Time Bus Tracking & Transit System
             </p>
           </div>
 
@@ -193,7 +200,7 @@ export default function App() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
                     placeholder="test@example.com"
                   />
                 </div>
@@ -214,7 +221,7 @@ export default function App() {
                       setLoginError("");
                       setResetSuccessMessage("");
                     }}
-                    className="text-xs text-emerald-400 hover:underline"
+                    className="text-xs text-indigo-400 hover:underline"
                   >
                     Forgot Password?
                   </button>
@@ -227,13 +234,16 @@ export default function App() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full">
+              <Button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-500"
+              >
                 Sign In
               </Button>
 
@@ -241,15 +251,13 @@ export default function App() {
                 <p className="font-semibold text-slate-300">Test Accounts:</p>
                 <p>
                   • Librarian:{" "}
-                  <code className="text-emerald-400">
-                    librarian@example.com
-                  </code>{" "}
-                  / <code className="text-emerald-400">testpassword</code>
+                  <code className="text-indigo-400">librarian@example.com</code>{" "}
+                  / <code className="text-indigo-400">testpassword</code>
                 </p>
                 <p>
                   • Member:{" "}
-                  <code className="text-emerald-400">test@example.com</code> /{" "}
-                  <code className="text-emerald-400">testpassword</code>
+                  <code className="text-indigo-400">test@example.com</code> /{" "}
+                  <code className="text-indigo-400">testpassword</code>
                 </p>
               </div>
             </form>
@@ -271,7 +279,7 @@ export default function App() {
                     required
                     value={resetLoginId}
                     onChange={(e) => setResetLoginId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
                     placeholder="test@example.com"
                   />
                 </div>
@@ -288,7 +296,7 @@ export default function App() {
                     required
                     value={resetMobile}
                     onChange={(e) => setResetMobile(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
                     placeholder="1234567890"
                   />
                 </div>
@@ -303,7 +311,10 @@ export default function App() {
                 >
                   Back
                 </Button>
-                <Button type="submit" className="flex-1">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-500"
+                >
                   Send OTP
                 </Button>
               </div>
@@ -329,7 +340,7 @@ export default function App() {
                     required
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
                     placeholder="123456"
                   />
                 </div>
@@ -344,7 +355,10 @@ export default function App() {
                 >
                   Back
                 </Button>
-                <Button type="submit" className="flex-1">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-500"
+                >
                   Verify OTP
                 </Button>
               </div>
@@ -373,7 +387,7 @@ export default function App() {
                     required
                     value={securityAnswer}
                     onChange={(e) => setSecurityAnswer(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
                     placeholder="Answer"
                   />
                 </div>
@@ -388,7 +402,10 @@ export default function App() {
                 >
                   Back
                 </Button>
-                <Button type="submit" className="flex-1">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-500"
+                >
                   Verify Answer
                 </Button>
               </div>
@@ -411,13 +428,16 @@ export default function App() {
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full">
+              <Button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-500"
+              >
                 Reset Password
               </Button>
             </form>
@@ -429,92 +449,110 @@ export default function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "dashboard":
-        return <LibrarianDashboard />;
-      case "portal":
-        return <MemberPortal user={user} />;
-      case "catalog":
-        return <BookCatalogManagement />;
-      case "inventory":
+      case "commuter-dashboard":
+        return <CommuterDashboard />;
+      case "admin-dashboard":
+        return <AdminDashboard />;
+      case "library-dashboard":
         return (
-          <InventoryDashboardPage
-            user={user}
-            onAddItem={() => {
-              setEditingItemId(null);
-              setActiveTab("inventory-form");
-            }}
-            onEditItem={(itemId) => {
-              setEditingItemId(itemId);
-              setActiveTab("inventory-form");
-            }}
-          />
-        );
-      case "inventory-form":
-        return (
-          <InventoryFormPage
-            itemId={editingItemId}
-            onCancel={() => setActiveTab("inventory")}
-            onSave={() => setActiveTab("inventory")}
-          />
-        );
-      case "members":
-        return (
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-            <h3 className="font-semibold text-slate-100 text-lg mb-4">
-              Members Directory
-            </h3>
-            <p className="text-sm text-slate-400">
-              Librarians can manage members from the main Dashboard quick
-              actions.
-            </p>
-          </div>
-        );
-      case "fines":
-        return (
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-            <h3 className="font-semibold text-slate-100 text-lg mb-4">
-              Fines Management
-            </h3>
-            <p className="text-sm text-slate-400">
-              Librarians can manage overdue fines from the main Dashboard.
-            </p>
+          <div className="space-y-6">
+            {/* Library Sub-Navigation */}
+            <div className="flex border-b border-slate-800 gap-4">
+              <button
+                onClick={() => setLibraryTab("dashboard")}
+                className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+                  libraryTab === "dashboard"
+                    ? "border-indigo-500 text-indigo-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Librarian Dashboard
+              </button>
+              <button
+                onClick={() => setLibraryTab("portal")}
+                className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+                  libraryTab === "portal"
+                    ? "border-indigo-500 text-indigo-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Member Portal
+              </button>
+              <button
+                onClick={() => setLibraryTab("catalog")}
+                className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+                  libraryTab === "catalog"
+                    ? "border-indigo-500 text-indigo-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Book Catalog
+              </button>
+              <button
+                onClick={() => setLibraryTab("inventory")}
+                className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+                  libraryTab === "inventory"
+                    ? "border-indigo-500 text-indigo-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Inventory
+              </button>
+            </div>
+
+            {/* Render Library Sub-Tab */}
+            {libraryTab === "dashboard" && <LibrarianDashboard />}
+            {libraryTab === "portal" && <MemberPortal user={user} />}
+            {libraryTab === "catalog" && <BookCatalogManagement />}
+            {libraryTab === "inventory" && (
+              <InventoryDashboardPage
+                user={user}
+                onAddItem={() => {
+                  setEditingItemId(null);
+                  setLibraryTab("inventory-form");
+                }}
+                onEditItem={(itemId) => {
+                  setEditingItemId(itemId);
+                  setLibraryTab("inventory-form");
+                }}
+              />
+            )}
+            {libraryTab === "inventory-form" && (
+              <InventoryFormPage
+                itemId={editingItemId}
+                onCancel={() => setLibraryTab("inventory")}
+                onSave={() => setLibraryTab("inventory")}
+              />
+            )}
           </div>
         );
       default:
-        return <LibrarianDashboard />;
+        return <CommuterDashboard />;
     }
   };
 
   const getHeaderTitle = () => {
     switch (activeTab) {
-      case "dashboard":
-        return "Librarian Dashboard";
-      case "portal":
-        return "Member Portal";
-      case "catalog":
-        return "Book Catalog Management";
-      case "inventory":
-        return "Inventory Management";
-      case "inventory-form":
-        return editingItemId ? "Edit Inventory Item" : "Add Inventory Item";
-      case "members":
-        return "Members Directory";
-      case "fines":
-        return "Fines Management";
+      case "commuter-dashboard":
+        return "TransitMax Bus Tracker";
+      case "admin-dashboard":
+        return "TransitMax Route Manager";
+      case "library-dashboard":
+        return "LibMax Library System";
       default:
-        return "Library Management System";
+        return "TransitMax Bus Tracking App";
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+    <div className="flex min-h-screen bg-slate-950 text-slate-100">
       <Sidebar
         user={user}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogout={handleLogout}
       />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header user={user} title={getHeaderTitle()} />
         <main className="flex-1 p-8 overflow-y-auto">{renderContent()}</main>
       </div>

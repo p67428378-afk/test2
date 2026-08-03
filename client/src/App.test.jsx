@@ -12,6 +12,12 @@ vi.mock("./services/api.js", () => {
       login: vi.fn(),
       logout: vi.fn(),
     },
+    busService: {
+      getRoutes: vi.fn().mockResolvedValue([]),
+      getRouteStops: vi.fn().mockResolvedValue([]),
+      getRouteBuses: vi.fn().mockResolvedValue([]),
+      getStopEta: vi.fn().mockResolvedValue({ etas: [] }),
+    },
     bookService: {
       getBooks: vi.fn().mockResolvedValue([]),
     },
@@ -37,8 +43,10 @@ describe("App Component", () => {
     render(<App />);
 
     // Check that the welcome message is displayed
-    expect(screen.getByText("Welcome to LibMax")).toBeInTheDocument();
-    expect(screen.getByText("Library Management System")).toBeInTheDocument();
+    expect(screen.getByText("Welcome to TransitMax")).toBeInTheDocument();
+    expect(
+      screen.getByText("Real-Time Bus Tracking & Transit System"),
+    ).toBeInTheDocument();
 
     // Check that the email and password inputs are present
     expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
