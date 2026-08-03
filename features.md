@@ -1,102 +1,99 @@
-# Project Features
-
-# SCRUM-638 Features
+# SCRUM-643 Features
 
 ## Feature Summary
-User Story: Library Management System
+User Story: Browse and Discover Computer Components
 
 ## User Stories
-# User Story: Library Management System
+### **User Story: Browse and Discover Computer Components**
 
-**As a** library user (both librarian and member),
-**I want** a comprehensive Library Management System,
-**So that** librarians can efficiently manage the library's collection and members, and members can easily discover, borrow, and return books.
+**As a customer,** I want to easily browse and search for a wide variety of computer parts on the website **so that** I can find the specific components I need for my build, whether I'm a casual builder or a high-end enthusiast.
 
 ---
 
-## Acceptance Criteria
+### **Acceptance Criteria**
 
-### 1. User Roles & Permissions
+#### **1. Frontend (UI/UX)**
+*   **Explanation:** The user interface should provide a clear and intuitive way to navigate through product categories. A prominent search bar should be available on all pages.
+*   **Example:** A user lands on the homepage and sees a navigation bar with categories like "CPUs," "Motherboards," "Memory (RAM), " "Storage (SSD, HDD), " "Graphics Cards, " etc. They can click on any category to see a list of products.
+*   **Edge Cases:** If a category is empty, the website should display a message like "No products found in this category" instead of a blank page.
 
-*   **Explanation**: The system will have two main user roles: "Librarian" and "Member".
-    *   **Librarians** have full administrative access to manage books, members, and borrowing records.
-    *   **Members** have access to search for books, view their borrowing history, and manage their own account.
-*   **Example**:
-    *   A user with the "Librarian" role can add a new book to the system.
-    *   A user with the "Member" role can view the library's book catalog but cannot add or delete books.
+#### **2. Product Search Functionality**
+*   **Explanation:** Users must be able to search for products by name, brand, or category. The search should be fast and return relevant results.
+*   **Example:** A user types "Nvidia RTX 4080" into the search bar and the website displays all available models of the RTX 4080 graphics card.
+*   **Edge Cases:** If a search query returns no results, the website should display a "No results found" message and perhaps offer suggestions for other products.
 
-### 2. Book Management (Librarian)
+#### **3. Product Listings Page**
+*   **Explanation:** When a user navigates to a category or performs a search, the website should display a grid or list of products with key information.
+*   **Example:** The "Graphics Cards" page shows a grid of GPUs, each with a product image, name, brand, price, and a "View Details" button.
+*   **Sub-headings:**
+    *   **Filtering and Sorting:** Users should be able to filter products by brand, price range, and other relevant attributes. They should also be able to sort products by price (low to high, high to low) and popularity.
 
-*   **Explanation**: Librarians must be able to perform CRUD (Create, Read, Update, Delete) operations for books. Each book will have attributes such as Title, Author, ISBN, Genre, Publication Year, and number of available copies.
-*   **Example**: A librarian can add a new copy of "The Great Gatsby", update its location, or remove a damaged book from the system.
+#### **4. Backend Logic**
+*   **Explanation:** The backend will manage the product catalog, including all product information, categories, and inventory levels. It will provide the data to the frontend via an API.
+*   **Example:** When a user requests the "CPUs" category page, the backend queries the database for all products in the "CPUs" category and returns the data to the frontend.
+*   **Database Schema:**
+    *   A `products` table with columns for `id`, `name`, `description`, `price`, `brand`, `category_id`, `stock_quantity`, `image_url`, `created_at`, and `updated_at`.
+    *   A `categories` table with columns for `id`, `name`, and `description`.
 
-### 3. Member Management (Librarian)
-
-*   **Explanation**: Librarians must be able to perform CRUD operations for library members. Each member will have a unique ID, name, contact details, and membership status.
-*   **Example**: A librarian can register a new member, update their phone number, or deactivate an expired membership.
-
-### 4. Book Search & Discovery (Member)
-
-*   **Explanation**: Members must be able to search the library catalog to find books. Search functionality should support filtering by title, author, genre, and ISBN.
-*   **Example**: A member can search for all books in the "Science Fiction" genre written by "Isaac Asimov".
-
-### 5. Book Borrowing & Returning (Member & Librarian)
-
-*   **Explanation**: The system must manage the process of borrowing and returning books. When a book is borrowed, the system records the checkout date, due date, and the member who borrowed it. The number of available copies is updated.
-*   **Example**: A member presents a book to the librarian, who scans it to mark it as "checked out" under that member's account. The due date is set for 14 days from the checkout date.
-
-### 6. Overdue Fine Calculation
-
-*   **Explanation**: The system will automatically calculate fines for overdue books. The standard fine will be $0.25 per day for each overdue book.
-*   **Example**: If a book is returned 3 days after its due date, a fine of $0.75 is automatically added to the member's account.
-*   **Edge Cases**: The system should not calculate fines for days the library is closed (e.g., public holidays).
-
-### 7. Due-Date Reminders
-
-*   **Explanation**: The system will send automated reminders to members about upcoming due dates. A reminder will be sent via email 3 days before the due date.
-*   **Example**: If a book is due on March 15th, the system will automatically send an email reminder to the member on March 12th.
-
-### 8. API Endpoints
-
-*   **Explanation**: The system will expose a RESTful API for all functionalities.
-*   **Example**:
-    *   `GET /api/v1/books` - to retrieve a list of all books.
-    *   `POST /api/v1/books` - for a librarian to add a new book.
-    *   `GET /api/v1/members/{memberId}/loans` - for a member to view their borrowing history.
-    *   `POST /api/v1/loans` - to record a new book loan.
-
-### 9. Database Schema
-
-*   **Explanation**: The system's database will include the following core tables:
-    *   `Books`: Stores book information (BookID, Title, Author, ISBN, Genre, etc.).
-    *   `Members`: Stores member information (MemberID, FirstName, LastName, Email, etc.).
-    *   `Loans`: Records borrowing transactions (LoanID, BookID, MemberID, CheckoutDate, DueDate, ReturnDate).
-    *   `Fines`: Tracks outstanding fines (FineID, LoanID, Amount, Status).
-
----
+#### **5. API Endpoints**
+*   **Explanation:** A set of RESTful API endpoints will be created to handle product and category data.
+*   **Example:**
+    *   `GET /api/v1/products`: Returns a list of all products, with support for filtering and pagination.
+    *   `GET /api/v1/products/{product_id}`: Returns the details of a specific product.
+    *   `GET /api/v1/categories`: Returns a list of all product categories.
+    *   `GET /api/v1/categories/{category_id}/products`: Returns a list of all products in a specific category.
 
 ## Acceptance Criteria
-- User Roles & Permissions
-- Book Management (Librarian)
-- Member Management (Librarian)
-- Book Search & Discovery (Member)
-- Book Borrowing & Returning (Member & Librarian)
-- Overdue Fine Calculation
-- Due-Date Reminders
-- API Endpoints
-- Database Schema
+- The user interface should provide a clear and intuitive way to navigate through product categories.
+- Users must be able to search for products by name, brand, or category.
+- The website should display a grid or list of products with key information.
+- The backend will manage the product catalog, including all product information, categories, and inventory levels.
+- A set of RESTful API endpoints will be created to handle product and category data.
 
 ## Backend Tasks
-- None specified
+- .env.example
+- README.md
+- server/__init__.py
+- server/main.py
+- server/models.py
+- server/database.py
+- server/requirements.txt
+- server/test_main.py
 
 ## Frontend Tasks
-- None specified
+- client/.env.example
+- client/.env
+- client/package.json
+- client/index.html
+- client/vite.config.js
+- client/tailwind.config.js
+- client/postcss.config.js
+- client/src/index.css
+- client/src/main.jsx
+- client/src/setup.js
+- client/src/components/layout/TopNavBar.jsx
+- client/src/components/common/Button.jsx
+- client/src/components/common/Badge.jsx
+- client/src/components/product/ProductCard.jsx
+- client/src/components/product/FilterPanel.jsx
+- client/src/pages/Homepage.jsx
+- client/src/pages/ProductListingsPage.jsx
+- client/src/pages/ProductDetailPage.jsx
+- client/src/services/api.js
 
 ## Database Changes
-Not yet authored.
+**tables**:
+  - {"name": "categories", "columns": [{"name": "id", "type": "UUID", "primary_key": true, "nullable": false, "default": "gen_random_uuid()"}, {"name": "name", "type": "VARCHAR(255)", "primary_key": false, "nullable": false, "unique": true}, {"name": "description", "type": "TEXT", "primary_key": false, "nullable": true}, {"name": "created_at", "type": "TIMESTAMP WITH TIME ZONE", "primary_key": false, "nullable": false, "default": "NOW()"}, {"name": "updated_at", "type": "TIMESTAMP WITH TIME ZONE", "primary_key": false, "nullable": false, "default": "NOW()"}]}
+  - {"name": "products", "columns": [{"name": "id", "type": "UUID", "primary_key": true, "nullable": false, "default": "gen_random_uuid()"}, {"name": "name", "type": "VARCHAR(255)", "primary_key": false, "nullable": false}, {"name": "description", "type": "TEXT", "primary_key": false, "nullable": true}, {"name": "price", "type": "NUMERIC(10, 2)", "primary_key": false, "nullable": false}, {"name": "brand", "type": "VARCHAR(100)", "primary_key": false, "nullable": false}, {"name": "stock_quantity", "type": "INTEGER", "primary_key": false, "nullable": false, "default": "0"}, {"name": "image_url", "type": "VARCHAR(2048)", "primary_key": false, "nullable": true}, {"name": "category_id", "type": "UUID", "primary_key": false, "nullable": false, "foreign_key": "categories.id"}, {"name": "created_at", "type": "TIMESTAMP WITH TIME ZONE", "primary_key": false, "nullable": false, "default": "NOW()"}, {"name": "updated_at", "type": "TIMESTAMP WITH TIME ZONE", "primary_key": false, "nullable": false, "default": "NOW()"}]}
+**relationships**:
+  - products.category_id -> categories.id (many-to-one)
 
 ## API Endpoints
-Not yet authored.
+- `GET /api/v1/products` — Get a paginated list of all products. Supports filtering by brand, price range, and category, and sorting by price.
+- `GET /api/v1/products/{product_id}` — Get the full details for a single product by its UUID.
+- `GET /api/v1/categories` — Get a list of all product categories.
+- `GET /api/v1/categories/{category_id}` — Get details for a single category.
+- `GET /api/v1/categories/{category_id}/products` — Get a paginated list of all products within a specific category.
 
 ## UI Components
 Not yet authored.
@@ -105,67 +102,4 @@ Not yet authored.
 Not yet authored.
 
 ## Deployment Notes
-Not yet authored.
-
-## SCRUM-642 — User Story: Inventory Management Module
-
-### Feature Summary
-User Story: Inventory Management Module
-
-### User Stories
-## User Story: Inventory Management Module
-
-**As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
-
-### Acceptance Criteria
-
-#### **Frontend**
-*   **Explanation**: The user interface should provide a dashboard to view and manage inventory. It should allow for adding, editing, and deleting inventory items. A search and filtering functionality should also be present.
-*   **Example**: A hospital staff member can search for "sterile gloves," see the current stock level, and update the count after a new shipment arrives.
-*   **Edge Cases**:
-    *   If the search returns no results, a "No items found" message is displayed.
-    *   Forms should have validation to prevent invalid data entry (e.g., negative stock quantities).
-
-#### **Backend**
-*   **Explanation**: The backend will provide APIs for all inventory management operations. It will handle the business logic for tracking stock levels, managing item data, and generating alerts for low stock.
-*   **Example**: When a user updates the stock of an item, the backend validates the input, updates the database, and logs the transaction.
-*   **Low Stock Alerts**: A system should be in place to automatically notify relevant personnel when the stock of an item falls below a predefined threshold.
-
-#### **API**
-*   **Explanation**: A RESTful API will be developed to expose inventory data and operations.
-*   **Example**:
-    *   `GET /api/v1/inventory`: Retrieves a list of all inventory items.
-    *   `POST /api/v1/inventory`: Adds a new item to the inventory.
-    *   `PUT /api/v1/inventory/{item_id}`: Updates an existing inventory item.
-    *   `DELETE /api/v1/inventory/{item_id}`: Removes an item from the inventory.
-
-#### **Database**
-*   **Explanation**: The database will store all inventory-related data. A main `inventory_items` table will exist, with columns for item details.
-*   **Example**: The `inventory_items` table will have columns such as `item_id` (UUID, Primary Key), `name` (String), `description` (Text), `quantity` (Integer), `unit` (String, e.g., "box", "piece"), `supplier` (String), `last_updated` (Timestamp).
-
-### Acceptance Criteria
-- **Frontend**: The user interface should provide a dashboard to view and manage inventory. It should allow for adding, editing, and deleting inventory items. A search and filtering functionality should also be present.
-- **Backend**: The backend will provide APIs for all inventory management operations. It will handle the business logic for tracking stock levels, managing item data, and generating alerts for low stock.
-- **API**: A RESTful API will be developed to expose inventory data and operations.
-- **Database**: The database will store all inventory-related data. A main `inventory_items` table will exist, with columns for item details.
-
-### Backend Tasks
-- None specified
-
-### Frontend Tasks
-- None specified
-
-### Database Changes
-Not yet authored.
-
-### API Endpoints
-Not yet authored.
-
-### UI Components
-Not yet authored.
-
-### Test Coverage
-Not yet authored.
-
-### Deployment Notes
 Not yet authored.

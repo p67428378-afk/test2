@@ -1,12 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import Base, get_db
+from sqlalchemy.pool import StaticPool
 
-# Use SQLite in-memory database for testing
+from server.main import app
+from server.database import get_db, Base, seed_data
+
+# Use SQLite in-memory for tests
 SQLALCHEMY_DATABASE_URL = "sqlite://"
 
 engine = create_engine(
@@ -19,22 +20,23 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
-    # Create all tables
+    # Create tables
     Base.metadata.create_all(bind=engine)
+    # Seed initial data
+    db = TestingSessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
     yield
     Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
-def db():
+def db_session():
     connection = engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-
-    # Seed initial data for each test function to have a clean state
-    from server.database import seed_data
-
-    seed_data(session)
 
     yield session
 
@@ -44,10 +46,10 @@ def db():
 
 
 @pytest.fixture(scope="function")
-def client(db):
+def client(db_session):
     def override_get_db():
         try:
-            yield db
+            yield db_session
         finally:
             pass
 

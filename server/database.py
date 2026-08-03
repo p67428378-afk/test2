@@ -1,12 +1,17 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import sessionmaker
+from server.models import Base, Category, Product
 
-engine = create_engine(settings.DATABASE_URL)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+
+# For SQLite, we need connect_args={"check_same_thread": False}
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
 
 
 def get_db():
@@ -18,41 +23,117 @@ def get_db():
 
 
 def init_db():
-    # Import models here to register them on Base.metadata
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+def seed_data(db):
+    # Idempotent seeding of categories
+    categories_data = [
+        {
+            "name": "CPUs",
+            "description": "Central Processing Units for high-performance computing.",
+        },
+        {
+            "name": "Graphics Cards",
+            "description": "Graphics Processing Units for gaming and rendering.",
+        },
+        {
+            "name": "Motherboards",
+            "description": "Mainboards connecting all computer components.",
+        },
+        {
+            "name": "Memory (RAM)",
+            "description": "Random Access Memory for fast multitasking.",
+        },
+        {
+            "name": "Storage (SSD, HDD)",
+            "description": "Solid State Drives and Hard Disk Drives for data storage.",
+        },
+    ]
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-        )
-        db.add(test_user)
+    seeded_categories = {}
+    for cat in categories_data:
+        existing_cat = db.query(Category).filter(Category.name == cat["name"]).first()
+        if not existing_cat:
+            new_cat = Category(name=cat["name"], description=cat["description"])
+            db.add(new_cat)
+            db.commit()
+            db.refresh(new_cat)
+            seeded_categories[cat["name"]] = new_cat
+        else:
+            seeded_categories[cat["name"]] = existing_cat
 
-    # Seed librarian user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Librarian",
-            role="librarian",
-            hashed_password=get_password_hash("adminpassword"),
-        )
-        db.add(admin_user)
+    # Idempotent seeding of products
+    products_data = [
+        {
+            "name": "Intel Core i9-14900K",
+            "description": "24-Core (8 Performance Cores + 16 Efficient Cores) desktop processor.",
+            "price": 549.99,
+            "brand": "Intel",
+            "stock_quantity": 15,
+            "image_url": "https://example.com/images/i9-14900k.jpg",
+            "category_name": "CPUs",
+        },
+        {
+            "name": "AMD Ryzen 7 7800X3D",
+            "description": "8-Core, 16-Thread desktop processor with AMD 3D V-Cache technology.",
+            "price": 369.99,
+            "brand": "AMD",
+            "stock_quantity": 25,
+            "image_url": "https://example.com/images/ryzen-7800x3d.jpg",
+            "category_name": "CPUs",
+        },
+        {
+            "name": "NVIDIA GeForce RTX 4090",
+            "description": "The ultimate GeForce GPU. It brings an enormous leap in performance, efficiency, and AI-powered graphics.",
+            "price": 1599.99,
+            "brand": "NVIDIA",
+            "stock_quantity": 8,
+            "image_url": "https://example.com/images/rtx-4090.jpg",
+            "category_name": "Graphics Cards",
+        },
+        {
+            "name": "ASUS ROG Strix X670E-E Gaming WiFi",
+            "description": "AMD X670 ATX motherboard with 18+2 power stages, DDR5 support, and PCIe 5.0.",
+            "price": 429.99,
+            "brand": "ASUS",
+            "stock_quantity": 12,
+            "image_url": "https://example.com/images/asus-x670e.jpg",
+            "category_name": "Motherboards",
+        },
+        {
+            "name": "Corsair Vengeance DDR5 32GB (2x16GB) 6000MHz",
+            "description": "High-performance DDR5 memory optimized for Intel and AMD motherboards.",
+            "price": 114.99,
+            "brand": "Corsair",
+            "stock_quantity": 50,
+            "image_url": "https://example.com/images/corsair-ddr5.jpg",
+            "category_name": "Memory (RAM)",
+        },
+        {
+            "name": "Samsung 990 Pro 2TB NVMe M.2 SSD",
+            "description": "High-speed PCIe Gen4 NVMe M.2 SSD with read speeds up to 7450 MB/s.",
+            "price": 169.99,
+            "brand": "Samsung",
+            "stock_quantity": 40,
+            "image_url": "https://example.com/images/samsung-990pro.jpg",
+            "category_name": "Storage (SSD, HDD)",
+        },
+    ]
 
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+    for prod in products_data:
+        existing_prod = db.query(Product).filter(Product.name == prod["name"]).first()
+        if not existing_prod:
+            cat = seeded_categories.get(prod["category_name"])
+            if cat:
+                new_prod = Product(
+                    name=prod["name"],
+                    description=prod["description"],
+                    price=prod["price"],
+                    brand=prod["brand"],
+                    stock_quantity=prod["stock_quantity"],
+                    image_url=prod["image_url"],
+                    category_id=cat.id,
+                )
+                db.add(new_prod)
+    db.commit()
