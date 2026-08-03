@@ -1,50 +1,42 @@
-// @vitest-environment jsdom
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import App from "./App.jsx";
+import App from "./App";
+import { categoryService, productService } from "./services/api";
 
-// Mock the API services to avoid real network calls during tests
-vi.mock("./services/api.js", () => {
-  return {
-    authService: {
-      getCurrentUser: vi.fn().mockRejectedValue(new Error("No token")),
-      login: vi.fn(),
-      logout: vi.fn(),
-    },
-    bookService: {
-      getBooks: vi.fn().mockResolvedValue([]),
-    },
-    memberService: {
-      getMembers: vi.fn().mockResolvedValue([]),
-    },
-    loanService: {
-      getMemberLoans: vi.fn().mockResolvedValue([]),
-    },
-    fineService: {
-      getFines: vi.fn().mockResolvedValue([]),
-    },
-    default: {
-      interceptors: {
-        request: { use: vi.fn() },
+// Mock the API services
+vi.mock("./services/api", () => ({
+  categoryService: {
+    getCategories: vi.fn().mockResolvedValue([
+      { id: "cat-1", name: "CPUs", description: "Processors" },
+      { id: "cat-2", name: "Graphics Cards", description: "GPUs" },
+    ]),
+  },
+  productService: {
+    getProducts: vi.fn().mockResolvedValue([
+      {
+        id: "prod-1",
+        name: "Intel Core i9-14900K",
+        brand: "Intel",
+        price: 589.99,
+        stock_quantity: 10,
+        image_url: "",
+        description: "High-end desktop processor",
       },
-    },
-  };
-});
+    ]),
+  },
+}));
 
 describe("App Component", () => {
-  it("renders the login form when not authenticated", async () => {
+  it("renders the top navigation bar and homepage", async () => {
     render(<App />);
 
-    // Check that the welcome message is displayed
-    expect(screen.getByText("Welcome to LibMax")).toBeInTheDocument();
-    expect(screen.getByText("Library Management System")).toBeInTheDocument();
+    // Wait for initial data to load
+    await waitFor(() => {
+      expect(screen.getByText("PartForge")).toBeInTheDocument();
+    });
 
-    // Check that the email and password inputs are present
-    expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-
-    // Check that the sign in button is present
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+    // Check if hero banner text is present
+    expect(screen.getByText(/Forge Your Ultimate/i)).toBeInTheDocument();
   });
 });
