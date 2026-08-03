@@ -4,6 +4,8 @@ import Header from "./components/layout/Header.jsx";
 import LibrarianDashboard from "./pages/LibrarianDashboard.jsx";
 import MemberPortal from "./pages/MemberPortal.jsx";
 import BookCatalogManagement from "./pages/BookCatalogManagement.jsx";
+import InventoryDashboardPage from "./pages/InventoryDashboardPage.jsx";
+import InventoryFormPage from "./pages/InventoryFormPage.jsx";
 import Button from "./components/common/Button.jsx";
 import { authService } from "./services/api.js";
 import { BookOpen, Lock, Mail, Phone, Key, HelpCircle } from "lucide-react";
@@ -18,6 +20,7 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
+  const [editingItemId, setEditingItemId] = useState(null);
 
   // Login form state
   const [email, setEmail] = useState("test@example.com");
@@ -432,6 +435,28 @@ export default function App() {
         return <MemberPortal user={user} />;
       case "catalog":
         return <BookCatalogManagement />;
+      case "inventory":
+        return (
+          <InventoryDashboardPage
+            user={user}
+            onAddItem={() => {
+              setEditingItemId(null);
+              setActiveTab("inventory-form");
+            }}
+            onEditItem={(itemId) => {
+              setEditingItemId(itemId);
+              setActiveTab("inventory-form");
+            }}
+          />
+        );
+      case "inventory-form":
+        return (
+          <InventoryFormPage
+            itemId={editingItemId}
+            onCancel={() => setActiveTab("inventory")}
+            onSave={() => setActiveTab("inventory")}
+          />
+        );
       case "members":
         return (
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
@@ -468,6 +493,10 @@ export default function App() {
         return "Member Portal";
       case "catalog":
         return "Book Catalog Management";
+      case "inventory":
+        return "Inventory Management";
+      case "inventory-form":
+        return editingItemId ? "Edit Inventory Item" : "Add Inventory Item";
       case "members":
         return "Members Directory";
       case "fines":

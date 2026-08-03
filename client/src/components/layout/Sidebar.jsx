@@ -6,6 +6,7 @@ import {
   DollarSign,
   LogOut,
   User,
+  Package,
 } from "lucide-react";
 
 export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
@@ -15,12 +16,14 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
     ? [
         { id: "dashboard", label: "Dashboard", icon: BookOpen },
         { id: "catalog", label: "Book Catalog", icon: FileText },
+        { id: "inventory", label: "Inventory", icon: Package },
         { id: "members", label: "Members", icon: Users },
         { id: "fines", label: "Fines", icon: DollarSign },
       ]
     : [
         { id: "portal", label: "My Portal", icon: User },
         { id: "catalog", label: "Search Books", icon: BookOpen },
+        { id: "inventory", label: "Inventory", icon: Package },
       ];
 
   return (

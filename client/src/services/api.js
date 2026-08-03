@@ -143,4 +143,30 @@ export const fineService = {
   },
 };
 
+export const inventoryService = {
+  getInventoryItems: async (search = "", category = "") => {
+    const params = {};
+    if (search) params.search = search;
+    if (category) params.category = category;
+    const response = await api.get("/api/v1/inventory", { params });
+    return response.data;
+  },
+  getInventoryItem: async (itemId) => {
+    const response = await api.get(`/api/v1/inventory/${itemId}`);
+    return response.data;
+  },
+  createInventoryItem: async (itemData) => {
+    const response = await api.post("/api/v1/inventory", itemData);
+    return response.data;
+  },
+  updateInventoryItem: async (itemId, itemData) => {
+    const response = await api.put(`/api/v1/inventory/${itemId}`, itemData);
+    return response.data;
+  },
+  deleteInventoryItem: async (itemId) => {
+    const response = await api.delete(`/api/v1/inventory/${itemId}`);
+    return response.data;
+  },
+};
+
 export default api;
