@@ -1,102 +1,99 @@
-# Project Features
-
-# SCRUM-638 Features
+# SCRUM-645 Features
 
 ## Feature Summary
-User Story: Library Management System
+User Story: Real-Time Bus Tracking and ETA
 
 ## User Stories
-# User Story: Library Management System
+# User Story: Real-Time Bus Tracking and ETA
 
-**As a** library user (both librarian and member),
-**I want** a comprehensive Library Management System,
-**So that** librarians can efficiently manage the library's collection and members, and members can easily discover, borrow, and return books.
+**Description:**
+As a Commuter,
+I want to see the real-time location of my bus on a map and know its estimated arrival time,
+So that I can better plan my journey and reduce waiting time at the bus stop.
 
----
+**Acceptance Criteria:**
 
-## Acceptance Criteria
+- **Real-Time Map Display:**
+  - **Explanation:** The app must display a map (e.g., Google Maps, OpenStreetMap) showing the live location of buses for selected routes. The bus icons should move smoothly on the map, updating every 5-10 seconds.
+  - **Example:** A user selects Route 72, and the map shows two buses currently active on that route, with their icons moving along the designated path.
 
-### 1. User Roles & Permissions
+- **Estimated Time of Arrival (ETA) Calculation:**
+  - **Explanation:** For any selected bus stop, the app must display the estimated arrival times for the next two buses on that route. The ETA should be dynamic, recalculating based on the bus's current location, speed, and historical traffic data for that segment.
+  - **Example:** A user taps on the "Main Street & 1st Ave" stop and sees "5 min" and "25 min" for the next two arrivals. As the first bus gets closer, the ETA updates to "4 min," "3 min," and so on.
 
-*   **Explanation**: The system will have two main user roles: "Librarian" and "Member".
-    *   **Librarians** have full administrative access to manage books, members, and borrowing records.
-    *   **Members** have access to search for books, view their borrowing history, and manage their own account.
-*   **Example**:
-    *   A user with the "Librarian" role can add a new book to the system.
-    *   A user with the "Member" role can view the library's book catalog but cannot add or delete books.
+- **Bus & Route Selection:**
+  - **Explanation:** Users must be able to easily search for and select specific bus routes to view on the map. The interface should allow filtering by route number or name.
+  - **Example:** A user types "14" into a search bar, and the app displays "Route 14 - Downtown Express," which the user can then select to see its active buses.
 
-### 2. Book Management (Librarian)
+- **User-Friendly Interface (UI/UX):**
+  - **Explanation:** The map interface must be intuitive, allowing users to pan, zoom, and tap on bus stops or buses for more information without clutter.
+  - **Example:** A user can pinch-to-zoom on the map to get a closer look at a specific intersection and tap a bus stop icon to bring up a small card with the stop name and upcoming ETAs.
 
-*   **Explanation**: Librarians must be able to perform CRUD (Create, Read, Update, Delete) operations for books. Each book will have attributes such as Title, Author, ISBN, Genre, Publication Year, and number of available copies.
-*   **Example**: A librarian can add a new copy of "The Great Gatsby", update its location, or remove a damaged book from the system.
-
-### 3. Member Management (Librarian)
-
-*   **Explanation**: Librarians must be able to perform CRUD operations for library members. Each member will have a unique ID, name, contact details, and membership status.
-*   **Example**: A librarian can register a new member, update their phone number, or deactivate an expired membership.
-
-### 4. Book Search & Discovery (Member)
-
-*   **Explanation**: Members must be able to search the library catalog to find books. Search functionality should support filtering by title, author, genre, and ISBN.
-*   **Example**: A member can search for all books in the "Science Fiction" genre written by "Isaac Asimov".
-
-### 5. Book Borrowing & Returning (Member & Librarian)
-
-*   **Explanation**: The system must manage the process of borrowing and returning books. When a book is borrowed, the system records the checkout date, due date, and the member who borrowed it. The number of available copies is updated.
-*   **Example**: A member presents a book to the librarian, who scans it to mark it as "checked out" under that member's account. The due date is set for 14 days from the checkout date.
-
-### 6. Overdue Fine Calculation
-
-*   **Explanation**: The system will automatically calculate fines for overdue books. The standard fine will be $0.25 per day for each overdue book.
-*   **Example**: If a book is returned 3 days after its due date, a fine of $0.75 is automatically added to the member's account.
-*   **Edge Cases**: The system should not calculate fines for days the library is closed (e.g., public holidays).
-
-### 7. Due-Date Reminders
-
-*   **Explanation**: The system will send automated reminders to members about upcoming due dates. A reminder will be sent via email 3 days before the due date.
-*   **Example**: If a book is due on March 15th, the system will automatically send an email reminder to the member on March 12th.
-
-### 8. API Endpoints
-
-*   **Explanation**: The system will expose a RESTful API for all functionalities.
-*   **Example**:
-    *   `GET /api/v1/books` - to retrieve a list of all books.
-    *   `POST /api/v1/books` - for a librarian to add a new book.
-    *   `GET /api/v1/members/{memberId}/loans` - for a member to view their borrowing history.
-    *   `POST /api/v1/loans` - to record a new book loan.
-
-### 9. Database Schema
-
-*   **Explanation**: The system's database will include the following core tables:
-    *   `Books`: Stores book information (BookID, Title, Author, ISBN, Genre, etc.).
-    *   `Members`: Stores member information (MemberID, FirstName, LastName, Email, etc.).
-    *   `Loans`: Records borrowing transactions (LoanID, BookID, MemberID, CheckoutDate, DueDate, ReturnDate).
-    *   `Fines`: Tracks outstanding fines (FineID, LoanID, Amount, Status).
-
----
+**Technical Requirements:**
+- **Backend:** A robust backend system (e.g., FastAPI on GCP) capable of ingesting and processing a high volume of real-time GPS location data from bus-mounted devices.
+- **Frontend:** A responsive mobile client (e.g., React Native or a web app using React/Vite) that can render the map and update bus locations and ETAs efficiently.
+- **API:** A secure RESTful API will be needed to send bus location data, route information, and ETAs to the client.
+- **Database:** A database (e.g., PostgreSQL) to store route information, bus stop locations, and historical transit data for ETA calculations.
+- **Map Integration:** Integration with a third-party mapping service API (e.g., Google Maps API, OpenStreetMap) is required.
 
 ## Acceptance Criteria
-- User Roles & Permissions
-- Book Management (Librarian)
-- Member Management (Librarian)
-- Book Search & Discovery (Member)
-- Book Borrowing & Returning (Member & Librarian)
-- Overdue Fine Calculation
-- Due-Date Reminders
-- API Endpoints
-- Database Schema
+- The app must display a map (e.g., Google Maps, OpenStreetMap) showing the live location of buses for selected routes. The bus icons should move smoothly on the map, updating every 5-10 seconds.
+- For any selected bus stop, the app must display the estimated arrival times for the next two buses on that route. The ETA should be dynamic, recalculating based on the bus's current location, speed, and historical traffic data for that segment.
+- Users must be able to easily search for and select specific bus routes to view on the map. The interface should allow filtering by route number or name.
+- The map interface must be intuitive, allowing users to pan, zoom, and tap on bus stops or buses for more information without clutter.
 
 ## Backend Tasks
-- None specified
+- .env.example
+- server/main.py
+- server/models.py
+- server/schemas.py
+- server/database.py
+- server/api/routes.py
+- server/tests/test_routes.py
 
 ## Frontend Tasks
-- None specified
+- client/.env.example
+- client/.env
+- client/package.json
+- client/index.html
+- client/vite.config.js
+- client/tailwind.config.js
+- client/postcss.config.js
+- client/src/index.css
+- client/src/main.jsx
+- client/src/setup.js
+- client/src/services/api.js
+- client/src/components/layout/AppLayout.jsx
+- client/src/components/layout/Sidebar.jsx
+- client/src/components/layout/Header.jsx
+- client/src/components/map/InteractiveMap.jsx
+- client/src/components/map/StopDetailCard.jsx
+- client/src/components/route/RouteSelector.jsx
+- client/src/components/route/RouteTimeline.jsx
+- client/src/components/admin/KPIGrid.jsx
+- client/src/components/admin/RouteTable.jsx
+- client/src/pages/CommuterDashboard.jsx
+- client/src/pages/RouteDetail.jsx
+- client/src/pages/AdminDashboard.jsx
 
 ## Database Changes
-Not yet authored.
+**tables**:
+  - {"name": "routes", "columns": [{"name": "id", "type": "UUID", "primary_key": true, "nullable": false}, {"name": "route_number", "type": "VARCHAR(10)", "nullable": false, "unique": true}, {"name": "route_name", "type": "VARCHAR(255)", "nullable": false}, {"name": "created_at", "type": "TIMESTAMP", "nullable": false, "default": "NOW()"}, {"name": "updated_at", "type": "TIMESTAMP", "nullable": false, "default": "NOW()"}]}
+  - {"name": "stops", "columns": [{"name": "id", "type": "UUID", "primary_key": true, "nullable": false}, {"name": "stop_name", "type": "VARCHAR(255)", "nullable": false}, {"name": "latitude", "type": "DOUBLE PRECISION", "nullable": false}, {"name": "longitude", "type": "DOUBLE PRECISION", "nullable": false}, {"name": "created_at", "type": "TIMESTAMP", "nullable": false, "default": "NOW()"}, {"name": "updated_at", "type": "TIMESTAMP", "nullable": false, "default": "NOW()"}]}
+  - {"name": "route_stops", "columns": [{"name": "route_id", "type": "UUID", "primary_key": true, "nullable": false, "foreign_key": "routes.id"}, {"name": "stop_id", "type": "UUID", "primary_key": true, "nullable": false, "foreign_key": "stops.id"}, {"name": "stop_order", "type": "INTEGER", "nullable": false}]}
+  - {"name": "buses", "columns": [{"name": "id", "type": "UUID", "primary_key": true, "nullable": false}, {"name": "vehicle_id", "type": "VARCHAR(50)", "nullable": false, "unique": true}, {"name": "route_id", "type": "UUID", "nullable": false, "foreign_key": "routes.id"}, {"name": "created_at", "type": "TIMESTAMP", "nullable": false, "default": "NOW()"}, {"name": "updated_at", "type": "TIMESTAMP", "nullable": false, "default": "NOW()"}]}
+  - {"name": "bus_locations", "columns": [{"name": "id", "type": "UUID", "primary_key": true, "nullable": false}, {"name": "bus_id", "type": "UUID", "nullable": false, "foreign_key": "buses.id"}, {"name": "latitude", "type": "DOUBLE PRECISION", "nullable": false}, {"name": "longitude", "type": "DOUBLE PRECISION", "nullable": false}, {"name": "timestamp", "type": "TIMESTAMP", "nullable": false, "default": "NOW()"}]}
+**relationships**:
+  - route_stops.route_id → routes.id (many-to-one)
+  - route_stops.stop_id → stops.id (many-to-one)
+  - buses.route_id → routes.id (many-to-one)
+  - bus_locations.bus_id → buses.id (many-to-one)
 
 ## API Endpoints
-Not yet authored.
+- `GET /api/v1/routes` — Get a list of all available bus routes.
+- `GET /api/v1/routes/{route_id}/stops` — Get all bus stops for a specific route.
+- `GET /api/v1/routes/{route_id}/buses` — Get the real-time location of all active buses on a route.
+- `GET /api/v1/stops/{stop_id}/eta` — Get the estimated arrival times for a specific stop.
 
 ## UI Components
 Not yet authored.
@@ -105,67 +102,4 @@ Not yet authored.
 Not yet authored.
 
 ## Deployment Notes
-Not yet authored.
-
-## SCRUM-642 — User Story: Inventory Management Module
-
-### Feature Summary
-User Story: Inventory Management Module
-
-### User Stories
-## User Story: Inventory Management Module
-
-**As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
-
-### Acceptance Criteria
-
-#### **Frontend**
-*   **Explanation**: The user interface should provide a dashboard to view and manage inventory. It should allow for adding, editing, and deleting inventory items. A search and filtering functionality should also be present.
-*   **Example**: A hospital staff member can search for "sterile gloves," see the current stock level, and update the count after a new shipment arrives.
-*   **Edge Cases**:
-    *   If the search returns no results, a "No items found" message is displayed.
-    *   Forms should have validation to prevent invalid data entry (e.g., negative stock quantities).
-
-#### **Backend**
-*   **Explanation**: The backend will provide APIs for all inventory management operations. It will handle the business logic for tracking stock levels, managing item data, and generating alerts for low stock.
-*   **Example**: When a user updates the stock of an item, the backend validates the input, updates the database, and logs the transaction.
-*   **Low Stock Alerts**: A system should be in place to automatically notify relevant personnel when the stock of an item falls below a predefined threshold.
-
-#### **API**
-*   **Explanation**: A RESTful API will be developed to expose inventory data and operations.
-*   **Example**:
-    *   `GET /api/v1/inventory`: Retrieves a list of all inventory items.
-    *   `POST /api/v1/inventory`: Adds a new item to the inventory.
-    *   `PUT /api/v1/inventory/{item_id}`: Updates an existing inventory item.
-    *   `DELETE /api/v1/inventory/{item_id}`: Removes an item from the inventory.
-
-#### **Database**
-*   **Explanation**: The database will store all inventory-related data. A main `inventory_items` table will exist, with columns for item details.
-*   **Example**: The `inventory_items` table will have columns such as `item_id` (UUID, Primary Key), `name` (String), `description` (Text), `quantity` (Integer), `unit` (String, e.g., "box", "piece"), `supplier` (String), `last_updated` (Timestamp).
-
-### Acceptance Criteria
-- **Frontend**: The user interface should provide a dashboard to view and manage inventory. It should allow for adding, editing, and deleting inventory items. A search and filtering functionality should also be present.
-- **Backend**: The backend will provide APIs for all inventory management operations. It will handle the business logic for tracking stock levels, managing item data, and generating alerts for low stock.
-- **API**: A RESTful API will be developed to expose inventory data and operations.
-- **Database**: The database will store all inventory-related data. A main `inventory_items` table will exist, with columns for item details.
-
-### Backend Tasks
-- None specified
-
-### Frontend Tasks
-- None specified
-
-### Database Changes
-Not yet authored.
-
-### API Endpoints
-Not yet authored.
-
-### UI Components
-Not yet authored.
-
-### Test Coverage
-Not yet authored.
-
-### Deployment Notes
 Not yet authored.

@@ -1,5 +1,14 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer, Numeric
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Integer,
+    Numeric,
+    Float,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -120,3 +129,85 @@ class InventoryItem(Base):
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
+
+
+# --- Bus Tracking App Models ---
+
+
+class Route(Base):
+    __tablename__ = "routes"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    route_number = Column(String(10), unique=True, nullable=False)
+    route_name = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    stops = relationship(
+        "RouteStop", back_populates="route", cascade="all, delete-orphan"
+    )
+    buses = relationship("Bus", back_populates="route")
+
+
+class Stop(Base):
+    __tablename__ = "stops"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    stop_name = Column(String(255), nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    routes = relationship(
+        "RouteStop", back_populates="stop", cascade="all, delete-orphan"
+    )
+
+
+class RouteStop(Base):
+    __tablename__ = "route_stops"
+    route_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("routes.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    stop_id = Column(
+        UUID(as_uuid=True), ForeignKey("stops.id", ondelete="CASCADE"), primary_key=True
+    )
+    stop_order = Column(Integer, nullable=False)
+
+    route = relationship("Route", back_populates="stops")
+    stop = relationship("Stop", back_populates="routes")
+
+
+class Bus(Base):
+    __tablename__ = "buses"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    vehicle_id = Column(String(50), unique=True, nullable=False)
+    route_id = Column(
+        UUID(as_uuid=True), ForeignKey("routes.id", ondelete="CASCADE"), nullable=False
+    )
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    route = relationship("Route", back_populates="buses")
+    locations = relationship(
+        "BusLocation", back_populates="bus", cascade="all, delete-orphan"
+    )
+
+
+class BusLocation(Base):
+    __tablename__ = "bus_locations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    bus_id = Column(
+        UUID(as_uuid=True), ForeignKey("buses.id", ondelete="CASCADE"), nullable=False
+    )
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    timestamp = Column(DateTime, default=func.now(), nullable=False)
+
+    bus = relationship("Bus", back_populates="locations")

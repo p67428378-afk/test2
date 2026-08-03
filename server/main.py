@@ -10,6 +10,7 @@ from server.api.v1.endpoints import (
     fines,
     inventory,
 )
+from server.api import routes as bus_routes
 from server.database import init_db, seed_data, SessionLocal
 
 # Initialize database tables
@@ -22,7 +23,7 @@ try:
 finally:
     db.close()
 
-app = FastAPI(title="Library Management System API", version="1.0.0")
+app = FastAPI(title="Bus Tracking and Library Management System API", version="1.0.0")
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
@@ -44,8 +45,9 @@ app.include_router(members.router, prefix="/api/v1", tags=["members"])
 app.include_router(loans.router, prefix="/api/v1", tags=["loans"])
 app.include_router(fines.router, prefix="/api/v1", tags=["fines"])
 app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
+app.include_router(bus_routes.router, prefix="/api/v1", tags=["bus-tracking"])
 
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Library Management System API"}
+    return {"message": "Welcome to the Bus Tracking and Library Management System API"}

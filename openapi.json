@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Library Management System API",
+    "title": "Bus Tracking and Library Management System API",
     "version": "1.0.0"
   },
   "paths": {
@@ -1362,6 +1362,225 @@
         }
       }
     },
+    "/api/v1/routes": {
+      "get": {
+        "tags": [
+          "bus-tracking"
+        ],
+        "summary": "Get Routes",
+        "description": "Get a list of all available bus routes with optional search filtering.",
+        "operationId": "get_routes_api_v1_routes_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search by route number or name",
+              "title": "Search"
+            },
+            "description": "Search by route number or name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RouteResponse"
+                  },
+                  "title": "Response Get Routes Api V1 Routes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/{route_id}/stops": {
+      "get": {
+        "tags": [
+          "bus-tracking"
+        ],
+        "summary": "Get Route Stops",
+        "description": "Get all bus stops for a specific route, ordered by stop_order.",
+        "operationId": "get_route_stops_api_v1_routes__route_id__stops_get",
+        "parameters": [
+          {
+            "name": "route_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Route Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StopResponse"
+                  },
+                  "title": "Response Get Route Stops Api V1 Routes  Route Id  Stops Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/{route_id}/buses": {
+      "get": {
+        "tags": [
+          "bus-tracking"
+        ],
+        "summary": "Get Route Buses",
+        "description": "Get the real-time location of all active buses on a route.",
+        "operationId": "get_route_buses_api_v1_routes__route_id__buses_get",
+        "parameters": [
+          {
+            "name": "route_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Route Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BusResponse"
+                  },
+                  "title": "Response Get Route Buses Api V1 Routes  Route Id  Buses Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stops/{stop_id}/eta": {
+      "get": {
+        "tags": [
+          "bus-tracking"
+        ],
+        "summary": "Get Stop Eta",
+        "description": "Get the estimated arrival times for a specific stop.",
+        "operationId": "get_stop_eta_api_v1_stops__stop_id__eta_get",
+        "parameters": [
+          {
+            "name": "stop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Stop Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopETAResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Read Root",
@@ -1645,6 +1864,82 @@
         },
         "type": "object",
         "title": "BookUpdate"
+      },
+      "BusResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "vehicle_id": {
+            "type": "string",
+            "title": "Vehicle Id"
+          },
+          "route_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Route Id"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocationSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "vehicle_id",
+          "route_id"
+        ],
+        "title": "BusResponse"
+      },
+      "ETADetail": {
+        "properties": {
+          "route_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Route Id"
+          },
+          "route_number": {
+            "type": "string",
+            "title": "Route Number"
+          },
+          "vehicle_id": {
+            "type": "string",
+            "title": "Vehicle Id"
+          },
+          "estimated_arrival_minutes": {
+            "type": "integer",
+            "title": "Estimated Arrival Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "route_id",
+          "route_number",
+          "vehicle_id",
+          "estimated_arrival_minutes"
+        ],
+        "title": "ETADetail"
       },
       "FineResponse": {
         "properties": {
@@ -2041,6 +2336,24 @@
         ],
         "title": "LoanResponse"
       },
+      "LocationSchema": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "title": "LocationSchema"
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -2126,6 +2439,42 @@
         ],
         "title": "PasswordResetInitiateResponse"
       },
+      "RouteResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "route_number": {
+            "type": "string",
+            "title": "Route Number"
+          },
+          "route_name": {
+            "type": "string",
+            "title": "Route Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "route_number",
+          "route_name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RouteResponse"
+      },
       "SecurityQuestionVerifyRequest": {
         "properties": {
           "answer": {
@@ -2192,6 +2541,61 @@
           "login_link"
         ],
         "title": "SetNewPasswordResponse"
+      },
+      "StopETAResponse": {
+        "properties": {
+          "stop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stop Id"
+          },
+          "stop_name": {
+            "type": "string",
+            "title": "Stop Name"
+          },
+          "etas": {
+            "items": {
+              "$ref": "#/components/schemas/ETADetail"
+            },
+            "type": "array",
+            "title": "Etas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stop_id",
+          "stop_name",
+          "etas"
+        ],
+        "title": "StopETAResponse"
+      },
+      "StopResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "stop_name": {
+            "type": "string",
+            "title": "Stop Name"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema"
+          },
+          "stop_order": {
+            "type": "integer",
+            "title": "Stop Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "stop_name",
+          "location",
+          "stop_order"
+        ],
+        "title": "StopResponse"
       },
       "Token": {
         "properties": {

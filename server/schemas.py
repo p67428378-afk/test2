@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 import re
@@ -238,6 +238,62 @@ class InventoryItemResponse(InventoryItemBase):
     created_at: datetime
     updated_at: datetime
     is_low_stock: bool = False
+
+    class Config:
+        from_attributes = True
+
+
+# --- Bus Tracking App Schemas ---
+
+
+class RouteResponse(BaseModel):
+    id: UUID
+    route_number: str
+    route_name: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LocationSchema(BaseModel):
+    latitude: float
+    longitude: float
+
+
+class StopResponse(BaseModel):
+    id: UUID
+    stop_name: str
+    location: LocationSchema
+    stop_order: int
+
+    class Config:
+        from_attributes = True
+
+
+class BusResponse(BaseModel):
+    id: UUID
+    vehicle_id: str
+    route_id: UUID
+    location: Optional[LocationSchema] = None
+    timestamp: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ETADetail(BaseModel):
+    route_id: UUID
+    route_number: str
+    vehicle_id: str
+    estimated_arrival_minutes: int
+
+
+class StopETAResponse(BaseModel):
+    stop_id: UUID
+    stop_name: str
+    etas: List[ETADetail]
 
     class Config:
         from_attributes = True
