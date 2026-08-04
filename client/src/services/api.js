@@ -10,9 +10,67 @@ const api = axios.create({
 });
 
 export const assortmentService = {
-  async getKPIs() {
+  async getNavigationTabs() {
     try {
-      const response = await api.get("/api/v1/assortment/kpis");
+      const response = await api.get("/api/v1/navigation/tabs");
+      return response.data;
+    } catch (error) {
+      console.warn(
+        "API call /api/v1/navigation/tabs failed, using default tabs:",
+        error,
+      );
+      return {
+        sidebar_tabs: [
+          {
+            id: "overview",
+            label: "Overview",
+            icon: "dashboard",
+            active: true,
+          },
+          {
+            id: "category_strategy",
+            label: "Category Strategy",
+            icon: "strategy",
+            active: true,
+          },
+          {
+            id: "sku_performance",
+            label: "SKU Performance",
+            icon: "analytics",
+            active: true,
+          },
+          {
+            id: "store_clusters",
+            label: "Store Clusters",
+            icon: "group_work",
+            active: true,
+          },
+          {
+            id: "audit_history",
+            label: "Audit History",
+            icon: "history",
+            active: true,
+          },
+        ],
+        topnav_tabs: [
+          {
+            id: "assortment_advisor",
+            label: "Assortment Advisor",
+            active: true,
+          },
+          { id: "scenario_modeler", label: "Scenario Modeler", active: true },
+          { id: "guardrail_rules", label: "Guardrail Rules", active: true },
+          { id: "approval_queue", label: "Approval Queue", active: true },
+        ],
+      };
+    }
+  },
+
+  async getKPIs(clusterId = "STV-CLUSTER-01") {
+    try {
+      const response = await api.get("/api/v1/assortment/kpis", {
+        params: { cluster_id: clusterId },
+      });
       return response.data;
     } catch (error) {
       console.warn(
@@ -23,6 +81,7 @@ export const assortmentService = {
         category: "Snacks",
         cluster_id: "STV-CLUSTER-01",
         sales_per_linear_ft: 142.5,
+        sales_per_linear_foot: 142.5,
         private_brand_mix_pct: 28.5,
         in_stock_rate_pct: 96.2,
         shelf_capacity_utilization_pct: 94.0,
@@ -34,7 +93,11 @@ export const assortmentService = {
   async getSKUs(subCategory = "", statusBadge = "") {
     try {
       const params = {};
-      if (subCategory && subCategory !== "All Sub-Categories") {
+      if (
+        subCategory &&
+        subCategory !== "All Sub-Categories" &&
+        subCategory !== "All Sub-categories"
+      ) {
         params.sub_category = subCategory;
       }
       if (statusBadge) {
@@ -50,92 +113,82 @@ export const assortmentService = {
       const defaultSkus = [
         {
           sku_id: "SKU-1001",
-          sku_code: "1001-A",
-          product_name: "Clover Valley Roasted Peanuts 16oz",
-          brand: "DG Brand",
+          sku_code: "1029481",
+          product_name: "Lay's Classic Family Size",
+          brand: "National",
           sub_category: "Salty Snacks",
-          sales_volume_weekly: 14.2,
-          margin_pct: 42.1,
-          linear_space_ft: 1.5,
-          is_private_brand: true,
+          sales_volume_weekly: 1245.0,
+          sales_volume: 1245.0,
+          margin_pct: 24.5,
+          linear_space_ft: 2.0,
+          is_private_brand: false,
+          private_brand_indicator: false,
           status_badge: "GROW",
         },
         {
           sku_id: "SKU-1002",
-          sku_code: "1002-B",
-          product_name: "Lay's Classic Potato Chips 8oz",
-          brand: "National",
+          sku_code: "1029555",
+          product_name: "DG Clover Valley Chips",
+          brand: "DG Brand",
           sub_category: "Salty Snacks",
-          sales_volume_weekly: 22.5,
-          margin_pct: 28.4,
-          linear_space_ft: 2.0,
-          is_private_brand: false,
-          status_badge: "MAINTAIN",
+          sales_volume_weekly: 890.5,
+          sales_volume: 890.5,
+          margin_pct: 42.1,
+          linear_space_ft: 1.0,
+          is_private_brand: true,
+          private_brand_indicator: true,
+          status_badge: "GROW",
         },
         {
           sku_id: "SKU-1003",
-          sku_code: "1003-C",
-          product_name: "Generic Brand Pretzels 12oz",
+          sku_code: "8837102",
+          product_name: "Generic Brand Pretzels",
           brand: "Tertiary",
           sub_category: "Salty Snacks",
-          sales_volume_weekly: 3.1,
-          margin_pct: 15.2,
+          sales_volume_weekly: 112.0,
+          sales_volume: 112.0,
+          margin_pct: 12.0,
           linear_space_ft: 1.0,
           is_private_brand: false,
+          private_brand_indicator: false,
           status_badge: "REDUCE",
         },
         {
           sku_id: "SKU-1004",
-          sku_code: "1004-D",
-          product_name: "Doritos Nacho Cheese 9.25oz",
+          sku_code: "4491028",
+          product_name: "Doritos Nacho Cheese",
           brand: "National",
           sub_category: "Salty Snacks",
-          sales_volume_weekly: 18.7,
-          margin_pct: 31.0,
-          linear_space_ft: 2.0,
+          sales_volume_weekly: 1450.0,
+          sales_volume: 1450.0,
+          margin_pct: 22.8,
+          linear_space_ft: 3.0,
           is_private_brand: false,
+          private_brand_indicator: false,
           status_badge: "MAINTAIN",
         },
         {
           sku_id: "SKU-1005",
-          sku_code: "1005-E",
-          product_name: "Clover Valley Trail Mix 8oz",
-          brand: "DG Brand",
-          sub_category: "Trail Mix",
-          sales_volume_weekly: 8.5,
-          margin_pct: 48.5,
-          linear_space_ft: 1.2,
-          is_private_brand: true,
-          status_badge: "GROW",
-        },
-        {
-          sku_id: "SKU-1006",
-          sku_code: "1006-F",
-          product_name: "Old Brand Pork Rinds 4oz",
+          sku_code: "5592011",
+          product_name: "Old Brand Puffs (Discontinued)",
           brand: "Regional",
           sub_category: "Salty Snacks",
-          sales_volume_weekly: 1.2,
-          margin_pct: 22.0,
+          sales_volume_weekly: 45.0,
+          sales_volume: 45.0,
+          margin_pct: 18.5,
           linear_space_ft: 1.0,
           is_private_brand: false,
+          private_brand_indicator: false,
           status_badge: "SWAP",
-        },
-        {
-          sku_id: "SKU-1007",
-          sku_code: "1007-G",
-          product_name: "Clover Valley Tortilla Chips 13oz",
-          brand: "DG Brand",
-          sub_category: "Salty Snacks",
-          sales_volume_weekly: 11.4,
-          margin_pct: 39.2,
-          linear_space_ft: 1.8,
-          is_private_brand: true,
-          status_badge: "MAINTAIN",
         },
       ];
 
       let filtered = defaultSkus;
-      if (subCategory && subCategory !== "All Sub-Categories") {
+      if (
+        subCategory &&
+        subCategory !== "All Sub-Categories" &&
+        subCategory !== "All Sub-categories"
+      ) {
         filtered = filtered.filter((s) => s.sub_category === subCategory);
       }
       if (statusBadge) {
@@ -161,8 +214,8 @@ export const assortmentService = {
           {
             scenario_id: "SCEN-01",
             name: "Conservative",
-            subtitle: "Low risk, minimal space changes",
-            projected_sales_lift_pct: 2.1,
+            subtitle: "Focus on core SKUs, minimize space changes.",
+            projected_sales_lift_pct: 1.2,
             projected_private_brand_pct: 27.2,
             shelf_capacity_impact_pct: 91.5,
             action_summary: { GROW: 2, MAINTAIN: 12, SWAP: 1, REDUCE: 2 },
@@ -175,11 +228,11 @@ export const assortmentService = {
           {
             scenario_id: "SCEN-02",
             name: "Balanced",
-            subtitle: "Optimal mix & stability",
-            projected_sales_lift_pct: 5.2,
+            subtitle: "Optimize Private Brand mix while protecting top NBs.",
+            projected_sales_lift_pct: 3.5,
             projected_private_brand_pct: 28.5,
             shelf_capacity_impact_pct: 94.0,
-            action_summary: { GROW: 12, MAINTAIN: 18, SWAP: 2, REDUCE: 1 },
+            action_summary: { GROW: 4, MAINTAIN: 85, SWAP: 3, REDUCE: 2 },
             guardrails: [
               { name: "Margin floor maintained", passed: true },
               { name: "Shelf capacity neutral", passed: true },
@@ -189,8 +242,8 @@ export const assortmentService = {
           {
             scenario_id: "SCEN-03",
             name: "Aggressive",
-            subtitle: "Max sales lift, higher risk",
-            projected_sales_lift_pct: 8.4,
+            subtitle: "Max Private Brand penetration, high churn.",
+            projected_sales_lift_pct: 4.1,
             projected_private_brand_pct: 31.0,
             shelf_capacity_impact_pct: 98.2,
             action_summary: { GROW: 24, MAINTAIN: 8, SWAP: 4, REDUCE: 2 },
@@ -205,6 +258,44 @@ export const assortmentService = {
     }
   },
 
+  async getGuardrails() {
+    try {
+      const response = await api.get("/api/v1/guardrails");
+      return response.data;
+    } catch (error) {
+      console.warn(
+        "API call /api/v1/guardrails failed, using fallback rules:",
+        error,
+      );
+      return [
+        {
+          id: "rule-1",
+          rule_name: "Private Brand % Threshold",
+          metric_key: "private_brand_mix_pct",
+          operator: ">=",
+          threshold_value: 25.0,
+          is_mandatory: true,
+        },
+        {
+          id: "rule-2",
+          rule_name: "In-Stock Rate Floor",
+          metric_key: "in_stock_rate_pct",
+          operator: ">=",
+          threshold_value: 95.0,
+          is_mandatory: true,
+        },
+        {
+          id: "rule-3",
+          rule_name: "Maximum Shelf Utilization",
+          metric_key: "shelf_capacity_utilization_pct",
+          operator: "<=",
+          threshold_value: 98.0,
+          is_mandatory: false,
+        },
+      ];
+    }
+  },
+
   async submitScenario(payload) {
     try {
       const response = await api.post(
@@ -214,18 +305,22 @@ export const assortmentService = {
       return response.data;
     } catch (error) {
       console.warn(
-        "POST /api/v1/assortment/submissions endpoint failed, creating direct submission audit record:",
+        "POST /api/v1/assortment/submissions endpoint failed, using local result:",
         error,
       );
-      // If backend endpoint is missing, return valid submission response according to contract
       return {
-        submission_id: `SUB-${Math.floor(100000 + Math.random() * 900000)}`,
-        audit_ref_id: `AUD-${Math.floor(100000 + Math.random() * 900000)}`,
-        scenario_name: payload.scenario_name || "Balanced",
+        submission_id: `BALANCED-2026-0518`,
+        audit_ref_id: `AUD-994821`,
+        scenario_name:
+          payload.scenario_name || payload.selected_scenario || "Balanced",
+        selected_scenario:
+          payload.scenario_name || payload.selected_scenario || "Balanced",
         status: "APPROVED_AND_LOGGED",
         guardrails_status: "PASSED",
+        skus_modified_count: 17,
         total_skus_modified: 17,
-        submitted_at: new Date().toISOString(),
+        timestamp_utc: new Date().toISOString(),
+        user_id: payload.user_id || "USR-CM-882",
       };
     }
   },

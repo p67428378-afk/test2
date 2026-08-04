@@ -1,84 +1,142 @@
 import React from "react";
-import {
-  BookOpen,
-  Users,
-  FileText,
-  DollarSign,
-  LogOut,
-  User,
-  Package,
-} from "lucide-react";
+import { useAssortment } from "../../context/AssortmentContext.jsx";
 
-export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
-  const isLibrarian = user?.role === "librarian";
+export default function Sidebar() {
+  const {
+    activeSidebarTab,
+    setActiveSidebarTab,
+    setActiveTopTab,
+    navigationTabs,
+    handleSelectScenario,
+  } = useAssortment();
 
-  const menuItems = isLibrarian
-    ? [
-        { id: "dashboard", label: "Dashboard", icon: BookOpen },
-        { id: "catalog", label: "Book Catalog", icon: FileText },
-        { id: "inventory", label: "Inventory", icon: Package },
-        { id: "members", label: "Members", icon: Users },
-        { id: "fines", label: "Fines", icon: DollarSign },
-      ]
-    : [
-        { id: "portal", label: "My Portal", icon: User },
-        { id: "catalog", label: "Search Books", icon: BookOpen },
-        { id: "inventory", label: "Inventory", icon: Package },
-      ];
+  const sidebarTabs =
+    navigationTabs?.sidebar_tabs?.length > 0
+      ? navigationTabs.sidebar_tabs
+      : [
+          { id: "overview", label: "Overview", icon: "dashboard" },
+          {
+            id: "category_strategy",
+            label: "Category Strategy",
+            icon: "strategy",
+          },
+          {
+            id: "sku_performance",
+            label: "SKU Performance",
+            icon: "analytics",
+          },
+          { id: "store_clusters", label: "Store Clusters", icon: "group_work" },
+          { id: "audit_history", label: "Audit History", icon: "history" },
+        ];
+
+  const handleTabClick = (tabId) => {
+    setActiveSidebarTab(tabId);
+    // Switch to assortment advisor canvas when clicking sidebar tabs
+    setActiveTopTab("assortment_advisor");
+  };
+
+  const getIconName = (tabId, serverIcon) => {
+    if (serverIcon) {
+      if (serverIcon === "LayoutDashboard") return "dashboard";
+      if (serverIcon === "Target") return "strategy";
+      if (serverIcon === "BarChart3") return "analytics";
+      if (serverIcon === "Store") return "group_work";
+      if (serverIcon === "History") return "history";
+    }
+    switch (tabId) {
+      case "overview":
+        return "dashboard";
+      case "category_strategy":
+        return "strategy";
+      case "sku_performance":
+        return "analytics";
+      case "store_clusters":
+        return "group_work";
+      case "audit_history":
+        return "history";
+      default:
+        return "label";
+    }
+  };
 
   return (
-    <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col h-screen sticky top-0">
-      <div className="p-6 border-b border-slate-700 flex items-center gap-3">
-        <BookOpen className="h-8 w-8 text-emerald-500" />
-        <div>
-          <h1 className="font-bold text-lg text-slate-100 leading-none">
-            LibMax
-          </h1>
-          <span className="text-xs text-slate-400">Library System</span>
+    <aside
+      className="hidden md:flex flex-col py-4 fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-[#261e15] border-r border-[#534434]/50 z-40 text-white"
+      aria-label="Sidebar Navigation"
+    >
+      <div className="px-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded bg-[#1E293B] flex items-center justify-center border border-[#334155]">
+            <span className="material-symbols-outlined text-amber-500">
+              group_work
+            </span>
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-amber-500">Active Cluster</h2>
+            <p className="text-xs text-slate-400">SE-Premium-V2</p>
+          </div>
         </div>
+        <button
+          onClick={() => {
+            handleSelectScenario("Balanced");
+            setActiveTopTab("scenario_modeler");
+          }}
+          className="w-full py-2 px-4 bg-amber-500 text-slate-950 font-bold rounded text-xs hover:bg-amber-400 transition-colors flex items-center justify-center gap-2 shadow"
+        >
+          <span className="material-symbols-outlined text-base">add</span>
+          New Scenario
+        </button>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
+      <nav
+        className="flex-1 overflow-y-auto px-3 space-y-1"
+        aria-label="Sidebar Tabs"
+      >
+        {sidebarTabs.map((tab) => {
+          const isActive = activeSidebarTab === tab.id;
+          const icon = getIconName(tab.id, tab.icon);
+
           return (
             <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded text-xs font-semibold transition-all ${
                 isActive
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-200"
+                  ? "bg-[#3e495d] text-amber-400 border-r-4 border-amber-500"
+                  : "text-slate-300 hover:bg-[#3c3329] hover:text-amber-400"
               }`}
             >
-              <Icon className="h-5 w-5" />
-              {item.label}
+              <span
+                className={`material-symbols-outlined text-lg ${isActive ? "text-amber-400" : "text-slate-400"}`}
+              >
+                {icon}
+              </span>
+              <span>{tab.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-700">
-        <div className="flex items-center gap-3 px-4 py-3 mb-2">
-          <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center text-slate-200 font-semibold">
-            {user?.full_name?.charAt(0) || "U"}
-          </div>
-          <div className="overflow-hidden">
-            <p className="text-sm font-medium text-slate-200 truncate">
-              {user?.full_name || "User"}
-            </p>
-            <p className="text-xs text-slate-400 capitalize truncate">
-              {user?.role || "Member"}
-            </p>
-          </div>
-        </div>
+      <div className="mt-auto px-3 pt-4 border-t border-[#534434]/50 space-y-1">
         <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors"
+          onClick={() => setActiveTopTab("guardrail_rules")}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded text-slate-400 hover:bg-[#3c3329] hover:text-white transition-all text-xs font-semibold"
         >
-          <LogOut className="h-5 w-5" />
-          Sign Out
+          <span className="material-symbols-outlined text-lg">settings</span>
+          Settings
+        </button>
+        <button
+          onClick={() =>
+            alert(
+              "Support: For technical or assortment assistance, contact CM support at cm-support@dollargeneral.com",
+            )
+          }
+          className="w-full flex items-center gap-3 px-3 py-2 rounded text-slate-400 hover:bg-[#3c3329] hover:text-white transition-all text-xs font-semibold"
+        >
+          <span className="material-symbols-outlined text-lg">
+            contact_support
+          </span>
+          Support
         </button>
       </div>
     </aside>

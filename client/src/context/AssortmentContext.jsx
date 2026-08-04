@@ -10,6 +10,16 @@ export const AssortmentProvider = ({ children }) => {
     scenarios: [],
     default_scenario: "Balanced",
   });
+  const [guardrailsList, setGuardrailsList] = useState([]);
+  const [navigationTabs, setNavigationTabs] = useState({
+    sidebar_tabs: [],
+    topnav_tabs: [],
+  });
+
+  // Navigation Tab State
+  const [activeTopTab, setActiveTopTab] = useState("assortment_advisor");
+  const [activeSidebarTab, setActiveSidebarTab] = useState("sku_performance");
+
   const [selectedScenarioName, setSelectedScenarioName] = useState("Balanced");
 
   const [selectedSubCategory, setSelectedSubCategory] =
@@ -28,18 +38,24 @@ export const AssortmentProvider = ({ children }) => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [kpiRes, skuRes, scenRes] = await Promise.all([
+        const [navRes, kpiRes, skuRes, scenRes, guardRes] = await Promise.all([
+          assortmentService.getNavigationTabs(),
           assortmentService.getKPIs(),
           assortmentService.getSKUs(),
           assortmentService.getScenarios(),
+          assortmentService.getGuardrails(),
         ]);
         if (isMounted) {
-          setKpis(kpiRes);
-          setSkusData(skuRes);
-          setScenariosData(scenRes);
-          if (scenRes && scenRes.default_scenario) {
-            setSelectedScenarioName(scenRes.default_scenario);
+          if (navRes) setNavigationTabs(navRes);
+          if (kpiRes) setKpis(kpiRes);
+          if (skuRes) setSkusData(skuRes);
+          if (scenRes) {
+            setScenariosData(scenRes);
+            if (scenRes.default_scenario) {
+              setSelectedScenarioName(scenRes.default_scenario);
+            }
           }
+          if (guardRes) setGuardrailsList(guardRes);
         }
       } catch (err) {
         console.error("Failed to load assortment context data:", err);
@@ -54,9 +70,11 @@ export const AssortmentProvider = ({ children }) => {
   }, []);
 
   // Filter SKUs when search or category selection changes
-  const filteredSkus = (skusData.skus || []).filter((sku) => {
+  const skusList = Array.isArray(skusData) ? skusData : skusData.skus || [];
+  const filteredSkus = skusList.filter((sku) => {
     const matchesCategory =
       selectedSubCategory === "All Sub-Categories" ||
+      selectedSubCategory === "All Sub-categories" ||
       !selectedSubCategory ||
       sku.sub_category === selectedSubCategory;
 
@@ -75,14 +93,15 @@ export const AssortmentProvider = ({ children }) => {
   });
 
   const activeScenario = (scenariosData.scenarios || []).find(
-    (s) => s.name === selectedScenarioName,
+    (s) => (s.name || s.scenario_name) === selectedScenarioName,
   ) ||
     scenariosData.scenarios?.[0] || {
       name: selectedScenarioName,
-      projected_sales_lift_pct: 5.2,
+      scenario_name: selectedScenarioName,
+      projected_sales_lift_pct: 3.5,
       projected_private_brand_pct: 28.5,
       shelf_capacity_impact_pct: 94.0,
-      action_summary: { GROW: 12, MAINTAIN: 18, SWAP: 2, REDUCE: 1 },
+      action_summary: { GROW: 4, MAINTAIN: 85, SWAP: 3, REDUCE: 2 },
       guardrails: [
         { name: "Margin floor maintained", passed: true },
         { name: "Shelf capacity neutral", passed: true },
@@ -102,6 +121,7 @@ export const AssortmentProvider = ({ children }) => {
         cluster_id: kpis?.cluster_id || "STV-CLUSTER-01",
         category: kpis?.category || "Snacks",
         scenario_name: selectedScenarioName,
+        selected_scenario: selectedScenarioName,
         user_id: "USR-CM-882",
         guardrails_override: false,
       };
@@ -129,6 +149,12 @@ export const AssortmentProvider = ({ children }) => {
         skusData,
         filteredSkus,
         scenariosData,
+        guardrailsList,
+        navigationTabs,
+        activeTopTab,
+        setActiveTopTab,
+        activeSidebarTab,
+        setActiveSidebarTab,
         selectedScenarioName,
         activeScenario,
         selectedSubCategory,
