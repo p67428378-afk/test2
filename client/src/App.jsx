@@ -1,523 +1,246 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./components/layout/Sidebar.jsx";
 import Header from "./components/layout/Header.jsx";
-import LibrarianDashboard from "./pages/LibrarianDashboard.jsx";
-import MemberPortal from "./pages/MemberPortal.jsx";
-import BookCatalogManagement from "./pages/BookCatalogManagement.jsx";
-import InventoryDashboardPage from "./pages/InventoryDashboardPage.jsx";
-import InventoryFormPage from "./pages/InventoryFormPage.jsx";
-import Button from "./components/common/Button.jsx";
-import { authService } from "./services/api.js";
-import { BookOpen, Lock, Mail, Phone, Key, HelpCircle } from "lucide-react";
+import Dashboard from "./components/Dashboard.jsx";
+import SKUViewPanel from "./components/dashboard/SKUViewPanel.jsx";
+import ClusterSelectPanel from "./components/dashboard/ClusterSelectPanel.jsx";
+import OptimizationPanel from "./components/dashboard/OptimizationPanel.jsx";
+import AuditTrailPanel from "./components/dashboard/AuditTrailPanel.jsx";
+import SettingsModal from "./components/common/SettingsModal.jsx";
+import NotificationsDrawer from "./components/common/NotificationsDrawer.jsx";
+import {
+  fetchKPIs,
+  fetchSKUs,
+  fetchScenarios,
+  submitRecommendation,
+  authService,
+} from "./services/api.js";
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => {
-    if (typeof window !== "undefined" && window.localStorage) {
-      return localStorage.getItem("token");
-    }
-    return null;
+  const [user, setUser] = useState({
+    id: "00000000-0000-0000-0000-000000000000",
+    full_name: "Aarchi Jain",
+    role: "Category Manager",
   });
+
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [loading, setLoading] = useState(true);
-  const [editingItemId, setEditingItemId] = useState(null);
+  const [activeTopNav, setActiveTopNav] = useState("scenarios");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-  // Login form state
-  const [email, setEmail] = useState("test@example.com");
-  const [password, setPassword] = useState("testpassword");
-  const [loginError, setLoginError] = useState("");
+  const [kpiData, setKpiData] = useState(null);
+  const [skusData, setSkusData] = useState([]);
+  const [scenariosData, setScenariosData] = useState([]);
+  const [selectedScenario, setSelectedScenario] = useState({
+    id: "balanced",
+    label: "Balanced",
+    projected_sales_delta_pct: 4.5,
+    projected_pb_share_pct: 28.5,
+    shelf_capacity_impact_pct: 1.2,
+  });
 
-  // Password reset state
-  const [resetStep, setResetStep] = useState("none"); // 'none', 'initiate', 'otp', 'question', 'new_password'
-  const [resetLoginId, setResetLoginId] = useState("");
-  const [resetMobile, setResetMobile] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSessionId, setOtpSessionId] = useState("");
-  const [securityQuestion, setSecurityQuestion] = useState("");
-  const [securityAnswer, setSecurityAnswer] = useState("");
-  const [securitySessionId, setSecurityQuestionSessionId] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [passwordResetSessionId, setPasswordResetSessionId] = useState("");
-  const [resetSuccessMessage, setResetSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      if (token) {
-        try {
-          const userData = await authService.getCurrentUser();
-          setUser(userData);
-          setActiveTab(userData.role === "librarian" ? "dashboard" : "portal");
-        } catch (err) {
-          console.error(err);
-          authService.logout();
-          setToken(null);
-          setUser(null);
-        }
-      }
-      setLoading(false);
-    };
-    checkAuth();
-  }, [token]);
+    let isMounted = true;
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginError("");
+    async function loadInitialData() {
+      setIsLoading(true);
+      try {
+        const [kpiRes, skusRes, scenarioRes] = await Promise.allSettled([
+          fetchKPIs("small-town-value"),
+          fetchSKUs("small-town-value", "Snacks"),
+          fetchScenarios(),
+        ]);
+
+        if (isMounted) {
+          if (kpiRes.status === "fulfilled") setKpiData(kpiRes.value);
+          if (skusRes.status === "fulfilled" && skusRes.value?.skus)
+            setSkusData(skusRes.value.skus);
+          if (
+            scenarioRes.status === "fulfilled" &&
+            scenarioRes.value?.scenarios
+          ) {
+            setScenariosData(scenarioRes.value.scenarios);
+            const defaultId = scenarioRes.value.default_selected || "balanced";
+            const matchedScenario = scenarioRes.value.scenarios.find(
+              (s) => s.id === defaultId,
+            );
+            if (matchedScenario) setSelectedScenario(matchedScenario);
+          }
+        }
+      } catch (err) {
+        // Fallback handled inside api.js
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSelectScenario = (scenario) => {
+    setSelectedScenario(scenario);
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setErrorMessage(null);
     try {
-      const data = await authService.login(email, password);
-      setToken(data.access_token);
+      const payload = {
+        cluster_id: "small-town-value",
+        scenario_id: selectedScenario?.id || "balanced",
+        manager_id: user?.full_name || "Aarchi Jain",
+        notes: `Submitted ${selectedScenario?.label || "Balanced"} scenario recommendation for Snacks category.`,
+      };
+
+      const result = await submitRecommendation(payload);
+      setSubmissionResult(result);
     } catch (err) {
-      setLoginError(err.response?.data?.detail || "Invalid email or password.");
+      setErrorMessage(
+        err.response?.data?.detail ||
+          err.message ||
+          "Failed to submit assortment recommendation. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleLogout = () => {
     authService.logout();
-    setToken(null);
-    setUser(null);
   };
 
-  // Password Reset Handlers
-  const handleInitiateReset = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    try {
-      const data = await authService.initiatePasswordReset(
-        resetLoginId,
-        resetMobile,
-      );
-      setOtpSessionId(data.otp_session_id);
-      setSecurityQuestion(data.security_question);
-      setResetStep("otp");
-    } catch (err) {
-      setLoginError(
-        err.response?.data?.detail || "Failed to initiate password reset.",
-      );
+  // Top Nav Tab handler sync
+  const handleTopNavChange = (navId) => {
+    setActiveTopNav(navId);
+    if (navId === "performance") {
+      setActiveTab("sku");
+    } else if (navId === "history") {
+      setActiveTab("audit");
+    } else if (navId === "scenarios") {
+      setActiveTab("dashboard");
     }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    try {
-      const data = await authService.verifyOtp(otpCode, otpSessionId);
-      setSecurityQuestionSessionId(data.security_question_session_id);
-      setResetStep("question");
-    } catch (err) {
-      setLoginError(err.response?.data?.detail || "Invalid OTP code.");
-    }
-  };
-
-  const handleVerifyQuestion = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    try {
-      const data = await authService.verifySecurityQuestion(
-        securityAnswer,
-        securitySessionId,
-      );
-      setPasswordResetSessionId(data.password_reset_session_id);
-      setResetStep("new_password");
-    } catch (err) {
-      setLoginError(err.response?.data?.detail || "Incorrect security answer.");
-    }
-  };
-
-  const handleSetNewPassword = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    try {
-      await authService.setNewPassword(newPassword, passwordResetSessionId);
-      setResetSuccessMessage(
-        "Password reset successfully! Please log in with your new password.",
-      );
-      setResetStep("none");
-      setEmail(resetLoginId);
-      setPassword("");
-    } catch (err) {
-      setLoginError(
-        err.response?.data?.detail || "Failed to set new password.",
-      );
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-height-screen bg-slate-950 flex items-center justify-center text-slate-400">
-        Loading application...
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
-          <div className="flex flex-col items-center text-center">
-            <div className="h-12 w-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 border border-emerald-500/20">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-100">
-              Welcome to LibMax
+  const renderActivePanel = () => {
+    switch (activeTab) {
+      case "dashboard":
+      case "overview":
+        return (
+          <Dashboard
+            kpiData={kpiData}
+            skusData={skusData}
+            scenariosData={scenariosData}
+            selectedScenario={selectedScenario}
+            onSelectScenario={handleSelectScenario}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+            submissionResult={submissionResult}
+            errorMessage={errorMessage}
+            onClearError={() => setErrorMessage(null)}
+            onClearResult={() => setSubmissionResult(null)}
+          />
+        );
+      case "sku":
+        return <SKUViewPanel skusData={skusData} />;
+      case "cluster":
+        return <ClusterSelectPanel />;
+      case "optimization":
+        return (
+          <OptimizationPanel
+            scenariosData={scenariosData}
+            selectedScenario={selectedScenario}
+            onSelectScenario={handleSelectScenario}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+          />
+        );
+      case "audit":
+        return <AuditTrailPanel />;
+      case "inventory":
+        return (
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-3">
+            <h2 className="text-xl font-bold text-slate-100">
+              Inventory & Distribution Management
             </h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Library Management System
-            </p>
-          </div>
-
-          {loginError && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-sm">
-              {loginError}
-            </div>
-          )}
-
-          {resetSuccessMessage && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm">
-              {resetSuccessMessage}
-            </div>
-          )}
-
-          {resetStep === "none" && (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1">
-                <label
-                  htmlFor="email"
-                  className="text-xs font-semibold text-slate-400 uppercase"
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="test@example.com"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="password"
-                    className="text-xs font-semibold text-slate-400 uppercase"
-                  >
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResetStep("initiate");
-                      setLoginError("");
-                      setResetSuccessMessage("");
-                    }}
-                    className="text-xs text-emerald-400 hover:underline"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full">
-                Sign In
-              </Button>
-
-              <div className="p-4 bg-slate-800/50 border border-slate-800 rounded-xl text-xs text-slate-400 space-y-1">
-                <p className="font-semibold text-slate-300">Test Accounts:</p>
-                <p>
-                  • Librarian:{" "}
-                  <code className="text-emerald-400">
-                    librarian@example.com
-                  </code>{" "}
-                  / <code className="text-emerald-400">testpassword</code>
-                </p>
-                <p>
-                  • Member:{" "}
-                  <code className="text-emerald-400">test@example.com</code> /{" "}
-                  <code className="text-emerald-400">testpassword</code>
-                </p>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "initiate" && (
-            <form onSubmit={handleInitiateReset} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Reset Password
-              </h3>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  Login ID (Email)
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="email"
-                    required
-                    value={resetLoginId}
-                    onChange={(e) => setResetLoginId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="test@example.com"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  Mobile Number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={resetMobile}
-                    onChange={(e) => setResetMobile(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="1234567890"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setResetStep("none")}
-                >
-                  Back
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Send OTP
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "otp" && (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Verify OTP
-              </h3>
-              <p className="text-xs text-slate-400">
-                Enter the OTP code sent to your mobile number.
-              </p>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  OTP Code
-                </label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="123456"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setResetStep("initiate")}
-                >
-                  Back
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Verify OTP
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "question" && (
-            <form onSubmit={handleVerifyQuestion} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Security Question
-              </h3>
-              <div className="p-3 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300">
-                <p className="font-semibold text-slate-400 text-xs uppercase">
-                  Question:
-                </p>
-                <p className="mt-1">{securityQuestion}</p>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  Your Answer
-                </label>
-                <div className="relative">
-                  <HelpCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={securityAnswer}
-                    onChange={(e) => setSecurityAnswer(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="Answer"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setResetStep("otp")}
-                >
-                  Back
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Verify Answer
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "new_password" && (
-            <form onSubmit={handleSetNewPassword} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Set New Password
-              </h3>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  New Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full">
-                Reset Password
-              </Button>
-            </form>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return <LibrarianDashboard />;
-      case "portal":
-        return <MemberPortal user={user} />;
-      case "catalog":
-        return <BookCatalogManagement />;
-      case "inventory":
-        return (
-          <InventoryDashboardPage
-            user={user}
-            onAddItem={() => {
-              setEditingItemId(null);
-              setActiveTab("inventory-form");
-            }}
-            onEditItem={(itemId) => {
-              setEditingItemId(itemId);
-              setActiveTab("inventory-form");
-            }}
-          />
-        );
-      case "inventory-form":
-        return (
-          <InventoryFormPage
-            itemId={editingItemId}
-            onCancel={() => setActiveTab("inventory")}
-            onSave={() => setActiveTab("inventory")}
-          />
-        );
-      case "members":
-        return (
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-            <h3 className="font-semibold text-slate-100 text-lg mb-4">
-              Members Directory
-            </h3>
-            <p className="text-sm text-slate-400">
-              Librarians can manage members from the main Dashboard quick
-              actions.
+            <p className="text-xs text-slate-400">
+              Distribution center stock levels, linear shelf capacity planning,
+              and automated reorder triggers for Small Town Value Cluster.
             </p>
           </div>
         );
-      case "fines":
+      case "team":
         return (
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-            <h3 className="font-semibold text-slate-100 text-lg mb-4">
-              Fines Management
-            </h3>
-            <p className="text-sm text-slate-400">
-              Librarians can manage overdue fines from the main Dashboard.
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-3">
+            <h2 className="text-xl font-bold text-slate-100">
+              Category Team Members & Permissions
+            </h2>
+            <p className="text-xs text-slate-400">
+              Dollar General Enterprise Assortment Advisor team roles, approval
+              delegates, and audit log access policies.
             </p>
           </div>
         );
       default:
-        return <LibrarianDashboard />;
-    }
-  };
-
-  const getHeaderTitle = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return "Librarian Dashboard";
-      case "portal":
-        return "Member Portal";
-      case "catalog":
-        return "Book Catalog Management";
-      case "inventory":
-        return "Inventory Management";
-      case "inventory-form":
-        return editingItemId ? "Edit Inventory Item" : "Add Inventory Item";
-      case "members":
-        return "Members Directory";
-      case "fines":
-        return "Fines Management";
-      default:
-        return "Library Management System";
+        return (
+          <Dashboard
+            kpiData={kpiData}
+            skusData={skusData}
+            scenariosData={scenariosData}
+            selectedScenario={selectedScenario}
+            onSelectScenario={handleSelectScenario}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+            submissionResult={submissionResult}
+            errorMessage={errorMessage}
+            onClearError={() => setErrorMessage(null)}
+            onClearResult={() => setSubmissionResult(null)}
+          />
+        );
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+    <div className="flex min-h-screen bg-slate-900 text-slate-100 antialiased font-sans">
       <Sidebar
         user={user}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogout={handleLogout}
       />
+
       <div className="flex-1 flex flex-col min-w-0">
-        <Header user={user} title={getHeaderTitle()} />
-        <main className="flex-1 p-8 overflow-y-auto">{renderContent()}</main>
+        <Header
+          clusterName="Small Town Value Cluster (#CL-8802)"
+          activeTopNav={activeTopNav}
+          setActiveTopNav={handleTopNavChange}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          user={user}
+        />
+
+        <main className="flex-1 p-6 overflow-y-auto">
+          {renderActivePanel()}
+        </main>
       </div>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <NotificationsDrawer
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+      />
     </div>
   );
 }
