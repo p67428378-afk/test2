@@ -1,23 +1,35 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from server.app.api.v1.assortment import router as assortment_router
 from server.app.database import SessionLocal, init_db, seed_data
 
-# Initialize database schema
-init_db()
 
-# Seed initial data
-db = SessionLocal()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
+
+# Initialize database schema at import time
+init_db()
+_db = SessionLocal()
 try:
-    seed_data(db)
+    seed_data(_db)
 finally:
-    db.close()
+    _db.close()
 
 app = FastAPI(
     title="DG Cluster Assortment Advisor API",
     version="1.0.0",
     description="Decision-support API for Dollar General Snacks cluster assortment management",
+    lifespan=lifespan,
 )
 
 # CORS Middleware configuration

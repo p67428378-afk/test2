@@ -4,7 +4,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from server.app.database import get_db, seed_data
-from server.app.models.assortment import Base
+from server.app.models.assortment import (
+    Base,
+)
 from server.main import app
 
 # In-memory SQLite with StaticPool for test session
@@ -34,6 +36,7 @@ def setup_test_database():
 def override_get_db():
     db = TestingSessionLocal()
     try:
+        seed_data(db)
         yield db
     finally:
         db.close()

@@ -1,7 +1,12 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from server.app.models.assortment import Base, Cluster, SKU, SKUClusterMetrics
+from server.app.models.assortment import (
+    Base,
+    Cluster,
+    SKU,
+    SKUClusterMetrics,
+)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
 
@@ -13,16 +18,10 @@ engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def init_db():
-    Base.metadata.create_all(bind=engine)
+def init_db(target_engine=None):
+    if target_engine is None:
+        target_engine = engine
+    Base.metadata.create_all(bind=target_engine)
 
 
 def seed_data(db):
@@ -136,3 +135,13 @@ def seed_data(db):
 
     except Exception:
         db.rollback()
+
+
+def get_db():
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+        yield db
+    finally:
+        db.close()
