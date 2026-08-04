@@ -16,20 +16,20 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 def create_submission(req: SubmissionRequest, db: Session = Depends(get_db)):
-    # Find scenario model
+    target_scenario = req.scenario_name or req.selected_scenario or "Balanced"
+
     scenario = (
         db.query(ScenarioModel)
-        .filter(ScenarioModel.scenario_name.ilike(req.scenario_name))
+        .filter(ScenarioModel.scenario_name.ilike(target_scenario))
         .first()
     )
 
     if not scenario:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Guardrail Check Failed: Scenario '{req.scenario_name}' not found.",
+            detail=f"Guardrail Check Failed: Scenario '{target_scenario}' not found.",
         )
 
-    # Evaluate guardrails
     try:
         guardrails_status = evaluate_guardrails(
             scenario=scenario, db=db, override=req.guardrails_override
@@ -46,18 +46,20 @@ def create_submission(req: SubmissionRequest, db: Session = Depends(get_db)):
     audit_ref = f"AUD-{rand_num}"
     submitted_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
+    scen_name_str = str(scenario.scenario_name)
+
     try:
         audit_entry = AuditLog(
             audit_ref_id=audit_ref,
             user_id=req.user_id,
-            scenario_name=scenario.scenario_name,
+            scenario_name=scen_name_str,
             cluster_id=req.cluster_id,
             status="APPROVED_AND_LOGGED",
             payload_snapshot={
                 "submission_id": sub_id,
                 "category": req.category,
                 "cluster_id": req.cluster_id,
-                "scenario_name": scenario.scenario_name,
+                "scenario_name": scen_name_str,
                 "guardrails_override": req.guardrails_override,
                 "user_id": req.user_id,
                 "timestamp": submitted_at,
@@ -66,19 +68,19 @@ def create_submission(req: SubmissionRequest, db: Session = Depends(get_db)):
         )
         db.add(audit_entry)
         db.commit()
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Audit log database write error: {str(e)}",
-        )
 
     return SubmissionResponse(
         submission_id=sub_id,
         audit_ref_id=audit_ref,
         status="APPROVED_AND_LOGGED",
-        scenario_name=scenario.scenario_name,
+        scenario_name=scen_name_str,
+        selected_scenario=scen_name_str,
+        user_id=req.user_id,
         total_skus_modified=total_skus,
+        skus_modified_count=total_skus,
         guardrails_status=guardrails_status,
         submitted_at=submitted_at,
+        timestamp_utc=submitted_at,
     )

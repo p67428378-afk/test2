@@ -36,10 +36,6 @@ def init_db(target_engine=None):
     Base.metadata.create_all(bind=eng)
 
 
-# Always import models when database.py is loaded so Base.metadata is populated
-from server.app import models  # noqa: F401
-
-
 def seed_data(db):
     from server.app.seed import run_seed
 

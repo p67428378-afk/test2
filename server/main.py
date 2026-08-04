@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from server.app.database import init_db, SessionLocal, seed_data
-from server.app.api import kpis, skus, scenarios, submissions
+from server.api.v1.endpoints import navigation, assortment, guardrails
 
 
 @asynccontextmanager
@@ -45,13 +45,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(kpis.router, prefix="/api/v1/assortment", tags=["kpis"])
-app.include_router(skus.router, prefix="/api/v1/assortment", tags=["skus"])
-app.include_router(scenarios.router, prefix="/api/v1/assortment", tags=["scenarios"])
-app.include_router(
-    submissions.router, prefix="/api/v1/assortment", tags=["submissions"]
-)
+# Navigation router
+app.include_router(navigation.router, prefix="/api/v1/navigation", tags=["navigation"])
+
+# Assortment router (v1 endpoints)
+app.include_router(assortment.router, prefix="/api/v1/assortment", tags=["assortment"])
+
+# Guardrails router (v1 endpoints)
+app.include_router(guardrails.router, prefix="/api/v1/guardrails", tags=["guardrails"])
 
 
 @app.get("/")

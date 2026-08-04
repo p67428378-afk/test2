@@ -6,13 +6,48 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/navigation/tabs": {
+      "get": {
+        "tags": [
+          "navigation"
+        ],
+        "summary": "Get Navigation Tabs",
+        "operationId": "get_navigation_tabs_api_v1_navigation_tabs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NavigationTabsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/assortment/kpis": {
       "get": {
         "tags": [
-          "kpis"
+          "assortment"
         ],
         "summary": "Get Kpis",
         "operationId": "get_kpis_api_v1_assortment_kpis_get",
+        "parameters": [
+          {
+            "name": "cluster_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Cluster ID",
+              "default": "STV-CLUSTER-01",
+              "title": "Cluster Id"
+            },
+            "description": "Cluster ID"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -23,6 +58,16 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -30,7 +75,7 @@
     "/api/v1/assortment/skus": {
       "get": {
         "tags": [
-          "skus"
+          "assortment"
         ],
         "summary": "Get Skus",
         "operationId": "get_skus_api_v1_assortment_skus_get",
@@ -52,6 +97,24 @@
               "title": "Sub Category"
             },
             "description": "Optional sub-category filter string"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional category filter string",
+              "title": "Category"
+            },
+            "description": "Optional category filter string"
           },
           {
             "name": "status_badge",
@@ -99,7 +162,7 @@
     "/api/v1/assortment/scenarios": {
       "get": {
         "tags": [
-          "scenarios"
+          "assortment"
         ],
         "summary": "Get Scenarios",
         "operationId": "get_scenarios_api_v1_assortment_scenarios_get",
@@ -120,7 +183,7 @@
     "/api/v1/assortment/submissions": {
       "post": {
         "tags": [
-          "submissions"
+          "assortment"
         ],
         "summary": "Create Submission",
         "operationId": "create_submission_api_v1_assortment_submissions_post",
@@ -151,6 +214,56 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/guardrails/": {
+      "get": {
+        "tags": [
+          "guardrails"
+        ],
+        "summary": "Get Guardrails",
+        "operationId": "get_guardrails_api_v1_guardrails__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GuardrailItem"
+                  },
+                  "type": "array",
+                  "title": "Response Get Guardrails Api V1 Guardrails  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/guardrails": {
+      "get": {
+        "tags": [
+          "guardrails"
+        ],
+        "summary": "Get Guardrails",
+        "operationId": "get_guardrails_api_v1_guardrails_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GuardrailItem"
+                  },
+                  "type": "array",
+                  "title": "Response Get Guardrails Api V1 Guardrails Get"
                 }
               }
             }
@@ -219,6 +332,44 @@
         "type": "object",
         "title": "ActionSummary"
       },
+      "GuardrailItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "rule_name": {
+            "type": "string",
+            "title": "Rule Name"
+          },
+          "metric_key": {
+            "type": "string",
+            "title": "Metric Key"
+          },
+          "operator": {
+            "type": "string",
+            "title": "Operator"
+          },
+          "threshold_value": {
+            "type": "number",
+            "title": "Threshold Value"
+          },
+          "is_mandatory": {
+            "type": "boolean",
+            "title": "Is Mandatory",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rule_name",
+          "metric_key",
+          "operator",
+          "threshold_value"
+        ],
+        "title": "GuardrailItem"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -248,6 +399,11 @@
             "type": "number",
             "title": "Sales Per Linear Ft"
           },
+          "sales_per_linear_foot": {
+            "type": "number",
+            "title": "Sales Per Linear Foot",
+            "default": 142.5
+          },
           "private_brand_mix_pct": {
             "type": "number",
             "title": "Private Brand Mix Pct"
@@ -275,6 +431,30 @@
         ],
         "title": "KPISummaryResponse"
       },
+      "NavigationTabsResponse": {
+        "properties": {
+          "sidebar_tabs": {
+            "items": {
+              "$ref": "#/components/schemas/TabItem"
+            },
+            "type": "array",
+            "title": "Sidebar Tabs"
+          },
+          "topnav_tabs": {
+            "items": {
+              "$ref": "#/components/schemas/TabItem"
+            },
+            "type": "array",
+            "title": "Topnav Tabs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sidebar_tabs",
+          "topnav_tabs"
+        ],
+        "title": "NavigationTabsResponse"
+      },
       "SKUItemResponse": {
         "properties": {
           "sku_id": {
@@ -293,6 +473,11 @@
             "type": "number",
             "title": "Sales Volume Weekly"
           },
+          "sales_volume": {
+            "type": "number",
+            "title": "Sales Volume",
+            "default": 0.0
+          },
           "margin_pct": {
             "type": "number",
             "title": "Margin Pct"
@@ -304,6 +489,11 @@
           "is_private_brand": {
             "type": "boolean",
             "title": "Is Private Brand"
+          },
+          "private_brand_indicator": {
+            "type": "boolean",
+            "title": "Private Brand Indicator",
+            "default": false
           },
           "status_badge": {
             "type": "string",
@@ -380,6 +570,11 @@
             "type": "string",
             "title": "Name"
           },
+          "scenario_name": {
+            "type": "string",
+            "title": "Scenario Name",
+            "default": ""
+          },
           "projected_sales_lift_pct": {
             "type": "number",
             "title": "Projected Sales Lift Pct"
@@ -388,12 +583,26 @@
             "type": "number",
             "title": "Projected Private Brand Pct"
           },
+          "private_brand_mix_pct": {
+            "type": "number",
+            "title": "Private Brand Mix Pct",
+            "default": 0.0
+          },
           "shelf_capacity_impact_pct": {
             "type": "number",
             "title": "Shelf Capacity Impact Pct"
           },
           "action_summary": {
             "$ref": "#/components/schemas/ActionSummary"
+          },
+          "actions_breakdown": {
+            "$ref": "#/components/schemas/ActionSummary",
+            "default": {
+              "GROW": 0,
+              "MAINTAIN": 0,
+              "SWAP": 0,
+              "REDUCE": 0
+            }
           }
         },
         "type": "object",
@@ -420,9 +629,26 @@
             "default": "Snacks"
           },
           "scenario_name": {
-            "type": "string",
-            "title": "Scenario Name",
-            "default": "Balanced"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Name"
+          },
+          "selected_scenario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Scenario"
           },
           "user_id": {
             "type": "string",
@@ -457,9 +683,24 @@
             "type": "string",
             "title": "Scenario Name"
           },
+          "selected_scenario": {
+            "type": "string",
+            "title": "Selected Scenario",
+            "default": ""
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "default": "usr_9921"
+          },
           "total_skus_modified": {
             "type": "integer",
             "title": "Total Skus Modified"
+          },
+          "skus_modified_count": {
+            "type": "integer",
+            "title": "Skus Modified Count",
+            "default": 0
           },
           "guardrails_status": {
             "type": "string",
@@ -469,6 +710,11 @@
           "submitted_at": {
             "type": "string",
             "title": "Submitted At"
+          },
+          "timestamp_utc": {
+            "type": "string",
+            "title": "Timestamp Utc",
+            "default": ""
           }
         },
         "type": "object",
@@ -480,6 +726,40 @@
           "submitted_at"
         ],
         "title": "SubmissionResponse"
+      },
+      "TabItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "TabItem"
       },
       "ValidationError": {
         "properties": {

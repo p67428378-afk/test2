@@ -7,9 +7,9 @@ from server.app.schemas import ScenarioListResponse, ScenarioResponse, ActionSum
 router = APIRouter()
 
 ACTION_SUMMARIES = {
-    "Conservative": ActionSummary(GROW=2, MAINTAIN=12, SWAP=1, REDUCE=2),
+    "Conservative": ActionSummary(GROW=2, MAINTAIN=12, SWAP=1, REDUCE=1),
     "Balanced": ActionSummary(GROW=4, MAINTAIN=10, SWAP=2, REDUCE=1),
-    "Aggressive": ActionSummary(GROW=6, MAINTAIN=7, SWAP=3, REDUCE=1),
+    "Aggressive": ActionSummary(GROW=6, MAINTAIN=8, SWAP=3, REDUCE=2),
 }
 
 
@@ -20,17 +20,21 @@ def get_scenarios(db: Session = Depends(get_db)):
         scenario_responses = []
 
         for idx, m in enumerate(models, start=1):
+            sc_name = str(m.scenario_name)
             action_sum = ACTION_SUMMARIES.get(
-                m.scenario_name, ActionSummary(GROW=4, MAINTAIN=10, SWAP=2, REDUCE=1)
+                sc_name, ActionSummary(GROW=4, MAINTAIN=10, SWAP=2, REDUCE=1)
             )
             scenario_responses.append(
                 ScenarioResponse(
                     scenario_id=f"SCEN-0{idx}",
-                    name=m.scenario_name,
-                    projected_sales_lift_pct=m.projected_sales_lift_pct,
-                    projected_private_brand_pct=m.projected_private_brand_pct,
-                    shelf_capacity_impact_pct=m.shelf_capacity_impact_pct,
+                    name=sc_name,
+                    scenario_name=sc_name,
+                    projected_sales_lift_pct=float(m.projected_sales_lift_pct),
+                    projected_private_brand_pct=float(m.projected_private_brand_pct),
+                    private_brand_mix_pct=float(m.projected_private_brand_pct),
+                    shelf_capacity_impact_pct=float(m.shelf_capacity_impact_pct),
                     action_summary=action_sum,
+                    actions_breakdown=action_sum,
                 )
             )
 

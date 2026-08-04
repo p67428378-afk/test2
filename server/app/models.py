@@ -8,6 +8,16 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String(255), unique=True, nullable=False)
+    full_name = Column(String(255), nullable=True)
+    role = Column(String(50), nullable=True, default="member")
+    created_at = Column(DateTime, nullable=False, default=utc_now)
+
+
 class SKU(Base):
     __tablename__ = "skus"
 

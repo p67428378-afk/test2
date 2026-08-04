@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from server.app.database import get_db
 from server.app.models import SKU
@@ -9,7 +9,10 @@ router = APIRouter()
 
 
 @router.get("/kpis", response_model=KPISummaryResponse)
-def get_kpis(db: Session = Depends(get_db)):
+def get_kpis(
+    cluster_id: str = Query("STV-CLUSTER-01", description="Cluster ID"),
+    db: Session = Depends(get_db),
+):
     try:
         skus = db.query(SKU).all()
         total_skus = len(skus)
@@ -31,9 +34,10 @@ def get_kpis(db: Session = Depends(get_db)):
         now_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         return KPISummaryResponse(
-            cluster_id="STV-CLUSTER-01",
+            cluster_id=cluster_id or "STV-CLUSTER-01",
             category="Snacks",
             sales_per_linear_ft=sales_per_lin_ft,
+            sales_per_linear_foot=sales_per_lin_ft,
             private_brand_mix_pct=pb_mix,
             in_stock_rate_pct=96.20,
             shelf_capacity_utilization_pct=94.00,
