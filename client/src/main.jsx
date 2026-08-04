@@ -14,26 +14,19 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Uncaught render error:", error, errorInfo);
+    console.error("Uncaught error:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div
-          style={{
-            padding: "2rem",
-            color: "#f59e0b",
-            backgroundColor: "#0F172A",
-            minHeight: "100vh",
-          }}
-        >
-          <h2>Something went wrong loading the dashboard.</h2>
-          <pre
-            style={{ fontSize: "0.8rem", color: "#ffbbbe", marginTop: "1rem" }}
-          >
-            {this.state.error?.toString()}
-          </pre>
+        <div className="p-8 bg-[#0F172A] text-slate-100 min-h-screen">
+          <h2 className="text-xl font-bold text-rose-400 mb-2">
+            Something went wrong.
+          </h2>
+          <p className="text-sm text-slate-400">
+            {this.state.error?.toString() || "An unexpected error occurred."}
+          </p>
         </div>
       );
     }

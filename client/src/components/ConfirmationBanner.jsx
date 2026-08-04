@@ -1,44 +1,36 @@
 import React from "react";
-import { useAssortment } from "../context/AssortmentContext";
+import { useAssortment } from "../context/AssortmentContext.jsx";
 
-const ConfirmationBanner = () => {
-  const { submissionResult, setSubmissionResult } = useAssortment();
+export default function ConfirmationBanner() {
+  const { submissionResult, handleDismissConfirmation } = useAssortment();
 
   if (!submissionResult) return null;
 
-  const auditRef = submissionResult.audit_ref_id || "AUD-994821";
-  const status = submissionResult.status || "APPROVED_AND_LOGGED";
-  const scenario = submissionResult.scenario_name || "Balanced";
-  const timestamp = submissionResult.submitted_at || new Date().toISOString();
-  const totalModified = submissionResult.total_skus_modified || 17;
-
   return (
-    <div className="bg-[#064E3B] border border-[#10B981]/40 rounded-lg p-4 flex items-start gap-4 shadow-lg animate-fadeIn">
-      <div className="text-[#10B981] font-bold text-xl mt-0.5">✓</div>
-
+    <div className="bg-[#064E3B] border border-emerald-500/30 rounded-lg p-4 flex items-start gap-4 shadow-lg transition-all">
+      <span className="material-symbols-outlined text-emerald-400 text-2xl mt-0.5">
+        check_circle
+      </span>
       <div className="flex-1">
-        <h3 className="text-base font-bold text-white mb-1">
+        <h3 className="font-title-lg text-white font-bold text-base mb-1">
           Assortment Recommendation Submitted & Locked!
         </h3>
-        <p className="text-xs text-emerald-100/90 font-mono leading-relaxed">
-          Audit Ref ID: <span className="font-bold text-white">{auditRef}</span>{" "}
-          | Status: <span className="font-bold text-white">{status}</span> |
-          Submitted by: <span className="font-bold text-white">USR-CM-882</span>{" "}
-          | Scenario: <span className="font-bold text-white">{scenario}</span> (
-          {totalModified} SKUs updated) | Timestamp:{" "}
-          <span className="text-white">{timestamp}</span>
+        <p className="font-body-sm text-emerald-100/90 text-xs font-mono leading-relaxed">
+          Audit Ref ID: {submissionResult.audit_ref_id || "AUD-994821"} |
+          Status: {submissionResult.status || "APPROVED_AND_LOGGED"} | Submitted
+          by: USR-CM-882 | Timestamp:{" "}
+          {submissionResult.submitted_at || new Date().toISOString()} |
+          Scenario: {submissionResult.scenario_name || "Balanced"} (
+          {submissionResult.total_skus_modified || 17} SKUs updated)
         </p>
       </div>
-
       <button
-        onClick={() => setSubmissionResult(null)}
-        className="text-emerald-200 hover:text-white transition-colors cursor-pointer text-sm font-bold px-2 py-1"
-        title="Dismiss Confirmation"
+        onClick={handleDismissConfirmation}
+        className="text-emerald-200 hover:text-white transition-colors"
+        aria-label="Close"
       >
-        ✕
+        <span className="material-symbols-outlined text-xl">close</span>
       </button>
     </div>
   );
-};
-
-export default ConfirmationBanner;
+}
