@@ -64,7 +64,7 @@ class AuditService:
         db.commit()
         db.refresh(audit_record)
 
-        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d%H:%M:%SZ")
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         summary = SubmitSummary(
             grow_count=grow_count,

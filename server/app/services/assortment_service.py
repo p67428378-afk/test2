@@ -27,7 +27,7 @@ class AssortmentService:
             private_brand_share_pct=28.5,
             instock_rate_pct=96.2,
             shelf_capacity_utilization_pct=92.0,
-            last_updated=datetime.now(timezone.utc).strftime("%Y-%m-%d%H:%M:%SZ"),
+            last_updated=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
     @staticmethod
