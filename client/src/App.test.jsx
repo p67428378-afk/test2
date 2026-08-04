@@ -1,50 +1,52 @@
-// @vitest-environment jsdom
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import App from "./App.jsx";
+import App from "./App";
 
-// Mock the API services to avoid real network calls during tests
-vi.mock("./services/api.js", () => {
-  return {
-    authService: {
-      getCurrentUser: vi.fn().mockRejectedValue(new Error("No token")),
-      login: vi.fn(),
-      logout: vi.fn(),
-    },
-    bookService: {
-      getBooks: vi.fn().mockResolvedValue([]),
-    },
-    memberService: {
-      getMembers: vi.fn().mockResolvedValue([]),
-    },
-    loanService: {
-      getMemberLoans: vi.fn().mockResolvedValue([]),
-    },
-    fineService: {
-      getFines: vi.fn().mockResolvedValue([]),
-    },
-    default: {
-      interceptors: {
-        request: { use: vi.fn() },
-      },
-    },
-  };
-});
-
-describe("App Component", () => {
-  it("renders the login form when not authenticated", async () => {
+describe("DG Cluster Assortment Advisor App", () => {
+  it("renders the header title correctly", () => {
     render(<App />);
+    expect(screen.getByText(/Cluster Assortment Advisor/i)).toBeInTheDocument();
+  });
 
-    // Check that the welcome message is displayed
-    expect(screen.getByText("Welcome to LibMax")).toBeInTheDocument();
-    expect(screen.getByText("Library Management System")).toBeInTheDocument();
+  it("renders KPI cards", () => {
+    render(<App />);
+    expect(screen.getByText(/Sales per Linear Ft/i)).toBeInTheDocument();
+    expect(screen.getByText(/Private Brand Mix/i)).toBeInTheDocument();
+    expect(screen.getByText(/In-Stock Rate/i)).toBeInTheDocument();
+    expect(screen.getByText(/Shelf Capacity Util/i)).toBeInTheDocument();
+  });
 
-    // Check that the email and password inputs are present
-    expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+  it("renders scenario selector with Balanced pre-selected", () => {
+    render(<App />);
+    expect(
+      screen.getByText(/Assortment Recommendation Scenarios/i),
+    ).toBeInTheDocument();
+    const balancedHeadings = screen.getAllByText(/Balanced/i);
+    expect(balancedHeadings.length).toBeGreaterThan(0);
+  });
 
-    // Check that the sign in button is present
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+  it("renders SKU performance table and search filter", () => {
+    render(<App />);
+    expect(
+      screen.getByText(/Snacks Category SKU Performance/i),
+    ).toBeInTheDocument();
+    const searchInput = screen.getByPlaceholderText(/Search SKU or Product/i);
+    expect(searchInput).toBeInTheDocument();
+  });
+
+  it("filters SKUs when typing in search input", async () => {
+    render(<App />);
+    const searchInput = screen.getByPlaceholderText(/Search SKU or Product/i);
+    fireEvent.change(searchInput, { target: { value: "Peanuts" } });
+    expect(
+      screen.getByText(/Clover Valley Roasted Peanuts/i),
+    ).toBeInTheDocument();
+  });
+
+  it("renders submit button in approval panel", () => {
+    render(<App />);
+    const submitBtn = screen.getByText(/Submit & Lock Assortment/i);
+    expect(submitBtn).toBeInTheDocument();
   });
 });
