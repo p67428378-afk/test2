@@ -1,5 +1,5 @@
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class KPISummaryResponse(BaseModel):
@@ -13,6 +13,8 @@ class KPISummaryResponse(BaseModel):
 
 
 class SKUItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     sku_id: str
     product_name: str
     sub_category: str
@@ -21,9 +23,6 @@ class SKUItemResponse(BaseModel):
     linear_space_ft: float
     is_private_brand: bool
     status_badge: str
-
-    class Config:
-        from_attributes = True
 
 
 class SKUListResponse(BaseModel):

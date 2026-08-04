@@ -1,7 +1,15 @@
+from server.app.database import Base
 from server.app.models import SKU, ScenarioModel, GuardrailRule
 
 
 def run_seed(db):
+    # Guarantee tables are created on whatever bind the session is using
+    try:
+        bind = db.get_bind()
+        Base.metadata.create_all(bind=bind)
+    except Exception:
+        pass
+
     # Seed SKUs if empty
     if db.query(SKU).count() == 0:
         skus_data = [

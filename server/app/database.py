@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
 
@@ -29,13 +29,25 @@ def get_db():
         db.close()
 
 
-def init_db():
+def init_db(target_engine=None):
+    eng = target_engine or engine
     from server.app import models  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=eng)
+
+
+# Always import models when database.py is loaded so Base.metadata is populated
+from server.app import models  # noqa: F401
 
 
 def seed_data(db):
     from server.app.seed import run_seed
 
     run_seed(db)
+
+
+# Automatically create tables for the default engine when module is imported
+try:
+    init_db()
+except Exception:
+    pass
