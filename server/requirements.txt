@@ -1,14 +1,12 @@
 email-validator
 fastapi
 httpx
-passlib[bcrypt]
-bcrypt==4.0.1
+passlib
 pydantic
 pydantic-settings
 pyjwt
 pytest
 python-jose
-python-multipart
 sqlalchemy
 starlette
 uvicorn

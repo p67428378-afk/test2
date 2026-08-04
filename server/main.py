@@ -1,18 +1,10 @@
+import os
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
-from server.api.v1.endpoints import (
-    password_reset,
-    auth,
-    books,
-    members,
-    loans,
-    fines,
-    inventory,
-)
-from server.database import init_db, seed_data, SessionLocal
+from server.app.api.v1.assortment import router as assortment_router
+from server.app.database import SessionLocal, init_db, seed_data
 
-# Initialize database tables
+# Initialize database schema
 init_db()
 
 # Seed initial data
@@ -22,7 +14,11 @@ try:
 finally:
     db.close()
 
-app = FastAPI(title="Library Management System API", version="1.0.0")
+app = FastAPI(
+    title="DG Cluster Assortment Advisor API",
+    version="1.0.0",
+    description="Decision-support API for Dollar General Snacks cluster assortment management",
+)
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
@@ -36,16 +32,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(books.router, prefix="/api/v1", tags=["books"])
-app.include_router(members.router, prefix="/api/v1", tags=["members"])
-app.include_router(loans.router, prefix="/api/v1", tags=["loans"])
-app.include_router(fines.router, prefix="/api/v1", tags=["fines"])
-app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
+# Include API router
+app.include_router(assortment_router, prefix="/api/v1")
 
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Library Management System API"}
+    return {"message": "Welcome to DG Cluster Assortment Advisor API"}
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
