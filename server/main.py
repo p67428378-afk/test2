@@ -1,18 +1,17 @@
+import os
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
-from server.api.v1.endpoints import (
-    password_reset,
-    auth,
-    books,
-    members,
-    loans,
-    fines,
-    inventory,
-)
 from server.database import init_db, seed_data, SessionLocal
+from server.api.v1.endpoints import (
+    auth,
+    proposals,
+    evaluations,
+    awards,
+    milestones,
+    financials,
+)
 
-# Initialize database tables
+# Initialize database schema
 init_db()
 
 # Seed initial data
@@ -22,12 +21,17 @@ try:
 finally:
     db.close()
 
-app = FastAPI(title="Library Management System API", version="1.0.0")
+app = FastAPI(
+    title="Research Grant Management Portal API",
+    version="1.0.0",
+    description="API for research grant proposals, evaluations, funding awards, milestones, and financial utilization reporting.",
+)
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 ).split(",")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -36,16 +40,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(books.router, prefix="/api/v1", tags=["books"])
-app.include_router(members.router, prefix="/api/v1", tags=["members"])
-app.include_router(loans.router, prefix="/api/v1", tags=["loans"])
-app.include_router(fines.router, prefix="/api/v1", tags=["fines"])
-app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
+# Include API v1 Routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(proposals.router, prefix="/api/v1/proposals", tags=["proposals"])
+app.include_router(
+    evaluations.router, prefix="/api/v1/evaluations", tags=["evaluations"]
+)
+app.include_router(awards.router, prefix="/api/v1/awards", tags=["awards"])
+app.include_router(milestones.router, prefix="/api/v1/milestones", tags=["milestones"])
+app.include_router(
+    financials.router, prefix="/api/v1/financial-reports", tags=["financials"]
+)
 
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Library Management System API"}
+    return {
+        "message": "Welcome to the Research Grant Management Portal API",
+        "docs_url": "/docs",
+    }
