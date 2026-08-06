@@ -1,122 +1,189 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer, Numeric
+from datetime import datetime, date
+from typing import Optional, List
+from sqlalchemy import (
+    String,
+    DateTime,
+    Date,
+    Boolean,
+    ForeignKey,
+    Integer,
+    UniqueConstraint,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from server.database import Base
 
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=True)
-    mobile_number = Column(String(20), unique=True, nullable=True)
-    hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=True)
-    security_answer_hash = Column(String(255), nullable=True)
 
-    # Library Management System fields
-    email = Column(String(255), unique=True, nullable=True)
-    full_name = Column(String(255), nullable=True)
-    role = Column(
-        String(50), default="member", nullable=False
-    )  # 'librarian' or 'member'
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    email: Mapped[Optional[str]] = mapped_column(
+        String(255), unique=True, index=True, nullable=True
+    )
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    role: Mapped[str] = mapped_column(
+        String(50), default="child", nullable=False
+    )  # 'child', 'parent', 'admin'
+    is_parent_verified: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    total_points: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
-    loans = relationship("Loan", back_populates="member")
+    habit_logs: Mapped[List["HabitLog"]] = relationship(
+        "HabitLog", back_populates="user", cascade="all, delete-orphan"
+    )
+    streak: Mapped[Optional["Streak"]] = relationship(
+        "Streak", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    user_badges: Mapped[List["UserBadge"]] = relationship(
+        "UserBadge", back_populates="user", cascade="all, delete-orphan"
+    )
+    parent: Mapped[Optional["User"]] = relationship(
+        "User", remote_side=[id], backref="children"
+    )
 
 
-class OTP(Base):
-    __tablename__ = "otps"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
+class Habit(Base):
+    __tablename__ = "habits"
 
-    user = relationship("User", back_populates="otps")
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    category: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    points_value: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
+    )
 
-
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="password_history")
+    logs: Mapped[List["HabitLog"]] = relationship(
+        "HabitLog", back_populates="habit", cascade="all, delete-orphan"
+    )
 
 
-class Book(Base):
-    __tablename__ = "books"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String(255), nullable=False)
-    author = Column(String(255), nullable=False)
-    isbn = Column(String(255), unique=True, nullable=False)
-    genre = Column(String(255), nullable=True)
-    publication_year = Column(Integer, nullable=True)
-    total_copies = Column(Integer, nullable=False, default=1)
-    available_copies = Column(Integer, nullable=False, default=1)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
+class HabitLog(Base):
+    __tablename__ = "habit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=False
+    )
+    habit_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("habits.id"), index=True, nullable=False
+    )
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
+    )
+    local_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "habit_id", "local_date", name="uix_user_habit_date"
+        ),
+    )
+
+    user: Mapped["User"] = relationship("User", back_populates="habit_logs")
+    habit: Mapped["Habit"] = relationship("Habit", back_populates="logs")
+
+
+class Streak(Base):
+    __tablename__ = "streaks"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False
+    )
+    current_streak: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    longest_streak: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_logged_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    loans = relationship("Loan", back_populates="book")
+    user: Mapped["User"] = relationship("User", back_populates="streak")
 
 
-class Loan(Base):
-    __tablename__ = "loans"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
-    member_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    checkout_date = Column(DateTime, default=func.now(), nullable=False)
-    due_date = Column(DateTime, nullable=False)
-    return_date = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+class Badge(Base):
+    __tablename__ = "badges"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    required_points: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+    icon_key: Mapped[str] = mapped_column(
+        String(100), nullable=False, default="badge_default"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
     )
 
-    book = relationship("Book", back_populates="loans")
-    member = relationship("User", back_populates="loans")
-    fine = relationship("Fine", back_populates="loan", uselist=False)
-
-
-class Fine(Base):
-    __tablename__ = "fines"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    loan_id = Column(UUID(as_uuid=True), ForeignKey("loans.id"), nullable=False)
-    amount = Column(Numeric(10, 2), nullable=False)
-    status = Column(
-        String(50), default="outstanding", nullable=False
-    )  # 'outstanding' or 'paid'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    user_badges: Mapped[List["UserBadge"]] = relationship(
+        "UserBadge", back_populates="badge", cascade="all, delete-orphan"
     )
 
-    loan = relationship("Loan", back_populates="fine")
+
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=False
+    )
+    badge_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("badges.id"), index=True, nullable=False
+    )
+    awarded_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
+    )
+
+    user: Mapped["User"] = relationship("User", back_populates="user_badges")
+    badge: Mapped["Badge"] = relationship("Badge", back_populates="user_badges")
 
 
-class InventoryItem(Base):
-    __tablename__ = "inventory_items"
-    item_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    description = Column(String, nullable=True)
-    quantity = Column(Integer, nullable=False, default=0)
-    unit = Column(String(50), nullable=False)
-    supplier = Column(String(255), nullable=True)
-    category = Column(String(100), nullable=True)
-    low_stock_threshold = Column(Integer, nullable=False, default=10)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+class Lesson(Base):
+    __tablename__ = "lessons"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False)
+    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    quiz_question: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    quiz_options: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    correct_answer: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    points_value: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
     )

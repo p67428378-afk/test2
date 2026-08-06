@@ -1,243 +1,165 @@
-from pydantic import BaseModel, field_validator
-from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
+from typing import Optional, List
+from pydantic import BaseModel, EmailStr, Field
 from uuid import UUID
-import re
 
 
-# Existing Password Reset schemas
-class PasswordResetInitiateRequest(BaseModel):
-    login_id: str
-    mobile_number: str
+# User / Auth Schemas
+class UserBase(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = "child"
 
 
-class PasswordResetInitiateResponse(BaseModel):
-    otp_session_id: str
-    security_question: str
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6)
 
 
-class OTPVerifyRequest(BaseModel):
-    otp_code: str
-    otp_session_id: str
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 
-class OTPVerifyResponse(BaseModel):
-    security_question_session_id: str
-
-
-class SecurityQuestionVerifyRequest(BaseModel):
-    answer: str
-    security_question_session_id: str
-
-
-class SecurityQuestionVerifyResponse(BaseModel):
-    password_reset_session_id: str
-
-
-class SetNewPasswordRequest(BaseModel):
-    new_password: str
-    password_reset_session_id: str
-
-
-class SetNewPasswordResponse(BaseModel):
-    status: str
-    login_link: str
-
-
-# Library Management System schemas
-
-
-# Token schemas
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
+    user_id: UUID
+    role: str
+    is_parent_verified: bool
 
 
 class TokenData(BaseModel):
     user_id: Optional[str] = None
 
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v: str) -> str:
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", v):
-            raise ValueError("Invalid email address format")
-        return v
-
-
-# User schemas
-class UserBase(BaseModel):
-    email: str
-    full_name: str
-    role: str = "member"
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v: str) -> str:
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", v):
-            raise ValueError("Invalid email address format")
-        return v
-
-
-class UserCreate(UserBase):
-    password: str
-
-
-class UserUpdate(BaseModel):
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    role: Optional[str] = None
-    password: Optional[str] = None
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None and not re.match(r"[^@]+@[^@]+\.[^@]+", v):
-            raise ValueError("Invalid email address format")
-        return v
-
-
 class UserResponse(UserBase):
     id: UUID
+    is_parent_verified: bool
+    is_active: bool
+    is_verified: bool
+    total_points: int
+    parent_id: Optional[UUID] = None
     created_at: datetime
-    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Book schemas
-class BookBase(BaseModel):
+class ParentalConsentRequest(BaseModel):
+    token: Optional[str] = None
+    consent_granted: bool = True
+    parent_email: Optional[EmailStr] = None
+
+
+class ParentalConsentResponse(BaseModel):
+    message: str
+    status: str
+    is_parent_verified: bool
+
+
+# Habit Schemas
+class HabitBase(BaseModel):
+    category: str
     title: str
-    author: str
-    isbn: str
-    genre: Optional[str] = None
-    publication_year: Optional[int] = None
-    total_copies: int = 1
+    description: Optional[str] = None
+    points_value: int = 10
 
 
-class BookCreate(BookBase):
+class HabitCreate(HabitBase):
     pass
 
 
-class BookUpdate(BaseModel):
-    title: Optional[str] = None
-    author: Optional[str] = None
-    isbn: Optional[str] = None
-    genre: Optional[str] = None
-    publication_year: Optional[int] = None
-    total_copies: Optional[int] = None
-    available_copies: Optional[int] = None
-
-
-class BookResponse(BookBase):
+class HabitResponse(HabitBase):
     id: UUID
-    available_copies: int
     created_at: datetime
-    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Loan schemas
-class LoanCreate(BaseModel):
-    book_id: UUID
-    member_id: UUID
+class HabitLogCreate(BaseModel):
+    habit_id: UUID
+    completed_at: Optional[datetime] = None
+    local_date: Optional[date] = None
 
 
-class LoanResponse(BaseModel):
+class HabitLogResponse(BaseModel):
+    log_id: UUID
+    habit_id: UUID
+    user_id: UUID
+    points_awarded: int
+    total_points: int
+    current_streak: int
+    longest_streak: int
+    unlocked_badges: List[str] = []
+    message: str = "Habit logged successfully!"
+
+
+# Streak Schemas
+class StreakResponse(BaseModel):
     id: UUID
-    book_id: UUID
-    member_id: UUID
-    checkout_date: datetime
-    due_date: datetime
-    return_date: Optional[datetime] = None
-    created_at: datetime
-    updated_at: datetime
-    book: Optional[BookResponse] = None
-    member: Optional[UserResponse] = None
+    user_id: UUID
+    current_streak: int
+    longest_streak: int
+    last_logged_date: Optional[date] = None
 
     class Config:
         from_attributes = True
 
 
-# Fine schemas
-class FineResponse(BaseModel):
+# Badge Schemas
+class BadgeResponse(BaseModel):
     id: UUID
-    loan_id: UUID
-    amount: float
-    status: str
-    created_at: datetime
-    updated_at: datetime
-    loan: Optional[LoanResponse] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Inventory Item schemas
-class InventoryItemBase(BaseModel):
     name: str
     description: Optional[str] = None
-    quantity: int = 0
-    unit: str
-    supplier: Optional[str] = None
-    category: Optional[str] = None
-    low_stock_threshold: int = 10
-
-    @field_validator("quantity")
-    @classmethod
-    def validate_quantity(cls, v: int) -> int:
-        if v < 0:
-            raise ValueError("Quantity cannot be negative")
-        return v
-
-    @field_validator("low_stock_threshold")
-    @classmethod
-    def validate_threshold(cls, v: int) -> int:
-        if v < 0:
-            raise ValueError("Low stock threshold cannot be negative")
-        return v
-
-
-class InventoryItemCreate(InventoryItemBase):
-    pass
-
-
-class InventoryItemUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    quantity: Optional[int] = None
-    unit: Optional[str] = None
-    supplier: Optional[str] = None
-    category: Optional[str] = None
-    low_stock_threshold: Optional[int] = None
-
-    @field_validator("quantity")
-    @classmethod
-    def validate_quantity(cls, v: Optional[int]) -> Optional[int]:
-        if v is not None and v < 0:
-            raise ValueError("Quantity cannot be negative")
-        return v
-
-    @field_validator("low_stock_threshold")
-    @classmethod
-    def validate_threshold(cls, v: Optional[int]) -> Optional[int]:
-        if v is not None and v < 0:
-            raise ValueError("Low stock threshold cannot be negative")
-        return v
-
-
-class InventoryItemResponse(InventoryItemBase):
-    item_id: UUID
-    created_at: datetime
-    updated_at: datetime
-    is_low_stock: bool = False
+    required_points: int
+    icon_key: str
 
     class Config:
         from_attributes = True
+
+
+class UserBadgeResponse(BaseModel):
+    badge_id: UUID
+    name: str
+    description: Optional[str] = None
+    icon_key: str
+    awarded_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserStreakDetailResponse(BaseModel):
+    user_id: UUID
+    current_streak: int
+    longest_streak: int
+    last_logged_date: Optional[date] = None
+    total_points: int
+    is_parent_verified: bool
+    badges: List[UserBadgeResponse] = []
+
+
+# Lesson & Quiz Schemas
+class LessonResponse(BaseModel):
+    id: UUID
+    title: str
+    category: str
+    content: Optional[str] = None
+    quiz_question: Optional[str] = None
+    quiz_options: Optional[str] = None
+    points_value: int
+
+    class Config:
+        from_attributes = True
+
+
+class QuizSubmitRequest(BaseModel):
+    answer: str
+
+
+class QuizSubmitResponse(BaseModel):
+    correct: bool
+    message: str
+    points_awarded: int
+    total_points: int

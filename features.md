@@ -113,6 +113,7 @@ Not yet authored.
 User Story: Inventory Management Module
 
 ### User Stories
+
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -160,6 +161,109 @@ Not yet authored.
 
 ### API Endpoints
 Not yet authored.
+
+### UI Components
+Not yet authored.
+
+### Test Coverage
+Not yet authored.
+
+### Deployment Notes
+Not yet authored.
+
+## SCRUM-649 — Health Habits Learning Platform for Kids
+
+### Feature Summary
+Health Habits Learning Platform for Kids
+
+### User Stories
+# Health Habits Learning Platform for Kids
+
+**Objective:**  
+Provide an engaging, gamified health habit learning web application that empowers children to build healthy daily routines through interactive lessons and streak tracking.  
+Ensure a COPPA-compliant, safe digital environment with parental consent controls and full-stack backend persistence.
+
+**Key Features:**
+- Interactive Kid-Friendly Dashboard with daily health habit tracking (nutrition, exercise, hygiene, sleep)
+- Gamified Reward & Streak System with dynamic visual badges and progress milestones
+- Educational Content & Interactive Lessons with fun quizzes and habit challenges
+- Parental Consent & COPPA Security Controls for verifiable authorization and data protection
+- RESTful API Backend & Database Persistence for real-time progress saving and cross-device sync
+
+---
+
+**Description:**  
+As a **young learner (child) and parent**,  
+I want **an interactive, gamified web platform to learn and log healthy daily habits with parental oversight**,  
+So that **children can build lifelong healthy routines in a safe, fun, and privacy-compliant digital environment**.
+
+---
+
+**Acceptance Criteria:**
+
+- **Interactive Health Habit Dashboard (Frontend):**
+  - **Explanation**: The client interface must render a vibrant, kid-friendly dashboard displaying daily habit categories (Nutrition, Physical Activity, Personal Hygiene, and Rest/Sleep) with interactive completion toggles.
+  - **Example**: A child clicks the "Drank 4 Glasses of Water" habit card; the UI updates instantly with a playful animation and play sound, marking today's habit as complete.
+  - **Edge Cases**: Network disconnect during habit logging triggers an offline retry queue and notifies the user with a friendly error toast.
+
+- **Daily Habit Tracking & Streak Engine (Backend & Integration):**
+  - **Explanation**: The backend API must calculate active streaks and completion histories per user per habit, automatically updating streak length based on consecutive daily logs.
+  - **Example**: If a user logs brushing teeth on Monday, Tuesday, and Wednesday, the streak count API returns `streak_length: 3` with an `active_streak: true` status.
+  - **Edge Cases**: Logging a habit across midnight/timezone boundaries checks the user's localized date window to prevent breaking active streaks unfairly.
+
+- **Gamification, Points & Badge Rewards (Full-Stack):**
+  - **Explanation**: Completing habits and lessons awards points and unlocks achievement badges, stored in PostgreSQL and rendered dynamically on the child's profile.
+  - **Example**: Reaching 100 habit points unlocks the "Health Hero" badge, displaying a celebratory modal on the frontend and saving the award timestamp in the database.
+  - **Edge Cases**: Attempting to claim reward points for the same habit log twice in a single day is rejected with an HTTP 400 validation error.
+
+- **Parental Consent & COPPA Compliance Controls (Security & Admin):**
+  - **Explanation**: Registration for users under 13 requires verifiable parental consent before personal progress data is collected or displayed publicly.
+  - **Example**: A parent completes account setup via email confirmation link, authorizing child profile creation and toggling data sharing preferences.
+  - **Edge Cases**: Unverified accounts are restricted to read-only guest lesson mode with local non-persisted progress until parental verification succeeds.
+
+- **RESTful API & Database Persistence (Backend Infrastructure):**
+  - **Explanation**: FastAPI endpoints under `/api/v1/habits` and `/api/v1/users` handle user authentication, habit logging, and lesson progress using UUID v4 keys.
+  - **Example**: `POST /api/v1/habits/logs` accepts `{ "habit_id": "uuid", "completed_at": "2026-05-18T10:00:00Z" }` and responds with HTTP 201 Created and updated score payload.
+  - **Edge Cases**: Database connection timeouts during peak traffic fail gracefully with HTTP 503 and standard `{ "detail": "Service temporarily unavailable" }` JSON response.
+
+---
+
+**Technical Requirements:**
+
+- **Architecture & Tech Stack (Constitution v1.0.0 Compliance)**:
+  - **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.x, PostgreSQL (Production) / SQLite in-memory (Tests), pytest, RESTful endpoints (`/api/v1/`).
+  - **Frontend**: React 18, Vite, Tailwind CSS, lucide-react icons, react-router-dom, axios client.
+  - **Directory Structure**: Backend in `server/`, Frontend in `client/`.
+- **API Contracts & Data Schemas**:
+  - `GET /api/v1/habits/` - List available habit categories and daily goals.
+  - `POST /api/v1/habits/logs` - Record habit completion with timestamp.
+  - `GET /api/v1/users/{user_id}/streaks` - Fetch current streak lengths and unlocked badges.
+  - `POST /api/v1/auth/parental-consent` - Verify parental authorization.
+- **Privacy & Security**:
+  - Strictly COPPA-compliant data minimization; no third-party tracking scripts.
+  - Passwords hashed with bcrypt; JWT authentication with 5-minute TTL inter-agent / standard session tokens for web UI.
+
+### Acceptance Criteria
+- Interactive Health Habit Dashboard (Frontend)
+- Daily Habit Tracking & Streak Engine (Backend & Integration)
+- Gamification, Points & Badge Rewards (Full-Stack)
+- Parental Consent & COPPA Compliance Controls (Security & Admin)
+- RESTful API & Database Persistence (Backend Infrastructure)
+
+### Backend Tasks
+- None specified
+
+### Frontend Tasks
+- None specified
+
+### Database Changes
+Not yet authored.
+
+### API Endpoints
+- `GET /api/v1/habits/` — List habit categories and goals
+- `POST /api/v1/habits/logs` — Record habit completion
+- `GET /api/v1/users/{user_id}/streaks` — Get user streak & unlocked badges
+- `POST /api/v1/auth/parental-consent` — Verify parental consent
 
 ### UI Components
 Not yet authored.
