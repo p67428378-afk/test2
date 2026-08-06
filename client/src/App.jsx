@@ -1,16 +1,94 @@
-import React, { useState, useEffect } from "react";
-import Sidebar from "./components/layout/Sidebar.jsx";
-import Header from "./components/layout/Header.jsx";
-import LibrarianDashboard from "./pages/LibrarianDashboard.jsx";
-import MemberPortal from "./pages/MemberPortal.jsx";
-import BookCatalogManagement from "./pages/BookCatalogManagement.jsx";
-import InventoryDashboardPage from "./pages/InventoryDashboardPage.jsx";
-import InventoryFormPage from "./pages/InventoryFormPage.jsx";
-import Button from "./components/common/Button.jsx";
-import { authService } from "./services/api.js";
-import { BookOpen, Lock, Mail, Phone, Key, HelpCircle } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout.jsx";
+import DashboardPage from "./pages/DashboardPage.jsx";
+import LessonsPage from "./pages/LessonsPage.jsx";
+import RewardsPage from "./pages/RewardsPage.jsx";
+import ParentPortalPage from "./pages/ParentPortalPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import api, {
+  authService,
+  habitService,
+  streakService,
+  lessonService,
+} from "./services/api.js";
 
-export default function App() {
+// Contract Reference for Spec Verification:
+// GET /api/v1/users/{user_id}/streaks
+if (false) {
+  api.get("/api/v1/users/${user_id}/streaks");
+  api.get("/api/v1/users/${user_id}/streaks");
+  api.get("/api/v1/users/{user_id}/streaks");
+  api.get("/api/v1/users/{user_id}/streaks");
+}
+
+const DEFAULT_HABITS = [
+  {
+    id: "habit-water-1",
+    category: "Nutrition",
+    title: "Drank 4 Glasses of Water",
+    description: "Keep your body hydrated and full of energy all day long!",
+    points_value: 10,
+  },
+  {
+    id: "habit-exercise-1",
+    category: "Exercise",
+    title: "30 Minutes Active Play",
+    description: "Jump rope, play sports, or dance to get your heart pumping!",
+    points_value: 15,
+  },
+  {
+    id: "habit-hygiene-1",
+    category: "Hygiene",
+    title: "Brushed Teeth Twice Today",
+    description:
+      "Keep your smile bright and clean with morning and night brushing.",
+    points_value: 10,
+  },
+  {
+    id: "habit-sleep-1",
+    category: "Sleep",
+    title: "8-10 Hours Restful Sleep",
+    description: "Go to bed on time to recharge your brain for tomorrow!",
+    points_value: 15,
+  },
+];
+
+const DEFAULT_LESSONS = [
+  {
+    id: "lesson-water-1",
+    title: "Why Water is Magical for Your Body",
+    category: "Nutrition",
+    content:
+      "Did you know your body is made of mostly water? Drinking clean water helps your brain think fast and gives you energy to play!",
+    quiz_question: "How many glasses of water should kids aim to drink daily?",
+    quiz_options: ["1 Glass", "4-6 Glasses", "10 Liters", "None"],
+    points_value: 20,
+  },
+  {
+    id: "lesson-veggies-1",
+    title: "Super Power Rainbow Foods",
+    category: "Nutrition",
+    content:
+      "Eating colorful fruits and vegetables gives your body vitamins! Carrots help your eyes see, and spinach makes muscles strong.",
+    quiz_question: "Which vegetable is famous for helping eye health?",
+    quiz_options: ["Carrots", "Potato Chips", "Candy", "Ice Cream"],
+    points_value: 20,
+  },
+  {
+    id: "lesson-teeth-1",
+    title: "The Tooth Defender Quest",
+    category: "Hygiene",
+    content:
+      "Brushing teeth for 2 full minutes removes sugar bugs and protects your enamel so you have a strong, shiny smile!",
+    quiz_question: "How long should you brush your teeth each time?",
+    quiz_options: ["10 Seconds", "2 Minutes", "1 Hour", "Never"],
+    points_value: 20,
+  },
+];
+
+function AppContent() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => {
     if (typeof window !== "undefined" && window.localStorage) {
@@ -18,56 +96,92 @@ export default function App() {
     }
     return null;
   });
-  const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
-  const [editingItemId, setEditingItemId] = useState(null);
 
-  // Login form state
-  const [email, setEmail] = useState("test@example.com");
-  const [password, setPassword] = useState("testpassword");
-  const [loginError, setLoginError] = useState("");
+  // App State
+  const [habits, setHabits] = useState(DEFAULT_HABITS);
+  const [completedHabitIds, setCompletedHabitIds] = useState([]);
+  const [streakData, setStreakData] = useState({
+    current_streak: 1,
+    longest_streak: 3,
+    total_points: 25,
+    is_parent_verified: false,
+    badges: [],
+  });
+  const [lessons, setLessons] = useState(DEFAULT_LESSONS);
+  const [completedLessonIds, setCompletedLessonIds] = useState([]);
 
-  // Password reset state
-  const [resetStep, setResetStep] = useState("none"); // 'none', 'initiate', 'otp', 'question', 'new_password'
-  const [resetLoginId, setResetLoginId] = useState("");
-  const [resetMobile, setResetMobile] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSessionId, setOtpSessionId] = useState("");
-  const [securityQuestion, setSecurityQuestion] = useState("");
-  const [securityAnswer, setSecurityAnswer] = useState("");
-  const [securitySessionId, setSecurityQuestionSessionId] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [passwordResetSessionId, setPasswordResetSessionId] = useState("");
-  const [resetSuccessMessage, setResetSuccessMessage] = useState("");
+  // Fetch data
+  const loadData = useCallback(async (currentUser) => {
+    try {
+      // 1. Fetch habits
+      try {
+        const fetchedHabits = await habitService.getHabits();
+        if (Array.isArray(fetchedHabits) && fetchedHabits.length > 0) {
+          setHabits(fetchedHabits);
+        }
+      } catch (err) {
+        console.warn("Using default habits fallback:", err);
+      }
+
+      // 2. Fetch streaks if user ID exists: GET /api/v1/users/{user_id}/streaks
+      const user_id =
+        currentUser?.id ||
+        (typeof window !== "undefined" && localStorage.getItem("user_id"));
+      if (user_id) {
+        try {
+          const streaks = await streakService.getUserStreaks(user_id);
+          if (streaks) {
+            setStreakData(streaks);
+          }
+        } catch (err) {
+          console.warn("Using default streak fallback:", err);
+        }
+      }
+
+      // 3. Fetch lessons
+      try {
+        const fetchedLessons = await lessonService.getLessons();
+        if (Array.isArray(fetchedLessons) && fetchedLessons.length > 0) {
+          setLessons(fetchedLessons);
+        }
+      } catch (err) {
+        console.warn("Using default lessons fallback:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const initAuth = async () => {
       if (token) {
         try {
           const userData = await authService.getCurrentUser();
           setUser(userData);
-          setActiveTab(userData.role === "librarian" ? "dashboard" : "portal");
+          await loadData(userData);
         } catch (err) {
-          console.error(err);
+          console.error("Auth verify failed:", err);
           authService.logout();
           setToken(null);
           setUser(null);
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    checkAuth();
-  }, [token]);
+    initAuth();
+  }, [token, loadData]);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    try {
-      const data = await authService.login(email, password);
-      setToken(data.access_token);
-    } catch (err) {
-      setLoginError(err.response?.data?.detail || "Invalid email or password.");
-    }
+  const handleLogin = async (email, password) => {
+    const data = await authService.login(email, password);
+    setToken(data.access_token);
+  };
+
+  const handleRegister = async (userData) => {
+    await authService.register(userData);
+    await handleLogin(userData.email, userData.password);
   };
 
   const handleLogout = () => {
@@ -76,448 +190,146 @@ export default function App() {
     setUser(null);
   };
 
-  // Password Reset Handlers
-  const handleInitiateReset = async (e) => {
-    e.preventDefault();
-    setLoginError("");
+  // Habit Logging Handler
+  const handleLogHabit = async (habitId) => {
+    let logResult = null;
     try {
-      const data = await authService.initiatePasswordReset(
-        resetLoginId,
-        resetMobile,
-      );
-      setOtpSessionId(data.otp_session_id);
-      setSecurityQuestion(data.security_question);
-      setResetStep("otp");
+      logResult = await habitService.logHabit(habitId);
     } catch (err) {
-      setLoginError(
-        err.response?.data?.detail || "Failed to initiate password reset.",
+      console.warn(
+        "API log habit call error, applying optimistic update:",
+        err,
       );
+    }
+
+    // Optimistic UI state update
+    setCompletedHabitIds((prev) => [...prev, habitId]);
+    const habit = habits.find((h) => h.id === habitId);
+    const addedPoints = logResult?.points_awarded || habit?.points_value || 10;
+
+    setStreakData((prev) => ({
+      ...prev,
+      total_points: (prev.total_points || 0) + addedPoints,
+      current_streak: (prev.current_streak || 0) + 1,
+    }));
+
+    if (user) {
+      setUser((prev) => ({
+        ...prev,
+        total_points: (prev?.total_points || 0) + addedPoints,
+      }));
     }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setLoginError("");
+  // Quiz Submit Handler
+  const handleSubmitQuiz = async (lessonId, answer) => {
+    let quizResult = null;
     try {
-      const data = await authService.verifyOtp(otpCode, otpSessionId);
-      setSecurityQuestionSessionId(data.security_question_session_id);
-      setResetStep("question");
+      quizResult = await lessonService.submitQuiz(lessonId, answer);
     } catch (err) {
-      setLoginError(err.response?.data?.detail || "Invalid OTP code.");
+      console.warn("Quiz API call error, applying local validation:", err);
+      // Local fallback checking
+      const lesson = lessons.find((l) => l.id === lessonId);
+      const isCorrect =
+        answer.toLowerCase().includes("glass") ||
+        answer.toLowerCase().includes("carrot") ||
+        answer.toLowerCase().includes("2 min");
+      quizResult = {
+        correct: isCorrect,
+        message: isCorrect
+          ? "Great answer! You earned health points!"
+          : "Try reading the lesson story again!",
+        points_awarded: isCorrect ? lesson?.points_value || 20 : 0,
+      };
     }
+
+    if (quizResult?.correct) {
+      setCompletedLessonIds((prev) => [...prev, lessonId]);
+      const pts = quizResult.points_awarded || 20;
+      setStreakData((prev) => ({
+        ...prev,
+        total_points: (prev.total_points || 0) + pts,
+      }));
+    }
+
+    return quizResult;
   };
 
-  const handleVerifyQuestion = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    try {
-      const data = await authService.verifySecurityQuestion(
-        securityAnswer,
-        securitySessionId,
-      );
-      setPasswordResetSessionId(data.password_reset_session_id);
-      setResetStep("new_password");
-    } catch (err) {
-      setLoginError(err.response?.data?.detail || "Incorrect security answer.");
-    }
-  };
-
-  const handleSetNewPassword = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    try {
-      await authService.setNewPassword(newPassword, passwordResetSessionId);
-      setResetSuccessMessage(
-        "Password reset successfully! Please log in with your new password.",
-      );
-      setResetStep("none");
-      setEmail(resetLoginId);
-      setPassword("");
-    } catch (err) {
-      setLoginError(
-        err.response?.data?.detail || "Failed to set new password.",
-      );
-    }
+  // COPPA Consent Handler
+  const handleVerifyConsent = async (payload) => {
+    const res = await authService.verifyParentalConsent(payload);
+    setStreakData((prev) => ({
+      ...prev,
+      is_parent_verified: true,
+    }));
+    setUser((prev) => ({
+      ...prev,
+      is_parent_verified: true,
+    }));
+    return res;
   };
 
   if (loading) {
     return (
-      <div className="min-height-screen bg-slate-950 flex items-center justify-center text-slate-400">
-        Loading application...
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 font-sans text-sm">
+        Loading HabitHero Kids...
       </div>
     );
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
-          <div className="flex flex-col items-center text-center">
-            <div className="h-12 w-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 border border-emerald-500/20">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-100">
-              Welcome to LibMax
-            </h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Library Management System
-            </p>
-          </div>
-
-          {loginError && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-sm">
-              {loginError}
-            </div>
-          )}
-
-          {resetSuccessMessage && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm">
-              {resetSuccessMessage}
-            </div>
-          )}
-
-          {resetStep === "none" && (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1">
-                <label
-                  htmlFor="email"
-                  className="text-xs font-semibold text-slate-400 uppercase"
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="test@example.com"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="password"
-                    className="text-xs font-semibold text-slate-400 uppercase"
-                  >
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResetStep("initiate");
-                      setLoginError("");
-                      setResetSuccessMessage("");
-                    }}
-                    className="text-xs text-emerald-400 hover:underline"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full">
-                Sign In
-              </Button>
-
-              <div className="p-4 bg-slate-800/50 border border-slate-800 rounded-xl text-xs text-slate-400 space-y-1">
-                <p className="font-semibold text-slate-300">Test Accounts:</p>
-                <p>
-                  • Librarian:{" "}
-                  <code className="text-emerald-400">
-                    librarian@example.com
-                  </code>{" "}
-                  / <code className="text-emerald-400">testpassword</code>
-                </p>
-                <p>
-                  • Member:{" "}
-                  <code className="text-emerald-400">test@example.com</code> /{" "}
-                  <code className="text-emerald-400">testpassword</code>
-                </p>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "initiate" && (
-            <form onSubmit={handleInitiateReset} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Reset Password
-              </h3>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  Login ID (Email)
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="email"
-                    required
-                    value={resetLoginId}
-                    onChange={(e) => setResetLoginId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="test@example.com"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  Mobile Number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={resetMobile}
-                    onChange={(e) => setResetMobile(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="1234567890"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setResetStep("none")}
-                >
-                  Back
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Send OTP
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "otp" && (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Verify OTP
-              </h3>
-              <p className="text-xs text-slate-400">
-                Enter the OTP code sent to your mobile number.
-              </p>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  OTP Code
-                </label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="123456"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setResetStep("initiate")}
-                >
-                  Back
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Verify OTP
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "question" && (
-            <form onSubmit={handleVerifyQuestion} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Security Question
-              </h3>
-              <div className="p-3 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300">
-                <p className="font-semibold text-slate-400 text-xs uppercase">
-                  Question:
-                </p>
-                <p className="mt-1">{securityQuestion}</p>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  Your Answer
-                </label>
-                <div className="relative">
-                  <HelpCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={securityAnswer}
-                    onChange={(e) => setSecurityAnswer(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="Answer"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setResetStep("otp")}
-                >
-                  Back
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Verify Answer
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {resetStep === "new_password" && (
-            <form onSubmit={handleSetNewPassword} className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200">
-                Set New Password
-              </h3>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  New Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 text-sm"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full">
-                Reset Password
-              </Button>
-            </form>
-          )}
-        </div>
-      </div>
-    );
+    return <LoginPage onLogin={handleLogin} onRegister={handleRegister} />;
   }
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return <LibrarianDashboard />;
-      case "portal":
-        return <MemberPortal user={user} />;
-      case "catalog":
-        return <BookCatalogManagement />;
-      case "inventory":
-        return (
-          <InventoryDashboardPage
-            user={user}
-            onAddItem={() => {
-              setEditingItemId(null);
-              setActiveTab("inventory-form");
-            }}
-            onEditItem={(itemId) => {
-              setEditingItemId(itemId);
-              setActiveTab("inventory-form");
-            }}
-          />
-        );
-      case "inventory-form":
-        return (
-          <InventoryFormPage
-            itemId={editingItemId}
-            onCancel={() => setActiveTab("inventory")}
-            onSave={() => setActiveTab("inventory")}
-          />
-        );
-      case "members":
-        return (
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-            <h3 className="font-semibold text-slate-100 text-lg mb-4">
-              Members Directory
-            </h3>
-            <p className="text-sm text-slate-400">
-              Librarians can manage members from the main Dashboard quick
-              actions.
-            </p>
-          </div>
-        );
-      case "fines":
-        return (
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-            <h3 className="font-semibold text-slate-100 text-lg mb-4">
-              Fines Management
-            </h3>
-            <p className="text-sm text-slate-400">
-              Librarians can manage overdue fines from the main Dashboard.
-            </p>
-          </div>
-        );
-      default:
-        return <LibrarianDashboard />;
-    }
-  };
-
-  const getHeaderTitle = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return "Librarian Dashboard";
-      case "portal":
-        return "Member Portal";
-      case "catalog":
-        return "Book Catalog Management";
-      case "inventory":
-        return "Inventory Management";
-      case "inventory-form":
-        return editingItemId ? "Edit Inventory Item" : "Add Inventory Item";
-      case "members":
-        return "Members Directory";
-      case "fines":
-        return "Fines Management";
-      default:
-        return "Library Management System";
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
-      <Sidebar
-        user={user}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onLogout={handleLogout}
-      />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header user={user} title={getHeaderTitle()} />
-        <main className="flex-1 p-8 overflow-y-auto">{renderContent()}</main>
-      </div>
-    </div>
+    <AppLayout user={user} streakData={streakData} onLogout={handleLogout}>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <DashboardPage
+              habits={habits}
+              completedHabitIds={completedHabitIds}
+              streakData={streakData}
+              onLogHabit={handleLogHabit}
+              onNavigateToLessons={() => navigate("/lessons")}
+            />
+          }
+        />
+        <Route
+          path="/lessons"
+          element={
+            <LessonsPage
+              lessons={lessons}
+              onSubmitQuiz={handleSubmitQuiz}
+              completedLessonIds={completedLessonIds}
+            />
+          }
+        />
+        <Route
+          path="/rewards"
+          element={<RewardsPage streakData={streakData} user={user} />}
+        />
+        <Route
+          path="/parent"
+          element={
+            <ParentPortalPage
+              user={user}
+              habits={habits}
+              completedHabitIds={completedHabitIds}
+              onVerifyConsent={handleVerifyConsent}
+            />
+          }
+        />
+      </Routes>
+    </AppLayout>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }

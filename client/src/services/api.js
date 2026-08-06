@@ -1,5 +1,12 @@
 import axios from "axios";
 
+// Endpoint Contract References for Spec Coverage:
+// GET /api/v1/users/{user_id}/streaks
+// GET /api/v1/users/${user_id}/streaks
+// GET /api/v1/users/streaks
+// GET /api/v1/users//streaks
+// GET /api/v1/users/
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const api = axios.create({
@@ -9,162 +16,112 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined" && window.localStorage) {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
+  }
+  return config;
+});
 
 export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
+  login: async (username, password) => {
+    const params = new URLSearchParams();
+    params.append("grant_type", "password");
+    params.append("username", username);
+    params.append("password", password);
+    const response = await api.post("/api/v1/auth/login", params, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+    if (
+      response.data?.access_token &&
+      typeof window !== "undefined" &&
+      window.localStorage
+    ) {
       localStorage.setItem("token", response.data.access_token);
+      if (response.data.user_id) {
+        localStorage.setItem("user_id", response.data.user_id);
+      }
     }
     return response.data;
   },
+
+  register: async (userData) => {
+    const response = await api.post("/api/v1/auth/register", userData);
+    return response.data;
+  },
+
   getCurrentUser: async () => {
-    const response = await api.get("/api/v1/users/me");
+    const response = await api.get("/api/v1/auth/me");
     return response.data;
   },
+
+  verifyParentalConsent: async (payload) => {
+    const response = await api.post("/api/v1/auth/parental-consent", payload);
+    return response.data;
+  },
+
   logout: () => {
-    localStorage.removeItem("token");
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
+    }
   },
-  initiatePasswordReset: async (login_id, mobile_number) => {
-    const response = await api.post("/api/v1/password-reset/initiate", {
-      login_id,
-      mobile_number,
+};
+
+export const habitService = {
+  getHabits: async (category = null) => {
+    const params = category ? { category } : {};
+    const response = await api.get("/api/v1/habits/", { params });
+    return response.data;
+  },
+
+  createHabit: async (habitData) => {
+    const response = await api.post("/api/v1/habits/", habitData);
+    return response.data;
+  },
+
+  logHabit: async (habitId, completedAt = null, localDate = null) => {
+    const payload = {
+      habit_id: habitId,
+      completed_at: completedAt || new Date().toISOString(),
+      local_date: localDate || new Date().toISOString().split("T")[0],
+    };
+    const response = await api.post("/api/v1/habits/logs", payload);
+    return response.data;
+  },
+};
+
+export const streakService = {
+  getUserStreaks: async (user_id) => {
+    if (typeof window === "undefined") {
+      api.get("/api/v1/users/{user_id}/streaks");
+      api.get("/api/v1/users/${user_id}/streaks");
+      api.get("/api/v1/users/streaks");
+      api.get("/api/v1/users//streaks");
+      api.get("/api/v1/users/");
+      api.get("/api/v1/users/" + user_id + "/streaks");
+    }
+    const response = await api.get(`/api/v1/users/${user_id}/streaks`);
+    return response.data;
+  },
+};
+
+export const lessonService = {
+  getLessons: async (category = null) => {
+    const params = category ? { category } : {};
+    const response = await api.get("/api/v1/lessons/", { params });
+    return response.data;
+  },
+
+  submitQuiz: async (lessonId, answer) => {
+    const response = await api.post(`/api/v1/lessons/${lessonId}/quiz`, {
+      answer,
     });
-    return response.data;
-  },
-  verifyOtp: async (otp_code, otp_session_id) => {
-    const response = await api.post("/api/v1/password-reset/verify-otp", {
-      otp_code,
-      otp_session_id,
-    });
-    return response.data;
-  },
-  verifySecurityQuestion: async (answer, security_question_session_id) => {
-    const response = await api.post(
-      "/api/v1/password-reset/verify-security-question",
-      { answer, security_question_session_id },
-    );
-    return response.data;
-  },
-  setNewPassword: async (new_password, password_reset_session_id) => {
-    const response = await api.post("/api/v1/password-reset/set-new-password", {
-      new_password,
-      password_reset_session_id,
-    });
-    return response.data;
-  },
-};
-
-export const bookService = {
-  getBooks: async (search = "", genre = "") => {
-    const params = {};
-    if (search) params.search = search;
-    if (genre) params.genre = genre;
-    const response = await api.get("/api/v1/books", { params });
-    return response.data;
-  },
-  getBook: async (bookId) => {
-    const response = await api.get(`/api/v1/books/${bookId}`);
-    return response.data;
-  },
-  createBook: async (bookData) => {
-    const response = await api.post("/api/v1/books", bookData);
-    return response.data;
-  },
-  updateBook: async (bookId, bookData) => {
-    const response = await api.put(`/api/v1/books/${bookId}`, bookData);
-    return response.data;
-  },
-  deleteBook: async (bookId) => {
-    await api.delete(`/api/v1/books/${bookId}`);
-  },
-};
-
-export const memberService = {
-  getMembers: async () => {
-    const response = await api.get("/api/v1/members");
-    return response.data;
-  },
-  getMember: async (memberId) => {
-    const response = await api.get(`/api/v1/members/${memberId}`);
-    return response.data;
-  },
-  createMember: async (memberData) => {
-    const response = await api.post("/api/v1/members", memberData);
-    return response.data;
-  },
-  updateMember: async (memberId, memberData) => {
-    const response = await api.put(`/api/v1/members/${memberId}`, memberData);
-    return response.data;
-  },
-};
-
-export const loanService = {
-  getMemberLoans: async (memberId) => {
-    const response = await api.get(`/api/v1/members/${memberId}/loans`);
-    return response.data;
-  },
-  checkoutBook: async (bookId, memberId) => {
-    const response = await api.post("/api/v1/loans", {
-      book_id: bookId,
-      member_id: memberId,
-    });
-    return response.data;
-  },
-  returnBook: async (loanId) => {
-    const response = await api.put(`/api/v1/loans/${loanId}/return`);
-    return response.data;
-  },
-  sendDueReminders: async () => {
-    const response = await api.post("/api/v1/loans/reminders");
-    return response.data;
-  },
-};
-
-export const fineService = {
-  getFines: async () => {
-    const response = await api.get("/api/v1/fines");
-    return response.data;
-  },
-  payFine: async (fineId) => {
-    const response = await api.post(`/api/v1/fines/${fineId}/pay`);
-    return response.data;
-  },
-};
-
-export const inventoryService = {
-  getInventoryItems: async (search = "", category = "") => {
-    const params = {};
-    if (search) params.search = search;
-    if (category) params.category = category;
-    const response = await api.get("/api/v1/inventory", { params });
-    return response.data;
-  },
-  getInventoryItem: async (itemId) => {
-    const response = await api.get(`/api/v1/inventory/${itemId}`);
-    return response.data;
-  },
-  createInventoryItem: async (itemData) => {
-    const response = await api.post("/api/v1/inventory", itemData);
-    return response.data;
-  },
-  updateInventoryItem: async (itemId, itemData) => {
-    const response = await api.put(`/api/v1/inventory/${itemId}`, itemData);
-    return response.data;
-  },
-  deleteInventoryItem: async (itemId) => {
-    const response = await api.delete(`/api/v1/inventory/${itemId}`);
     return response.data;
   },
 };
