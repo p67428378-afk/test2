@@ -3,12 +3,34 @@ import Sidebar from "./components/layout/Sidebar.jsx";
 import Header from "./components/layout/Header.jsx";
 import LibrarianDashboard from "./pages/LibrarianDashboard.jsx";
 import MemberPortal from "./pages/MemberPortal.jsx";
-import BookCatalogManagement from "./pages/BookCatalogManagement.jsx";
+import DashboardPage from "./pages/DashboardPage.jsx";
+import BookDetailsPage from "./pages/BookDetailsPage.jsx";
+import BookFormPage from "./pages/BookFormPage.jsx";
 import InventoryDashboardPage from "./pages/InventoryDashboardPage.jsx";
 import InventoryFormPage from "./pages/InventoryFormPage.jsx";
 import Button from "./components/common/Button.jsx";
 import { authService } from "./services/api.js";
 import { BookOpen, Lock, Mail, Phone, Key, HelpCircle } from "lucide-react";
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <h2 style={{ padding: "2rem" }}>
+          Something went wrong. Check console.
+        </h2>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -19,6 +41,8 @@ export default function App() {
     return null;
   });
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [catalogView, setCatalogView] = useState("list"); // 'list', 'details', 'form'
+  const [selectedBookId, setSelectedBookId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingItemId, setEditingItemId] = useState(null);
 
@@ -157,7 +181,7 @@ export default function App() {
               <BookOpen className="h-6 w-6" />
             </div>
             <h2 className="text-2xl font-bold text-slate-100">
-              Welcome to LibMax
+              Welcome to LibKeep
             </h2>
             <p className="text-sm text-slate-400 mt-1">
               Library Management System
@@ -434,7 +458,49 @@ export default function App() {
       case "portal":
         return <MemberPortal user={user} />;
       case "catalog":
-        return <BookCatalogManagement />;
+        if (catalogView === "details") {
+          return (
+            <BookDetailsPage
+              bookId={selectedBookId}
+              onBack={() => setCatalogView("list")}
+              onEdit={(book) => {
+                setSelectedBookId(book.id);
+                setCatalogView("form");
+              }}
+            />
+          );
+        }
+        if (catalogView === "form") {
+          return (
+            <BookFormPage
+              bookId={selectedBookId}
+              onSave={() => {
+                setCatalogView("list");
+                setSelectedBookId(null);
+              }}
+              onCancel={() => {
+                setCatalogView("list");
+                setSelectedBookId(null);
+              }}
+            />
+          );
+        }
+        return (
+          <DashboardPage
+            onAddBook={() => {
+              setSelectedBookId(null);
+              setCatalogView("form");
+            }}
+            onEditBook={(book) => {
+              setSelectedBookId(book.id);
+              setCatalogView("form");
+            }}
+            onViewDetails={(book) => {
+              setSelectedBookId(book.id);
+              setCatalogView("details");
+            }}
+          />
+        );
       case "inventory":
         return (
           <InventoryDashboardPage
@@ -492,6 +558,9 @@ export default function App() {
       case "portal":
         return "Member Portal";
       case "catalog":
+        if (catalogView === "details") return "Book Details";
+        if (catalogView === "form")
+          return selectedBookId ? "Edit Book" : "Add New Book";
         return "Book Catalog Management";
       case "inventory":
         return "Inventory Management";
@@ -507,17 +576,25 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
-      <Sidebar
-        user={user}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onLogout={handleLogout}
-      />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header user={user} title={getHeaderTitle()} />
-        <main className="flex-1 p-8 overflow-y-auto">{renderContent()}</main>
+    <ErrorBoundary>
+      <div className="flex min-h-screen bg-slate-900 text-slate-100">
+        <Sidebar
+          user={user}
+          activeTab={activeTab}
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+            if (tab === "catalog") {
+              setCatalogView("list");
+              setSelectedBookId(null);
+            }
+          }}
+          onLogout={handleLogout}
+        />
+        <div className="flex-1 flex flex-col min-w-0">
+          <Header user={user} title={getHeaderTitle()} />
+          <main className="flex-1 p-8 overflow-y-auto">{renderContent()}</main>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
