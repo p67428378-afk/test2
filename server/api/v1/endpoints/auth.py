@@ -3,9 +3,13 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from server import schemas, crud, models
 from server.database import get_db
-from server.core.security import verify_password, create_access_token
-import jwt
-from server.core.security import SECRET_KEY, ALGORITHM
+from server.core.security import (
+    verify_password,
+    create_access_token,
+    SECRET_KEY,
+    ALGORITHM,
+)
+from jose import jwt, JWTError
 
 router = APIRouter()
 
@@ -25,7 +29,7 @@ def get_current_user(
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-    except jwt.PyJWTError:
+    except JWTError:
         raise credentials_exception
 
     user = crud.get_user_by_id(db, user_id=user_id)

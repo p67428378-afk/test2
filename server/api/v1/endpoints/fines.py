@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from server import schemas, crud, models
 from server.database import get_db
-from server.api.v1.endpoints.auth import get_current_librarian
-from typing import List
+from server.api.v1.endpoints.auth import get_current_user, get_current_librarian
+from typing import List, Optional
 from uuid import UUID
 
 router = APIRouter()
@@ -13,19 +13,33 @@ router = APIRouter()
 def read_fines(
     skip: int = 0,
     limit: int = 100,
+    status_filter: Optional[str] = Query(None, alias="status"),
     db: Session = Depends(get_db),
     current_librarian: models.User = Depends(get_current_librarian),
 ):
-    # Return outstanding fines or all fines?
-    # The HLD says "Get a list of all outstanding fines". Let's filter by status 'outstanding'.
-    fines = (
-        db.query(models.Fine)
-        .filter(models.Fine.status == "outstanding")
-        .offset(skip)
-        .limit(limit)
-        .all()
+    query = db.query(models.Fine)
+    if status_filter:
+        query = query.filter(models.Fine.status.ilike(f"%{status_filter}%"))
+    return query.offset(skip).limit(limit).all()
+
+
+@router.get("/fines/member/{member_id}", response_model=List[schemas.FineResponse])
+def read_member_fines(
+    member_id: UUID,
+    status_filter: Optional[str] = Query(None, alias="status"),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "librarian" and current_user.id != member_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to view this member's fines",
+        )
+    return crud.get_member_fines(
+        db, member_id=member_id, status=status_filter, skip=skip, limit=limit
     )
-    return fines
 
 
 @router.post("/fines/{fine_id}/pay", response_model=schemas.FineResponse)
@@ -39,7 +53,7 @@ def pay_fine(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Fine record not found"
         )
-    if db_fine.status == "paid":
+    if db_fine.status.upper() == "PAID":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Fine has already been paid"
         )

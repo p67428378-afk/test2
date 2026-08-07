@@ -303,10 +303,28 @@
                   "type": "null"
                 }
               ],
-              "description": "Search by title, author, or ISBN",
+              "description": "Search by title, author, category, or ISBN",
               "title": "Search"
             },
-            "description": "Search by title, author, or ISBN"
+            "description": "Search by title, author, category, or ISBN"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category",
+              "title": "Category"
+            },
+            "description": "Filter by category"
           },
           {
             "name": "genre",
@@ -325,6 +343,18 @@
               "title": "Genre"
             },
             "description": "Filter by genre"
+          },
+          {
+            "name": "available_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Filter available copies > 0",
+              "default": false,
+              "title": "Available Only"
+            },
+            "description": "Filter available copies > 0"
           },
           {
             "name": "skip",
@@ -770,6 +800,151 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "members"
+        ],
+        "summary": "Delete Member",
+        "operationId": "delete_member_api_v1_members__member_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/loans": {
+      "get": {
+        "tags": [
+          "loans"
+        ],
+        "summary": "Read All Loans",
+        "operationId": "read_all_loans_api_v1_loans_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LoanResponse"
+                  },
+                  "title": "Response Read All Loans Api V1 Loans Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "loans"
+        ],
+        "summary": "Checkout Book",
+        "operationId": "checkout_book_api_v1_loans_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/members/{member_id}/loans": {
@@ -844,13 +1019,13 @@
         }
       }
     },
-    "/api/v1/loans": {
+    "/api/v1/loans/checkout": {
       "post": {
         "tags": [
           "loans"
         ],
         "summary": "Checkout Book",
-        "operationId": "checkout_book_api_v1_loans_post",
+        "operationId": "checkout_book_api_v1_loans_checkout_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -891,12 +1066,58 @@
       }
     },
     "/api/v1/loans/{loan_id}/return": {
+      "post": {
+        "tags": [
+          "loans"
+        ],
+        "summary": "Return Book Post",
+        "operationId": "return_book_post_api_v1_loans__loan_id__return_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "loan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Loan Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanReturnResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "loans"
         ],
-        "summary": "Return Book",
-        "operationId": "return_book_api_v1_loans__loan_id__return_put",
+        "summary": "Return Book Put",
+        "operationId": "return_book_put_api_v1_loans__loan_id__return_put",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -936,6 +1157,30 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/reminders/process": {
+      "post": {
+        "tags": [
+          "loans"
+        ],
+        "summary": "Send Due Reminders",
+        "operationId": "send_due_reminders_api_v1_reminders_process_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/v1/loans/reminders": {
@@ -994,6 +1239,22 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
           }
         ],
         "responses": {
@@ -1007,6 +1268,94 @@
                     "$ref": "#/components/schemas/FineResponse"
                   },
                   "title": "Response Read Fines Api V1 Fines Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fines/member/{member_id}": {
+      "get": {
+        "tags": [
+          "fines"
+        ],
+        "summary": "Read Member Fines",
+        "operationId": "read_member_fines_api_v1_fines_member__member_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FineResponse"
+                  },
+                  "title": "Response Read Member Fines Api V1 Fines Member  Member Id  Get"
                 }
               }
             }
@@ -1454,6 +1803,17 @@
             "type": "string",
             "title": "Isbn"
           },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "genre": {
             "anyOf": [
               {
@@ -1504,6 +1864,17 @@
             "type": "string",
             "title": "Isbn"
           },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "genre": {
             "anyOf": [
               {
@@ -1539,6 +1910,11 @@
           "available_copies": {
             "type": "integer",
             "title": "Available Copies"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
           },
           "created_at": {
             "type": "string",
@@ -1598,6 +1974,17 @@
             ],
             "title": "Isbn"
           },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "genre": {
             "anyOf": [
               {
@@ -1641,6 +2028,17 @@
               }
             ],
             "title": "Available Copies"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
           }
         },
         "type": "object",
@@ -1658,6 +2056,23 @@
             "format": "uuid",
             "title": "Loan Id"
           },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "overdue_days": {
+            "type": "integer",
+            "title": "Overdue Days",
+            "default": 0
+          },
           "amount": {
             "type": "number",
             "title": "Amount"
@@ -1665,6 +2080,18 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
           },
           "created_at": {
             "type": "string",
@@ -1977,9 +2404,28 @@
             "title": "Member Id"
           },
           "checkout_date": {
-            "type": "string",
-            "format": "date-time",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Checkout Date"
+          },
+          "borrowed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Borrowed At"
           },
           "due_date": {
             "type": "string",
@@ -1997,6 +2443,33 @@
               }
             ],
             "title": "Return Date"
+          },
+          "returned_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returned At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "BORROWED"
+          },
+          "reminder_48h_sent": {
+            "type": "boolean",
+            "title": "Reminder 48H Sent",
+            "default": false
+          },
+          "reminder_24h_sent": {
+            "type": "boolean",
+            "title": "Reminder 24H Sent",
+            "default": false
           },
           "created_at": {
             "type": "string",
@@ -2034,12 +2507,33 @@
           "id",
           "book_id",
           "member_id",
-          "checkout_date",
           "due_date",
           "created_at",
           "updated_at"
         ],
         "title": "LoanResponse"
+      },
+      "LoanReturnResponse": {
+        "properties": {
+          "loan": {
+            "$ref": "#/components/schemas/LoanResponse"
+          },
+          "fine": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FineResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "loan"
+        ],
+        "title": "LoanReturnResponse"
       },
       "LoginRequest": {
         "properties": {
@@ -2221,10 +2715,31 @@
             "type": "string",
             "title": "Full Name"
           },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
           "role": {
             "type": "string",
             "title": "Role",
             "default": "member"
+          },
+          "membership_status": {
+            "type": "string",
+            "title": "Membership Status",
+            "default": "ACTIVE"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
           },
           "password": {
             "type": "string",
@@ -2249,10 +2764,31 @@
             "type": "string",
             "title": "Full Name"
           },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
           "role": {
             "type": "string",
             "title": "Role",
             "default": "member"
+          },
+          "membership_status": {
+            "type": "string",
+            "title": "Membership Status",
+            "default": "ACTIVE"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
           },
           "id": {
             "type": "string",
@@ -2304,6 +2840,17 @@
             ],
             "title": "Full Name"
           },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
           "role": {
             "anyOf": [
               {
@@ -2314,6 +2861,28 @@
               }
             ],
             "title": "Role"
+          },
+          "membership_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Membership Status"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
           },
           "password": {
             "anyOf": [

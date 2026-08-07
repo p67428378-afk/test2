@@ -5,7 +5,7 @@ from uuid import UUID
 import re
 
 
-# Existing Password Reset schemas
+# Password Reset schemas
 class PasswordResetInitiateRequest(BaseModel):
     login_id: str
     mobile_number: str
@@ -44,9 +44,6 @@ class SetNewPasswordResponse(BaseModel):
     login_link: str
 
 
-# Library Management System schemas
-
-
 # Token schemas
 class Token(BaseModel):
     access_token: str
@@ -69,11 +66,14 @@ class LoginRequest(BaseModel):
         return v
 
 
-# User schemas
+# User / Member schemas
 class UserBase(BaseModel):
     email: str
     full_name: str
+    phone: Optional[str] = None
     role: str = "member"
+    membership_status: str = "ACTIVE"
+    is_active: bool = True
 
     @field_validator("email")
     @classmethod
@@ -90,7 +90,10 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     email: Optional[str] = None
     full_name: Optional[str] = None
+    phone: Optional[str] = None
     role: Optional[str] = None
+    membership_status: Optional[str] = None
+    is_active: Optional[bool] = None
     password: Optional[str] = None
 
     @field_validator("email")
@@ -115,6 +118,7 @@ class BookBase(BaseModel):
     title: str
     author: str
     isbn: str
+    category: Optional[str] = None
     genre: Optional[str] = None
     publication_year: Optional[int] = None
     total_copies: int = 1
@@ -128,15 +132,18 @@ class BookUpdate(BaseModel):
     title: Optional[str] = None
     author: Optional[str] = None
     isbn: Optional[str] = None
+    category: Optional[str] = None
     genre: Optional[str] = None
     publication_year: Optional[int] = None
     total_copies: Optional[int] = None
     available_copies: Optional[int] = None
+    is_active: Optional[bool] = None
 
 
 class BookResponse(BookBase):
     id: UUID
     available_copies: int
+    is_active: bool = True
     created_at: datetime
     updated_at: datetime
 
@@ -154,9 +161,14 @@ class LoanResponse(BaseModel):
     id: UUID
     book_id: UUID
     member_id: UUID
-    checkout_date: datetime
+    checkout_date: Optional[datetime] = None
+    borrowed_at: Optional[datetime] = None
     due_date: datetime
     return_date: Optional[datetime] = None
+    returned_at: Optional[datetime] = None
+    status: str = "BORROWED"
+    reminder_48h_sent: bool = False
+    reminder_24h_sent: bool = False
     created_at: datetime
     updated_at: datetime
     book: Optional[BookResponse] = None
@@ -170,14 +182,23 @@ class LoanResponse(BaseModel):
 class FineResponse(BaseModel):
     id: UUID
     loan_id: UUID
+    member_id: Optional[UUID] = None
+    overdue_days: int = 0
     amount: float
     status: str
+    paid_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     loan: Optional[LoanResponse] = None
 
     class Config:
         from_attributes = True
+
+
+# Loan Return Response schema
+class LoanReturnResponse(BaseModel):
+    loan: LoanResponse
+    fine: Optional[FineResponse] = None
 
 
 # Inventory Item schemas

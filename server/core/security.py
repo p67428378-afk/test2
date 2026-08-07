@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Any, Union
 from passlib.context import CryptContext
-import jwt
+from jose import jwt
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"

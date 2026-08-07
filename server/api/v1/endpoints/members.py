@@ -16,11 +16,9 @@ def read_members(
     db: Session = Depends(get_db),
     current_librarian: models.User = Depends(get_current_librarian),
 ):
-    # Filter users by role 'member' or just return all users?
-    # The requirement says "Get a list of all members". Let's return users with role 'member'.
     members = (
         db.query(models.User)
-        .filter(models.User.role == "member")
+        .filter(models.User.role == "member", models.User.is_active.is_(True))
         .offset(skip)
         .limit(limit)
         .all()
@@ -71,3 +69,18 @@ def update_member(
             status_code=status.HTTP_404_NOT_FOUND, detail="Member not found"
         )
     return crud.update_user(db, db_user=db_user, user_update=member_update)
+
+
+@router.delete("/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_member(
+    member_id: UUID,
+    db: Session = Depends(get_db),
+    current_librarian: models.User = Depends(get_current_librarian),
+):
+    db_user = crud.get_user_by_id(db, user_id=member_id)
+    if not db_user or db_user.role != "member":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Member not found"
+        )
+    crud.delete_user(db, db_user=db_user)
+    return None

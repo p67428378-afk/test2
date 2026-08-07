@@ -19,6 +19,8 @@ def get_db():
 
 def init_db():
     # Import models here to register them on Base.metadata
+    from server import models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
@@ -35,9 +37,14 @@ def seed_data(db: Session):
             email="test@example.com",
             full_name="Test Member",
             role="member",
+            membership_status="ACTIVE",
+            is_active=True,
             hashed_password=get_password_hash("testpassword"),
         )
         db.add(test_user)
+    else:
+        test_user.is_active = True
+        test_user.membership_status = "ACTIVE"
 
     # Seed librarian user
     admin_user = (
@@ -48,9 +55,14 @@ def seed_data(db: Session):
             email="admin@example.com",
             full_name="Admin Librarian",
             role="librarian",
+            membership_status="ACTIVE",
+            is_active=True,
             hashed_password=get_password_hash("adminpassword"),
         )
         db.add(admin_user)
+    else:
+        admin_user.is_active = True
+        admin_user.membership_status = "ACTIVE"
 
     try:
         db.commit()

@@ -16,8 +16,11 @@ class User(Base):
     security_answer_hash = Column(String(255), nullable=True)
 
     # Library Management System fields
-    email = Column(String(255), unique=True, nullable=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
     full_name = Column(String(255), nullable=True)
+    phone = Column(String(30), nullable=True)
+    membership_status = Column(String(20), default="ACTIVE", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
     role = Column(
         String(50), default="member", nullable=False
     )  # 'librarian' or 'member'
@@ -30,6 +33,20 @@ class User(Base):
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
     loans = relationship("Loan", back_populates="member")
+
+
+class Member(Base):
+    __tablename__ = "members"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    full_name = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    phone = Column(String(30), nullable=True)
+    membership_status = Column(String(20), default="ACTIVE", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class OTP(Base):
@@ -57,13 +74,15 @@ class PasswordHistory(Base):
 class Book(Base):
     __tablename__ = "books"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String(255), nullable=False)
-    author = Column(String(255), nullable=False)
-    isbn = Column(String(255), unique=True, nullable=False)
+    title = Column(String(255), nullable=False, index=True)
+    author = Column(String(255), nullable=False, index=True)
+    isbn = Column(String(255), unique=True, nullable=False, index=True)
+    category = Column(String(100), nullable=True, index=True)
     genre = Column(String(255), nullable=True)
     publication_year = Column(Integer, nullable=True)
     total_copies = Column(Integer, nullable=False, default=1)
     available_copies = Column(Integer, nullable=False, default=1)
+    is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
@@ -78,8 +97,15 @@ class Loan(Base):
     book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
     member_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     checkout_date = Column(DateTime, default=func.now(), nullable=False)
+    borrowed_at = Column(DateTime, default=func.now(), nullable=False)
     due_date = Column(DateTime, nullable=False)
     return_date = Column(DateTime, nullable=True)
+    returned_at = Column(DateTime, nullable=True)
+    status = Column(
+        String(20), default="BORROWED", nullable=False
+    )  # 'BORROWED', 'RETURNED', 'OVERDUE'
+    reminder_48h_sent = Column(Boolean, default=False, nullable=False)
+    reminder_24h_sent = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
@@ -94,16 +120,22 @@ class Fine(Base):
     __tablename__ = "fines"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     loan_id = Column(UUID(as_uuid=True), ForeignKey("loans.id"), nullable=False)
+    member_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    overdue_days = Column(Integer, default=0, nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
     status = Column(
-        String(50), default="outstanding", nullable=False
-    )  # 'outstanding' or 'paid'
+        String(50), default="UNPAID", nullable=False
+    )  # 'UNPAID' / 'outstanding' or 'PAID' / 'paid'
+    paid_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
 
     loan = relationship("Loan", back_populates="fine")
+    member = relationship(
+        "User", primaryjoin="Fine.member_id == User.id", foreign_keys=[member_id]
+    )
 
 
 class InventoryItem(Base):

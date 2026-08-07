@@ -11,14 +11,26 @@ router = APIRouter()
 
 @router.get("/books", response_model=List[schemas.BookResponse])
 def read_books(
-    search: Optional[str] = Query(None, description="Search by title, author, or ISBN"),
+    search: Optional[str] = Query(
+        None, description="Search by title, author, category, or ISBN"
+    ),
+    category: Optional[str] = Query(None, description="Filter by category"),
     genre: Optional[str] = Query(None, description="Filter by genre"),
+    available_only: bool = Query(False, description="Filter available copies > 0"),
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    books = crud.get_books(db, search=search, genre=genre, skip=skip, limit=limit)
+    books = crud.get_books(
+        db,
+        search=search,
+        category=category,
+        genre=genre,
+        available_only=available_only,
+        skip=skip,
+        limit=limit,
+    )
     return books
 
 
@@ -79,5 +91,11 @@ def delete_book(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Book not found"
         )
-    crud.delete_book(db, db_book=db_book)
+    try:
+        crud.delete_book(db, db_book=db_book)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     return None

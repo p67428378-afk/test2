@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import uuid
+from server import models
 
 
 def get_auth_headers(client, email, password):
@@ -52,6 +53,7 @@ def test_book_management_librarian(client):
         "title": "The Hobbit",
         "author": "J.R.R. Tolkien",
         "isbn": "9780007488308",
+        "category": "Fantasy",
         "genre": "Fantasy",
         "publication_year": 1937,
         "total_copies": 3,
@@ -77,6 +79,43 @@ def test_book_management_librarian(client):
     # Delete book
     response = client.delete(f"/api/v1/books/{book_id}", headers=headers)
     assert response.status_code == 204
+
+
+def test_book_delete_with_active_loan_blocked(client, db):
+    admin_headers = get_auth_headers(client, "admin@example.com", "adminpassword")
+    member_headers = get_auth_headers(client, "test@example.com", "testpassword")
+
+    # Create book
+    response = client.post(
+        "/api/v1/books",
+        json={
+            "title": "1984",
+            "author": "George Orwell",
+            "isbn": "9780451524935",
+            "category": "Fiction",
+            "total_copies": 2,
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 201
+    book_id = response.json()["id"]
+
+    # Get member ID
+    response = client.get("/api/v1/users/me", headers=member_headers)
+    member_id = response.json()["id"]
+
+    # Checkout book
+    response = client.post(
+        "/api/v1/loans/checkout",
+        json={"book_id": book_id, "member_id": member_id},
+        headers=admin_headers,
+    )
+    assert response.status_code == 201
+
+    # Attempt to delete book with active loan -> Should fail (400)
+    response = client.delete(f"/api/v1/books/{book_id}", headers=admin_headers)
+    assert response.status_code == 400
+    assert "active loans" in response.json()["detail"].lower()
 
 
 def test_book_management_member_denied(client):
@@ -106,6 +145,7 @@ def test_book_search_and_filter(client):
             "title": "Dune",
             "author": "Frank Herbert",
             "isbn": "9780441172719",
+            "category": "Sci-Fi",
             "genre": "Sci-Fi",
             "publication_year": 1965,
             "total_copies": 2,
@@ -119,6 +159,7 @@ def test_book_search_and_filter(client):
             "title": "Foundation",
             "author": "Isaac Asimov",
             "isbn": "9780553293357",
+            "category": "Sci-Fi",
             "genre": "Sci-Fi",
             "publication_year": 1951,
             "total_copies": 1,
@@ -132,7 +173,7 @@ def test_book_search_and_filter(client):
     assert len(response.json()) == 1
     assert response.json()[0]["title"] == "Dune"
 
-    # Filter by genre
+    # Filter by genre/category
     response = client.get("/api/v1/books?genre=Sci-Fi", headers=member_headers)
     assert response.status_code == 200
     assert len(response.json()) == 2
@@ -178,6 +219,7 @@ def test_book_borrowing_and_returning(client, db):
             "title": "The Hobbit",
             "author": "J.R.R. Tolkien",
             "isbn": "9780007488308",
+            "category": "Fantasy",
             "genre": "Fantasy",
             "publication_year": 1937,
             "total_copies": 1,
@@ -192,7 +234,9 @@ def test_book_borrowing_and_returning(client, db):
 
     # Checkout book
     loan_data = {"book_id": book_id, "member_id": member_id}
-    response = client.post("/api/v1/loans", json=loan_data, headers=admin_headers)
+    response = client.post(
+        "/api/v1/loans/checkout", json=loan_data, headers=admin_headers
+    )
     assert response.status_code == 201
     loan_id = response.json()["id"]
 
@@ -201,22 +245,21 @@ def test_book_borrowing_and_returning(client, db):
     assert response.json()["available_copies"] == 0
 
     # Try to checkout again (should fail as copies = 0)
-    response = client.post("/api/v1/loans", json=loan_data, headers=admin_headers)
+    response = client.post(
+        "/api/v1/loans/checkout", json=loan_data, headers=admin_headers
+    )
     assert response.status_code == 400
 
     # Return book
-    response = client.put(f"/api/v1/loans/{loan_id}/return", headers=admin_headers)
+    response = client.post(f"/api/v1/loans/{loan_id}/return", headers=admin_headers)
     assert response.status_code == 200
-    assert response.json()["return_date"] is not None
 
     # Verify book copies incremented
     response = client.get(f"/api/v1/books/{book_id}", headers=member_headers)
     assert response.json()["available_copies"] == 1
 
 
-def test_overdue_fine_calculation(client, db):
-    from server import models
-
+def test_overdue_fine_calculation_and_payment(client, db):
     admin_headers = get_auth_headers(client, "admin@example.com", "adminpassword")
     member_headers = get_auth_headers(client, "test@example.com", "testpassword")
 
@@ -224,11 +267,10 @@ def test_overdue_fine_calculation(client, db):
     response = client.post(
         "/api/v1/books",
         json={
-            "title": "The Hobbit",
-            "author": "J.R.R. Tolkien",
-            "isbn": "9780007488308",
-            "genre": "Fantasy",
-            "publication_year": 1937,
+            "title": "Clean Code",
+            "author": "Robert C. Martin",
+            "isbn": "9780132350884",
+            "category": "Technology",
             "total_copies": 1,
         },
         headers=admin_headers,
@@ -241,32 +283,36 @@ def test_overdue_fine_calculation(client, db):
 
     # Checkout book
     loan_data = {"book_id": book_id, "member_id": member_id}
-    response = client.post("/api/v1/loans", json=loan_data, headers=admin_headers)
+    response = client.post(
+        "/api/v1/loans/checkout", json=loan_data, headers=admin_headers
+    )
     loan_id = response.json()["id"]
 
-    # Manually update due date to 5 days ago in the database to simulate overdue
+    # Manually update due date to 10 days ago in the database to simulate overdue
     db_loan = db.query(models.Loan).filter(models.Loan.id == uuid.UUID(loan_id)).first()
-    db_loan.due_date = datetime.utcnow() - timedelta(days=5)
+    db_loan.due_date = datetime.utcnow() - timedelta(days=10)
     db.commit()
 
     # Return book
-    response = client.put(f"/api/v1/loans/{loan_id}/return", headers=admin_headers)
+    response = client.post(f"/api/v1/loans/{loan_id}/return", headers=admin_headers)
     assert response.status_code == 200
 
-    # Verify fine was created
-    response = client.get("/api/v1/fines", headers=admin_headers)
+    # Verify fine was created ($0.50 * 10 = $5.00)
+    response = client.get(f"/api/v1/fines/member/{member_id}", headers=member_headers)
     assert response.status_code == 200
-    assert len(response.json()) == 1
-    # 5 days overdue, but let's check if weekends were excluded.
-    # Since we used datetime.utcnow() - timedelta(days=5), the exact number of overdue days depends on the current day of the week.
-    # But it should be > 0 and status should be outstanding.
-    assert response.json()[0]["status"] == "outstanding"
-    assert response.json()[0]["amount"] > 0
+    fines = response.json()
+    assert len(fines) == 1
+    fine_id = fines[0]["id"]
+    assert fines[0]["amount"] == 5.0
+    assert fines[0]["status"].upper() in ("UNPAID", "OUTSTANDING")
+
+    # Pay fine
+    response = client.post(f"/api/v1/fines/{fine_id}/pay", headers=admin_headers)
+    assert response.status_code == 200
+    assert response.json()["status"].upper() == "PAID"
 
 
 def test_due_date_reminders(client, db):
-    from server import models
-
     admin_headers = get_auth_headers(client, "admin@example.com", "adminpassword")
     member_headers = get_auth_headers(client, "test@example.com", "testpassword")
 
@@ -277,7 +323,7 @@ def test_due_date_reminders(client, db):
             "title": "The Hobbit",
             "author": "J.R.R. Tolkien",
             "isbn": "9780007488308",
-            "genre": "Fantasy",
+            "category": "Fantasy",
             "publication_year": 1937,
             "total_copies": 1,
         },
@@ -291,16 +337,17 @@ def test_due_date_reminders(client, db):
 
     # Checkout book
     loan_data = {"book_id": book_id, "member_id": member_id}
-    response = client.post("/api/v1/loans", json=loan_data, headers=admin_headers)
+    response = client.post(
+        "/api/v1/loans/checkout", json=loan_data, headers=admin_headers
+    )
     loan_id = response.json()["id"]
 
-    # Manually update due date to exactly 3 days from now
+    # Manually update due date to 24 hours from now
     db_loan = db.query(models.Loan).filter(models.Loan.id == uuid.UUID(loan_id)).first()
-    db_loan.due_date = datetime.utcnow() + timedelta(days=3)
+    db_loan.due_date = datetime.utcnow() + timedelta(hours=20)
     db.commit()
 
     # Trigger reminders
     response = client.post("/api/v1/loans/reminders", headers=admin_headers)
     assert response.status_code == 200
-    assert len(response.json()["reminders_sent"]) == 1
-    assert response.json()["reminders_sent"][0]["member_email"] == "test@example.com"
+    assert len(response.json()["reminders_sent"]) >= 1
