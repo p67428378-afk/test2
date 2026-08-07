@@ -22,149 +22,100 @@ api.interceptors.request.use(
 );
 
 export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-    }
+  register: async (storeName, email, phoneNumber, password) => {
+    const response = await api.post("/api/v1/sellers/register", {
+      store_name: storeName,
+      email,
+      phone_number: phoneNumber || null,
+      password,
+    });
     return response.data;
   },
-  getCurrentUser: async () => {
-    const response = await api.get("/api/v1/users/me");
+  login: async (email, password) => {
+    const response = await api.post("/api/v1/sellers/login", {
+      email,
+      password,
+    });
+    if (response.data && response.data.access_token) {
+      localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem("seller", JSON.stringify(response.data.seller));
+    }
     return response.data;
   },
   logout: () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("seller");
   },
-  initiatePasswordReset: async (login_id, mobile_number) => {
-    const response = await api.post("/api/v1/password-reset/initiate", {
-      login_id,
-      mobile_number,
-    });
-    return response.data;
+  getCurrentSeller: () => {
+    const sellerStr = localStorage.getItem("seller");
+    if (sellerStr) {
+      try {
+        return JSON.parse(sellerStr);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   },
-  verifyOtp: async (otp_code, otp_session_id) => {
-    const response = await api.post("/api/v1/password-reset/verify-otp", {
-      otp_code,
-      otp_session_id,
-    });
-    return response.data;
-  },
-  verifySecurityQuestion: async (answer, security_question_session_id) => {
-    const response = await api.post(
-      "/api/v1/password-reset/verify-security-question",
-      { answer, security_question_session_id },
-    );
-    return response.data;
-  },
-  setNewPassword: async (new_password, password_reset_session_id) => {
-    const response = await api.post("/api/v1/password-reset/set-new-password", {
-      new_password,
-      password_reset_session_id,
-    });
-    return response.data;
+  isAuthenticated: () => {
+    return !!localStorage.getItem("token");
   },
 };
 
-export const bookService = {
-  getBooks: async (search = "", genre = "") => {
+export const productService = {
+  getProducts: async (filters = {}) => {
     const params = {};
-    if (search) params.search = search;
-    if (genre) params.genre = genre;
-    const response = await api.get("/api/v1/books", { params });
-    return response.data;
-  },
-  getBook: async (bookId) => {
-    const response = await api.get(`/api/v1/books/${bookId}`);
-    return response.data;
-  },
-  createBook: async (bookData) => {
-    const response = await api.post("/api/v1/books", bookData);
-    return response.data;
-  },
-  updateBook: async (bookId, bookData) => {
-    const response = await api.put(`/api/v1/books/${bookId}`, bookData);
-    return response.data;
-  },
-  deleteBook: async (bookId) => {
-    await api.delete(`/api/v1/books/${bookId}`);
-  },
-};
+    if (filters.brand) params.brand = filters.brand;
+    if (filters.condition) params.condition = filters.condition;
+    if (filters.min_price !== undefined && filters.min_price !== "")
+      params.min_price = Number(filters.min_price);
+    if (filters.max_price !== undefined && filters.max_price !== "")
+      params.max_price = Number(filters.max_price);
+    if (filters.ram) params.ram = filters.ram;
+    if (filters.storage) params.storage = filters.storage;
+    if (filters.search) params.search = filters.search;
+    if (filters.skip !== undefined) params.skip = filters.skip;
+    if (filters.limit !== undefined) params.limit = filters.limit;
 
-export const memberService = {
-  getMembers: async () => {
-    const response = await api.get("/api/v1/members");
+    const response = await api.get("/api/v1/products", { params });
     return response.data;
   },
-  getMember: async (memberId) => {
-    const response = await api.get(`/api/v1/members/${memberId}`);
+  getProduct: async (id) => {
+    const response = await api.get(`/api/v1/products/${id}`);
     return response.data;
   },
-  createMember: async (memberData) => {
-    const response = await api.post("/api/v1/members", memberData);
-    return response.data;
-  },
-  updateMember: async (memberId, memberData) => {
-    const response = await api.put(`/api/v1/members/${memberId}`, memberData);
-    return response.data;
-  },
-};
-
-export const loanService = {
-  getMemberLoans: async (memberId) => {
-    const response = await api.get(`/api/v1/members/${memberId}/loans`);
-    return response.data;
-  },
-  checkoutBook: async (bookId, memberId) => {
-    const response = await api.post("/api/v1/loans", {
-      book_id: bookId,
-      member_id: memberId,
+  createProduct: async (productData) => {
+    const response = await api.post("/api/v1/products", {
+      brand: productData.brand,
+      model: productData.model,
+      processor: productData.processor,
+      ram: productData.ram,
+      storage: productData.storage,
+      gpu: productData.gpu,
+      screen_size: productData.screen_size,
+      condition: productData.condition,
+      price: Number(productData.price),
+      stock_quantity: Number(productData.stock_quantity),
     });
     return response.data;
   },
-  returnBook: async (loanId) => {
-    const response = await api.put(`/api/v1/loans/${loanId}/return`);
+  updateProduct: async (id, productData) => {
+    const response = await api.put(`/api/v1/products/${id}`, {
+      brand: productData.brand,
+      model: productData.model,
+      processor: productData.processor,
+      ram: productData.ram,
+      storage: productData.storage,
+      gpu: productData.gpu,
+      screen_size: productData.screen_size,
+      condition: productData.condition,
+      price: Number(productData.price),
+      stock_quantity: Number(productData.stock_quantity),
+    });
     return response.data;
   },
-  sendDueReminders: async () => {
-    const response = await api.post("/api/v1/loans/reminders");
-    return response.data;
-  },
-};
-
-export const fineService = {
-  getFines: async () => {
-    const response = await api.get("/api/v1/fines");
-    return response.data;
-  },
-  payFine: async (fineId) => {
-    const response = await api.post(`/api/v1/fines/${fineId}/pay`);
-    return response.data;
-  },
-};
-
-export const inventoryService = {
-  getInventoryItems: async (search = "", category = "") => {
-    const params = {};
-    if (search) params.search = search;
-    if (category) params.category = category;
-    const response = await api.get("/api/v1/inventory", { params });
-    return response.data;
-  },
-  getInventoryItem: async (itemId) => {
-    const response = await api.get(`/api/v1/inventory/${itemId}`);
-    return response.data;
-  },
-  createInventoryItem: async (itemData) => {
-    const response = await api.post("/api/v1/inventory", itemData);
-    return response.data;
-  },
-  updateInventoryItem: async (itemId, itemData) => {
-    const response = await api.put(`/api/v1/inventory/${itemId}`, itemData);
-    return response.data;
-  },
-  deleteInventoryItem: async (itemId) => {
-    const response = await api.delete(`/api/v1/inventory/${itemId}`);
+  deleteProduct: async (id) => {
+    const response = await api.delete(`/api/v1/products/${id}`);
     return response.data;
   },
 };

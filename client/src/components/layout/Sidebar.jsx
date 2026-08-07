@@ -1,86 +1,110 @@
 import React from "react";
 import {
-  BookOpen,
-  Users,
-  FileText,
-  DollarSign,
+  LayoutDashboard,
+  Laptop,
+  ShoppingCart,
+  Settings,
   LogOut,
-  User,
-  Package,
 } from "lucide-react";
 
-export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
-  const isLibrarian = user?.role === "librarian";
+export default function Sidebar({
+  activeTab,
+  setActiveTab,
+  onLogout,
+  isOpen,
+  onClose,
+}) {
+  const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "products", label: "Products", icon: Laptop },
+    { id: "orders", label: "Orders", icon: ShoppingCart },
+  ];
 
-  const menuItems = isLibrarian
-    ? [
-        { id: "dashboard", label: "Dashboard", icon: BookOpen },
-        { id: "catalog", label: "Book Catalog", icon: FileText },
-        { id: "inventory", label: "Inventory", icon: Package },
-        { id: "members", label: "Members", icon: Users },
-        { id: "fines", label: "Fines", icon: DollarSign },
-      ]
-    : [
-        { id: "portal", label: "My Portal", icon: User },
-        { id: "catalog", label: "Search Books", icon: BookOpen },
-        { id: "inventory", label: "Inventory", icon: Package },
-      ];
-
-  return (
-    <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col h-screen sticky top-0">
-      <div className="p-6 border-b border-slate-700 flex items-center gap-3">
-        <BookOpen className="h-8 w-8 text-emerald-500" />
+  const sidebarContent = (
+    <>
+      <div className="p-6 border-b border-outline-variant flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+          L
+        </div>
         <div>
-          <h1 className="font-bold text-lg text-slate-100 leading-none">
-            LibMax
+          <h1 className="font-headline-md text-title-lg text-on-primary-container font-bold tracking-tight">
+            LaptopSeller
           </h1>
-          <span className="text-xs text-slate-400">Library System</span>
+          <p className="text-label-md text-secondary-fixed-dim/70">
+            Apex Laptops
+          </p>
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-200"
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-              {item.label}
-            </button>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto py-4">
+        <ul className="space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <li key={item.id}>
+                <button
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    if (onClose) onClose();
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 ${
+                    isActive
+                      ? "border-l-4 border-primary bg-secondary-fixed-dim/10 text-primary-fixed font-bold"
+                      : "text-secondary-fixed-dim hover:bg-secondary-fixed-dim/5 hover:text-on-primary-fixed-variant"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
-      <div className="p-4 border-t border-slate-700">
-        <div className="flex items-center gap-3 px-4 py-3 mb-2">
-          <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center text-slate-200 font-semibold">
-            {user?.full_name?.charAt(0) || "U"}
-          </div>
-          <div className="overflow-hidden">
-            <p className="text-sm font-medium text-slate-200 truncate">
-              {user?.full_name || "User"}
-            </p>
-            <p className="text-xs text-slate-400 capitalize truncate">
-              {user?.role || "Member"}
-            </p>
-          </div>
-        </div>
+      <div className="p-4 border-t border-outline-variant flex flex-col gap-2">
+        <button
+          onClick={() => {
+            setActiveTab("settings");
+            if (onClose) onClose();
+          }}
+          className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+            activeTab === "settings"
+              ? "bg-secondary-fixed-dim/10 text-primary-fixed font-bold"
+              : "text-secondary-fixed-dim hover:bg-secondary-fixed-dim/5 hover:text-on-primary-fixed-variant"
+          }`}
+        >
+          <Settings className="h-5 w-5" />
+          <span>Settings</span>
+        </button>
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg text-error hover:bg-error/10 transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
-          Sign Out
+          <span>Sign Out</span>
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="fixed left-0 top-0 h-full w-[260px] bg-inverse-surface text-primary-fixed border-r border-outline-variant shadow-sm flex flex-col z-50 hidden md:flex">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Sidebar Drawer */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+          <aside className="fixed left-0 top-0 h-full w-[260px] bg-inverse-surface text-primary-fixed border-r border-outline-variant shadow-sm flex flex-col z-50">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
