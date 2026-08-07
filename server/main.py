@@ -1,16 +1,8 @@
+import os
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
-from server.api.v1.endpoints import (
-    password_reset,
-    auth,
-    books,
-    members,
-    loans,
-    fines,
-    inventory,
-)
 from server.database import init_db, seed_data, SessionLocal
+from server.api.v1.endpoints import sellers, products
 
 # Initialize database tables
 init_db()
@@ -22,7 +14,7 @@ try:
 finally:
     db.close()
 
-app = FastAPI(title="Library Management System API", version="1.0.0")
+app = FastAPI(title="Laptop Seller Portal & Catalog Management API", version="1.0.0")
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
@@ -37,15 +29,10 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(books.router, prefix="/api/v1", tags=["books"])
-app.include_router(members.router, prefix="/api/v1", tags=["members"])
-app.include_router(loans.router, prefix="/api/v1", tags=["loans"])
-app.include_router(fines.router, prefix="/api/v1", tags=["fines"])
-app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
+app.include_router(sellers.router, prefix="/api/v1/sellers", tags=["sellers"])
+app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
 
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Library Management System API"}
+    return {"message": "Welcome to the Laptop Seller Portal & Catalog Management API"}
