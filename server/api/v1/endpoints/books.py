@@ -3,13 +3,16 @@ from sqlalchemy.orm import Session
 from server import schemas, crud, models
 from server.database import get_db
 from server.api.v1.endpoints.auth import get_current_user, get_current_librarian
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID
 
 router = APIRouter()
 
 
-@router.get("/books", response_model=List[schemas.BookResponse])
+@router.get(
+    "/books",
+    response_model=Union[schemas.BookSearchResponse, List[schemas.BookResponse]],
+)
 def read_books(
     search: Optional[str] = Query(None, description="Search by title, author, or ISBN"),
     genre: Optional[str] = Query(None, description="Filter by genre"),
@@ -17,8 +20,29 @@ def read_books(
     limit: int = 100,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
+    paginated: Optional[bool] = Query(
+        None, description="Whether to return paginated response"
+    ),
 ):
     books = crud.get_books(db, search=search, genre=genre, skip=skip, limit=limit)
+    if paginated:
+        # Calculate total
+        query = db.query(models.Book)
+        if search:
+            from sqlalchemy import or_
+
+            query = query.filter(
+                or_(
+                    models.Book.title.ilike(f"%{search}%"),
+                    models.Book.author.ilike(f"%{search}%"),
+                    models.Book.isbn.ilike(f"%{search}%"),
+                )
+            )
+        if genre:
+            query = query.filter(models.Book.genre.ilike(f"%{genre}%"))
+        total = query.count()
+
+        return {"items": books, "limit": limit, "skip": skip, "total": total}
     return books
 
 

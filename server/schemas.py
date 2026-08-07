@@ -1,6 +1,6 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
+from datetime import datetime, date
 from uuid import UUID
 import re
 
@@ -117,6 +117,7 @@ class BookBase(BaseModel):
     isbn: str
     genre: Optional[str] = None
     publication_year: Optional[int] = None
+    publication_date: Optional[date] = None
     total_copies: int = 1
 
 
@@ -130,6 +131,7 @@ class BookUpdate(BaseModel):
     isbn: Optional[str] = None
     genre: Optional[str] = None
     publication_year: Optional[int] = None
+    publication_date: Optional[date] = None
     total_copies: Optional[int] = None
     available_copies: Optional[int] = None
 
@@ -142,6 +144,13 @@ class BookResponse(BookBase):
 
     class Config:
         from_attributes = True
+
+
+class BookSearchResponse(BaseModel):
+    items: List[BookResponse]
+    limit: int
+    skip: int
+    total: int
 
 
 # Loan schemas

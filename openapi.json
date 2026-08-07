@@ -345,6 +345,24 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "paginated",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whether to return paginated response",
+              "title": "Paginated"
+            },
+            "description": "Whether to return paginated response"
           }
         ],
         "responses": {
@@ -353,10 +371,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BookResponse"
-                  },
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BookSearchResponse"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BookResponse"
+                      }
+                    }
+                  ],
                   "title": "Response Read Books Api V1 Books Get"
                 }
               }
@@ -1476,6 +1501,18 @@
             ],
             "title": "Publication Year"
           },
+          "publication_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Date"
+          },
           "total_copies": {
             "type": "integer",
             "title": "Total Copies",
@@ -1526,6 +1563,18 @@
             ],
             "title": "Publication Year"
           },
+          "publication_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Date"
+          },
           "total_copies": {
             "type": "integer",
             "title": "Total Copies",
@@ -1562,6 +1611,37 @@
           "updated_at"
         ],
         "title": "BookResponse"
+      },
+      "BookSearchResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BookResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "limit",
+          "skip",
+          "total"
+        ],
+        "title": "BookSearchResponse"
       },
       "BookUpdate": {
         "properties": {
@@ -1619,6 +1699,18 @@
               }
             ],
             "title": "Publication Year"
+          },
+          "publication_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Date"
           },
           "total_copies": {
             "anyOf": [

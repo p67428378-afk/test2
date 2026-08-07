@@ -1,5 +1,14 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer, Numeric
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Integer,
+    Numeric,
+    Date,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -62,6 +71,7 @@ class Book(Base):
     isbn = Column(String(255), unique=True, nullable=False)
     genre = Column(String(255), nullable=True)
     publication_year = Column(Integer, nullable=True)
+    publication_date = Column(Date, nullable=True)
     total_copies = Column(Integer, nullable=False, default=1)
     available_copies = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, default=func.now(), nullable=False)

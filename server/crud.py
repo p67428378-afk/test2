@@ -130,12 +130,23 @@ def get_books(
 
 
 def create_book(db: Session, book: schemas.BookCreate):
+    pub_date = None
+    if book.publication_date:
+        try:
+            if isinstance(book.publication_date, str):
+                pub_date = datetime.strptime(book.publication_date, "%Y-%m-%d").date()
+            else:
+                pub_date = book.publication_date
+        except ValueError:
+            pass
+
     db_book = models.Book(
         title=book.title,
         author=book.author,
         isbn=book.isbn,
         genre=book.genre,
         publication_year=book.publication_year,
+        publication_date=pub_date,
         total_copies=book.total_copies,
         available_copies=book.total_copies,
     )
@@ -152,6 +163,15 @@ def update_book(db: Session, db_book: models.Book, book_update: schemas.BookUpda
     if "total_copies" in update_data:
         diff = update_data["total_copies"] - db_book.total_copies
         db_book.available_copies = max(0, db_book.available_copies + diff)
+
+    if "publication_date" in update_data and update_data["publication_date"]:
+        try:
+            if isinstance(update_data["publication_date"], str):
+                update_data["publication_date"] = datetime.strptime(
+                    update_data["publication_date"], "%Y-%m-%d"
+                ).date()
+        except ValueError:
+            update_data["publication_date"] = None
 
     for key, value in update_data.items():
         setattr(db_book, key, value)
