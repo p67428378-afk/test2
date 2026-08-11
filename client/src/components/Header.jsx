@@ -1,5 +1,4 @@
 import React from "react";
-import { Bell, Search, User } from "lucide-react";
 
 export default function Header({ title, user }) {
   return (

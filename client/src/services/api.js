@@ -66,6 +66,22 @@ export const authService = {
   },
 };
 
+export const productService = {
+  searchProducts: async ({
+    q = "",
+    limit = 10,
+    page = 1,
+    category_id = "",
+  } = {}) => {
+    const params = { q, limit, page };
+    if (category_id) {
+      params.category_id = category_id;
+    }
+    const response = await api.get("/api/v1/products/search", { params });
+    return response.data;
+  },
+};
+
 export const bookService = {
   getBooks: async (search = "", genre = "") => {
     const params = {};
