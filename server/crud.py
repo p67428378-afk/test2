@@ -303,3 +303,69 @@ def update_inventory_item(
 def delete_inventory_item(db: Session, db_item: models.InventoryItem):
     db.delete(db_item)
     db.commit()
+
+
+# Vintage Clock CRUD (SCRUM-49)
+def get_alarm_by_id(db: Session, alarm_id):
+    return db.query(models.Alarm).filter(models.Alarm.id == _to_uuid(alarm_id)).first()
+
+
+def get_alarms(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Alarm).offset(skip).limit(limit).all()
+
+
+def create_alarm(db: Session, alarm: schemas.AlarmCreate):
+    db_alarm = models.Alarm(
+        time=alarm.time,
+        label=alarm.label,
+        enabled=alarm.enabled,
+        repeat_days=alarm.repeat_days,
+        sound_type=alarm.sound_type,
+        snooze_duration_minutes=alarm.snooze_duration_minutes,
+    )
+    db.add(db_alarm)
+    db.commit()
+    db.refresh(db_alarm)
+    return db_alarm
+
+
+def update_alarm(
+    db: Session, db_alarm: models.Alarm, alarm_update: schemas.AlarmUpdate
+):
+    update_data = alarm_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_alarm, key, value)
+    db.commit()
+    db.refresh(db_alarm)
+    return db_alarm
+
+
+def delete_alarm(db: Session, db_alarm: models.Alarm):
+    db.delete(db_alarm)
+    db.commit()
+
+
+def get_user_settings(db: Session):
+    settings = db.query(models.UserSettings).first()
+    if not settings:
+        settings = models.UserSettings(
+            clock_mode="flip",
+            theme_id="antique_brass",
+            time_format="12h",
+            show_second_hand=True,
+            time_zone="UTC",
+        )
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+
+def update_user_settings(db: Session, settings_update: schemas.UserSettingsUpdate):
+    settings = get_user_settings(db)
+    update_data = settings_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(settings, key, value)
+    db.commit()
+    db.refresh(settings)
+    return settings

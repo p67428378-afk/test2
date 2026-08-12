@@ -9,6 +9,9 @@ from server.api.v1.endpoints import (
     loans,
     fines,
     inventory,
+    clock,
+    alarms,
+    settings,
 )
 from server.database import init_db, seed_data, SessionLocal
 
@@ -22,7 +25,7 @@ try:
 finally:
     db.close()
 
-app = FastAPI(title="Library Management System API", version="1.0.0")
+app = FastAPI(title="Vintage Clock Web Application API", version="1.0.0")
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
@@ -37,6 +40,9 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(clock.router, prefix="/api/v1", tags=["clock"])
+app.include_router(alarms.router, prefix="/api/v1", tags=["alarms"])
+app.include_router(settings.router, prefix="/api/v1", tags=["settings"])
 app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 app.include_router(books.router, prefix="/api/v1", tags=["books"])
@@ -48,4 +54,4 @@ app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Library Management System API"}
+    return {"message": "Welcome to the Vintage Clock Web Application API"}

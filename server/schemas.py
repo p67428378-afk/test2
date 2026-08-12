@@ -1,8 +1,14 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 import re
+
+VALID_CLOCK_MODES = {"analog", "flip", "hybrid"}
+VALID_THEMES = {"antique_brass", "wooden_mantle", "retro_neon"}
+VALID_TIME_FORMATS = {"12h", "24h"}
+VALID_SOUND_TYPES = {"mechanical_bell", "vintage_radio_chime"}
+VALID_DAYS = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}
 
 
 # Existing Password Reset schemas
@@ -238,6 +244,177 @@ class InventoryItemResponse(InventoryItemBase):
     created_at: datetime
     updated_at: datetime
     is_low_stock: bool = False
+
+    class Config:
+        from_attributes = True
+
+
+# Vintage Clock Schemas (SCRUM-49)
+class ServerTime(BaseModel):
+    utc_datetime: str
+    timezone: str = "UTC"
+    timestamp_ms: int
+    local_datetime: Optional[str] = None
+
+
+class AlarmBase(BaseModel):
+    time: str
+    label: str = "Alarm"
+    enabled: bool = True
+    repeat_days: List[str] = []
+    sound_type: str = "mechanical_bell"
+    snooze_duration_minutes: int = 5
+
+    @field_validator("time")
+    @classmethod
+    def validate_time_format(cls, v: str) -> str:
+        if not re.match(r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$", v):
+            raise ValueError("Time must be in HH:MM format (24-hour)")
+        return v
+
+    @field_validator("sound_type")
+    @classmethod
+    def validate_sound_type(cls, v: str) -> str:
+        if v not in VALID_SOUND_TYPES:
+            raise ValueError(
+                f"Invalid sound_type. Must be one of: {', '.join(VALID_SOUND_TYPES)}"
+            )
+        return v
+
+    @field_validator("repeat_days")
+    @classmethod
+    def validate_repeat_days(cls, v: List[str]) -> List[str]:
+        for day in v:
+            if day not in VALID_DAYS:
+                raise ValueError(
+                    f"Invalid day '{day}' in repeat_days. Must be one of: {', '.join(VALID_DAYS)}"
+                )
+        return v
+
+
+class AlarmCreate(AlarmBase):
+    pass
+
+
+class AlarmUpdate(BaseModel):
+    time: Optional[str] = None
+    label: Optional[str] = None
+    enabled: Optional[bool] = None
+    repeat_days: Optional[List[str]] = None
+    sound_type: Optional[str] = None
+    snooze_duration_minutes: Optional[int] = None
+
+    @field_validator("time")
+    @classmethod
+    def validate_time_format(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not re.match(r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$", v):
+            raise ValueError("Time must be in HH:MM format (24-hour)")
+        return v
+
+    @field_validator("sound_type")
+    @classmethod
+    def validate_sound_type(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_SOUND_TYPES:
+            raise ValueError(
+                f"Invalid sound_type. Must be one of: {', '.join(VALID_SOUND_TYPES)}"
+            )
+        return v
+
+    @field_validator("repeat_days")
+    @classmethod
+    def validate_repeat_days(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is not None:
+            for day in v:
+                if day not in VALID_DAYS:
+                    raise ValueError(
+                        f"Invalid day '{day}' in repeat_days. Must be one of: {', '.join(VALID_DAYS)}"
+                    )
+        return v
+
+
+class AlarmResponse(AlarmBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserSettingsBase(BaseModel):
+    clock_mode: str = "flip"
+    theme_id: str = "antique_brass"
+    time_format: str = "12h"
+    show_second_hand: bool = True
+    time_zone: str = "UTC"
+
+    @field_validator("clock_mode")
+    @classmethod
+    def validate_clock_mode(cls, v: str) -> str:
+        if v not in VALID_CLOCK_MODES:
+            raise ValueError(
+                f"Invalid clock_mode. Must be one of: {', '.join(VALID_CLOCK_MODES)}"
+            )
+        return v
+
+    @field_validator("theme_id")
+    @classmethod
+    def validate_theme_id(cls, v: str) -> str:
+        if v not in VALID_THEMES:
+            raise ValueError(
+                f"Invalid theme_id. Must be one of: {', '.join(VALID_THEMES)}"
+            )
+        return v
+
+    @field_validator("time_format")
+    @classmethod
+    def validate_time_format(cls, v: str) -> str:
+        if v not in VALID_TIME_FORMATS:
+            raise ValueError(
+                f"Invalid time_format. Must be one of: {', '.join(VALID_TIME_FORMATS)}"
+            )
+        return v
+
+
+class UserSettingsUpdate(BaseModel):
+    clock_mode: Optional[str] = None
+    theme_id: Optional[str] = None
+    time_format: Optional[str] = None
+    show_second_hand: Optional[bool] = None
+    time_zone: Optional[str] = None
+
+    @field_validator("clock_mode")
+    @classmethod
+    def validate_clock_mode(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_CLOCK_MODES:
+            raise ValueError(
+                f"Invalid clock_mode. Must be one of: {', '.join(VALID_CLOCK_MODES)}"
+            )
+        return v
+
+    @field_validator("theme_id")
+    @classmethod
+    def validate_theme_id(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_THEMES:
+            raise ValueError(
+                f"Invalid theme_id. Must be one of: {', '.join(VALID_THEMES)}"
+            )
+        return v
+
+    @field_validator("time_format")
+    @classmethod
+    def validate_time_format(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_TIME_FORMATS:
+            raise ValueError(
+                f"Invalid time_format. Must be one of: {', '.join(VALID_TIME_FORMATS)}"
+            )
+        return v
+
+
+class UserSettingsResponse(UserSettingsBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True

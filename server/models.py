@@ -1,5 +1,14 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer, Numeric
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Integer,
+    Numeric,
+    JSON,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -116,6 +125,35 @@ class InventoryItem(Base):
     supplier = Column(String(255), nullable=True)
     category = Column(String(100), nullable=True)
     low_stock_threshold = Column(Integer, nullable=False, default=10)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class Alarm(Base):
+    __tablename__ = "alarms"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    time = Column(String(5), nullable=False)
+    label = Column(String(100), nullable=False, default="Alarm")
+    enabled = Column(Boolean, nullable=False, default=True)
+    repeat_days = Column(JSON, nullable=False, default=list)
+    sound_type = Column(String(50), nullable=False, default="mechanical_bell")
+    snooze_duration_minutes = Column(Integer, nullable=False, default=5)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    clock_mode = Column(String(20), nullable=False, default="flip")
+    theme_id = Column(String(50), nullable=False, default="antique_brass")
+    time_format = Column(String(5), nullable=False, default="12h")
+    show_second_hand = Column(Boolean, nullable=False, default=True)
+    time_zone = Column(String(50), nullable=False, default="UTC")
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
