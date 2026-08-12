@@ -1,5 +1,5 @@
 from typing import Optional, List, Any, Dict
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
@@ -138,19 +138,24 @@ class CartResponse(BaseModel):
 
 # --- Checkout & Order Schemas ---
 class ShippingAddress(BaseModel):
-    full_name: str
-    address_line1: str
+    full_name: Optional[str] = "Valued Customer"
+    address_line1: Optional[str] = None
+    street: Optional[str] = None
     address_line2: Optional[str] = None
-    city: str
-    state: str
-    postal_code: str
-    country: str = "US"
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    zip: Optional[str] = None
+    country: Optional[str] = "US"
+
+    class Config:
+        extra = "allow"
 
 
 class CheckoutIntentRequest(BaseModel):
     cart_id: str
-    customer_email: EmailStr
-    shipping_address: ShippingAddress
+    customer_email: str
+    shipping_address: Dict[str, Any]
     promo_code: Optional[str] = None
 
 

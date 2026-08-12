@@ -157,10 +157,15 @@ def create_checkout_intent(
 
     # 4. Generate Order
     order_number = f"ORD-{uuid.uuid4().hex[:8].upper()}"
+    shipping_addr = (
+        payload.shipping_address.model_dump()
+        if hasattr(payload.shipping_address, "model_dump")
+        else payload.shipping_address
+    )
     new_order = models.Order(
         order_number=order_number,
         customer_email=payload.customer_email,
-        shipping_address=payload.shipping_address.model_dump(),
+        shipping_address=shipping_addr,
         subtotal=discounted_subtotal,
         shipping_fee=shipping_fee,
         tax_amount=tax_amount,

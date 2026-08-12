@@ -20,6 +20,9 @@ def get_db():
 
 def init_db():
     # Import models here to register them on Base.metadata
+    from server import models  # noqa: F401
+    from server import models_painting  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 

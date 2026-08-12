@@ -19,6 +19,9 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
+    from server import models  # noqa: F401
+    from server import models_painting  # noqa: F401
+
     # Create all tables
     Base.metadata.create_all(bind=engine)
     yield
