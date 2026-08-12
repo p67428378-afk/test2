@@ -7,6 +7,34 @@ from server.schemas import ServerTime
 router = APIRouter()
 
 
+def _get_tzinfo(tz_str: str):
+    # 1. Try standard library ZoneInfo
+    try:
+        return ZoneInfo(tz_str)
+    except Exception:
+        pass
+
+    # 2. Try dateutil.tz fallback
+    try:
+        from dateutil import tz as dateutil_tz
+
+        tz_obj = dateutil_tz.gettz(tz_str)
+        if tz_obj is not None:
+            return tz_obj
+    except Exception:
+        pass
+
+    # 3. Try pytz fallback
+    try:
+        import pytz
+
+        return pytz.timezone(tz_str)
+    except Exception:
+        pass
+
+    return None
+
+
 @router.get("/time", response_model=ServerTime)
 def get_server_time(
     tz: Optional[str] = Query(
@@ -21,13 +49,18 @@ def get_server_time(
     target_tz_str = "UTC"
 
     if tz:
-        try:
-            target_zone = ZoneInfo(tz)
-            now_local = now_utc.astimezone(target_zone)
-            local_datetime_str = now_local.isoformat()
-            target_tz_str = tz
-        except Exception:
+        target_zone = _get_tzinfo(tz)
+        if target_zone is not None:
+            try:
+                now_local = now_utc.astimezone(target_zone)
+                local_datetime_str = now_local.isoformat()
+                target_tz_str = tz
+            except Exception:
+                local_datetime_str = utc_datetime_str
+                target_tz_str = "UTC"
+        else:
             local_datetime_str = utc_datetime_str
+            target_tz_str = "UTC"
 
     return ServerTime(
         utc_datetime=utc_datetime_str,
