@@ -113,6 +113,7 @@ Not yet authored.
 User Story: Inventory Management Module
 
 ### User Stories
+
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -160,6 +161,94 @@ Not yet authored.
 
 ### API Endpoints
 Not yet authored.
+
+### UI Components
+Not yet authored.
+
+### Test Coverage
+Not yet authored.
+
+### Deployment Notes
+Not yet authored.
+
+## SCRUM-43 — Laundry Management Platform End-to-End Service Core
+
+### Feature Summary
+Laundry Management Platform End-to-End Service Core
+
+### User Stories
+# Laundry Management Platform End-to-End Service Core
+
+**Objective:**
+Provide an end-to-end Laundry Management Platform that enables customers to schedule pickups, track garment progress through washing stages, optimize driver delivery routes, and process secure payments.
+Streamline operations for customers, laundry operators, and delivery drivers while maintaining real-time status visibility across the entire service lifecycle.
+
+**Key Features:**
+- Customer Pickup & Delivery Scheduling: Interactive selection of pickup/delivery time slots and service types.
+- Garment & Washing Stage Tracking: Real-time multi-stage status updates (Received, Sorting, Washing, Drying, Ironing, Ready, Out for Delivery).
+- Delivery Route Optimization: Automated driver stop sequencing based on location proximity and scheduled time windows.
+- Integrated Stripe Payment Processing: Automated invoice calculation, secure Stripe Checkout, and webhook settlement sync.
+- Administrative & Operator Portal: Centralized dashboard for managing orders, garment processing workflows, and driver assignments.
+
+**Description:**
+As a customer and laundry platform administrator,  
+I want an integrated platform to schedule garment pickups, monitor laundry processing stages, manage optimized driver delivery routes, and execute secure online payments,  
+So that laundry operations run efficiently with full transparency, minimal operational friction, and reliable automated payment fulfillment.
+
+**Acceptance Criteria:**
+
+- **Customer Pickup & Delivery Scheduling:**
+  - **Explanation:** Customers can create an account, select laundry service types (Wash & Fold, Dry Cleaning, Ironing Only), specify garment counts or estimated weights, and schedule preferred pickup and delivery time windows.
+  - **Example:** A customer selects "Wash & Fold", chooses a pickup window of 09:00 - 11:00 AM tomorrow, and confirms the request, generating an order with status `SCHEDULED_FOR_PICKUP`.
+  - **Edge Cases:** If a requested pickup window is fully booked or outside operating hours, the system prevents selection and displays available alternative time slots.
+
+- **Garment Processing & Washing Stage Tracking:**
+  - **Explanation:** Laundry staff can update order status and advance garments through lifecycle stages (`Received`, `Sorting`, `Washing`, `Drying`, `Ironing`, `Ready_for_Delivery`), updating the customer's order tracking timeline in real time.
+  - **Example:** Staff updates order #1002 from `Washing` to `Drying` in the operator portal; the customer's tracking dashboard immediately reflects the updated stage with a UTC timestamp.
+  - **Edge Cases:** If a garment is flagged as requiring special care during sorting, the order status transitions to `SPECIAL_PROCESSING` and notifies the customer.
+
+- **Driver Delivery Route Optimization:**
+  - **Explanation:** The system aggregates scheduled pickups and drop-offs for a target zone and time window, generating an optimal sequenced route for drivers to minimize travel time and distance.
+  - **Example:** A driver assigned to Zone 1 receives a sequenced itinerary of 5 stops ordered by optimal geographical route, updating stop statuses (`En Route`, `Picked Up`, `Delivered`).
+  - **Edge Cases:** If a driver marks a pickup attempt as "Customer Unavailable", the system reschedules the window and dynamically adjusts the remaining driver route.
+
+- **Payment Processing & Invoice Settlement:**
+  - **Explanation:** Customers view itemized billing based on service selection and actual garment weight/count, then settle charges securely via Stripe Checkout. Payment webhooks automatically sync transaction status.
+  - **Example:** Upon garment weighing, an invoice for $35.00 is generated. The customer completes Stripe Checkout, triggering a `checkout.session.completed` webhook that updates payment status to `PAID`.
+  - **Edge Cases:** If payment fails or is declined, the order transitions to `PAYMENT_PENDING`, preventing final delivery dispatch until payment is completed.
+
+**Technical Requirements:**
+- **Backend Architecture:** FastAPI RESTful API (`/api/v1/orders`, `/api/v1/pickups`, `/api/v1/routes`, `/api/v1/payments`) built with Python 3.11, SQLAlchemy 2.x, and PostgreSQL database.
+- **Frontend Architecture:** React 18 single-page application built with Vite and Tailwind CSS, providing responsive customer tracking and administrative management portals.
+- **Payment Gateway:** Stripe Checkout API integration with signature-verified webhooks (`/api/v1/payments/stripe/webhook`).
+- **Data Model & Standards:** Models for `users`, `orders`, `garment_stages`, `driver_routes`, and `payments` utilizing UUID v4 primary keys and ISO 8601 UTC timestamps (`created_at`, `updated_at`).
+- **Security & Standards:** JWT Bearer authentication, CORS middleware configured for `http://localhost:5173`, and standardized error response formats (`{"detail": "..."}`).
+
+### Acceptance Criteria
+- Customer Pickup & Delivery Scheduling: Account creation, service selection (Wash & Fold, Dry Cleaning, Ironing Only), pickup/delivery scheduling, handle full/unavailable time slots.
+- Garment Processing & Washing Stage Tracking: Order lifecycle transitions (Received, Sorting, Washing, Drying, Ironing, Ready_for_Delivery), real-time timeline updates with UTC timestamps, special care handling.
+- Driver Delivery Route Optimization: Sequenced itineraries for drivers based on proximity and time windows, stop status updates (En Route, Picked Up, Delivered), customer unavailable retry routing.
+- Payment Processing & Invoice Settlement: Itemized invoicing based on weight/count, Stripe Checkout integration, webhook settlement sync, payment failure pending state.
+
+### Backend Tasks
+- None specified
+
+### Frontend Tasks
+- None specified
+
+### Database Changes
+Not yet authored.
+
+### API Endpoints
+- `POST /api/v1/auth/register` — Register a new user account.
+- `POST /api/v1/auth/login` — Authenticate credentials and issue JWT access token.
+- `POST /api/v1/orders` — Create a new laundry order.
+- `GET /api/v1/orders/{order_id}` — Retrieve detailed order status, invoice, and timeline.
+- `PATCH /api/v1/orders/{order_id}/stage` — Update garment processing stage.
+- `GET /api/v1/routes/driver/{driver_id}` — Retrieve optimized route itinerary.
+- `PATCH /api/v1/routes/stops/{stop_id}` — Update driver stop status.
+- `POST /api/v1/payments/checkout-session` — Generate Stripe Checkout session URL.
+- `POST /api/v1/payments/stripe/webhook` — Handle signature-verified Stripe webhooks.
 
 ### UI Components
 Not yet authored.

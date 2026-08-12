@@ -1,33 +1,37 @@
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
-from server.api.v1.endpoints import (
-    password_reset,
-    auth,
-    books,
-    members,
-    loans,
-    fines,
-    inventory,
+
+from server.api.v1.endpoints import auth, orders, payments, pickups, routes
+from server.database import SessionLocal, init_db, seed_data
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema
+    init_db()
+    # Seed initial test data
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
+
+app = FastAPI(
+    title="Laundry Management Platform API",
+    version="1.0.0",
+    lifespan=lifespan,
 )
-from server.database import init_db, seed_data, SessionLocal
-
-# Initialize database tables
-init_db()
-
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
-
-app = FastAPI(title="Library Management System API", version="1.0.0")
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 ).split(",")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -36,16 +40,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(books.router, prefix="/api/v1", tags=["books"])
-app.include_router(members.router, prefix="/api/v1", tags=["members"])
-app.include_router(loans.router, prefix="/api/v1", tags=["loans"])
-app.include_router(fines.router, prefix="/api/v1", tags=["fines"])
-app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
+# Include API Routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
+app.include_router(pickups.router, prefix="/api/v1/pickups", tags=["pickups"])
+app.include_router(routes.router, prefix="/api/v1/routes", tags=["routes"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Library Management System API"}
+    return {"message": "Welcome to the Laundry Management Platform API"}

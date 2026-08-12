@@ -1,122 +1,112 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+
 from server.database import Base
 
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=True)
-    mobile_number = Column(String(20), unique=True, nullable=True)
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=True)
-    security_answer_hash = Column(String(255), nullable=True)
-
-    # Library Management System fields
-    email = Column(String(255), unique=True, nullable=True)
-    full_name = Column(String(255), nullable=True)
-    role = Column(
-        String(50), default="member", nullable=False
-    )  # 'librarian' or 'member'
-
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    role = Column(String(50), nullable=False, default="CUSTOMER")
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
-    loans = relationship("Loan", back_populates="member")
 
+class Order(Base):
+    __tablename__ = "orders"
 
-class OTP(Base):
-    __tablename__ = "otps"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="otps")
-
-
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
-
-    user = relationship("User", back_populates="password_history")
-
-
-class Book(Base):
-    __tablename__ = "books"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String(255), nullable=False)
-    author = Column(String(255), nullable=False)
-    isbn = Column(String(255), unique=True, nullable=False)
-    genre = Column(String(255), nullable=True)
-    publication_year = Column(Integer, nullable=True)
-    total_copies = Column(Integer, nullable=False, default=1)
-    available_copies = Column(Integer, nullable=False, default=1)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    customer_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    service_type = Column(
+        String(50), nullable=False
+    )  # WASH_AND_FOLD, DRY_CLEANING, IRONING_ONLY
+    status = Column(String(50), nullable=False, default="SCHEDULED_FOR_PICKUP")
+    pickup_window_start = Column(DateTime, nullable=False)
+    pickup_window_end = Column(DateTime, nullable=False)
+    delivery_window_start = Column(DateTime, nullable=False)
+    delivery_window_end = Column(DateTime, nullable=False)
+    weight_kg = Column(Float, nullable=True)
+    item_count = Column(Integer, nullable=True)
+    total_amount = Column(Float, nullable=True, default=0.0)
+    payment_status = Column(String(50), nullable=False, default="PENDING")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    loans = relationship("Loan", back_populates="book")
-
-
-class Loan(Base):
-    __tablename__ = "loans"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), nullable=False)
-    member_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    checkout_date = Column(DateTime, default=func.now(), nullable=False)
-    due_date = Column(DateTime, nullable=False)
-    return_date = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    customer = relationship("User", foreign_keys=[customer_id])
+    stages = relationship(
+        "GarmentStage", back_populates="order", cascade="all, delete-orphan"
+    )
+    routes = relationship(
+        "DriverRoute", back_populates="order", cascade="all, delete-orphan"
+    )
+    payments = relationship(
+        "Payment", back_populates="order", cascade="all, delete-orphan"
     )
 
-    book = relationship("Book", back_populates="loans")
-    member = relationship("User", back_populates="loans")
-    fine = relationship("Fine", back_populates="loan", uselist=False)
+
+class GarmentStage(Base):
+    __tablename__ = "garment_stages"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    order_id = Column(String(36), ForeignKey("orders.id"), nullable=False)
+    stage = Column(
+        String(50), nullable=False
+    )  # RECEIVED, SORTING, WASHING, DRYING, IRONING, READY_FOR_DELIVERY, SPECIAL_PROCESSING
+    notes = Column(String(500), nullable=True)
+    updated_by = Column(String(36), ForeignKey("users.id"), nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    order = relationship("Order", back_populates="stages")
+    updater = relationship("User", foreign_keys=[updated_by])
 
 
-class Fine(Base):
-    __tablename__ = "fines"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    loan_id = Column(UUID(as_uuid=True), ForeignKey("loans.id"), nullable=False)
-    amount = Column(Numeric(10, 2), nullable=False)
+class DriverRoute(Base):
+    __tablename__ = "driver_routes"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    driver_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    zone = Column(String(100), nullable=False)
+    sequence_order = Column(Integer, nullable=False)
+    order_id = Column(String(36), ForeignKey("orders.id"), nullable=False)
+    stop_type = Column(String(50), nullable=False)  # PICKUP, DELIVERY
+    stop_status = Column(
+        String(50), nullable=False, default="EN_ROUTE"
+    )  # EN_ROUTE, PICKED_UP, DELIVERED, CUSTOMER_UNAVAILABLE
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    driver = relationship("User", foreign_keys=[driver_id])
+    order = relationship("Order", back_populates="routes")
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    order_id = Column(String(36), ForeignKey("orders.id"), nullable=False)
+    stripe_session_id = Column(String(255), nullable=True)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(10), default="USD", nullable=False)
     status = Column(
-        String(50), default="outstanding", nullable=False
-    )  # 'outstanding' or 'paid'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+        String(50), nullable=False, default="PENDING"
+    )  # PENDING, SUCCEEDED, FAILED, PAID
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    loan = relationship("Loan", back_populates="fine")
-
-
-class InventoryItem(Base):
-    __tablename__ = "inventory_items"
-    item_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    description = Column(String, nullable=True)
-    quantity = Column(Integer, nullable=False, default=0)
-    unit = Column(String(50), nullable=False)
-    supplier = Column(String(255), nullable=True)
-    category = Column(String(100), nullable=True)
-    low_stock_threshold = Column(Integer, nullable=False, default=10)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
+    order = relationship("Order", back_populates="payments")

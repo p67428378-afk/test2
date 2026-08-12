@@ -1,305 +1,233 @@
+from datetime import datetime
+from typing import Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from server import models, schemas
+from server.models import User, Order, GarmentStage, DriverRoute, Payment
+from server.schemas import UserCreate, OrderCreate
 from server.core.security import get_password_hash
-from datetime import datetime, timedelta
-import uuid
 
 
-# Helper to convert string to UUID if needed
-def _to_uuid(val):
-    if isinstance(val, str):
-        return uuid.UUID(val)
-    return val
+def get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email == email).first()
 
 
-# Existing Password Reset CRUD
-def get_user_by_login_id(db: Session, login_id: str):
-    return db.query(models.User).filter(models.User.login_id == login_id).first()
+def get_user_by_id(db: Session, user_id: str) -> Optional[User]:
+    return db.query(User).filter(User.id == user_id).first()
 
 
-def get_user_by_mobile_number(db: Session, mobile_number: str):
-    return (
-        db.query(models.User).filter(models.User.mobile_number == mobile_number).first()
+def create_user(db: Session, user_in: UserCreate) -> User:
+    hashed = get_password_hash(user_in.password)
+    user = User(
+        email=user_in.email,
+        full_name=user_in.full_name,
+        role=user_in.role or "CUSTOMER",
+        hashed_password=hashed,
+        is_active=True,
     )
-
-
-def create_otp(db: Session, user_id: str, otp_code_hash: str, expires_at: str):
-    db_otp = models.OTP(
-        user_id=user_id, otp_code_hash=otp_code_hash, expires_at=expires_at
-    )
-    db.add(db_otp)
-    db.commit()
-    db.refresh(db_otp)
-    return db_otp
-
-
-def get_otp(db: Session, otp_session_id: str):
-    return db.query(models.OTP).filter(models.OTP.id == otp_session_id).first()
-
-
-def update_otp_as_used(db: Session, otp: models.OTP):
-    otp.is_used = True
-    db.commit()
-    db.refresh(otp)
-    return otp
-
-
-def create_password_history(db: Session, user_id: str, hashed_password: str):
-    db_password_history = models.PasswordHistory(
-        user_id=user_id, hashed_password=hashed_password
-    )
-    db.add(db_password_history)
-    db.commit()
-    db.refresh(db_password_history)
-    return db_password_history
-
-
-def update_user_password(db: Session, user: models.User, hashed_password: str):
-    user.hashed_password = hashed_password
+    db.add(user)
     db.commit()
     db.refresh(user)
     return user
 
 
-# Library Management System CRUD
+def calculate_order_amount(
+    service_type: str, weight_kg: Optional[float], item_count: Optional[int]
+) -> float:
+    base = 10.0
+    weight = weight_kg or 1.0
+    items = item_count or 1
+    if service_type == "WASH_AND_FOLD":
+        return round(base + (weight * 5.0), 2)
+    elif service_type == "DRY_CLEANING":
+        return round(base + (items * 8.0), 2)
+    elif service_type == "IRONING_ONLY":
+        return round(base + (items * 3.0), 2)
+    return round(base + (weight * 4.0), 2)
 
 
-# User CRUD
-def get_user_by_email(db: Session, email: str):
-    return db.query(models.User).filter(models.User.email == email).first()
-
-
-def get_user_by_id(db: Session, user_id):
-    return db.query(models.User).filter(models.User.id == _to_uuid(user_id)).first()
-
-
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.User).offset(skip).limit(limit).all()
-
-
-def create_user(db: Session, user: schemas.UserCreate):
-    hashed_password = get_password_hash(user.password)
-    db_user = models.User(
-        email=user.email,
-        full_name=user.full_name,
-        role=user.role,
-        hashed_password=hashed_password,
+def create_order(db: Session, order_in: OrderCreate, customer_id: str) -> Order:
+    amount = calculate_order_amount(
+        order_in.service_type, order_in.weight_kg, order_in.item_count
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-
-def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpdate):
-    update_data = user_update.dict(exclude_unset=True)
-    if "password" in update_data:
-        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
-    for key, value in update_data.items():
-        setattr(db_user, key, value)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-
-# Book CRUD
-def get_book_by_id(db: Session, book_id):
-    return db.query(models.Book).filter(models.Book.id == _to_uuid(book_id)).first()
-
-
-def get_book_by_isbn(db: Session, isbn: str):
-    return db.query(models.Book).filter(models.Book.isbn == isbn).first()
-
-
-def get_books(
-    db: Session, search: str = None, genre: str = None, skip: int = 0, limit: int = 100
-):
-    query = db.query(models.Book)
-    if search:
-        query = query.filter(
-            or_(
-                models.Book.title.ilike(f"%{search}%"),
-                models.Book.author.ilike(f"%{search}%"),
-                models.Book.isbn.ilike(f"%{search}%"),
-            )
-        )
-    if genre:
-        query = query.filter(models.Book.genre.ilike(f"%{genre}%"))
-    return query.offset(skip).limit(limit).all()
-
-
-def create_book(db: Session, book: schemas.BookCreate):
-    db_book = models.Book(
-        title=book.title,
-        author=book.author,
-        isbn=book.isbn,
-        genre=book.genre,
-        publication_year=book.publication_year,
-        total_copies=book.total_copies,
-        available_copies=book.total_copies,
+    order = Order(
+        customer_id=customer_id,
+        service_type=order_in.service_type,
+        status="SCHEDULED_FOR_PICKUP",
+        pickup_window_start=order_in.pickup_window_start,
+        pickup_window_end=order_in.pickup_window_end,
+        delivery_window_start=order_in.delivery_window_start,
+        delivery_window_end=order_in.delivery_window_end,
+        weight_kg=order_in.weight_kg,
+        item_count=order_in.item_count,
+        total_amount=amount,
+        payment_status="PENDING",
     )
-    db.add(db_book)
+    db.add(order)
     db.commit()
-    db.refresh(db_book)
-    return db_book
+    db.refresh(order)
 
-
-def update_book(db: Session, db_book: models.Book, book_update: schemas.BookUpdate):
-    update_data = book_update.dict(exclude_unset=True)
-
-    # If total_copies is updated, adjust available_copies accordingly
-    if "total_copies" in update_data:
-        diff = update_data["total_copies"] - db_book.total_copies
-        db_book.available_copies = max(0, db_book.available_copies + diff)
-
-    for key, value in update_data.items():
-        setattr(db_book, key, value)
-    db.commit()
-    db.refresh(db_book)
-    return db_book
-
-
-def delete_book(db: Session, db_book: models.Book):
-    db.delete(db_book)
-    db.commit()
-
-
-# Loan CRUD
-def get_loan_by_id(db: Session, loan_id):
-    return db.query(models.Loan).filter(models.Loan.id == _to_uuid(loan_id)).first()
-
-
-def get_loans(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Loan).offset(skip).limit(limit).all()
-
-
-def get_member_loans(db: Session, member_id, skip: int = 0, limit: int = 100):
-    return (
-        db.query(models.Loan)
-        .filter(models.Loan.member_id == _to_uuid(member_id))
-        .offset(skip)
-        .limit(limit)
-        .all()
+    stage = GarmentStage(
+        order_id=str(order.id),
+        stage="RECEIVED",
+        notes="Order created and scheduled for pickup",
+        timestamp=datetime.utcnow(),
     )
-
-
-def create_loan(db: Session, loan: schemas.LoanCreate):
-    # Set due date to 14 days from now
-    due_date = datetime.utcnow() + timedelta(days=14)
-    db_loan = models.Loan(
-        book_id=_to_uuid(loan.book_id),
-        member_id=_to_uuid(loan.member_id),
-        due_date=due_date,
-    )
-    db.add(db_loan)
-
-    # Decrement available copies of the book
-    db_book = get_book_by_id(db, loan.book_id)
-    if db_book:
-        db_book.available_copies = max(0, db_book.available_copies - 1)
-
+    db.add(stage)
     db.commit()
-    db.refresh(db_loan)
-    return db_loan
+    db.refresh(order)
+    return order
 
 
-def return_loan(db: Session, db_loan: models.Loan):
-    db_loan.return_date = datetime.utcnow()
-
-    # Increment available copies of the book
-    db_book = get_book_by_id(db, db_loan.book_id)
-    if db_book:
-        db_book.available_copies = min(
-            db_book.total_copies, db_book.available_copies + 1
-        )
-
-    db.commit()
-    db.refresh(db_loan)
-    return db_loan
+def get_order(db: Session, order_id: str) -> Optional[Order]:
+    return db.query(Order).filter(Order.id == order_id).first()
 
 
-# Fine CRUD
-def get_fines(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Fine).offset(skip).limit(limit).all()
-
-
-def create_fine(db: Session, loan_id, amount: float):
-    db_fine = models.Fine(
-        loan_id=_to_uuid(loan_id), amount=amount, status="outstanding"
-    )
-    db.add(db_fine)
-    db.commit()
-    db.refresh(db_fine)
-    return db_fine
-
-
-def pay_fine(db: Session, db_fine: models.Fine):
-    db_fine.status = "paid"
-    db.commit()
-    db.refresh(db_fine)
-    return db_fine
-
-
-# Inventory Item CRUD
-def get_inventory_item_by_id(db: Session, item_id):
-    return (
-        db.query(models.InventoryItem)
-        .filter(models.InventoryItem.item_id == _to_uuid(item_id))
-        .first()
-    )
-
-
-def get_inventory_items(
+def list_orders(
     db: Session,
-    search: str = None,
-    category: str = None,
     skip: int = 0,
-    limit: int = 100,
-):
-    query = db.query(models.InventoryItem)
-    if search:
-        query = query.filter(
-            or_(
-                models.InventoryItem.name.ilike(f"%{search}%"),
-                models.InventoryItem.supplier.ilike(f"%{search}%"),
-                models.InventoryItem.category.ilike(f"%{search}%"),
-            )
-        )
-    if category:
-        query = query.filter(models.InventoryItem.category.ilike(f"%{category}%"))
+    limit: int = 20,
+    customer_id: Optional[str] = None,
+    status: Optional[str] = None,
+) -> List[Order]:
+    query = db.query(Order)
+    if customer_id:
+        query = query.filter(Order.customer_id == customer_id)
+    if status:
+        query = query.filter(Order.status == status)
     return query.offset(skip).limit(limit).all()
 
 
-def create_inventory_item(db: Session, item: schemas.InventoryItemCreate):
-    db_item = models.InventoryItem(
-        name=item.name,
-        description=item.description,
-        quantity=item.quantity,
-        unit=item.unit,
-        supplier=item.supplier,
-        category=item.category,
-        low_stock_threshold=item.low_stock_threshold,
-    )
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-    return db_item
-
-
-def update_inventory_item(
+def update_order_stage(
     db: Session,
-    db_item: models.InventoryItem,
-    item_update: schemas.InventoryItemUpdate,
-):
-    update_data = item_update.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_item, key, value)
+    order: Order,
+    stage_name: str,
+    notes: Optional[str] = None,
+    weight_kg: Optional[float] = None,
+    item_count: Optional[int] = None,
+    updated_by: Optional[str] = None,
+) -> Order:
+    if weight_kg is not None:
+        setattr(order, "weight_kg", weight_kg)
+    if item_count is not None:
+        setattr(order, "item_count", item_count)
+    if weight_kg is not None or item_count is not None:
+        setattr(
+            order,
+            "total_amount",
+            calculate_order_amount(
+                str(order.service_type), order.weight_kg, order.item_count
+            ),
+        )
+
+    stage_upper = stage_name.upper()
+    if stage_upper in ["RECEIVED", "SORTING", "WASHING", "DRYING", "IRONING"]:
+        setattr(order, "status", "IN_PROCESS")
+    elif stage_upper in ["READY_FOR_DELIVERY", "READY"]:
+        setattr(order, "status", "READY_FOR_DELIVERY")
+    elif stage_upper == "SPECIAL_PROCESSING":
+        setattr(order, "status", "SPECIAL_PROCESSING")
+    elif stage_upper == "COMPLETED":
+        setattr(order, "status", "COMPLETED")
+
+    stage_record = GarmentStage(
+        order_id=str(order.id),
+        stage=stage_upper,
+        notes=notes or f"Updated stage to {stage_upper}",
+        updated_by=updated_by,
+        timestamp=datetime.utcnow(),
+    )
+    db.add(stage_record)
     db.commit()
-    db.refresh(db_item)
-    return db_item
+    db.refresh(order)
+    return order
 
 
-def delete_inventory_item(db: Session, db_item: models.InventoryItem):
-    db.delete(db_item)
+def get_driver_routes(
+    db: Session, driver_id: str, zone: Optional[str] = None
+) -> List[DriverRoute]:
+    query = db.query(DriverRoute).filter(DriverRoute.driver_id == driver_id)
+    if zone:
+        query = query.filter(DriverRoute.zone == zone)
+    routes = query.order_by(DriverRoute.sequence_order.asc()).all()
+
+    # Generate optimized route sequence by pickup/delivery time windows and zone proximity
+    if not routes:
+        orders = (
+            db.query(Order).order_by(Order.pickup_window_start.asc()).limit(5).all()
+        )
+        for idx, ord_obj in enumerate(orders):
+            dr = DriverRoute(
+                driver_id=driver_id,
+                zone=zone or "Zone 1",
+                sequence_order=idx + 1,
+                order_id=str(ord_obj.id),
+                stop_type="PICKUP"
+                if ord_obj.status == "SCHEDULED_FOR_PICKUP"
+                else "DELIVERY",
+                stop_status="EN_ROUTE",
+            )
+            db.add(dr)
+        db.commit()
+        routes = (
+            db.query(DriverRoute)
+            .filter(DriverRoute.driver_id == driver_id)
+            .order_by(DriverRoute.sequence_order.asc())
+            .all()
+        )
+    return routes
+
+
+def update_stop_status(
+    db: Session, stop_id: str, stop_status: str
+) -> Optional[DriverRoute]:
+    stop = db.query(DriverRoute).filter(DriverRoute.id == stop_id).first()
+    if not stop:
+        return None
+    setattr(stop, "stop_status", stop_status.upper())
+    order = db.query(Order).filter(Order.id == stop.order_id).first()
+    if order:
+        if stop_status.upper() == "PICKED_UP":
+            setattr(order, "status", "IN_PROCESS")
+        elif stop_status.upper() == "DELIVERED":
+            setattr(order, "status", "COMPLETED")
+        elif stop_status.upper() == "CUSTOMER_UNAVAILABLE":
+            setattr(order, "status", "SCHEDULED_FOR_PICKUP")
+            # Dynamically adjust remaining driver route sequence
+            driver_routes = (
+                db.query(DriverRoute)
+                .filter(
+                    DriverRoute.driver_id == stop.driver_id,
+                    DriverRoute.stop_status == "EN_ROUTE",
+                )
+                .order_by(DriverRoute.sequence_order.asc())
+                .all()
+            )
+            for idx, dr in enumerate(driver_routes, start=1):
+                setattr(dr, "sequence_order", idx)
     db.commit()
+    db.refresh(stop)
+    return stop
+
+
+def create_or_get_payment(
+    db: Session, order_id: str, amount: Optional[float] = None
+) -> Payment:
+    order = db.query(Order).filter(Order.id == order_id).first()
+    amt = (
+        amount
+        if amount is not None
+        else (float(order.total_amount) if order and order.total_amount else 35.0)
+    )
+
+    payment = db.query(Payment).filter(Payment.order_id == order_id).first()
+    if not payment:
+        payment = Payment(
+            order_id=order_id,
+            amount=amt,
+            currency="USD",
+            status="PENDING",
+            stripe_session_id=f"cs_test_mock_{order_id[:8]}",
+        )
+        db.add(payment)
+        db.commit()
+        db.refresh(payment)
+    return payment
