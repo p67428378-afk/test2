@@ -113,6 +113,7 @@ Not yet authored.
 User Story: Inventory Management Module
 
 ### User Stories
+
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -169,3 +170,8 @@ Not yet authored.
 
 ### Deployment Notes
 Not yet authored.
+
+## SCRUM-52 — E-Commerce Wall Painting & Custom Artwork Platform
+
+### Feature Summary
+Allows customers to browse original paintings, customize dimensions and framing options, place orders securely, and track shipment status, while enabling admins to manage inventory and fulfillment.
