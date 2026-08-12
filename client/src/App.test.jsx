@@ -1,50 +1,61 @@
-// @vitest-environment jsdom
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import App from "./App.jsx";
 
-// Mock the API services to avoid real network calls during tests
-vi.mock("./services/api.js", () => {
-  return {
-    authService: {
-      getCurrentUser: vi.fn().mockRejectedValue(new Error("No token")),
-      login: vi.fn(),
-      logout: vi.fn(),
-    },
-    bookService: {
-      getBooks: vi.fn().mockResolvedValue([]),
-    },
-    memberService: {
-      getMembers: vi.fn().mockResolvedValue([]),
-    },
-    loanService: {
-      getMemberLoans: vi.fn().mockResolvedValue([]),
-    },
-    fineService: {
-      getFines: vi.fn().mockResolvedValue([]),
-    },
-    default: {
-      interceptors: {
-        request: { use: vi.fn() },
+// Mock API services
+vi.mock("./services/api.js", () => ({
+  clockService: {
+    getServerTime: vi.fn().mockResolvedValue({
+      utc_datetime: "2026-08-12T12:00:00Z",
+      timezone: "UTC",
+      timestamp_ms: 1786536000000,
+    }),
+  },
+  alarmService: {
+    getAlarms: vi.fn().mockResolvedValue([
+      {
+        id: "1",
+        time: "07:30",
+        label: "Morning Alarm",
+        enabled: true,
+        repeat_days: ["MON", "TUE"],
+        sound_type: "mechanical_bell",
+        snooze_duration_minutes: 5,
       },
-    },
-  };
-});
+    ]),
+    createAlarm: vi.fn(),
+    updateAlarm: vi.fn(),
+    deleteAlarm: vi.fn(),
+  },
+  settingsService: {
+    getSettings: vi.fn().mockResolvedValue({
+      clock_mode: "flip",
+      theme_id: "antique_brass",
+      time_format: "12h",
+      show_second_hand: true,
+      time_zone: "UTC",
+    }),
+    updateSettings: vi.fn(),
+  },
+}));
 
-describe("App Component", () => {
-  it("renders the login form when not authenticated", async () => {
+describe("Vintage Clock App", () => {
+  test("renders Vintage Clock header", async () => {
     render(<App />);
+    const heading = await screen.findByText(/Vintage Clock/i);
+    expect(heading).toBeInTheDocument();
+  });
 
-    // Check that the welcome message is displayed
-    expect(screen.getByText("Welcome to LibMax")).toBeInTheDocument();
-    expect(screen.getByText("Library Management System")).toBeInTheDocument();
+  test("renders mode switcher buttons", async () => {
+    render(<App />);
+    expect(await screen.findByText(/Flip View/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Analog View/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Hybrid View/i)).toBeInTheDocument();
+  });
 
-    // Check that the email and password inputs are present
-    expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-
-    // Check that the sign in button is present
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+  test("renders active alarms section", async () => {
+    render(<App />);
+    expect(await screen.findByText(/Active Alarms/i)).toBeInTheDocument();
   });
 });
