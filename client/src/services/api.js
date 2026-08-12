@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -62,6 +61,133 @@ export const authService = {
       new_password,
       password_reset_session_id,
     });
+    return response.data;
+  },
+};
+
+export const paintingService = {
+  getPaintings: async (filters = {}) => {
+    const params = {};
+    if (filters.search) params.search = filters.search;
+    if (filters.style) params.style = filters.style;
+    if (filters.medium) params.medium = filters.medium;
+    if (filters.min_price) params.min_price = filters.min_price;
+    if (filters.max_price) params.max_price = filters.max_price;
+    if (
+      filters.is_configurable !== undefined &&
+      filters.is_configurable !== ""
+    ) {
+      params.is_configurable = filters.is_configurable;
+    }
+    if (
+      filters.is_original_one_of_one !== undefined &&
+      filters.is_original_one_of_one !== ""
+    ) {
+      params.is_original_one_of_one = filters.is_original_one_of_one;
+    }
+    if (filters.skip) params.skip = filters.skip;
+    if (filters.limit) params.limit = filters.limit;
+
+    const response = await api.get("/api/v1/paintings", { params });
+    return response.data;
+  },
+  getPainting: async (id) => {
+    const response = await api.get(`/api/v1/paintings/${id}`);
+    return response.data;
+  },
+  getFrameOptions: async () => {
+    const response = await api.get("/api/v1/frame-options");
+    return response.data;
+  },
+};
+
+export const configuratorService = {
+  calculatePrice: async (data) => {
+    const response = await api.post("/api/v1/configurator/price", data);
+    return response.data;
+  },
+  getFrameOptions: async () => {
+    const response = await api.get("/api/v1/configurator/frame-options");
+    return response.data;
+  },
+};
+
+export const cartService = {
+  getCart: async (cartId) => {
+    const response = await api.get("/api/v1/cart", {
+      params: { cart_id: cartId },
+    });
+    return response.data;
+  },
+  addItem: async (itemData) => {
+    const response = await api.post("/api/v1/cart/items", itemData);
+    return response.data;
+  },
+  removeItem: async (itemId, cartId) => {
+    const response = await api.delete(`/api/v1/cart/items/${itemId}`, {
+      params: { cart_id: cartId },
+    });
+    return response.data;
+  },
+  clearCart: async (cartId) => {
+    const response = await api.delete("/api/v1/cart", {
+      params: { cart_id: cartId },
+    });
+    return response.data;
+  },
+};
+
+export const checkoutService = {
+  createIntent: async (data, idempotencyKey) => {
+    const headers = {};
+    if (idempotencyKey) {
+      headers["X-Idempotency-Key"] = idempotencyKey;
+    }
+    const response = await api.post("/api/v1/checkout/intent", data, {
+      headers,
+    });
+    return response.data;
+  },
+};
+
+export const orderService = {
+  getOrders: async (customerEmail = "") => {
+    const params = {};
+    if (customerEmail) params.customer_email = customerEmail;
+    const response = await api.get("/api/v1/orders", { params });
+    return response.data;
+  },
+  getOrderDetail: async (orderIdentifier) => {
+    const response = await api.get(`/api/v1/orders/${orderIdentifier}`);
+    return response.data;
+  },
+  cancelOrder: async (orderIdentifier) => {
+    const response = await api.post(`/api/v1/orders/${orderIdentifier}/cancel`);
+    return response.data;
+  },
+};
+
+export const adminPaintingService = {
+  getAdminOrders: async () => {
+    const response = await api.get("/api/v1/admin/orders");
+    return response.data;
+  },
+  updateOrderStatus: async (orderIdentifier, statusData) => {
+    const response = await api.patch(
+      `/api/v1/admin/orders/${orderIdentifier}`,
+      statusData,
+    );
+    return response.data;
+  },
+  createPainting: async (paintingData) => {
+    const response = await api.post("/api/v1/admin/paintings", paintingData);
+    return response.data;
+  },
+  updatePainting: async (paintingId, paintingData) => {
+    const response = await api.put(
+      `/api/v1/admin/paintings/${paintingId}`,
+      paintingData,
+    );
     return response.data;
   },
 };
