@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Library Management System API",
+    "title": "Screen Time Monitoring Application API",
     "version": "1.0.0"
   },
   "paths": {
@@ -1362,6 +1362,488 @@
         }
       }
     },
+    "/api/v1/screentime/sessions": {
+      "post": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "Log Screentime Session",
+        "operationId": "log_screentime_session_api_v1_screentime_sessions_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "List Screentime Sessions",
+        "operationId": "list_screentime_sessions_api_v1_screentime_sessions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "app_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "App Name"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionResponse"
+                  },
+                  "title": "Response List Screentime Sessions Api V1 Screentime Sessions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screentime/sessions/{session_id}": {
+      "delete": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "Delete Screentime Session",
+        "operationId": "delete_screentime_session_api_v1_screentime_sessions__session_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screentime/clear": {
+      "delete": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "Clear Screentime History",
+        "operationId": "clear_screentime_history_api_v1_screentime_clear_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/screentime/analytics": {
+      "get": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "Get Screentime Analytics",
+        "operationId": "get_screentime_analytics_api_v1_screentime_analytics_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hourly|daily|weekly)$",
+              "default": "daily",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screentime/limits": {
+      "get": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "List Usage Limits",
+        "operationId": "list_usage_limits_api_v1_screentime_limits_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LimitResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Usage Limits Api V1 Screentime Limits Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "Create Or Update Limit",
+        "operationId": "create_or_update_limit_api_v1_screentime_limits_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LimitCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LimitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/screentime/limits/{limit_id}": {
+      "delete": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "Delete Usage Limit",
+        "operationId": "delete_usage_limit_api_v1_screentime_limits__limit_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Limit Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screentime/export": {
+      "get": {
+        "tags": [
+          "screentime"
+        ],
+        "summary": "Export Usage Data",
+        "operationId": "export_usage_data_api_v1_screentime_export_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "export_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "json",
+              "title": "Export Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Read Root",
@@ -1381,6 +1863,124 @@
   },
   "components": {
     "schemas": {
+      "AlertNotification": {
+        "properties": {
+          "category_or_app": {
+            "type": "string",
+            "title": "Category Or App"
+          },
+          "threshold": {
+            "type": "string",
+            "title": "Threshold"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_or_app",
+          "threshold",
+          "message"
+        ],
+        "title": "AlertNotification"
+      },
+      "AnalyticsCategoryBreakdown": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "percentage": {
+            "type": "number",
+            "title": "Percentage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "duration_seconds",
+          "percentage"
+        ],
+        "title": "AnalyticsCategoryBreakdown"
+      },
+      "AnalyticsResponse": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date"
+          },
+          "total_screen_time_seconds": {
+            "type": "integer",
+            "title": "Total Screen Time Seconds"
+          },
+          "top_applications": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsTopApp"
+            },
+            "type": "array",
+            "title": "Top Applications",
+            "default": []
+          },
+          "category_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsCategoryBreakdown"
+            },
+            "type": "array",
+            "title": "Category Breakdown",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "start_date",
+          "end_date",
+          "total_screen_time_seconds"
+        ],
+        "title": "AnalyticsResponse"
+      },
+      "AnalyticsTopApp": {
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "title": "App Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "percentage": {
+            "type": "number",
+            "title": "Percentage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_name",
+          "category",
+          "duration_seconds",
+          "percentage"
+        ],
+        "title": "AnalyticsTopApp"
+      },
       "Body_login_for_access_token_api_v1_auth_token_post": {
         "properties": {
           "grant_type": {
@@ -1645,6 +2245,91 @@
         },
         "type": "object",
         "title": "BookUpdate"
+      },
+      "ExportResponse": {
+        "properties": {
+          "export_type": {
+            "type": "string",
+            "title": "Export Type"
+          },
+          "total_records": {
+            "type": "integer",
+            "title": "Total Records"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "sessions": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions"
+          },
+          "limits": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "export_type",
+          "total_records",
+          "user_id",
+          "generated_at"
+        ],
+        "title": "ExportResponse"
       },
       "FineResponse": {
         "properties": {
@@ -1939,6 +2624,76 @@
         "type": "object",
         "title": "InventoryItemUpdate"
       },
+      "LimitCreate": {
+        "properties": {
+          "category_or_app": {
+            "type": "string",
+            "title": "Category Or App"
+          },
+          "daily_limit_seconds": {
+            "type": "integer",
+            "title": "Daily Limit Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_or_app",
+          "daily_limit_seconds"
+        ],
+        "title": "LimitCreate"
+      },
+      "LimitResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "category_or_app": {
+            "type": "string",
+            "title": "Category Or App"
+          },
+          "daily_limit_seconds": {
+            "type": "integer",
+            "title": "Daily Limit Seconds"
+          },
+          "current_usage_seconds": {
+            "type": "integer",
+            "title": "Current Usage Seconds",
+            "default": 0
+          },
+          "percentage_used": {
+            "type": "number",
+            "title": "Percentage Used",
+            "default": 0.0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "category_or_app",
+          "daily_limit_seconds",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LimitResponse"
+      },
       "LoanCreate": {
         "properties": {
           "book_id": {
@@ -2156,6 +2911,104 @@
           "password_reset_session_id"
         ],
         "title": "SecurityQuestionVerifyResponse"
+      },
+      "SessionCreate": {
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "title": "App Name"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "default": "Uncategorized"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_name",
+          "start_time",
+          "end_time"
+        ],
+        "title": "SessionCreate"
+      },
+      "SessionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "app_name": {
+            "type": "string",
+            "title": "App Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "alerts_triggered": {
+            "items": {
+              "$ref": "#/components/schemas/AlertNotification"
+            },
+            "type": "array",
+            "title": "Alerts Triggered",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "app_name",
+          "category",
+          "start_time",
+          "end_time",
+          "duration_seconds",
+          "created_at"
+        ],
+        "title": "SessionResponse"
       },
       "SetNewPasswordRequest": {
         "properties": {

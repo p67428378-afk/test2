@@ -113,6 +113,7 @@ Not yet authored.
 User Story: Inventory Management Module
 
 ### User Stories
+
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -169,3 +170,14 @@ Not yet authored.
 
 ### Deployment Notes
 Not yet authored.
+
+## SCRUM-44 — Screen Time Monitoring Application
+- **Summary:** # Screen Time Monitoring Application
+- **Tables:** users, screentime_sessions, usage_limits
+- **Endpoints:**
+- POST /api/v1/screentime/sessions
+- GET /api/v1/screentime/analytics
+- GET /api/v1/screentime/limits
+- POST /api/v1/screentime/limits
+- GET /api/v1/screentime/export
+- **Full spec:** https://bfsi-na-ai-engineering-v4.atlassian.net/wiki/spaces/SCRUM2/pages/7733251/SCRUM-44+Feature+Specification

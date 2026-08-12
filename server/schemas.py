@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List, Any
 from datetime import datetime
 from uuid import UUID
 import re
@@ -241,3 +241,101 @@ class InventoryItemResponse(InventoryItemBase):
 
     class Config:
         from_attributes = True
+
+
+# Screen Time Monitoring Application schemas
+
+
+class AlertNotification(BaseModel):
+    category_or_app: str
+    threshold: str
+    message: str
+
+
+class SessionCreate(BaseModel):
+    app_name: str
+    category: Optional[str] = "Uncategorized"
+    start_time: datetime
+    end_time: datetime
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, v: Optional[str]) -> str:
+        if not v or not v.strip():
+            return "Uncategorized"
+        return v.strip()
+
+
+class SessionResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    app_name: str
+    category: str
+    start_time: datetime
+    end_time: datetime
+    duration_seconds: int
+    alerts_triggered: List[AlertNotification] = []
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LimitCreate(BaseModel):
+    category_or_app: str
+    daily_limit_seconds: int
+
+    @field_validator("daily_limit_seconds")
+    @classmethod
+    def validate_limit_seconds(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("Daily limit in seconds must be greater than zero")
+        return v
+
+
+class LimitResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    category_or_app: str
+    daily_limit_seconds: int
+    current_usage_seconds: int = 0
+    percentage_used: float = 0.0
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AnalyticsTopApp(BaseModel):
+    app_name: str
+    category: str
+    duration_seconds: int
+    percentage: float
+
+
+class AnalyticsCategoryBreakdown(BaseModel):
+    category: str
+    duration_seconds: int
+    percentage: float
+
+
+class AnalyticsResponse(BaseModel):
+    period: str
+    start_date: str
+    end_date: str
+    total_screen_time_seconds: int
+    top_applications: List[AnalyticsTopApp] = []
+    category_breakdown: List[AnalyticsCategoryBreakdown] = []
+
+
+class ExportResponse(BaseModel):
+    export_type: str
+    total_records: int
+    user_id: str
+    generated_at: str
+    status: Optional[str] = None
+    message: Optional[str] = None
+    task_id: Optional[str] = None
+    sessions: Optional[List[Any]] = None
+    limits: Optional[List[Any]] = None

@@ -30,6 +30,12 @@ class User(Base):
     otps = relationship("OTP", back_populates="user")
     password_history = relationship("PasswordHistory", back_populates="user")
     loans = relationship("Loan", back_populates="member")
+    screentime_sessions = relationship(
+        "ScreentimeSession", back_populates="user", cascade="all, delete-orphan"
+    )
+    usage_limits = relationship(
+        "UsageLimit", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class OTP(Base):
@@ -120,3 +126,35 @@ class InventoryItem(Base):
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
+
+
+class ScreentimeSession(Base):
+    __tablename__ = "screentime_sessions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    app_name = Column(String(255), nullable=False)
+    category = Column(String(100), default="Uncategorized", nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    duration_seconds = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    user = relationship("User", back_populates="screentime_sessions")
+
+
+class UsageLimit(Base):
+    __tablename__ = "usage_limits"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    category_or_app = Column(String(255), nullable=False)
+    daily_limit_seconds = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    user = relationship("User", back_populates="usage_limits")
