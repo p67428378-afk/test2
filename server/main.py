@@ -13,7 +13,7 @@ from server.api.v1.endpoints import (
     health,
 )
 
-# Initialize database tables
+# Initialize database tables for SCRUM-39
 init_db()
 
 # Seed initial data
