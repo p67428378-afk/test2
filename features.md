@@ -174,9 +174,6 @@ Not yet authored.
 ## SCRUM-43 — Laundry Management Platform End-to-End Service Core
 
 ### Feature Summary
-Laundry Management Platform End-to-End Service Core
-
-### User Stories
 # Laundry Management Platform End-to-End Service Core
 
 **Objective:**
@@ -223,38 +220,3 @@ So that laundry operations run efficiently with full transparency, minimal opera
 - **Payment Gateway:** Stripe Checkout API integration with signature-verified webhooks (`/api/v1/payments/stripe/webhook`).
 - **Data Model & Standards:** Models for `users`, `orders`, `garment_stages`, `driver_routes`, and `payments` utilizing UUID v4 primary keys and ISO 8601 UTC timestamps (`created_at`, `updated_at`).
 - **Security & Standards:** JWT Bearer authentication, CORS middleware configured for `http://localhost:5173`, and standardized error response formats (`{"detail": "..."}`).
-
-### Acceptance Criteria
-- Customer Pickup & Delivery Scheduling: Account creation, service selection (Wash & Fold, Dry Cleaning, Ironing Only), pickup/delivery scheduling, handle full/unavailable time slots.
-- Garment Processing & Washing Stage Tracking: Order lifecycle transitions (Received, Sorting, Washing, Drying, Ironing, Ready_for_Delivery), real-time timeline updates with UTC timestamps, special care handling.
-- Driver Delivery Route Optimization: Sequenced itineraries for drivers based on proximity and time windows, stop status updates (En Route, Picked Up, Delivered), customer unavailable retry routing.
-- Payment Processing & Invoice Settlement: Itemized invoicing based on weight/count, Stripe Checkout integration, webhook settlement sync, payment failure pending state.
-
-### Backend Tasks
-- None specified
-
-### Frontend Tasks
-- None specified
-
-### Database Changes
-Not yet authored.
-
-### API Endpoints
-- `POST /api/v1/auth/register` — Register a new user account.
-- `POST /api/v1/auth/login` — Authenticate credentials and issue JWT access token.
-- `POST /api/v1/orders` — Create a new laundry order.
-- `GET /api/v1/orders/{order_id}` — Retrieve detailed order status, invoice, and timeline.
-- `PATCH /api/v1/orders/{order_id}/stage` — Update garment processing stage.
-- `GET /api/v1/routes/driver/{driver_id}` — Retrieve optimized route itinerary.
-- `PATCH /api/v1/routes/stops/{stop_id}` — Update driver stop status.
-- `POST /api/v1/payments/checkout-session` — Generate Stripe Checkout session URL.
-- `POST /api/v1/payments/stripe/webhook` — Handle signature-verified Stripe webhooks.
-
-### UI Components
-Not yet authored.
-
-### Test Coverage
-Not yet authored.
-
-### Deployment Notes
-Not yet authored.
