@@ -113,6 +113,7 @@ Not yet authored.
 User Story: Inventory Management Module
 
 ### User Stories
+
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -169,3 +170,14 @@ Not yet authored.
 
 ### Deployment Notes
 Not yet authored.
+
+## SCRUM-39 — Real-Time Train Tracking Application
+- **Summary:** # Real-Time Train Tracking Application
+- **Tables:** stations, routes, trains, schedules, location_logs, delay_alerts
+- **Endpoints:**
+- GET /api/v1/trains
+- GET /api/v1/trains/{train_id}
+- GET /api/v1/stations
+- GET /api/v1/stations/{station_id}/schedules
+- GET /api/v1/delays (+2 more)
+- **Full spec:** https://bfsi-na-ai-engineering-v4.atlassian.net/wiki/spaces/SCRUM2/pages/6914051/SCRUM-39+Feature+Specification
