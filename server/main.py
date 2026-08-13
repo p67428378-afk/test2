@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 import os
+
 from server.api.v1.endpoints import (
-    password_reset,
     auth,
-    books,
-    members,
-    loans,
-    fines,
-    inventory,
+    tournaments,
+    players,
+    pairings,
+    scores,
+    standings,
+    certificates,
 )
 from server.database import init_db, seed_data, SessionLocal
 
@@ -22,12 +23,17 @@ try:
 finally:
     db.close()
 
-app = FastAPI(title="Library Management System API", version="1.0.0")
+app = FastAPI(
+    title="Chess Tournament Management System API",
+    version="1.0.0",
+    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+)
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 ).split(",")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -36,16 +42,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
+# Include routers under /api/v1
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(books.router, prefix="/api/v1", tags=["books"])
-app.include_router(members.router, prefix="/api/v1", tags=["members"])
-app.include_router(loans.router, prefix="/api/v1", tags=["loans"])
-app.include_router(fines.router, prefix="/api/v1", tags=["fines"])
-app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
+app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
+app.include_router(players.router, prefix="/api/v1", tags=["players"])
+app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
+app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
+app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
+app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
 
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Library Management System API"}
+    return {
+        "message": "Welcome to the Chess Tournament Management System API",
+        "docs": "/docs",
+    }
