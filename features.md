@@ -107,12 +107,6 @@ Not yet authored.
 ## Deployment Notes
 Not yet authored.
 
-## SCRUM-642 — User Story: Inventory Management Module
-
-### Feature Summary
-User Story: Inventory Management Module
-
-### User Stories
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -169,3 +163,15 @@ Not yet authored.
 
 ### Deployment Notes
 Not yet authored.
+
+## SCRUM-61 — Music Festival Management System Core Platform
+
+### Feature Summary
+Provides festival managers, staff, and safety coordinators with tools for multi-stage artist scheduling, volunteer shift management, rapid QR ticket validation, and live crowd density monitoring.
+
+### Key Features
+- Multi-stage artist scheduling with automated conflict detection
+- Volunteer shift rostering, role assignment, and check-in tracking
+- Sub-second QR code ticket scanning with anti-passback duplicate protection
+- Live crowd density monitoring and stage capacity heatmaps
+- Responsive role-based management dashboard for administrative and field operations

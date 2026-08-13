@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from sqlalchemy import (
     Column,
     String,
@@ -7,12 +8,10 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Float,
-    UniqueConstraint,
     TypeDecorator,
     CHAR,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from server.database import Base
 
 
@@ -58,193 +57,168 @@ class User(Base):
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
-    full_name = Column(String(255), nullable=True)
     hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=True)
     role = Column(
-        String(50), default="member", nullable=False
-    )  # 'admin', 'organizer', 'member'
+        String(50), default="GATE_STAFF", nullable=False
+    )  # 'ADMIN', 'STAGE_MANAGER', 'VOLUNTEER_COORDINATOR', 'GATE_STAFF'
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    volunteers = relationship(
+        "Volunteer", back_populates="user", cascade="all, delete-orphan"
     )
 
 
-class Tournament(Base):
-    __tablename__ = "tournaments"
+class Artist(Base):
+    __tablename__ = "artists"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
-    status = Column(
-        String(50), default="DRAFT", nullable=False
-    )  # 'DRAFT', 'ACTIVE', 'COMPLETED'
-    total_rounds = Column(Integer, default=5, nullable=False)
-    current_round = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    genre = Column(String(100), nullable=True)
+    contact_email = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    registrations = relationship(
-        "Registration", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    rounds = relationship(
-        "Round", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="tournament", cascade="all, delete-orphan"
+    performances = relationship(
+        "Performance", back_populates="artist", cascade="all, delete-orphan"
     )
 
 
-class Player(Base):
-    __tablename__ = "players"
+class Stage(Base):
+    __tablename__ = "stages"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    full_name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False, index=True)
-    rating = Column(Integer, default=1200, nullable=False)
-    fide_id = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    name = Column(String(255), unique=True, nullable=False)
+    location_zone = Column(String(100), nullable=False)
+    capacity = Column(Integer, nullable=False, default=5000)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    registrations = relationship(
-        "Registration", back_populates="player", cascade="all, delete-orphan"
+    performances = relationship(
+        "Performance", back_populates="stage", cascade="all, delete-orphan"
     )
-    standings = relationship(
-        "Standing", back_populates="player", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="player", cascade="all, delete-orphan"
+    telemetry = relationship(
+        "CrowdTelemetry", back_populates="stage", cascade="all, delete-orphan"
     )
 
 
-class Registration(Base):
-    __tablename__ = "registrations"
-    __table_args__ = (
-        UniqueConstraint("tournament_id", "player_id", name="uq_tournament_player"),
-    )
+class Performance(Base):
+    __tablename__ = "performances"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
+    artist_id = Column(
+        GUID(), ForeignKey("artists.id", ondelete="CASCADE"), nullable=False
     )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
+    stage_id = Column(
+        GUID(), ForeignKey("stages.id", ondelete="CASCADE"), nullable=False
     )
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
     status = Column(
-        String(50), default="ACTIVE", nullable=False
-    )  # 'ACTIVE', 'WITHDRAWN'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+        String(50), default="SCHEDULED", nullable=False
+    )  # 'SCHEDULED', 'CANCELLED', 'IN_PROGRESS', 'COMPLETED'
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
-    tournament = relationship("Tournament", back_populates="registrations")
-    player = relationship("Player", back_populates="registrations")
+    artist = relationship("Artist", back_populates="performances")
+    stage = relationship("Stage", back_populates="performances")
 
 
-class Round(Base):
-    __tablename__ = "rounds"
+class Volunteer(Base):
+    __tablename__ = "volunteers"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    round_number = Column(Integer, nullable=False)
-    is_closed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="rounds")
-    matches = relationship(
-        "Match", back_populates="round", cascade="all, delete-orphan"
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    phone = Column(String(50), nullable=True)
+    assigned_zone = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
+    user = relationship("User", back_populates="volunteers")
+    shifts = relationship(
+        "Shift", back_populates="volunteer", cascade="all, delete-orphan"
+    )
 
-class Match(Base):
-    __tablename__ = "matches"
+
+class Shift(Base):
+    __tablename__ = "shifts"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    round_id = Column(
-        GUID(), ForeignKey("rounds.id", ondelete="CASCADE"), nullable=False
+    volunteer_id = Column(
+        GUID(), ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False
     )
-    board_number = Column(Integer, nullable=True)
-    white_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    black_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    result = Column(
+    zone = Column(String(100), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    status = Column(
         String(50), default="PENDING", nullable=False
-    )  # 'PENDING', '1-0', '0-1', '0.5-0.5', 'BYE'
-    is_bye = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    round = relationship("Round", back_populates="matches")
-    white_player = relationship("Player", foreign_keys=[white_player_id])
-    black_player = relationship("Player", foreign_keys=[black_player_id])
-
-
-class Standing(Base):
-    __tablename__ = "standings"
-    __table_args__ = (
-        UniqueConstraint(
-            "tournament_id", "player_id", name="uq_tournament_player_standing"
-        ),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    total_points = Column(Float, default=0.0, nullable=False)
-    buchholz = Column(Float, default=0.0, nullable=False)
-    sonneborn_berger = Column(Float, default=0.0, nullable=False)
-    rank = Column(Integer, nullable=True)
+    )  # 'PENDING', 'ACTIVE', 'COMPLETED', 'NO_SHOW'
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    tournament = relationship("Tournament", back_populates="standings")
-    player = relationship("Player", back_populates="standings")
+    volunteer = relationship("Volunteer", back_populates="shifts")
 
 
-class Certificate(Base):
-    __tablename__ = "certificates"
+class Ticket(Base):
+    __tablename__ = "tickets"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    verification_uuid = Column(
-        GUID(), default=uuid.uuid4, unique=True, index=True, nullable=False
+    ticket_code = Column(String(100), unique=True, nullable=False, index=True)
+    tier = Column(String(100), default="General Admission", nullable=False)
+    qr_payload_hash = Column(String(255), nullable=True)
+    is_used = Column(Boolean, default=False, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    rank = Column(Integer, nullable=False)
-    total_points = Column(Float, default=0.0, nullable=False)
-    issued_at = Column(DateTime, default=func.now(), nullable=False)
-    qr_code_url = Column(String(512), nullable=True)
 
-    tournament = relationship("Tournament", back_populates="certificates")
-    player = relationship("Player", back_populates="certificates")
+    scans = relationship(
+        "GateScan", back_populates="ticket", cascade="all, delete-orphan"
+    )
 
 
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
+class GateScan(Base):
+    __tablename__ = "gate_scans"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    admin_id = Column(String(255), nullable=True)
-    match_id = Column(
-        GUID(), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True
+    ticket_id = Column(
+        GUID(), ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False
     )
-    original_score = Column(String(50), nullable=True)
-    new_score = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=func.now(), nullable=False)
+    gate_name = Column(String(100), nullable=False)
+    scan_result = Column(
+        String(50), nullable=False
+    )  # 'VALID', 'DUPLICATE_PASSBACK', 'INVALID_SIGNATURE'
+    scanned_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    ticket = relationship("Ticket", back_populates="scans")
+
+
+class CrowdTelemetry(Base):
+    __tablename__ = "crowd_telemetry"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    stage_id = Column(
+        GUID(), ForeignKey("stages.id", ondelete="CASCADE"), nullable=False
+    )
+    current_occupancy = Column(Integer, default=0, nullable=False)
+    capacity_ratio = Column(Float, default=0.0, nullable=False)
+    alert_triggered = Column(Boolean, default=False, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    stage = relationship("Stage", back_populates="telemetry")
