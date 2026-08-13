@@ -9,6 +9,7 @@ const api = axios.create({
   },
 });
 
+// Interceptor to add Bearer token to requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -20,96 +21,109 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-    }
-    return response.data;
-  },
-  logout: () => {
-    localStorage.removeItem("token");
-  },
+// --- Auth APIs ---
+export const loginUser = async (email, password) => {
+  const response = await api.post("/api/v1/auth/login", { email, password });
+  return response.data;
 };
 
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
-    return response.data;
-  },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
-    return response.data;
-  },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
-    return response.data;
-  },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
-    return response.data;
-  },
+export const getMe = async () => {
+  const response = await api.get("/api/v1/auth/me");
+  return response.data;
 };
 
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
-    return response.data;
-  },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
-    );
-    return response.data;
-  },
+// --- Scheduling & Stage Allocation APIs ---
+export const getPerformances = async (params = {}) => {
+  const response = await api.get("/api/v1/performances", { params });
+  return response.data;
 };
 
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
-    return response.data;
-  },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
-  },
+export const schedulePerformance = async (data) => {
+  const response = await api.post("/api/v1/performances", data);
+  return response.data;
 };
 
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
-    });
-    return response.data;
-  },
+export const getArtists = async () => {
+  const response = await api.get("/api/v1/artists");
+  return response.data;
 };
 
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
-    );
-    return response.data;
-  },
+export const createArtist = async (data) => {
+  const response = await api.post("/api/v1/artists", data);
+  return response.data;
 };
 
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
-    return response.data;
-  },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
-  },
+export const getStages = async () => {
+  const response = await api.get("/api/v1/stages");
+  return response.data;
+};
+
+export const createStage = async (data) => {
+  const response = await api.post("/api/v1/stages", data);
+  return response.data;
+};
+
+// --- Volunteer Roster & Shift APIs ---
+export const getShifts = async (params = {}) => {
+  const response = await api.get("/api/v1/volunteers/shifts", { params });
+  return response.data;
+};
+
+export const checkInVolunteer = async (shiftId, volunteerId) => {
+  const response = await api.post("/api/v1/volunteers/check-in", {
+    shift_id: shiftId,
+    volunteer_id: volunteerId,
+  });
+  return response.data;
+};
+
+export const createShift = async (data) => {
+  const response = await api.post("/api/v1/volunteers/shifts", data);
+  return response.data;
+};
+
+export const getVolunteers = async () => {
+  const response = await api.get("/api/v1/volunteers");
+  return response.data;
+};
+
+export const createVolunteer = async (data) => {
+  const response = await api.post("/api/v1/volunteers", data);
+  return response.data;
+};
+
+// --- Ticket Validation & Gate Entry APIs ---
+export const validateTicket = async (
+  ticketCode,
+  qrPayload = "",
+  gateName = "Main Gate",
+) => {
+  const response = await api.post("/api/v1/tickets/validate", {
+    ticket_code: ticketCode,
+    qr_payload: qrPayload,
+    gate_name: gateName,
+  });
+  return response.data;
+};
+
+export const getTickets = async () => {
+  const response = await api.get("/api/v1/tickets");
+  return response.data;
+};
+
+export const createTicket = async (data) => {
+  const response = await api.post("/api/v1/tickets", data);
+  return response.data;
+};
+
+// --- Crowd Analytics & Telemetry APIs ---
+export const getCrowdDensity = async () => {
+  const response = await api.get("/api/v1/crowd/density");
+  return response.data;
+};
+
+export const getTelemetryStreamUrl = () => {
+  return `${BASE_URL}/api/v1/telemetry/stream`;
 };
 
 export default api;

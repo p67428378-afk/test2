@@ -1,50 +1,37 @@
-// @vitest-environment jsdom
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import App from "./App.jsx";
+import App from "./App";
 
-// Mock the API services to avoid real network calls during tests
-vi.mock("./services/api.js", () => {
-  return {
-    authService: {
-      getCurrentUser: vi.fn().mockRejectedValue(new Error("No token")),
-      login: vi.fn(),
-      logout: vi.fn(),
-    },
-    bookService: {
-      getBooks: vi.fn().mockResolvedValue([]),
-    },
-    memberService: {
-      getMembers: vi.fn().mockResolvedValue([]),
-    },
-    loanService: {
-      getMemberLoans: vi.fn().mockResolvedValue([]),
-    },
-    fineService: {
-      getFines: vi.fn().mockResolvedValue([]),
-    },
-    default: {
-      interceptors: {
-        request: { use: vi.fn() },
+vi.mock("./services/api", () => ({
+  getMe: vi.fn().mockRejectedValue(new Error("Unauthenticated")),
+  getCrowdDensity: vi.fn().mockResolvedValue({
+    total_attendees: 1200,
+    active_scans_per_min: 45,
+    active_volunteers: 18,
+    active_stages: 4,
+    stages: [
+      {
+        stage_id: "s1",
+        stage_name: "Main Stage",
+        location_zone: "North Field",
+        current_occupancy: 4000,
+        max_capacity: 5000,
+        occupancy_ratio: 0.8,
+        alert_status: "NORMAL",
       },
-    },
-  };
-});
+    ],
+  }),
+  getTelemetryStreamUrl: vi
+    .fn()
+    .mockReturnValue("http://localhost:8000/api/v1/telemetry/stream"),
+}));
 
 describe("App Component", () => {
-  it("renders the login form when not authenticated", async () => {
+  it("renders application navigation and dashboard header", async () => {
     render(<App />);
-
-    // Check that the welcome message is displayed
-    expect(screen.getByText("Welcome to LibMax")).toBeInTheDocument();
-    expect(screen.getByText("Library Management System")).toBeInTheDocument();
-
-    // Check that the email and password inputs are present
-    expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-
-    // Check that the sign in button is present
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+    const headers = await screen.findAllByText(/FestControl/i);
+    expect(headers.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Control Center/i)).toBeInTheDocument();
   });
 });
