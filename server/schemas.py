@@ -1,44 +1,21 @@
-import uuid
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
+# Artist Schemas
+class ArtistBase(BaseModel):
     name: str
-    total_rounds: int = Field(default=5, ge=1)
+    genre: str
+    tech_spec_summary: Optional[str] = None
 
 
-class TournamentCreate(TournamentBase):
+class ArtistCreate(ArtistBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class ArtistResponse(ArtistBase):
+    id: str
     created_at: datetime
     updated_at: datetime
 
@@ -46,85 +23,202 @@ class TournamentResponse(TournamentBase):
         from_attributes = True
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# Stage Schemas
+class StageBase(BaseModel):
+    name: str
+    location_zone: str
+    max_capacity: int = 10000
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class StageCreate(StageBase):
+    pass
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
+class StageResponse(StageBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class RosterPlayerResponse(PlayerResponse):
+class StageNotificationResponse(BaseModel):
+    id: str
+    stage_id: str
+    performance_id: Optional[str] = None
+    message: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Performance Schemas
+class PerformanceCreate(BaseModel):
+    artist_id: str
+    start_time: datetime
+    end_time: datetime
+    buffer_minutes: int = 30
+
+
+class PerformanceDelayRequest(BaseModel):
+    delay_minutes: int = Field(..., gt=0)
+
+
+class PerformanceResponse(BaseModel):
+    id: str
+    stage_id: str
+    artist_id: str
+    start_time: datetime
+    end_time: datetime
+    buffer_minutes: int
+    status: str
+    artist: Optional[ArtistResponse] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Volunteer Schemas
+class VolunteerBase(BaseModel):
+    full_name: str
+    email: str
+    phone: str
+    assigned_zone: str
     status: str = "ACTIVE"
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class VolunteerCreate(VolunteerBase):
+    pass
+
+
+class VolunteerResponse(VolunteerBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+# Volunteer Shift Schemas
+class VolunteerShiftCreate(BaseModel):
+    volunteer_id: Optional[str] = None
+    zone_name: str
+    start_time: datetime
+    end_time: datetime
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+class VolunteerShiftCheckInRequest(BaseModel):
+    volunteer_id: Optional[str] = None
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
+class VolunteerShiftDropRequest(BaseModel):
+    reason: Optional[str] = None
+
+
+class StandbyAlertResponse(BaseModel):
+    id: str
+    shift_id: Optional[str] = None
+    zone_name: str
+    alert_type: str
+    message: str
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class VolunteerShiftResponse(BaseModel):
+    id: str
+    volunteer_id: Optional[str] = None
+    zone_name: str
+    start_time: datetime
+    end_time: datetime
+    check_in_time: Optional[datetime] = None
+    status: str
+    volunteer: Optional[VolunteerResponse] = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+# Ticket Schemas
+class TicketCreate(BaseModel):
+    ticket_code: str
+    tier: str = "General Admission"
+
+
+class TicketResponse(BaseModel):
+    id: str
+    ticket_code: str
+    tier: str
+    status: str
+    scanned_at: Optional[datetime] = None
+    scanned_gate: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TicketValidationRequest(BaseModel):
+    qr_payload: str
+    gate_id: str = "Gate-1"
+    device_timestamp: Optional[datetime] = None
+
+
+class TicketValidationResponse(BaseModel):
+    status: str  # ACCESS_GRANTED or ACCESS_DENIED
+    ticket_id: Optional[str] = None
+    tier: Optional[str] = None
+    scanned_at: Optional[datetime] = None
+    reason: Optional[str] = None
+    message: Optional[str] = None
+
+
+class TicketSyncItem(BaseModel):
+    ticket_code: str
+    gate_id: str
+    scanned_at: datetime
+
+
+class TicketSyncRequest(BaseModel):
+    scanned_tickets: List[TicketSyncItem]
+
+
+class TicketSyncResponse(BaseModel):
+    synchronized_count: int
+    rejected_count: int
+    details: List[dict]
+
+
+# Telemetry / Crowd Analytics Schemas
+class TelemetryIngestRequest(BaseModel):
+    zone_id: str
+    sensor_id: str
+    ingress_count: int = 0
+    egress_count: int = 0
+    current_occupancy: Optional[int] = None
+    timestamp: Optional[datetime] = None
+
+
+class TelemetryIngestBatch(BaseModel):
+    events: List[TelemetryIngestRequest]
+
+
+class ZoneCrowdStatus(BaseModel):
+    zone_id: str
+    zone_name: str
+    current_occupancy: int
+    max_capacity: int
+    occupancy_percentage: float
+    density_status: str  # NORMAL, YELLOW_WARNING, RED_ALERT
+    rate_of_change_2min: int
+    rate_of_change_alert: bool
