@@ -1,1 +1,1 @@
-# Package initialization
+# Equipment Rental Management System Backend
