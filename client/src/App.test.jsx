@@ -73,7 +73,7 @@ describe("App Component", () => {
     render(<App />);
 
     // Check that the header title is displayed
-    expect(screen.getByText("Canvas & Co.")).toBeInTheDocument();
+    expect(screen.getAllByText("Canvas & Co.")[0]).toBeInTheDocument();
 
     // Wait for the painting to load and render
     await waitFor(() => {

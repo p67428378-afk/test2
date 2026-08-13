@@ -40,7 +40,7 @@ export default function Header({ cartCount = 0 }) {
               search
             </span>
             <input
-              className="pl-10 pr-4 py-2 border border-outline-variant rounded bg-surface-container-low focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-body-sm text-body-sm w-64 transition-all"
+              className="pl-10 pr-4 py-2 border border-outline-variant rounded bg-surface-container-low focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-body-sm text-body-sm w-80 lg:w-96 transition-all"
               placeholder="Search paintings, artists, styles..."
               type="text"
             />
