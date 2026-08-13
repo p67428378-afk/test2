@@ -1,60 +1,61 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
+from server.config import settings
 from server.database import init_db, seed_data, SessionLocal
+from server.routers.auth import router as auth_router
+from server.routers.bookings import router as bookings_router
+from server.routers.dispatch import router as dispatch_router
+from server.routers.deliveries import router as deliveries_router
+from server.routers.admin import router as admin_router
+from server.routers.tankers import router as tankers_router
+from server.routers.users import router as users_router
+from server.websocket import ws_router
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema
+    init_db()
+    # Seed initial test data
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
-    version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
-
+# Configure CORS middleware
+origins = [
+    origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=origins if origins else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Include Routers
+app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(bookings_router, prefix=settings.API_V1_STR)
+app.include_router(dispatch_router, prefix=settings.API_V1_STR)
+app.include_router(deliveries_router, prefix=settings.API_V1_STR)
+app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(tankers_router, prefix=settings.API_V1_STR)
+app.include_router(users_router, prefix=settings.API_V1_STR)
+app.include_router(ws_router, prefix=settings.API_V1_STR)
 
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+@app.get("/health", tags=["Health"])
+def health_check():
+    return {"status": "ok", "service": settings.PROJECT_NAME}
