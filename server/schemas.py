@@ -1,75 +1,136 @@
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 
-# Campaign Schemas
-class CampaignBase(BaseModel):
-    name: str
-    brand_id: str
-    start_date: datetime
-    end_date: datetime
 
-class CampaignCreate(CampaignBase):
-    pass
+# User Schemas
+class UserBase(BaseModel):
+    email: str
+    is_admin: Optional[bool] = False
 
-class CampaignUpdate(CampaignBase):
-    pass
 
-class Campaign(CampaignBase):
-    campaign_id: UUID4
+class UserRegister(UserBase):
+    password: str
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class UserResponse(UserBase):
+    id: str
     created_at: datetime
     updated_at: datetime
 
     class Config:
+        from_attributes = True
         orm_mode = True
 
-# Deliverable Schemas
-class DeliverableBase(BaseModel):
+
+# Token Schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+
+
+# Item Image Schemas
+class ItemImageBase(BaseModel):
+    image_url: str
+
+
+class ItemImageCreate(ItemImageBase):
+    pass
+
+
+class ItemImageResponse(ItemImageBase):
+    id: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+        orm_mode = True
+
+
+# Item Schemas
+class ItemBase(BaseModel):
+    item_type: str  # 'lost' or 'found'
+    category: str
+    color: Optional[str] = None
+    brand: Optional[str] = None
     description: str
-    platform: str
-    due_date: datetime
-    status: Optional[str] = "pending"
+    location: str
+    item_date: date
 
-class DeliverableCreate(DeliverableBase):
-    pass
 
-class DeliverableUpdate(DeliverableBase):
-    pass
+class ItemCreate(ItemBase):
+    image_urls: Optional[List[str]] = []
 
-class Deliverable(DeliverableBase):
-    deliverable_id: UUID4
-    campaign_id: UUID4
+
+class ItemResponse(ItemBase):
+    id: str
+    user_id: Optional[str] = None
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    images: List[ItemImageResponse] = []
+
+    class Config:
+        from_attributes = True
+        orm_mode = True
+
+
+# Match Schemas
+class MatchResponse(BaseModel):
+    matched_item_id: str
+    similarity_score: float
+    category: str
+    color: Optional[str] = None
+    brand: Optional[str] = None
+    location: str
+    item_date: date
+    image_url: Optional[str] = None
+
+
+# Claim Schemas
+class ClaimCreate(BaseModel):
+    item_id: str
+
+
+class ClaimResponse(BaseModel):
+    id: str
+    item_id: str
+    claimant_id: str
+    verifier_id: Optional[str] = None
+    status: str
     created_at: datetime
     updated_at: datetime
 
     class Config:
+        from_attributes = True
         orm_mode = True
 
-# Social Media Account Schemas
-class SocialMediaAccountBase(BaseModel):
-    platform: str
-    auth_code: str
 
-class SocialMediaAccountCreate(SocialMediaAccountBase):
-    pass
+class ClaimVerify(BaseModel):
+    status: str  # 'approved' or 'rejected'
 
-class SocialMediaAccount(BaseModel):
-    account_id: UUID4
-    platform: str
 
-    class Config:
-        orm_mode = True
+# Message Schemas
+class MessageCreate(BaseModel):
+    text: str
 
-# Engagement Metric Schemas
-class EngagementMetricBase(BaseModel):
-    metric_type: str
-    value: int
-    timestamp: datetime
-    content_id: str
 
-class EngagementMetric(EngagementMetricBase):
-    metric_id: UUID4
-    account_id: UUID4
+class MessageResponse(BaseModel):
+    id: str
+    claim_id: str
+    sender_id: str
+    text: str
+    created_at: datetime
 
     class Config:
+        from_attributes = True
         orm_mode = True

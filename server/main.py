@@ -1,17 +1,47 @@
 from fastapi import FastAPI
-from .database import engine
-from . import models
-from .routers import campaigns, deliverables, social_media, metrics
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import os
 
-models.Base.metadata.create_all(bind=engine)
+from .database import init_db, seed_data, SessionLocal
+from .routers import auth, items, claims
 
-app = FastAPI()
 
-app.include_router(campaigns.router, prefix="/api/v1/campaigns", tags=["campaigns"])
-app.include_router(deliverables.router, prefix="/api/v1", tags=["deliverables"])
-app.include_router(social_media.router, prefix="/api/v1", tags=["social_media"])
-app.include_router(metrics.router, prefix="/api/v1", tags=["metrics"])
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database schema
+    init_db()
+    # Seed initial data
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
+
+app = FastAPI(
+    title="Lost and Found Item Management System", version="1.0.0", lifespan=lifespan
+)
+
+# CORS Middleware
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+).split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(auth.router)
+app.include_router(items.router)
+app.include_router(claims.router)
+
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"status": "healthy", "service": "Lost and Found Item Management System API"}
