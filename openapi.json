@@ -1,34 +1,134 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Library Management System API",
+    "title": "Dairy Lost & Found Management System",
+    "description": "API for reporting lost/found items, AI matching, and admin verification.",
     "version": "1.0.0"
   },
   "paths": {
-    "/api/v1/password-reset/initiate": {
+    "/api/v1/items": {
       "post": {
         "tags": [
-          "password-reset"
+          "items"
         ],
-        "summary": "Initiate Password Reset",
-        "operationId": "initiate_password_reset_api_v1_password_reset_initiate_post",
+        "summary": "Report Item",
+        "operationId": "report_item_api_v1_items_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PasswordResetInitiateRequest"
+                "$ref": "#/components/schemas/ItemCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemResponse"
+                }
               }
             }
           },
-          "required": true
-        },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "items"
+        ],
+        "summary": "List Items",
+        "operationId": "list_items_api_v1_items_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "'lost' or 'found'",
+              "title": "Type"
+            },
+            "description": "'lost' or 'found'"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "'unclaimed', 'claimed', 'reunited'",
+              "title": "Status"
+            },
+            "description": "'unclaimed', 'claimed', 'reunited'"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PasswordResetInitiateResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemResponse"
+                  },
+                  "title": "Response List Items Api V1 Items Get"
                 }
               }
             }
@@ -46,30 +146,31 @@
         }
       }
     },
-    "/api/v1/password-reset/verify-otp": {
-      "post": {
+    "/api/v1/items/{item_id}": {
+      "get": {
         "tags": [
-          "password-reset"
+          "items"
         ],
-        "summary": "Verify Otp",
-        "operationId": "verify_otp_api_v1_password_reset_verify_otp_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OTPVerifyRequest"
-              }
+        "summary": "Get Item Details",
+        "operationId": "get_item_details_api_v1_items__item_id__get",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OTPVerifyResponse"
+                  "$ref": "#/components/schemas/ItemResponse"
                 }
               }
             }
@@ -87,30 +188,52 @@
         }
       }
     },
-    "/api/v1/password-reset/verify-security-question": {
-      "post": {
+    "/api/v1/items/{item_id}/matches": {
+      "get": {
         "tags": [
-          "password-reset"
+          "matches"
         ],
-        "summary": "Verify Security Question",
-        "operationId": "verify_security_question_api_v1_password_reset_verify_security_question_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SecurityQuestionVerifyRequest"
-              }
+        "summary": "Get Item Matches",
+        "operationId": "get_item_matches_api_v1_items__item_id__matches_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
             }
           },
-          "required": true
-        },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100.0,
+              "minimum": 0.0,
+              "default": 60.0,
+              "title": "Threshold"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SecurityQuestionVerifyResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MatchResponse"
+                  },
+                  "title": "Response Get Item Matches Api V1 Items  Item Id  Matches Get"
                 }
               }
             }
@@ -128,22 +251,149 @@
         }
       }
     },
-    "/api/v1/password-reset/set-new-password": {
+    "/api/v1/claims": {
       "post": {
         "tags": [
-          "password-reset"
+          "claims"
         ],
-        "summary": "Set New Password",
-        "operationId": "set_new_password_api_v1_password_reset_set_new_password_post",
+        "summary": "Submit Claim",
+        "operationId": "submit_claim_api_v1_claims_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SetNewPasswordRequest"
+                "$ref": "#/components/schemas/ClaimCreate"
               }
             }
           },
           "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/claims": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Pending Claims",
+        "operationId": "list_pending_claims_api_v1_admin_claims_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimResponse"
+                  },
+                  "title": "Response List Pending Claims Api V1 Admin Claims Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/claims/{claim_id}/verify": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Verify Claim",
+        "operationId": "verify_claim_api_v1_admin_claims__claim_id__verify_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimVerifyRequest"
+              }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -151,7 +401,269 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SetNewPasswordResponse"
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/items/{item_id}/history": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Audit Trail",
+        "operationId": "get_audit_trail_api_v1_admin_items__item_id__history_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimHistoryResponse"
+                  },
+                  "title": "Response Get Audit Trail Api V1 Admin Items  Item Id  History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/claims": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Pending Claims",
+        "operationId": "list_pending_claims_admin_claims_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimResponse"
+                  },
+                  "title": "Response List Pending Claims Admin Claims Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/claims/{claim_id}/verify": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Verify Claim",
+        "operationId": "verify_claim_admin_claims__claim_id__verify_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimVerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/items/{item_id}/history": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Audit Trail",
+        "operationId": "get_audit_trail_admin_items__item_id__history_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimHistoryResponse"
+                  },
+                  "title": "Response Get Audit Trail Admin Items  Item Id  History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Register User",
+        "operationId": "register_user_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -171,9 +683,6 @@
     },
     "/api/v1/auth/token": {
       "post": {
-        "tags": [
-          "auth"
-        ],
         "summary": "Login For Access Token",
         "operationId": "login_for_access_token_api_v1_auth_token_post",
         "requestBody": {
@@ -210,1168 +719,20 @@
         }
       }
     },
-    "/api/v1/auth/login": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Login Json",
-        "operationId": "login_json_api_v1_auth_login_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/users/me": {
+    "/health": {
       "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Read Users Me",
-        "operationId": "read_users_me_api_v1_users_me_get",
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
                 }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/books": {
-      "get": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Read Books",
-        "operationId": "read_books_api_v1_books_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Search by title, author, or ISBN",
-              "title": "Search"
-            },
-            "description": "Search by title, author, or ISBN"
-          },
-          {
-            "name": "genre",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by genre",
-              "title": "Genre"
-            },
-            "description": "Filter by genre"
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BookResponse"
-                  },
-                  "title": "Response Read Books Api V1 Books Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Create Book",
-        "operationId": "create_book_api_v1_books_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BookCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/books/{book_id}": {
-      "get": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Read Book",
-        "operationId": "read_book_api_v1_books__book_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Update Book",
-        "operationId": "update_book_api_v1_books__book_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BookUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Delete Book",
-        "operationId": "delete_book_api_v1_books__book_id__delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members": {
-      "get": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Read Members",
-        "operationId": "read_members_api_v1_members_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponse"
-                  },
-                  "title": "Response Read Members Api V1 Members Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Create Member",
-        "operationId": "create_member_api_v1_members_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members/{member_id}": {
-      "get": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Read Member",
-        "operationId": "read_member_api_v1_members__member_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Update Member",
-        "operationId": "update_member_api_v1_members__member_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members/{member_id}/loans": {
-      "get": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Read Member Loans",
-        "operationId": "read_member_loans_api_v1_members__member_id__loans_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoanResponse"
-                  },
-                  "title": "Response Read Member Loans Api V1 Members  Member Id  Loans Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans": {
-      "post": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Checkout Book",
-        "operationId": "checkout_book_api_v1_loans_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoanCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/loans/{loan_id}/return": {
-      "put": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Return Book",
-        "operationId": "return_book_api_v1_loans__loan_id__return_put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "loan_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Loan Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans/reminders": {
-      "post": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Send Due Reminders",
-        "operationId": "send_due_reminders_api_v1_loans_reminders_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/fines": {
-      "get": {
-        "tags": [
-          "fines"
-        ],
-        "summary": "Read Fines",
-        "operationId": "read_fines_api_v1_fines_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FineResponse"
-                  },
-                  "title": "Response Read Fines Api V1 Fines Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/fines/{fine_id}/pay": {
-      "post": {
-        "tags": [
-          "fines"
-        ],
-        "summary": "Pay Fine",
-        "operationId": "pay_fine_api_v1_fines__fine_id__pay_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "fine_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Fine Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FineResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/inventory": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Read Inventory Items",
-        "operationId": "read_inventory_items_api_v1_inventory_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Search by name, supplier, or category",
-              "title": "Search"
-            },
-            "description": "Search by name, supplier, or category"
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by category",
-              "title": "Category"
-            },
-            "description": "Filter by category"
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryItemResponse"
-                  },
-                  "title": "Response Read Inventory Items Api V1 Inventory Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Create Inventory Item",
-        "operationId": "create_inventory_item_api_v1_inventory_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InventoryItemCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/inventory/{item_id}": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Read Inventory Item",
-        "operationId": "read_inventory_item_api_v1_inventory__item_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Update Inventory Item",
-        "operationId": "update_inventory_item_api_v1_inventory__item_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InventoryItemUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Delete Inventory Item",
-        "operationId": "delete_inventory_item_api_v1_inventory__item_id__delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/": {
-      "get": {
-        "summary": "Read Root",
-        "operationId": "read_root__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           }
@@ -1440,71 +801,35 @@
         ],
         "title": "Body_login_for_access_token_api_v1_auth_token_post"
       },
-      "BookCreate": {
+      "ClaimCreate": {
         "properties": {
-          "title": {
+          "item_id": {
             "type": "string",
-            "title": "Title"
+            "title": "Item Id"
           },
-          "author": {
+          "proof_of_ownership": {
             "type": "string",
-            "title": "Author"
-          },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
+            "title": "Proof Of Ownership"
           }
         },
         "type": "object",
         "required": [
-          "title",
-          "author",
-          "isbn"
+          "item_id",
+          "proof_of_ownership"
         ],
-        "title": "BookCreate"
+        "title": "ClaimCreate"
       },
-      "BookResponse": {
+      "ClaimHistoryResponse": {
         "properties": {
-          "title": {
+          "id": {
             "type": "string",
-            "title": "Title"
+            "title": "Id"
           },
-          "author": {
+          "item_id": {
             "type": "string",
-            "title": "Author"
+            "title": "Item Id"
           },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
+          "claim_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -1513,159 +838,104 @@
                 "type": "null"
               }
             ],
-            "title": "Genre"
+            "title": "Claim Id"
           },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
-          },
-          "id": {
+          "actor_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Id"
+            "title": "Actor Id"
           },
-          "available_copies": {
-            "type": "integer",
-            "title": "Available Copies"
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "details": {
+            "type": "string",
+            "title": "Details"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
-          "title",
-          "author",
-          "isbn",
           "id",
-          "available_copies",
-          "created_at",
-          "updated_at"
+          "item_id",
+          "actor_id",
+          "action",
+          "details",
+          "created_at"
         ],
-        "title": "BookResponse"
+        "title": "ClaimHistoryResponse"
       },
-      "BookUpdate": {
+      "ClaimResponse": {
         "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
           },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author"
+          "proof_of_ownership": {
+            "type": "string",
+            "title": "Proof Of Ownership"
           },
-          "isbn": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Copies"
-          },
-          "available_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Available Copies"
-          }
-        },
-        "type": "object",
-        "title": "BookUpdate"
-      },
-      "FineResponse": {
-        "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "loan_id": {
+          "claimant_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Loan Id"
-          },
-          "amount": {
-            "type": "number",
-            "title": "Amount"
+            "title": "Claimant Id"
           },
           "status": {
             "type": "string",
             "title": "Status"
           },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "admin_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Notes"
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -1675,28 +945,55 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
-          },
-          "loan": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LoanResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "type": "object",
         "required": [
+          "item_id",
+          "proof_of_ownership",
           "id",
-          "loan_id",
-          "amount",
+          "claimant_id",
           "status",
           "created_at",
           "updated_at"
         ],
-        "title": "FineResponse"
+        "title": "ClaimResponse"
+      },
+      "ClaimVerifyRequest": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "'approved' or 'rejected'"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "admin_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ClaimVerifyRequest"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1711,487 +1008,209 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "InventoryItemCreate": {
+      "ItemCreate": {
         "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "'lost' or 'found'"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
           "name": {
             "type": "string",
             "title": "Name"
           },
           "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Description"
           },
-          "quantity": {
-            "type": "integer",
-            "title": "Quantity",
-            "default": 0
-          },
-          "unit": {
+          "location": {
             "type": "string",
-            "title": "Unit"
+            "title": "Location"
           },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "unit"
-        ],
-        "title": "InventoryItemCreate"
-      },
-      "InventoryItemResponse": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "quantity": {
-            "type": "integer",
-            "title": "Quantity",
-            "default": 0
-          },
-          "unit": {
-            "type": "string",
-            "title": "Unit"
-          },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
-          },
-          "item_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Item Id"
-          },
-          "created_at": {
+          "date_incident": {
             "type": "string",
             "format": "date-time",
-            "title": "Created At"
+            "title": "Date Incident"
           },
-          "updated_at": {
+          "contact_info": {
             "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
+            "title": "Contact Info"
           },
-          "is_low_stock": {
-            "type": "boolean",
-            "title": "Is Low Stock",
-            "default": false
+          "images": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ItemImageCreate"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images",
+            "default": []
           }
         },
         "type": "object",
         "required": [
+          "type",
+          "category",
           "name",
-          "unit",
-          "item_id",
-          "created_at",
-          "updated_at"
+          "description",
+          "location",
+          "date_incident",
+          "contact_info"
         ],
-        "title": "InventoryItemResponse"
+        "title": "ItemCreate"
       },
-      "InventoryItemUpdate": {
+      "ItemImageCreate": {
         "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "quantity": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Quantity"
-          },
-          "unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit"
-          },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Low Stock Threshold"
-          }
-        },
-        "type": "object",
-        "title": "InventoryItemUpdate"
-      },
-      "LoanCreate": {
-        "properties": {
-          "book_id": {
+          "image_url": {
             "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
+            "title": "Image Url"
           },
-          "member_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
+          "file_size_mb": {
+            "type": "number",
+            "title": "File Size Mb"
           }
         },
         "type": "object",
         "required": [
-          "book_id",
-          "member_id"
+          "image_url",
+          "file_size_mb"
         ],
-        "title": "LoanCreate"
+        "title": "ItemImageCreate"
       },
-      "LoanResponse": {
+      "ItemImageResponse": {
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "book_id": {
+          "image_url": {
             "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
+            "title": "Image Url"
           },
-          "member_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
-          },
-          "checkout_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Checkout Date"
-          },
-          "due_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Due Date"
-          },
-          "return_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Return Date"
+          "file_size_mb": {
+            "type": "number",
+            "title": "File Size Mb"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "book": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/BookResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "member": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UserResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "type": "object",
         "required": [
           "id",
-          "book_id",
-          "member_id",
-          "checkout_date",
-          "due_date",
-          "created_at",
-          "updated_at"
+          "image_url",
+          "file_size_mb",
+          "created_at"
         ],
-        "title": "LoanResponse"
+        "title": "ItemImageResponse"
       },
-      "LoginRequest": {
+      "ItemResponse": {
         "properties": {
-          "email": {
+          "type": {
             "type": "string",
-            "title": "Email"
+            "title": "Type",
+            "description": "'lost' or 'found'"
           },
-          "password": {
+          "category": {
             "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "title": "LoginRequest"
-      },
-      "OTPVerifyRequest": {
-        "properties": {
-          "otp_code": {
-            "type": "string",
-            "title": "Otp Code"
+            "title": "Category"
           },
-          "otp_session_id": {
+          "name": {
             "type": "string",
-            "title": "Otp Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_code",
-          "otp_session_id"
-        ],
-        "title": "OTPVerifyRequest"
-      },
-      "OTPVerifyResponse": {
-        "properties": {
-          "security_question_session_id": {
-            "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "security_question_session_id"
-        ],
-        "title": "OTPVerifyResponse"
-      },
-      "PasswordResetInitiateRequest": {
-        "properties": {
-          "login_id": {
-            "type": "string",
-            "title": "Login Id"
+            "title": "Name"
           },
-          "mobile_number": {
+          "description": {
             "type": "string",
-            "title": "Mobile Number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "login_id",
-          "mobile_number"
-        ],
-        "title": "PasswordResetInitiateRequest"
-      },
-      "PasswordResetInitiateResponse": {
-        "properties": {
-          "otp_session_id": {
-            "type": "string",
-            "title": "Otp Session Id"
+            "title": "Description"
           },
-          "security_question": {
+          "location": {
             "type": "string",
-            "title": "Security Question"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_session_id",
-          "security_question"
-        ],
-        "title": "PasswordResetInitiateResponse"
-      },
-      "SecurityQuestionVerifyRequest": {
-        "properties": {
-          "answer": {
-            "type": "string",
-            "title": "Answer"
+            "title": "Location"
           },
-          "security_question_session_id": {
+          "date_incident": {
             "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "answer",
-          "security_question_session_id"
-        ],
-        "title": "SecurityQuestionVerifyRequest"
-      },
-      "SecurityQuestionVerifyResponse": {
-        "properties": {
-          "password_reset_session_id": {
-            "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "password_reset_session_id"
-        ],
-        "title": "SecurityQuestionVerifyResponse"
-      },
-      "SetNewPasswordRequest": {
-        "properties": {
-          "new_password": {
-            "type": "string",
-            "title": "New Password"
+            "format": "date-time",
+            "title": "Date Incident"
           },
-          "password_reset_session_id": {
+          "contact_info": {
             "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "new_password",
-          "password_reset_session_id"
-        ],
-        "title": "SetNewPasswordRequest"
-      },
-      "SetNewPasswordResponse": {
-        "properties": {
+            "title": "Contact Info"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "reporter_id": {
+            "type": "string",
+            "title": "Reporter Id"
+          },
           "status": {
             "type": "string",
             "title": "Status"
           },
-          "login_link": {
+          "created_at": {
             "type": "string",
-            "title": "Login Link"
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/ItemImageResponse"
+            },
+            "type": "array",
+            "title": "Images",
+            "default": []
           }
         },
         "type": "object",
         "required": [
+          "type",
+          "category",
+          "name",
+          "description",
+          "location",
+          "date_incident",
+          "contact_info",
+          "id",
+          "reporter_id",
           "status",
-          "login_link"
+          "created_at",
+          "updated_at"
         ],
-        "title": "SetNewPasswordResponse"
+        "title": "ItemResponse"
+      },
+      "MatchResponse": {
+        "properties": {
+          "matched_item": {
+            "$ref": "#/components/schemas/ItemResponse"
+          },
+          "similarity_score": {
+            "type": "number",
+            "title": "Similarity Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matched_item",
+          "similarity_score"
+        ],
+        "title": "MatchResponse"
       },
       "Token": {
         "properties": {
@@ -2202,12 +1221,16 @@
           "token_type": {
             "type": "string",
             "title": "Token Type"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
           }
         },
         "type": "object",
         "required": [
           "access_token",
-          "token_type"
+          "token_type",
+          "user"
         ],
         "title": "Token"
       },
@@ -2215,6 +1238,7 @@
         "properties": {
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
           },
           "full_name": {
@@ -2224,7 +1248,7 @@
           "role": {
             "type": "string",
             "title": "Role",
-            "default": "member"
+            "default": "user"
           },
           "password": {
             "type": "string",
@@ -2243,6 +1267,7 @@
         "properties": {
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
           },
           "full_name": {
@@ -2252,12 +1277,15 @@
           "role": {
             "type": "string",
             "title": "Role",
-            "default": "member"
+            "default": "user"
           },
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
           },
           "created_at": {
             "type": "string",
@@ -2275,60 +1303,11 @@
           "email",
           "full_name",
           "id",
+          "is_active",
           "created_at",
           "updated_at"
         ],
         "title": "UserResponse"
-      },
-      "UserUpdate": {
-        "properties": {
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
-          "full_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Full Name"
-          },
-          "role": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Role"
-          },
-          "password": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "title": "UserUpdate"
       },
       "ValidationError": {
         "properties": {

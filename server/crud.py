@@ -1,151 +1,124 @@
+from sqlalchemy.orm import Session, joinedload
+from server.models import User, Item, ItemImage, Claim, ClaimHistory
+from server.schemas import UserCreate, ItemCreate, ClaimCreate
+from server.security import get_password_hash
 import uuid
-from typing import List, Optional
-from sqlalchemy.orm import Session
-from server import models, schemas
 
 
 # User CRUD
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.email == email).first()
+def get_user_by_email(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()
 
 
-# Tournament CRUD
-def create_tournament(
-    db: Session, tournament_in: schemas.TournamentCreate
-) -> models.Tournament:
-    tournament = models.Tournament(
-        name=tournament_in.name,
-        total_rounds=tournament_in.total_rounds,
-        status="DRAFT",
-        current_round=0,
+def create_user(db: Session, user: UserCreate):
+    hashed_pw = get_password_hash(user.password)
+    db_user = User(
+        email=user.email,
+        hashed_password=hashed_pw,
+        full_name=user.full_name,
+        role=user.role,
     )
-    db.add(tournament)
-    db.commit()
-    db.refresh(tournament)
-    return tournament
+    db.add(db_user)
+    return db_user
 
 
-def get_tournament(
-    db: Session, tournament_id: uuid.UUID
-) -> Optional[models.Tournament]:
+# Item CRUD
+def get_item(db: Session, item_id: str):
     return (
-        db.query(models.Tournament)
-        .filter(models.Tournament.id == tournament_id)
+        db.query(Item)
+        .options(joinedload(Item.images))
+        .filter(Item.id == item_id)
         .first()
     )
 
 
-def list_tournaments(
-    db: Session, skip: int = 0, limit: int = 100
-) -> List[models.Tournament]:
-    return db.query(models.Tournament).offset(skip).limit(limit).all()
+def get_items(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    type_filter: str = None,
+    status_filter: str = None,
+):
+    query = db.query(Item).options(joinedload(Item.images))
+    if type_filter:
+        query = query.filter(Item.type == type_filter)
+    if status_filter:
+        query = query.filter(Item.status == status_filter)
+    return query.order_by(Item.created_at.desc()).offset(skip).limit(limit).all()
 
 
-# Player & Registration CRUD
-def register_player(
-    db: Session, player_in: schemas.PlayerCreate, tournament_id: uuid.UUID
-) -> models.Player:
-    # Check if email is already registered in this tournament
-    existing_reg = (
-        db.query(models.Registration)
-        .join(models.Player)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Player.email == player_in.email,
-        )
-        .first()
+def create_item(db: Session, item: ItemCreate, reporter_id: str):
+    item_id = str(uuid.uuid4())
+    db_item = Item(
+        id=item_id,
+        reporter_id=reporter_id,
+        type=item.type,
+        category=item.category,
+        name=item.name,
+        description=item.description,
+        location=item.location,
+        date_incident=item.date_incident,
+        contact_info=item.contact_info,
     )
-    if existing_reg:
-        raise ValueError("Player email already registered in this tournament")
+    db.add(db_item)
 
-    # Check if player exists globally, else create
-    player = (
-        db.query(models.Player).filter(models.Player.email == player_in.email).first()
-    )
-    if not player:
-        player = models.Player(
-            full_name=player_in.full_name,
-            email=player_in.email,
-            rating=player_in.rating if player_in.rating is not None else 1200,
-            fide_id=player_in.fide_id,
+    for img in item.images:
+        db_img = ItemImage(
+            item_id=item_id,
+            image_url=img.image_url,
+            file_size_mb=img.file_size_mb,
         )
-        db.add(player)
-        db.flush()
+        db.add(db_img)
 
-    # Create registration
-    reg = models.Registration(
-        tournament_id=tournament_id,
-        player_id=player.id,
-        status="ACTIVE",
+    return db_item
+
+
+# Claim CRUD
+def get_claim(db: Session, claim_id: str):
+    return db.query(Claim).filter(Claim.id == claim_id).first()
+
+
+def get_claims(db: Session, skip: int = 0, limit: int = 100, status_filter: str = None):
+    query = db.query(Claim)
+    if status_filter:
+        query = query.filter(Claim.status == status_filter)
+    return query.order_by(Claim.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def create_claim(db: Session, claim: ClaimCreate, claimant_id: str):
+    db_claim = Claim(
+        item_id=claim.item_id,
+        claimant_id=claimant_id,
+        proof_of_ownership=claim.proof_of_ownership,
     )
-    db.add(reg)
+    db.add(db_claim)
+    return db_claim
 
-    # Initialize standing entry
-    existing_standing = (
-        db.query(models.Standing)
-        .filter(
-            models.Standing.tournament_id == tournament_id,
-            models.Standing.player_id == player.id,
-        )
-        .first()
+
+# Claim History CRUD
+def create_history_entry(
+    db: Session,
+    item_id: str,
+    actor_id: str,
+    action: str,
+    details: str,
+    claim_id: str = None,
+):
+    db_history = ClaimHistory(
+        item_id=item_id,
+        claim_id=claim_id,
+        actor_id=actor_id,
+        action=action,
+        details=details,
     )
-    if not existing_standing:
-        standing = models.Standing(
-            tournament_id=tournament_id,
-            player_id=player.id,
-            total_points=0.0,
-            buchholz=0.0,
-            sonneborn_berger=0.0,
-        )
-        db.add(standing)
-
-    db.commit()
-    db.refresh(player)
-    return player
+    db.add(db_history)
+    return db_history
 
 
-def get_tournament_players(
-    db: Session, tournament_id: uuid.UUID
-) -> List[models.Player]:
+def get_item_history(db: Session, item_id: str):
     return (
-        db.query(models.Player)
-        .join(models.Registration, models.Registration.player_id == models.Player.id)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Registration.status == "ACTIVE",
-        )
+        db.query(ClaimHistory)
+        .filter(ClaimHistory.item_id == item_id)
+        .order_by(ClaimHistory.created_at.asc())
         .all()
-    )
-
-
-def get_player(db: Session, player_id: uuid.UUID) -> Optional[models.Player]:
-    return db.query(models.Player).filter(models.Player.id == player_id).first()
-
-
-# Round & Match CRUD
-def get_round(db: Session, round_id: uuid.UUID) -> Optional[models.Round]:
-    return db.query(models.Round).filter(models.Round.id == round_id).first()
-
-
-def get_match(db: Session, match_id: uuid.UUID) -> Optional[models.Match]:
-    return db.query(models.Match).filter(models.Match.id == match_id).first()
-
-
-# Standing CRUD
-def get_standings(db: Session, tournament_id: uuid.UUID) -> List[models.Standing]:
-    return (
-        db.query(models.Standing)
-        .filter(models.Standing.tournament_id == tournament_id)
-        .all()
-    )
-
-
-# Certificate CRUD
-def get_certificate_by_uuid(
-    db: Session, verification_uuid: uuid.UUID
-) -> Optional[models.Certificate]:
-    return (
-        db.query(models.Certificate)
-        .filter(models.Certificate.verification_uuid == verification_uuid)
-        .first()
     )
