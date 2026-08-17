@@ -1,20 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
         "surface-container": "#e7eefe",
         "on-secondary-fixed": "#002113",
         "secondary-fixed-dim": "#4edea3",
-        "tertiary": "#684000",
+        tertiary: "#684000",
         "inverse-on-surface": "#ebf1ff",
         "surface-container-lowest": "#ffffff",
         "on-secondary-container": "#00714d",
-        "primary": "#3525cd",
+        primary: "#3525cd",
         "on-secondary-fixed-variant": "#005236",
         "on-primary": "#ffffff",
         "surface-container-highest": "#dce2f3",
@@ -28,10 +25,10 @@ export default {
         "surface-bright": "#f9f9ff",
         "primary-fixed-dim": "#c3c0ff",
         "surface-variant": "#dce2f3",
-        "background": "#f9f9ff",
-        "error": "#ba1a1a",
+        background: "#f9f9ff",
+        error: "#ba1a1a",
         "on-primary-container": "#dad7ff",
-        "secondary": "#006c49",
+        secondary: "#006c49",
         "surface-container-low": "#f0f3ff",
         "on-background": "#151c27",
         "inverse-primary": "#c3c0ff",
@@ -39,7 +36,7 @@ export default {
         "outline-variant": "#c7c4d8",
         "tertiary-fixed-dim": "#ffb95f",
         "primary-fixed": "#e2dfff",
-        "surface": "#f9f9ff",
+        surface: "#f9f9ff",
         "on-primary-fixed-variant": "#3323cc",
         "secondary-container": "#6cf8bb",
         "secondary-fixed": "#6ffbbe",
@@ -48,17 +45,17 @@ export default {
         "on-tertiary-container": "#ffd4a4",
         "on-surface-variant": "#464555",
         "on-primary-fixed": "#0f0069",
-        "outline": "#777587",
+        outline: "#777587",
         "on-surface": "#151c27",
         "primary-container": "#4f46e5",
         "surface-tint": "#4d44e3",
         "on-tertiary": "#ffffff",
-        "inverse-surface": "#2a313d"
+        "inverse-surface": "#2a313d",
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ["Inter", "sans-serif"],
       },
     },
   },
   plugins: [],
-}
+};
