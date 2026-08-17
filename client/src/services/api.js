@@ -112,4 +112,56 @@ export const certificateService = {
   },
 };
 
+// Lost and Found Services
+export const itemService = {
+  reportItem: async (itemData) => {
+    const response = await api.post("/api/v1/items", itemData);
+    return response.data;
+  },
+  getItems: async (params = {}) => {
+    const response = await api.get("/api/v1/items", { params });
+    return response.data;
+  },
+  getItem: async (itemId) => {
+    const response = await api.get(`/api/v1/items/${itemId}`);
+    return response.data;
+  },
+  getItemMatches: async (itemId) => {
+    const response = await api.get(`/api/v1/items/${itemId}/matches`);
+    return response.data;
+  },
+};
+
+export const claimService = {
+  submitClaim: async (claimData) => {
+    const response = await api.post("/api/v1/claims", claimData);
+    return response.data;
+  },
+  getClaims: async (params = {}) => {
+    const response = await api.get("/api/v1/claims", { params });
+    return response.data;
+  },
+  getClaim: async (claimId) => {
+    const response = await api.get(`/api/v1/claims/${claimId}`);
+    return response.data;
+  },
+  verifyClaim: async (claimId, status) => {
+    const response = await api.put(`/api/v1/claims/${claimId}/verify`, {
+      status,
+    });
+    return response.data;
+  },
+};
+
+export const adminService = {
+  getItems: async (params = {}) => {
+    const response = await api.get("/api/v1/admin/items", { params });
+    return response.data;
+  },
+  getClaims: async (params = {}) => {
+    const response = await api.get("/api/v1/admin/claims", { params });
+    return response.data;
+  },
+};
+
 export default api;

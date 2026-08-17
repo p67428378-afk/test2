@@ -7,22 +7,12 @@ import App from "./App.jsx";
 // Mock the API services to avoid real network calls during tests
 vi.mock("./services/api.js", () => {
   return {
-    authService: {
-      getCurrentUser: vi.fn().mockRejectedValue(new Error("No token")),
-      login: vi.fn(),
-      logout: vi.fn(),
+    itemService: {
+      getItems: vi.fn().mockResolvedValue([]),
+      getItemMatches: vi.fn().mockResolvedValue([]),
     },
-    bookService: {
-      getBooks: vi.fn().mockResolvedValue([]),
-    },
-    memberService: {
-      getMembers: vi.fn().mockResolvedValue([]),
-    },
-    loanService: {
-      getMemberLoans: vi.fn().mockResolvedValue([]),
-    },
-    fineService: {
-      getFines: vi.fn().mockResolvedValue([]),
+    claimService: {
+      getClaims: vi.fn().mockResolvedValue([]),
     },
     default: {
       interceptors: {
@@ -33,18 +23,13 @@ vi.mock("./services/api.js", () => {
 });
 
 describe("App Component", () => {
-  it("renders the login form when not authenticated", async () => {
+  it("renders the dashboard page", async () => {
     render(<App />);
 
-    // Check that the welcome message is displayed
-    expect(screen.getByText("Welcome to LibMax")).toBeInTheDocument();
-    expect(screen.getByText("Library Management System")).toBeInTheDocument();
-
-    // Check that the email and password inputs are present
-    expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-
-    // Check that the sign in button is present
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+    // Check that the dashboard header is displayed
+    expect(screen.getByText("Lost & Found Items")).toBeInTheDocument();
+    expect(
+      screen.getByText("Browse reported items or report a new one."),
+    ).toBeInTheDocument();
   });
 });
