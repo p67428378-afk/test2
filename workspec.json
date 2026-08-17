@@ -1,0 +1,512 @@
+{
+  "meta": {
+    "issue_key": "SCRUM-79",
+    "repo_url": "https://github.com/p67428378-afk/test2",
+    "staging_branch": "staging/ISSUE-SCRUM-79",
+    "feature_branch": "ISSUE-SCRUM-79",
+    "created_at": "2026-08-17T15:11:31.657Z",
+    "spec_version": "1.0.0"
+  },
+  "requirements": {
+    "summary": "Build a Food Donation Management System where restaurants donate surplus food, NGOs accept requests, volunteers deliver donations, and food freshness is monitored.",
+    "acceptance_criteria": [
+      "Role-Based Access Control and Multi-Portal Authentication",
+      "Surplus Food Posting & Real-Time Freshness Monitoring",
+      "NGO Claim Allocation and Request Handling",
+      "Volunteer Dispatch, Delivery Routing, and Digital Proof of Delivery",
+      "Admin Oversight, Waste Analytics, and Audit Logs"
+    ],
+    "is_fullstack": true,
+    "is_backend_only": false,
+    "notes": ""
+  },
+  "tech_stack": {
+    "backend": {
+      "language": "Python",
+      "framework": "FastAPI",
+      "orm": "SQLAlchemy",
+      "database": "PostgreSQL",
+      "test_runner": "pytest",
+      "package_manager": "pip"
+    },
+    "frontend": {
+      "framework": "React",
+      "bundler": "Vite",
+      "styling": "Tailwind CSS",
+      "package_manager": "npm"
+    }
+  },
+  "api_contracts": [
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "description": "Register a new user with role (donor, ngo, volunteer, admin)",
+      "request_body": {
+        "email": "string",
+        "password": "string",
+        "role": "string",
+        "name": "string",
+        "phone": "string",
+        "address": "string"
+      },
+      "response": {
+        "id": "string",
+        "email": "string",
+        "role": "string",
+        "name": "string"
+      },
+      "errors": [
+        {
+          "status": 400,
+          "when": "Email already registered"
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "description": "Login and receive JWT token",
+      "request_body": {
+        "email": "string",
+        "password": "string"
+      },
+      "response": {
+        "access_token": "string",
+        "token_type": "string",
+        "user": {
+          "id": "string",
+          "email": "string",
+          "role": "string",
+          "name": "string"
+        }
+      },
+      "errors": [
+        {
+          "status": 401,
+          "when": "Invalid credentials"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/donations",
+      "description": "Get all active donations (filtered by location, quantity, food type)",
+      "response": [
+        {
+          "id": "string",
+          "donor_id": "string",
+          "category": "string",
+          "quantity": 0.0,
+          "preparation_time": "string",
+          "storage_condition": "string",
+          "pickup_address": "string",
+          "estimated_shelf_life": 0,
+          "freshness_status": "string",
+          "created_at": "string",
+          "updated_at": "string"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/donations",
+      "description": "Create a new food donation",
+      "request_body": {
+        "category": "string",
+        "quantity": 0.0,
+        "preparation_time": "string",
+        "storage_condition": "string",
+        "pickup_address": "string",
+        "estimated_shelf_life": 0
+      },
+      "response": {
+        "id": "string",
+        "donor_id": "string",
+        "category": "string",
+        "quantity": 0.0,
+        "preparation_time": "string",
+        "storage_condition": "string",
+        "pickup_address": "string",
+        "estimated_shelf_life": 0,
+        "freshness_status": "string"
+      },
+      "errors": [
+        {
+          "status": 401,
+          "when": "Not authenticated"
+        },
+        {
+          "status": 403,
+          "when": "Not a donor"
+        }
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/donations/{id}/freshness",
+      "description": "Update freshness status of a donation",
+      "response": {
+        "id": "string",
+        "freshness_status": "string"
+      },
+      "errors": [
+        {
+          "status": 404,
+          "when": "Donation not found"
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/claims",
+      "description": "Claim a donation (full or partial quantity)",
+      "request_body": {
+        "donation_id": "string",
+        "quantity": 0.0,
+        "target_pickup_time": "string"
+      },
+      "response": {
+        "id": "string",
+        "donation_id": "string",
+        "ngo_id": "string",
+        "quantity": 0.0,
+        "target_pickup_time": "string",
+        "status": "string"
+      },
+      "errors": [
+        {
+          "status": 400,
+          "when": "Insufficient quantity or donation expired"
+        },
+        {
+          "status": 403,
+          "when": "Not an NGO"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/claims",
+      "description": "Get claims for the authenticated user",
+      "response": [
+        {
+          "id": "string",
+          "donation_id": "string",
+          "ngo_id": "string",
+          "quantity": 0.0,
+          "target_pickup_time": "string",
+          "status": "string"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/deliveries",
+      "description": "Get all deliveries or filter by volunteer",
+      "response": [
+        {
+          "id": "string",
+          "claim_id": "string",
+          "volunteer_id": "string",
+          "status": "string",
+          "photo_url": "string",
+          "signature": "string"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/deliveries/{id}/status",
+      "description": "Update delivery status (TASK_ACCEPTED, ARRIVED_AT_PICKUP, IN_TRANSIT, DELIVERED)",
+      "request_body": {
+        "status": "string",
+        "photo_url": "string",
+        "signature": "string"
+      },
+      "response": {
+        "id": "string",
+        "status": "string"
+      },
+      "errors": [
+        {
+          "status": 404,
+          "when": "Delivery not found"
+        }
+      ]
+    }
+  ],
+  "db_schema": {
+    "tables": [
+      {
+        "name": "users",
+        "columns": [
+          {
+            "name": "id",
+            "type": "UUID",
+            "primary_key": true,
+            "nullable": false
+          },
+          {
+            "name": "email",
+            "type": "VARCHAR",
+            "unique": true,
+            "nullable": false
+          },
+          {
+            "name": "hashed_password",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "role",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "phone",
+            "type": "VARCHAR",
+            "nullable": true
+          },
+          {
+            "name": "address",
+            "type": "VARCHAR",
+            "nullable": true
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          }
+        ]
+      },
+      {
+        "name": "donations",
+        "columns": [
+          {
+            "name": "id",
+            "type": "UUID",
+            "primary_key": true,
+            "nullable": false
+          },
+          {
+            "name": "donor_id",
+            "type": "UUID",
+            "foreign_key": "users.id",
+            "nullable": false
+          },
+          {
+            "name": "category",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "quantity",
+            "type": "FLOAT",
+            "nullable": false
+          },
+          {
+            "name": "preparation_time",
+            "type": "TIMESTAMP",
+            "nullable": false
+          },
+          {
+            "name": "storage_condition",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "pickup_address",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "estimated_shelf_life",
+            "type": "INTEGER",
+            "nullable": false
+          },
+          {
+            "name": "freshness_status",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          }
+        ]
+      },
+      {
+        "name": "claims",
+        "columns": [
+          {
+            "name": "id",
+            "type": "UUID",
+            "primary_key": true,
+            "nullable": false
+          },
+          {
+            "name": "donation_id",
+            "type": "UUID",
+            "foreign_key": "donations.id",
+            "nullable": false
+          },
+          {
+            "name": "ngo_id",
+            "type": "UUID",
+            "foreign_key": "users.id",
+            "nullable": false
+          },
+          {
+            "name": "quantity",
+            "type": "FLOAT",
+            "nullable": false
+          },
+          {
+            "name": "target_pickup_time",
+            "type": "TIMESTAMP",
+            "nullable": false
+          },
+          {
+            "name": "status",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          }
+        ]
+      },
+      {
+        "name": "deliveries",
+        "columns": [
+          {
+            "name": "id",
+            "type": "UUID",
+            "primary_key": true,
+            "nullable": false
+          },
+          {
+            "name": "claim_id",
+            "type": "UUID",
+            "foreign_key": "claims.id",
+            "nullable": false
+          },
+          {
+            "name": "volunteer_id",
+            "type": "UUID",
+            "foreign_key": "users.id",
+            "nullable": true
+          },
+          {
+            "name": "status",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "photo_url",
+            "type": "VARCHAR",
+            "nullable": true
+          },
+          {
+            "name": "signature",
+            "type": "VARCHAR",
+            "nullable": true
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          },
+          {
+            "name": "updated_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          }
+        ]
+      },
+      {
+        "name": "freshness_logs",
+        "columns": [
+          {
+            "name": "id",
+            "type": "UUID",
+            "primary_key": true,
+            "nullable": false
+          },
+          {
+            "name": "donation_id",
+            "type": "UUID",
+            "foreign_key": "donations.id",
+            "nullable": false
+          },
+          {
+            "name": "old_status",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "new_status",
+            "type": "VARCHAR",
+            "nullable": false
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          }
+        ]
+      }
+    ],
+    "relationships": []
+  },
+  "file_plan": {
+    "backend": [
+      "server/requirements.txt",
+      "server/database.py",
+      "server/models.py",
+      "server/schemas.py",
+      "server/auth.py",
+      "server/main.py",
+      "server/tests/conftest.py",
+      "server/tests/test_auth.py",
+      "server/tests/test_donations.py",
+      "server/tests/test_claims.py",
+      "server/tests/test_deliveries.py"
+    ],
+    "frontend": []
+  },
+  "status": {
+    "spec_complete": true,
+    "backend_validated": false,
+    "backend_push_complete": false,
+    "frontend_validated": false,
+    "frontend_push_complete": false,
+    "staging_branch": "staging/ISSUE-SCRUM-79"
+  }
+}
