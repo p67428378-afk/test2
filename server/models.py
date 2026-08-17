@@ -1,16 +1,5 @@
 import uuid
-from sqlalchemy import (
-    Column,
-    String,
-    DateTime,
-    Boolean,
-    ForeignKey,
-    Integer,
-    Float,
-    UniqueConstraint,
-    TypeDecorator,
-    CHAR,
-)
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, CHAR, TypeDecorator
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.database import Base
@@ -53,198 +42,52 @@ class GUID(TypeDecorator):
                 return value
 
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    full_name = Column(String(255), nullable=True)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(
-        String(50), default="member", nullable=False
-    )  # 'admin', 'organizer', 'member'
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_verified = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-
-class Tournament(Base):
-    __tablename__ = "tournaments"
+class Item(Base):
+    __tablename__ = "items"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    category = Column(String(255), nullable=False)
+    location = Column(String(255), nullable=False)
+    report_date = Column(DateTime, nullable=False)
+    contact_info = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False)  # 'lost' or 'found'
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    images = relationship(
+        "ItemImage", back_populates="item", cascade="all, delete-orphan"
+    )
+    claims = relationship("Claim", back_populates="item", cascade="all, delete-orphan")
+
+
+class ItemImage(Base):
+    __tablename__ = "item_images"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    item_id = Column(GUID(), ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
+    image_url = Column(String(512), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    item = relationship("Item", back_populates="images")
+
+
+class Claim(Base):
+    __tablename__ = "claims"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    item_id = Column(GUID(), ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
+    claimant_details = Column(Text, nullable=False)
+    claim_date = Column(DateTime, nullable=False)
     status = Column(
-        String(50), default="DRAFT", nullable=False
-    )  # 'DRAFT', 'ACTIVE', 'COMPLETED'
-    total_rounds = Column(Integer, default=5, nullable=False)
-    current_round = Column(Integer, default=0, nullable=False)
+        String(50), default="pending", nullable=False
+    )  # 'pending', 'approved', 'rejected'
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    registrations = relationship(
-        "Registration", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    rounds = relationship(
-        "Round", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="tournament", cascade="all, delete-orphan"
-    )
-
-
-class Player(Base):
-    __tablename__ = "players"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    full_name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False, index=True)
-    rating = Column(Integer, default=1200, nullable=False)
-    fide_id = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    registrations = relationship(
-        "Registration", back_populates="player", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="player", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="player", cascade="all, delete-orphan"
-    )
-
-
-class Registration(Base):
-    __tablename__ = "registrations"
-    __table_args__ = (
-        UniqueConstraint("tournament_id", "player_id", name="uq_tournament_player"),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    status = Column(
-        String(50), default="ACTIVE", nullable=False
-    )  # 'ACTIVE', 'WITHDRAWN'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="registrations")
-    player = relationship("Player", back_populates="registrations")
-
-
-class Round(Base):
-    __tablename__ = "rounds"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    round_number = Column(Integer, nullable=False)
-    is_closed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="rounds")
-    matches = relationship(
-        "Match", back_populates="round", cascade="all, delete-orphan"
-    )
-
-
-class Match(Base):
-    __tablename__ = "matches"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    round_id = Column(
-        GUID(), ForeignKey("rounds.id", ondelete="CASCADE"), nullable=False
-    )
-    board_number = Column(Integer, nullable=True)
-    white_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    black_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    result = Column(
-        String(50), default="PENDING", nullable=False
-    )  # 'PENDING', '1-0', '0-1', '0.5-0.5', 'BYE'
-    is_bye = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    round = relationship("Round", back_populates="matches")
-    white_player = relationship("Player", foreign_keys=[white_player_id])
-    black_player = relationship("Player", foreign_keys=[black_player_id])
-
-
-class Standing(Base):
-    __tablename__ = "standings"
-    __table_args__ = (
-        UniqueConstraint(
-            "tournament_id", "player_id", name="uq_tournament_player_standing"
-        ),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    total_points = Column(Float, default=0.0, nullable=False)
-    buchholz = Column(Float, default=0.0, nullable=False)
-    sonneborn_berger = Column(Float, default=0.0, nullable=False)
-    rank = Column(Integer, nullable=True)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    tournament = relationship("Tournament", back_populates="standings")
-    player = relationship("Player", back_populates="standings")
-
-
-class Certificate(Base):
-    __tablename__ = "certificates"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    verification_uuid = Column(
-        GUID(), default=uuid.uuid4, unique=True, index=True, nullable=False
-    )
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    rank = Column(Integer, nullable=False)
-    total_points = Column(Float, default=0.0, nullable=False)
-    issued_at = Column(DateTime, default=func.now(), nullable=False)
-    qr_code_url = Column(String(512), nullable=True)
-
-    tournament = relationship("Tournament", back_populates="certificates")
-    player = relationship("Player", back_populates="certificates")
-
-
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    admin_id = Column(String(255), nullable=True)
-    match_id = Column(
-        GUID(), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True
-    )
-    original_score = Column(String(50), nullable=True)
-    new_score = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=func.now(), nullable=False)
+    item = relationship("Item", back_populates="claims")

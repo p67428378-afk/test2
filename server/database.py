@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from server.config import settings
 
 engine = create_engine(
     settings.DATABASE_URL,
@@ -27,43 +26,33 @@ def init_db():
 
 
 def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+    # Idempotent seeding of some initial items if needed
+    from server.models import Item
+    import datetime
 
-    # Ensure tables exist
-    init_db()
-
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
+    # Check if we already have items
+    if db.query(Item).count() == 0:
+        item1 = Item(
+            name="iPhone 13 Pro",
+            description="Black iPhone 13 Pro with a blue silicone case, slightly scratched on the bottom left corner. Wallpaper is a mountain landscape.",
+            category="Electronics",
+            location="Student Union",
+            report_date=datetime.datetime.utcnow(),
+            contact_info="alex@example.com",
+            status="lost",
         )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
+        item2 = Item(
+            name="Leather Bi-fold Wallet",
+            description="A classic brown leather bi-fold men's wallet.",
+            category="Wallet",
+            location="Library Cafe",
+            report_date=datetime.datetime.utcnow(),
+            contact_info="sam@example.com",
+            status="found",
         )
-        db.add(admin_user)
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+        db.add(item1)
+        db.add(item2)
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()

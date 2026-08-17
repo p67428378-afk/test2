@@ -1,8 +1,6 @@
-# Chess Tournament Management System (`SCRUM-55`)
+# Lost and Found Management System (`SCRUM-72`)
 
-An end-to-end tournament management application supporting player registrations, FIDE Swiss-system pairings, match score tracking, live standings with Buchholz and Sonneborn-Berger tie-breaks, and verifiable digital certificates with QR codes.
-
-## Server
+An end-to-end Lost and Found Management System where users can report lost or found items, AI suggests possible matches, admins verify ownership, and claim history is maintained.
 
 ### Prerequisites
 - Python 3.11+
@@ -21,16 +19,12 @@ source server/.venv/bin/activate
 
 2. Install dependencies:
 ```bash
-cd server
 pip install -r requirements.txt
-cd ..
 ```
 
 ### Running Tests
 ```bash
-cd server
 python -m pytest -v
-cd ..
 ```
 
 ### Starting the Development Server
@@ -49,14 +43,14 @@ To run both backend and frontend together locally:
 ### 1. Environment Setup
 ```bash
 # Copy the example environment file
-cp server/.env.example .env
+cp .env.example .env
 ```
 
 ### 2. Start the Backend (Terminal 1)
 ```bash
 python -m venv server/.venv
 source server/.venv/bin/activate  # On Windows: server\.venv\Scripts\activate
-pip install -r server/requirements.txt
+pip install -r requirements.txt
 python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
 ```
 Backend API: `http://localhost:8000` | API Docs: `http://localhost:8000/docs`
@@ -70,11 +64,6 @@ npm run dev
 Frontend: `http://localhost:5173`
 
 The frontend connects to the backend API at `http://localhost:8000` by default via the `VITE_API_BASE_URL` environment variable.
-
-### 4. Test Credentials
-The backend seeds ready-to-use accounts on startup (idempotent):
-- **Regular user** — Email: `test@example.com`, Password: `testpassword`
-- **Admin/Organizer user** — Email: `admin@example.com`, Password: `adminpassword`, Role: `admin`
 
 ### Port Reference
 | Service  | Port | URL                        |
