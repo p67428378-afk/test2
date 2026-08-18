@@ -1,14 +1,18 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 
 engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
+    DATABASE_URL,
+    connect_args=connect_args,
+    poolclass=StaticPool if "sqlite" in DATABASE_URL else None,
 )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -23,47 +27,30 @@ def get_db():
 
 
 def init_db():
+    # Import models here to register them on Base.metadata
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+def seed_data(db):
+    from server.models import User
+    from server.auth import get_password_hash
+    from sqlalchemy.exc import IntegrityError
 
-    # Ensure tables exist
-    init_db()
+    _SEED_USERS = [
+        {"email": "test@example.com", "password": "testpassword", "role": "user"},
+        {"email": "admin@example.com", "password": "adminpassword", "role": "admin"},
+    ]
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
+    for u in _SEED_USERS:
+        if db.query(User).filter(User.email == u["email"]).first():
+            continue
+        db_user = User(
+            email=u["email"],
+            hashed_password=get_password_hash(u["password"]),
+            role=u["role"],
         )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+        db.add(db_user)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()

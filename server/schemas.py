@@ -1,44 +1,64 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
+class UserBase(BaseModel):
     email: EmailStr
+
+
+class UserRegister(UserBase):
     password: str
+    role: Optional[str] = "user"
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
+class UserResponse(UserBase):
+    id: str
     role: str
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 
-class TournamentCreate(TournamentBase):
-    pass
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
+class ItemImageResponse(BaseModel):
+    id: str
+    image_url: str
+
+    class Config:
+        from_attributes = True
+
+
+class ItemCreate(BaseModel):
+    type: str = Field(..., description="Must be 'lost' or 'found'")
+    category: str
+    description: str
+    location: Optional[str] = None
+    item_timestamp: Optional[datetime] = None
+    images: Optional[List[str]] = []
+
+
+class ItemResponse(BaseModel):
+    id: str
+    user_id: str
+    type: str
+    category: str
+    description: str
+    location: Optional[str] = None
+    item_timestamp: Optional[datetime] = None
     status: str
-    current_round: int
+    images: List[ItemImageResponse] = []
     created_at: datetime
     updated_at: datetime
 
@@ -46,85 +66,55 @@ class TournamentResponse(TournamentBase):
         from_attributes = True
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class ItemListResponse(BaseModel):
+    items: List[ItemResponse]
+    total: int
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
-
-
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class MatchSuggestionResponse(BaseModel):
+    id: str
+    lost_item_id: str
+    found_item_id: str
+    confidence_score: float
+    status: str
+    matched_item: ItemResponse
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class ClaimCreate(BaseModel):
+    item_id: str
+    proof: Optional[str] = None
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+class ClaimVerify(BaseModel):
+    status: str = Field(..., description="Must be 'approved' or 'rejected'")
+    notes: Optional[str] = None
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
+class ClaimResponse(BaseModel):
+    id: str
+    item_id: str
+    claimant_id: str
+    status: str
+    proof: Optional[str] = None
+    admin_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class ClaimHistoryResponse(BaseModel):
+    id: str
+    claim_id: str
+    event_type: str
+    notes: Optional[str] = None
+    performed_by_id: str
+    created_at: datetime
 
     class Config:
         from_attributes = True
