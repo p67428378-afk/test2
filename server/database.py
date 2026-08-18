@@ -1,20 +1,25 @@
+import os
+import uuid
+from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session
+from sqlalchemy.exc import IntegrityError
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/museum_app.db")
+
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
-def get_db():
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
@@ -22,48 +27,67 @@ def get_db():
         db.close()
 
 
-def init_db():
+def init_db() -> None:
+    # Import models so they register on Base.metadata
+    from server import models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+def seed_data(db: Session) -> None:
+    from server.models import User, Tour
+    from server.auth import get_password_hash
 
-    # Ensure tables exist
-    init_db()
+    # Seed Users
+    users_to_seed = [
+        {
+            "email": "test@example.com",
+            "password": "testpassword",
+            "full_name": "Test Visitor",
+            "role": "Visitor",
+        },
+        {
+            "email": "admin@example.com",
+            "password": "adminpassword",
+            "full_name": "Admin User",
+            "role": "Administrator",
+        },
+        {
+            "email": "guide@example.com",
+            "password": "guidepassword",
+            "full_name": "John Doe",
+            "role": "Guide",
+        },
+    ]
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
+    for u_data in users_to_seed:
+        existing = db.query(User).filter(User.email == u_data["email"]).first()
+        if not existing:
+            user = User(
+                id=str(uuid.uuid4()),
+                email=u_data["email"],
+                password_hash=get_password_hash(u_data["password"]),
+                full_name=u_data["full_name"],
+                role=u_data["role"],
+                is_active=True,
+            )
+            db.add(user)
+            try:
+                db.commit()
+            except IntegrityError:
+                db.rollback()
+
+    # Seed Sample Tour
+    existing_tour = db.query(Tour).filter(Tour.name == "Renaissance Art Tour").first()
+    if not existing_tour:
+        tour = Tour(
+            id=str(uuid.uuid4()),
+            name="Renaissance Art Tour",
+            description="Explore masterworks from the 15th century with expert art historians.",
+            duration_minutes=60,
         )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+        db.add(tour)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()

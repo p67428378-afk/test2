@@ -1,130 +1,123 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# --- USER SCHEMAS ---
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    full_name: str
+    role: Optional[str] = "Visitor"
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
+class UserLogin(BaseModel):
+    email: str
     password: str
 
 
 class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: str
+    full_name: str
     role: str
-
-    class Config:
-        from_attributes = True
+    created_at: datetime
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
+# --- TOUR SCHEMAS ---
+class TourCreate(BaseModel):
     name: str
-    total_rounds: int = Field(default=5, ge=1)
+    description: Optional[str] = None
+    duration_minutes: int = 60
 
 
-class TournamentCreate(TournamentBase):
-    pass
+class TourUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    duration_minutes: Optional[int] = None
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
+class TourResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    duration_minutes: int
+    created_at: datetime
+
+
+# --- SCHEDULE SCHEMAS ---
+class ScheduleCreate(BaseModel):
+    tour_id: str
+    guide_id: Optional[str] = None
+    start_time: datetime
+    max_capacity: int = Field(gt=0)
+
+
+class ScheduleUpdate(BaseModel):
+    tour_id: Optional[str] = None
+    guide_id: Optional[str] = None
+    start_time: Optional[datetime] = None
+    max_capacity: Optional[int] = None
+
+
+class ScheduleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    tour_id: str
+    guide_id: Optional[str] = None
+    start_time: datetime
+    max_capacity: int
+    booked_tickets: int = 0
+    remaining_capacity: int = 0
+    tour: Optional[TourResponse] = None
+    guide: Optional[UserResponse] = None
+
+
+# --- BOOKING SCHEMAS ---
+class BookingCreate(BaseModel):
+    schedule_id: str
+    ticket_count: int = Field(default=1, gt=0)
+
+
+class BookingResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    schedule_id: str
+    visitor_id: str
+    ticket_count: int
     status: str
-    current_round: int
+    created_at: datetime
+    schedule: Optional[ScheduleResponse] = None
+    visitor: Optional[UserResponse] = None
+
+
+# --- ATTENDANCE SCHEMAS ---
+class AttendanceCheckIn(BaseModel):
+    booking_id: str
+    status: str = "Checked-in"  # Checked-in, No-show, Unchecked
+
+
+class AttendanceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    booking_id: str
+    status: str
+    checked_in_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
-
-
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
-
-
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
-
-
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
-
-
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    visitor_name: Optional[str] = None
+    ticket_count: Optional[int] = None
+    booking: Optional[BookingResponse] = None
