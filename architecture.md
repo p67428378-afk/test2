@@ -27,29 +27,42 @@ graph TD
 
 ## Backend Modules (server/)
 - server/__init__.py
-- server/api/__init__.py
-- server/api/v1/__init__.py
-- server/api/v1/categories.py
-- server/api/v1/expenses.py
-- server/api/v1/router.py
+- server/crud.py
 - server/database.py
 - server/main.py
-- server/models/__init__.py
-- server/models/category.py
-- server/models/expense.py
-- server/schemas/__init__.py
-- server/schemas/category.py
-- server/schemas/expense.py
-- server/services/__init__.py
-- server/services/category_service.py
-- server/services/expense_service.py
+- server/models.py
+- server/routers/__init__.py
+- server/routers/categories.py
+- server/routers/expenses.py
+- server/schemas.py
 - server/tests/__init__.py
 - server/tests/conftest.py
 - server/tests/test_categories.py
 - server/tests/test_expenses.py
+- server/tests/test_summary.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/App.test.jsx
+- client/src/components/categories/CategoryFormCard.jsx
+- client/src/components/categories/CategoryTable.jsx
+- client/src/components/common/StatCard.jsx
+- client/src/components/expenses/ExpenseFilterBar.jsx
+- client/src/components/expenses/ExpenseFormCard.jsx
+- client/src/components/expenses/ExpenseTable.jsx
+- client/src/components/layout/Navbar.jsx
+- client/src/main.jsx
+- client/src/pages/CategoriesPage.jsx
+- client/src/pages/DashboardPage.jsx
+- client/src/pages/ExpensesPage.jsx
+- client/src/pages/ReportsPage.jsx
+- client/src/services/api.js
+- client/src/services/api.test.js
+- client/src/setup.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - POST /api/v1/categories

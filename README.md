@@ -1,4 +1,49 @@
-# Project
+# Expense Tracker Application
+
+Full-stack Expense Tracker application with FastAPI backend and React/Vite/Tailwind CSS frontend.
+
+### Setup & Installation
+```bash
+cd server
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Running Tests
+```bash
+pytest
+```
+
+### Running Development Server
+```bash
+uvicorn server.main:app --reload --port 8000
+```
+API Documentation will be available at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+---
+
+## Client (React + Vite + Tailwind CSS Frontend)
+
+### Setup & Installation
+```bash
+cd client
+npm install
+```
+
+### Running Frontend
+```bash
+npm run dev
+```
+The application will run on [http://localhost:5173](http://localhost:5173).
+
+---
+
+## Full-Stack Local Development
+
+1. **Start Backend**: `uvicorn server.main:app --port 8000`
+2. **Start Frontend**: `cd client && npm run dev`
+3. Access the web app at `http://localhost:5173`.
 
 ## Server
 
