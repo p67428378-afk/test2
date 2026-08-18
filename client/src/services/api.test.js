@@ -1,50 +1,36 @@
 import { describe, it, expect } from "vitest";
 import {
-  tournamentService,
-  playerService,
-  pairingService,
-  scoreService,
-  standingsService,
-  certificateService,
-  authService,
+  authAPI,
+  toursAPI,
+  schedulesAPI,
+  bookingsAPI,
+  attendanceAPI,
 } from "./api";
 
-describe("API Service Exports", () => {
-  it("exports tournamentService methods", () => {
-    expect(typeof tournamentService.getTournaments).toBe("function");
-    expect(typeof tournamentService.getTournament).toBe("function");
-    expect(typeof tournamentService.createTournament).toBe("function");
-    expect(typeof tournamentService.finishTournament).toBe("function");
+describe("API Services", () => {
+  it("exports authAPI endpoints", () => {
+    expect(typeof authAPI.login).toBe("function");
+    expect(typeof authAPI.register).toBe("function");
+    expect(typeof authAPI.getGuides).toBe("function");
   });
 
-  it("exports playerService methods", () => {
-    expect(typeof playerService.registerPlayer).toBe("function");
-    expect(typeof playerService.getRoster).toBe("function");
+  it("exports toursAPI endpoints", () => {
+    expect(typeof toursAPI.listTours).toBe("function");
+    expect(typeof toursAPI.createTour).toBe("function");
   });
 
-  it("exports pairingService methods", () => {
-    expect(typeof pairingService.generatePairings).toBe("function");
-    expect(typeof pairingService.getRounds).toBe("function");
+  it("exports schedulesAPI endpoints", () => {
+    expect(typeof schedulesAPI.listSchedules).toBe("function");
+    expect(typeof schedulesAPI.createSchedule).toBe("function");
   });
 
-  it("exports scoreService methods", () => {
-    expect(typeof scoreService.submitScore).toBe("function");
+  it("exports bookingsAPI endpoints", () => {
+    expect(typeof bookingsAPI.createBooking).toBe("function");
+    expect(typeof bookingsAPI.getMyBookings).toBe("function");
   });
 
-  it("exports standingsService methods", () => {
-    expect(typeof standingsService.getStandings).toBe("function");
-  });
-
-  it("exports certificateService methods", () => {
-    expect(typeof certificateService.verifyCertificate).toBe("function");
-    expect(typeof certificateService.getCertificatePdfUrl).toBe("function");
-    expect(certificateService.getCertificatePdfUrl("test-uuid")).toContain(
-      "/api/v1/certificates/test-uuid/pdf",
-    );
-  });
-
-  it("exports authService methods", () => {
-    expect(typeof authService.login).toBe("function");
-    expect(typeof authService.logout).toBe("function");
+  it("exports attendanceAPI endpoints", () => {
+    expect(typeof attendanceAPI.getAttendanceSheet).toBe("function");
+    expect(typeof attendanceAPI.checkInVisitor).toBe("function");
   });
 });

@@ -20,95 +20,129 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear token on 401 if unauthorized/expired
+      if (localStorage.getItem("token")) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.dispatchEvent(new Event("auth-expired"));
+      }
     }
-    return response.data;
+    return Promise.reject(error);
+  },
+);
+
+export const authAPI = {
+  register: async (userData) => {
+    const res = await api.post("/api/v1/auth/register", userData);
+    return res.data;
+  },
+  login: async (credentials) => {
+    const res = await api.post("/api/v1/auth/login", credentials);
+    if (res.data && res.data.access_token) {
+      localStorage.setItem("token", res.data.access_token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+    }
+    return res.data;
+  },
+  getMe: async () => {
+    const res = await api.get("/api/v1/auth/me");
+    return res.data;
+  },
+  getGuides: async () => {
+    const res = await api.get("/api/v1/auth/guides");
+    return res.data;
   },
   logout: () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   },
 };
 
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
-    return response.data;
+export const toursAPI = {
+  listTours: async (params = {}) => {
+    const res = await api.get("/api/v1/tours", { params });
+    return res.data;
   },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
-    return response.data;
+  getTour: async (id) => {
+    const res = await api.get(`/api/v1/tours/${id}`);
+    return res.data;
   },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
-    return response.data;
+  createTour: async (data) => {
+    const res = await api.post("/api/v1/tours", data);
+    return res.data;
   },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
-    return response.data;
+  updateTour: async (id, data) => {
+    const res = await api.put(`/api/v1/tours/${id}`, data);
+    return res.data;
   },
-};
-
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
-    return response.data;
-  },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
-    );
-    return response.data;
+  deleteTour: async (id) => {
+    const res = await api.delete(`/api/v1/tours/${id}`);
+    return res.data;
   },
 };
 
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
-    return response.data;
+export const schedulesAPI = {
+  listSchedules: async (params = {}) => {
+    const res = await api.get("/api/v1/schedules", { params });
+    return res.data;
   },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
+  getSchedule: async (id) => {
+    const res = await api.get(`/api/v1/schedules/${id}`);
+    return res.data;
   },
-};
-
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
-    });
-    return response.data;
+  createSchedule: async (data) => {
+    const res = await api.post("/api/v1/schedules", data);
+    return res.data;
+  },
+  updateSchedule: async (id, data) => {
+    const res = await api.put(`/api/v1/schedules/${id}`, data);
+    return res.data;
+  },
+  deleteSchedule: async (id) => {
+    const res = await api.delete(`/api/v1/schedules/${id}`);
+    return res.data;
   },
 };
 
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
-    );
-    return response.data;
+export const bookingsAPI = {
+  createBooking: async (data) => {
+    const res = await api.post("/api/v1/bookings", data);
+    return res.data;
+  },
+  getMyBookings: async () => {
+    const res = await api.get("/api/v1/bookings/my-bookings");
+    return res.data;
+  },
+  listAllBookings: async (params = {}) => {
+    const res = await api.get("/api/v1/bookings", { params });
+    return res.data;
+  },
+  getBooking: async (id) => {
+    const res = await api.get(`/api/v1/bookings/${id}`);
+    return res.data;
+  },
+  cancelBooking: async (id) => {
+    const res = await api.post(`/api/v1/bookings/${id}/cancel`);
+    return res.data;
+  },
+  deleteBooking: async (id) => {
+    const res = await api.delete(`/api/v1/bookings/${id}`);
+    return res.data;
   },
 };
 
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
-    return response.data;
+export const attendanceAPI = {
+  getAttendanceSheet: async (scheduleId) => {
+    const res = await api.get(`/api/v1/attendance/schedule/${scheduleId}`);
+    return res.data;
   },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
+  checkInVisitor: async (data) => {
+    const res = await api.post("/api/v1/attendance/check-in", data);
+    return res.data;
   },
 };
 

@@ -1,50 +1,30 @@
-// @vitest-environment jsdom
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import App from "./App.jsx";
+import App from "./App";
 
-// Mock the API services to avoid real network calls during tests
-vi.mock("./services/api.js", () => {
-  return {
-    authService: {
-      getCurrentUser: vi.fn().mockRejectedValue(new Error("No token")),
-      login: vi.fn(),
-      logout: vi.fn(),
-    },
-    bookService: {
-      getBooks: vi.fn().mockResolvedValue([]),
-    },
-    memberService: {
-      getMembers: vi.fn().mockResolvedValue([]),
-    },
-    loanService: {
-      getMemberLoans: vi.fn().mockResolvedValue([]),
-    },
-    fineService: {
-      getFines: vi.fn().mockResolvedValue([]),
-    },
-    default: {
-      interceptors: {
-        request: { use: vi.fn() },
-      },
-    },
-  };
-});
+vi.mock("./services/api", () => ({
+  authAPI: {
+    login: vi.fn(),
+    logout: vi.fn(),
+  },
+  toursAPI: {
+    listTours: vi.fn().mockResolvedValue([]),
+  },
+  schedulesAPI: {
+    listSchedules: vi.fn().mockResolvedValue([]),
+  },
+  bookingsAPI: {
+    getMyBookings: vi.fn().mockResolvedValue([]),
+  },
+  attendanceAPI: {
+    getAttendanceSheet: vi.fn().mockResolvedValue([]),
+  },
+}));
 
-describe("App Component", () => {
-  it("renders the login form when not authenticated", async () => {
+describe("App", () => {
+  it("renders application header and title", async () => {
     render(<App />);
-
-    // Check that the welcome message is displayed
-    expect(screen.getByText("Welcome to LibMax")).toBeInTheDocument();
-    expect(screen.getByText("Library Management System")).toBeInTheDocument();
-
-    // Check that the email and password inputs are present
-    expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-
-    // Check that the sign in button is present
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+    expect(screen.getByText(/Museum Tours/i)).toBeInTheDocument();
   });
 });
