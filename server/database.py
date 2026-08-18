@@ -1,18 +1,12 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/expense_tracker.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./expenses.db")
 
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args["check_same_thread"] = False
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    connect_args=connect_args
-)
+engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -28,26 +22,49 @@ def get_db():
 
 
 def init_db():
-    from server.models import Category, Expense  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
+def seed_data(db):
     from server.models import Category
+    from uuid import uuid4
 
     default_categories = [
-        {"name": "Food & Dining", "description": "Groceries, restaurants, fast food, and beverages"},
-        {"name": "Transport", "description": "Public transit, gas, ride-sharing, and vehicle maintenance"},
-        {"name": "Utilities", "description": "Electricity, water, gas, internet, and phone bills"},
-        {"name": "Entertainment", "description": "Movies, concerts, streaming services, and hobbies"},
+        {
+            "name": "Food & Dining",
+            "description": "Groceries, restaurants, and food items",
+        },
+        {
+            "name": "Transport",
+            "description": "Public transit, gas, taxi, and vehicle maintenance",
+        },
+        {
+            "name": "Utilities",
+            "description": "Electricity, water, internet, and phone bills",
+        },
+        {
+            "name": "Entertainment",
+            "description": "Movies, games, subscriptions, and leisure",
+        },
+        {
+            "name": "Shopping",
+            "description": "Clothing, electronics, and general merchandise",
+        },
+        {
+            "name": "Health & Medical",
+            "description": "Medical expenses, pharmacy, and wellness",
+        },
     ]
 
     for cat_data in default_categories:
         existing = db.query(Category).filter(Category.name == cat_data["name"]).first()
         if not existing:
-            new_cat = Category(name=cat_data["name"], description=cat_data["description"])
-            db.add(new_cat)
-    
+            category = Category(
+                id=str(uuid4()),
+                name=cat_data["name"],
+                description=cat_data["description"],
+            )
+            db.add(category)
     try:
         db.commit()
     except Exception:

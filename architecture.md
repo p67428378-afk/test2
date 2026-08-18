@@ -27,7 +27,7 @@ graph TD
 
 ## Backend Modules (server/)
 - server/__init__.py
-- server/crud.py
+- server/config.py
 - server/database.py
 - server/main.py
 - server/models.py

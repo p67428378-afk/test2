@@ -1,17 +1,15 @@
-import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from server.config import settings
 from server.database import init_db, seed_data, SessionLocal
 from server.routers import categories, expenses
-
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB schema and seed default data
+    # Startup logic
     init_db()
     db = SessionLocal()
     try:
@@ -19,28 +17,38 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
     yield
+    # Shutdown logic (if any)
 
 
 app = FastAPI(
-    title="Expense Tracker API",
-    description="RESTful API service for tracking and reporting expenses",
-    version="1.0.0",
-    lifespan=lifespan
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan,
 )
+
+# CORS Configuration
+allowed_origins = [
+    origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(categories.router, prefix="/api/v1")
-app.include_router(expenses.router, prefix="/api/v1")
+# Include routers
+app.include_router(categories.router, prefix=settings.API_V1_STR)
+app.include_router(expenses.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")
-@app.get("/api/v1/health")
+def root():
+    return {"message": "Welcome to the Expense Tracker API", "docs_url": "/docs"}
+
+
+@app.get("/health")
 def health_check():
-    return {"status": "ok", "service": "Expense Tracker API", "version": "1.0.0"}
+    return {"status": "healthy"}

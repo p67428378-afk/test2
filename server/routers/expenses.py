@@ -2,117 +2,191 @@ from datetime import date
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from uuid import uuid4
 
-from server import crud, schemas
 from server.database import get_db
+from server.models import Expense, Category
+from server import schemas
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
 
-def _to_expense_response(expense) -> schemas.ExpenseResponse:
-    category_name = expense.category.name if expense.category else None
-    return schemas.ExpenseResponse(
-        id=expense.id,
-        amount=expense.amount,
-        date=expense.date,
-        category_id=expense.category_id,
-        category_name=category_name,
-        payment_method=expense.payment_method,
-        description=expense.description,
-        created_at=expense.created_at,
-        updated_at=expense.updated_at
-    )
-
-
 @router.get("/summary", response_model=schemas.ExpenseSummaryResponse)
 def get_expense_summary(
-    start_date: Optional[date] = Query(None, description="Start date filter (YYYY-MM-DD)"),
-    end_date: Optional[date] = Query(None, description="End date filter (YYYY-MM-DD)"),
-    category_id: Optional[str] = Query(None, description="Category UUID filter"),
-    db: Session = Depends(get_db)
+    start_date: Optional[date] = Query(None, description="Start date filter"),
+    end_date: Optional[date] = Query(None, description="End date filter"),
+    db: Session = Depends(get_db),
 ):
-    """Get aggregated expense summary statistics."""
-    return crud.get_expense_summary(db, start_date=start_date, end_date=end_date, category_id=category_id)
+    query = db.query(Expense)
+    if start_date:
+        query = query.filter(Expense.date >= start_date)
+    if end_date:
+        query = query.filter(Expense.date <= end_date)
+
+    expenses = query.all()
+    total_expense = sum(e.amount for e in expenses)
+    total_transactions = len(expenses)
+
+    # Group by category
+    category_totals = {}
+    for e in expenses:
+        cat_id = e.category_id
+        if cat_id not in category_totals:
+            cat_name = e.category.name if e.category else "Uncategorized"
+            category_totals[cat_id] = {"name": cat_name, "total": 0.0}
+        category_totals[cat_id]["total"] += e.amount
+
+    by_category = []
+    for cat_id, data in category_totals.items():
+        pct = (data["total"] / total_expense * 100.0) if total_expense > 0 else 0.0
+        by_category.append(
+            schemas.CategorySummary(
+                category_id=cat_id,
+                category_name=data["name"],
+                total_amount=round(data["total"], 2),
+                percentage=round(pct, 2),
+            )
+        )
+
+    # Sort by total amount descending
+    by_category.sort(key=lambda x: x.total_amount, reverse=True)
+
+    return schemas.ExpenseSummaryResponse(
+        total_expense=round(total_expense, 2),
+        total_transactions=total_transactions,
+        start_date=start_date,
+        end_date=end_date,
+        by_category=by_category,
+    )
 
 
 @router.get("", response_model=List[schemas.ExpenseResponse])
-@router.get("/", response_model=List[schemas.ExpenseResponse])
 def list_expenses(
-    category_id: Optional[str] = Query(None, description="Filter by category UUID"),
     start_date: Optional[date] = Query(None, description="Start date filter"),
     end_date: Optional[date] = Query(None, description="End date filter"),
-    search: Optional[str] = Query(None, description="Search in description or payment method"),
+    category_id: Optional[str] = Query(None, description="Filter by category ID"),
+    search: Optional[str] = Query(
+        None, description="Search in description or payment method"
+    ),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """Retrieve list of expenses with optional filtering and pagination."""
-    expenses = crud.get_expenses(
-        db,
-        category_id=category_id,
-        start_date=start_date,
-        end_date=end_date,
-        search=search,
-        skip=skip,
-        limit=limit
-    )
-    return [_to_expense_response(e) for e in expenses]
-
-
-@router.post("", response_model=schemas.ExpenseResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=schemas.ExpenseResponse, status_code=status.HTTP_201_CREATED)
-def create_expense(expense_in: schemas.ExpenseCreate, db: Session = Depends(get_db)):
-    """Record a new expense."""
-    category = crud.get_category_by_id(db, expense_in.category_id)
-    if not category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Category with ID '{expense_in.category_id}' not found."
+    query = db.query(Expense)
+    if start_date:
+        query = query.filter(Expense.date >= start_date)
+    if end_date:
+        query = query.filter(Expense.date <= end_date)
+    if category_id:
+        query = query.filter(Expense.category_id == category_id)
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            (Expense.description.ilike(search_filter))
+            | (Expense.payment_method.ilike(search_filter))
         )
 
-    expense = crud.create_expense(db, expense_in)
-    return _to_expense_response(expense)
+    expenses = (
+        query.order_by(Expense.date.desc(), Expense.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    result = []
+    for e in expenses:
+        exp_dict = schemas.ExpenseResponse.model_validate(e)
+        exp_dict.category_name = e.category.name if e.category else None
+        result.append(exp_dict)
+
+    return result
+
+
+@router.post(
+    "", response_model=schemas.ExpenseResponse, status_code=status.HTTP_201_CREATED
+)
+def create_expense(expense_in: schemas.ExpenseCreate, db: Session = Depends(get_db)):
+    category = db.query(Category).filter(Category.id == expense_in.category_id).first()
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid category_id. Category does not exist.",
+        )
+
+    expense = Expense(
+        id=str(uuid4()),
+        amount=expense_in.amount,
+        date=expense_in.date,
+        category_id=expense_in.category_id,
+        payment_method=expense_in.payment_method,
+        description=expense_in.description,
+    )
+    db.add(expense)
+    db.commit()
+    db.refresh(expense)
+
+    res = schemas.ExpenseResponse.model_validate(expense)
+    res.category_name = category.name
+    return res
 
 
 @router.get("/{expense_id}", response_model=schemas.ExpenseResponse)
 def get_expense(expense_id: str, db: Session = Depends(get_db)):
-    """Get specific expense details by UUID."""
-    expense = crud.get_expense_by_id(db, expense_id)
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
     if not expense:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Expense with ID '{expense_id}' not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense record not found"
         )
-    return _to_expense_response(expense)
+    res = schemas.ExpenseResponse.model_validate(expense)
+    res.category_name = expense.category.name if expense.category else None
+    return res
 
 
 @router.put("/{expense_id}", response_model=schemas.ExpenseResponse)
-def update_expense(expense_id: str, expense_update: schemas.ExpenseUpdate, db: Session = Depends(get_db)):
-    """Update an existing expense record."""
-    if expense_update.category_id is not None:
-        category = crud.get_category_by_id(db, expense_update.category_id)
-        if not category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Category with ID '{expense_update.category_id}' not found."
-            )
-
-    expense = crud.update_expense(db, expense_id, expense_update)
+def update_expense(
+    expense_id: str, expense_in: schemas.ExpenseUpdate, db: Session = Depends(get_db)
+):
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
     if not expense:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Expense with ID '{expense_id}' not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense record not found"
         )
-    return _to_expense_response(expense)
+
+    if expense_in.category_id is not None:
+        category = (
+            db.query(Category).filter(Category.id == expense_in.category_id).first()
+        )
+        if not category:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid category_id. Category does not exist.",
+            )
+        expense.category_id = expense_in.category_id
+
+    if expense_in.amount is not None:
+        expense.amount = expense_in.amount
+    if expense_in.date is not None:
+        expense.date = expense_in.date
+    if expense_in.payment_method is not None:
+        expense.payment_method = expense_in.payment_method
+    if expense_in.description is not None:
+        expense.description = expense_in.description
+
+    db.commit()
+    db.refresh(expense)
+
+    res = schemas.ExpenseResponse.model_validate(expense)
+    res.category_name = expense.category.name if expense.category else None
+    return res
 
 
 @router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_expense(expense_id: str, db: Session = Depends(get_db)):
-    """Delete an expense record."""
-    success = crud.delete_expense(db, expense_id)
-    if not success:
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if not expense:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Expense with ID '{expense_id}' not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense record not found"
         )
+    db.delete(expense)
+    db.commit()
     return None

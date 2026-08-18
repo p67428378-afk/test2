@@ -1,83 +1,100 @@
-from datetime import date
+def test_create_expense(client):
+    # Get category ID
+    cats = client.get("/api/v1/categories").json()
+    category_id = cats[0]["id"]
 
-
-def test_expense_crud_workflow(client):
-    # 1. Fetch categories to get a valid category_id
-    cat_resp = client.get("/api/v1/categories")
-    assert cat_resp.status_code == 200
-    categories = cat_resp.json()
-    food_cat = next(c for c in categories if c["name"] == "Food & Dining")
-
-    # 2. Create expense
-    expense_payload = {
+    payload = {
         "amount": 45.50,
-        "date": "2026-02-15",
-        "category_id": food_cat["id"],
+        "date": "2026-05-18",
+        "category_id": category_id,
         "payment_method": "Credit Card",
-        "description": "Weekly grocery shopping"
+        "description": "Groceries at Supermarket",
     }
-    create_resp = client.post("/api/v1/expenses", json=expense_payload)
-    assert create_resp.status_code == 201
-    created_expense = create_resp.json()
-    expense_id = created_expense["id"]
-    assert created_expense["amount"] == 45.50
-    assert created_expense["category_name"] == "Food & Dining"
-    assert created_expense["description"] == "Weekly grocery shopping"
 
-    # 3. Get expense by ID
-    get_resp = client.get(f"/api/v1/expenses/{expense_id}")
-    assert get_resp.status_code == 200
-    assert get_resp.json()["id"] == expense_id
-
-    # 4. List expenses with filter
-    list_resp = client.get(f"/api/v1/expenses?category_id={food_cat['id']}")
-    assert list_resp.status_code == 200
-    expenses_list = list_resp.json()
-    assert any(e["id"] == expense_id for e in expenses_list)
-
-    # 5. Update expense
-    update_payload = {
-        "amount": 50.00,
-        "description": "Weekly grocery shopping - updated"
-    }
-    put_resp = client.put(f"/api/v1/expenses/{expense_id}", json=update_payload)
-    assert put_resp.status_code == 200
-    updated_expense = put_resp.json()
-    assert updated_expense["amount"] == 50.00
-    assert updated_expense["description"] == "Weekly grocery shopping - updated"
-
-    # 6. Delete expense
-    del_resp = client.delete(f"/api/v1/expenses/{expense_id}")
-    assert del_resp.status_code == 204
-
-    # Confirm deletion
-    get_after_del = client.get(f"/api/v1/expenses/{expense_id}")
-    assert get_after_del.status_code == 404
+    response = client.post("/api/v1/expenses", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["amount"] == 45.50
+    assert data["category_id"] == category_id
+    assert data["category_name"] == cats[0]["name"]
+    assert "id" in data
 
 
-def test_create_expense_invalid_category(client):
-    expense_payload = {
+def test_create_expense_invalid_category_fails(client):
+    payload = {
         "amount": 20.00,
-        "date": "2026-02-15",
-        "category_id": "non-existent-uuid",
+        "date": "2026-05-18",
+        "category_id": "invalid-uuid-12345",
         "payment_method": "Cash",
-        "description": "Coffee"
+        "description": "Coffee",
     }
-    resp = client.post("/api/v1/expenses", json=expense_payload)
-    assert resp.status_code == 404
-    assert "not found" in resp.json()["detail"]
+
+    response = client.post("/api/v1/expenses", json=payload)
+    assert response.status_code == 400
 
 
-def test_create_expense_invalid_amount(client):
-    cat_resp = client.get("/api/v1/categories")
-    categories = cat_resp.json()
-    
-    expense_payload = {
-        "amount": -10.00,  # Invalid non-positive amount
-        "date": "2026-02-15",
-        "category_id": categories[0]["id"],
-        "payment_method": "Cash",
-        "description": "Invalid"
-    }
-    resp = client.post("/api/v1/expenses", json=expense_payload)
-    assert resp.status_code == 422  # Unprocessable Entity from Pydantic validation
+def test_create_expense_invalid_amount_fails(client):
+    cats = client.get("/api/v1/categories").json()
+    category_id = cats[0]["id"]
+
+    payload = {"amount": -10.00, "date": "2026-05-18", "category_id": category_id}
+
+    response = client.post("/api/v1/expenses", json=payload)
+    assert response.status_code == 422  # Pydantic validation error
+
+
+def test_list_expenses_with_filters(client):
+    cats = client.get("/api/v1/categories").json()
+    cat_id = cats[0]["id"]
+
+    # Create 2 expenses
+    client.post(
+        "/api/v1/expenses",
+        json={
+            "amount": 100.0,
+            "date": "2026-05-01",
+            "category_id": cat_id,
+            "description": "Lunch",
+        },
+    )
+    client.post(
+        "/api/v1/expenses",
+        json={
+            "amount": 50.0,
+            "date": "2026-05-10",
+            "category_id": cat_id,
+            "description": "Dinner",
+        },
+    )
+
+    res = client.get(f"/api/v1/expenses?category_id={cat_id}&search=Lunch")
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 1
+    assert data[0]["description"] == "Lunch"
+
+
+def test_update_and_delete_expense(client):
+    cats = client.get("/api/v1/categories").json()
+    cat_id = cats[0]["id"]
+
+    create_res = client.post(
+        "/api/v1/expenses",
+        json={
+            "amount": 15.0,
+            "date": "2026-05-15",
+            "category_id": cat_id,
+            "description": "Taxi",
+        },
+    )
+    exp_id = create_res.json()["id"]
+
+    update_res = client.put(f"/api/v1/expenses/{exp_id}", json={"amount": 25.0})
+    assert update_res.status_code == 200
+    assert update_res.json()["amount"] == 25.0
+
+    del_res = client.delete(f"/api/v1/expenses/{exp_id}")
+    assert del_res.status_code == 204
+
+    get_res = client.get(f"/api/v1/expenses/{exp_id}")
+    assert get_res.status_code == 404
