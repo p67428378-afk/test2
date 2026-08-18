@@ -130,7 +130,11 @@ export default function ReportsPage() {
           <div className="space-y-6">
             {summary.by_category.map((item, idx) => {
               const amt =
-                typeof item.total_amount === "number" ? item.total_amount : 0;
+                typeof item.total_amount === "number"
+                  ? item.total_amount
+                  : typeof item.total === "number"
+                    ? item.total
+                    : 0;
               const pct =
                 typeof item.percentage === "number" ? item.percentage : 0;
               return (

@@ -76,6 +76,13 @@ export default function DashboardPage() {
   const topCategory = summary?.by_category?.[0];
   const totalSpend =
     typeof summary?.total_expense === "number" ? summary.total_expense : 0;
+  const topCategoryAmount = topCategory
+    ? typeof topCategory.total_amount === "number"
+      ? topCategory.total_amount
+      : typeof topCategory.total === "number"
+        ? topCategory.total
+        : 0
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -120,8 +127,8 @@ export default function DashboardPage() {
           title="Top Category"
           value={topCategory?.category_name || "N/A"}
           subtitle={
-            topCategory && typeof topCategory.total_amount === "number"
-              ? `$${topCategory.total_amount.toFixed(2)} (${(topCategory.percentage || 0).toFixed(1)}%)`
+            topCategory
+              ? `$${topCategoryAmount.toFixed(2)} (${(topCategory.percentage || 0).toFixed(1)}%)`
               : "No expenses logged"
           }
           icon={Tag}
@@ -155,7 +162,11 @@ export default function DashboardPage() {
           <div className="space-y-4">
             {summary.by_category.map((item, idx) => {
               const amt =
-                typeof item.total_amount === "number" ? item.total_amount : 0;
+                typeof item.total_amount === "number"
+                  ? item.total_amount
+                  : typeof item.total === "number"
+                    ? item.total
+                    : 0;
               const pct =
                 typeof item.percentage === "number" ? item.percentage : 0;
               return (
