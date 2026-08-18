@@ -1,151 +1,209 @@
-import uuid
-from typing import List, Optional
 from sqlalchemy.orm import Session
-from server import models, schemas
+from sqlalchemy import or_
+from typing import List, Optional
+from server.models import (
+    User,
+    Category,
+    DietaryTag,
+    Ingredient,
+    RecipeIngredient,
+    Recipe,
+)
+from server.schemas import UserCreate, RecipeCreate, RecipeUpdate
+from server.core.security import get_password_hash
 
 
 # User CRUD
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.email == email).first()
+def get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email == email).first()
 
 
-# Tournament CRUD
-def create_tournament(
-    db: Session, tournament_in: schemas.TournamentCreate
-) -> models.Tournament:
-    tournament = models.Tournament(
-        name=tournament_in.name,
-        total_rounds=tournament_in.total_rounds,
-        status="DRAFT",
-        current_round=0,
+def create_user(db: Session, user_in: UserCreate) -> User:
+    hashed_pw = get_password_hash(user_in.password)
+    db_user = User(
+        username=user_in.username,
+        email=user_in.email,
+        hashed_password=hashed_pw,
+        role="member",
     )
-    db.add(tournament)
+    db.add(db_user)
     db.commit()
-    db.refresh(tournament)
-    return tournament
+    db.refresh(db_user)
+    return db_user
 
 
-def get_tournament(
-    db: Session, tournament_id: uuid.UUID
-) -> Optional[models.Tournament]:
-    return (
-        db.query(models.Tournament)
-        .filter(models.Tournament.id == tournament_id)
-        .first()
+# Category CRUD
+def get_categories(db: Session) -> List[Category]:
+    return db.query(Category).all()
+
+
+# Recipe CRUD
+def create_recipe(db: Session, recipe_in: RecipeCreate, user_id: str) -> Recipe:
+    db_recipe = Recipe(
+        title=recipe_in.title,
+        description=recipe_in.description,
+        prep_time=recipe_in.prep_time,
+        cook_time=recipe_in.cook_time,
+        servings=recipe_in.servings,
+        instructions=recipe_in.instructions,
+        user_id=user_id,
+        category_id=recipe_in.category_id,
     )
+    db.add(db_recipe)
+    db.flush()  # Get recipe ID
 
+    # Handle Ingredients
+    for ing_item in recipe_in.ingredients:
+        # Find or create ingredient
+        db_ing = db.query(Ingredient).filter(Ingredient.name == ing_item.name).first()
+        if not db_ing:
+            db_ing = Ingredient(name=ing_item.name)
+            db.add(db_ing)
+            db.flush()
 
-def list_tournaments(
-    db: Session, skip: int = 0, limit: int = 100
-) -> List[models.Tournament]:
-    return db.query(models.Tournament).offset(skip).limit(limit).all()
-
-
-# Player & Registration CRUD
-def register_player(
-    db: Session, player_in: schemas.PlayerCreate, tournament_id: uuid.UUID
-) -> models.Player:
-    # Check if email is already registered in this tournament
-    existing_reg = (
-        db.query(models.Registration)
-        .join(models.Player)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Player.email == player_in.email,
+        # Create association
+        assoc = RecipeIngredient(
+            recipe_id=db_recipe.id,
+            ingredient_id=db_ing.id,
+            quantity=ing_item.quantity,
+            unit=ing_item.unit,
         )
-        .first()
-    )
-    if existing_reg:
-        raise ValueError("Player email already registered in this tournament")
+        db.add(assoc)
 
-    # Check if player exists globally, else create
-    player = (
-        db.query(models.Player).filter(models.Player.email == player_in.email).first()
-    )
-    if not player:
-        player = models.Player(
-            full_name=player_in.full_name,
-            email=player_in.email,
-            rating=player_in.rating if player_in.rating is not None else 1200,
-            fide_id=player_in.fide_id,
+    # Handle Dietary Tags
+    if recipe_in.dietary_tag_ids:
+        tags = (
+            db.query(DietaryTag)
+            .filter(DietaryTag.id.in_(recipe_in.dietary_tag_ids))
+            .all()
         )
-        db.add(player)
-        db.flush()
-
-    # Create registration
-    reg = models.Registration(
-        tournament_id=tournament_id,
-        player_id=player.id,
-        status="ACTIVE",
-    )
-    db.add(reg)
-
-    # Initialize standing entry
-    existing_standing = (
-        db.query(models.Standing)
-        .filter(
-            models.Standing.tournament_id == tournament_id,
-            models.Standing.player_id == player.id,
-        )
-        .first()
-    )
-    if not existing_standing:
-        standing = models.Standing(
-            tournament_id=tournament_id,
-            player_id=player.id,
-            total_points=0.0,
-            buchholz=0.0,
-            sonneborn_berger=0.0,
-        )
-        db.add(standing)
+        db_recipe.dietary_tags = tags
 
     db.commit()
-    db.refresh(player)
-    return player
+    db.refresh(db_recipe)
+    return db_recipe
 
 
-def get_tournament_players(
-    db: Session, tournament_id: uuid.UUID
-) -> List[models.Player]:
-    return (
-        db.query(models.Player)
-        .join(models.Registration, models.Registration.player_id == models.Player.id)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Registration.status == "ACTIVE",
+def get_recipes(
+    db: Session,
+    user_id: Optional[str] = None,
+    search: Optional[str] = None,
+    category_id: Optional[str] = None,
+    dietary_tags: Optional[List[str]] = None,
+    max_prep_time: Optional[int] = None,
+    max_cook_time: Optional[int] = None,
+    ingredients: Optional[List[str]] = None,
+    favorites_only: bool = False,
+) -> List[Recipe]:
+    query = db.query(Recipe)
+
+    if favorites_only and user_id:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            query = query.filter(Recipe.id.in_([r.id for r in user.favorite_recipes]))
+
+    if search:
+        query = query.filter(
+            or_(Recipe.title.icontains(search), Recipe.description.icontains(search))
         )
-        .all()
-    )
+
+    if category_id:
+        query = query.filter(Recipe.category_id == category_id)
+
+    if max_prep_time is not None:
+        query = query.filter(Recipe.prep_time <= max_prep_time)
+
+    if max_cook_time is not None:
+        query = query.filter(Recipe.cook_time <= max_cook_time)
+
+    if dietary_tags:
+        # Filter recipes that have ALL or ANY of the specified dietary tags
+        for tag_name in dietary_tags:
+            query = query.filter(Recipe.dietary_tags.any(DietaryTag.name == tag_name))
+
+    if ingredients:
+        # Filter recipes that contain any of the specified ingredients
+        query = query.filter(
+            Recipe.ingredient_associations.any(
+                RecipeIngredient.ingredient.has(Ingredient.name.in_(ingredients))
+            )
+        )
+
+    return query.all()
 
 
-def get_player(db: Session, player_id: uuid.UUID) -> Optional[models.Player]:
-    return db.query(models.Player).filter(models.Player.id == player_id).first()
+def get_recipe(db: Session, recipe_id: str) -> Optional[Recipe]:
+    return db.query(Recipe).filter(Recipe.id == recipe_id).first()
 
 
-# Round & Match CRUD
-def get_round(db: Session, round_id: uuid.UUID) -> Optional[models.Round]:
-    return db.query(models.Round).filter(models.Round.id == round_id).first()
+def update_recipe(db: Session, db_recipe: Recipe, recipe_in: RecipeUpdate) -> Recipe:
+    update_data = recipe_in.model_dump(exclude_unset=True)
+
+    # Update basic fields
+    for field in [
+        "title",
+        "description",
+        "prep_time",
+        "cook_time",
+        "servings",
+        "instructions",
+        "category_id",
+    ]:
+        if field in update_data:
+            setattr(db_recipe, field, update_data[field])
+
+    # Update Ingredients if provided
+    if "ingredients" in update_data and update_data["ingredients"] is not None:
+        # Delete existing associations
+        db.query(RecipeIngredient).filter(
+            RecipeIngredient.recipe_id == db_recipe.id
+        ).delete()
+
+        # Add new associations
+        for ing_item in update_data["ingredients"]:
+            db_ing = (
+                db.query(Ingredient).filter(Ingredient.name == ing_item["name"]).first()
+            )
+            if not db_ing:
+                db_ing = Ingredient(name=ing_item["name"])
+                db.add(db_ing)
+                db.flush()
+
+            assoc = RecipeIngredient(
+                recipe_id=db_recipe.id,
+                ingredient_id=db_ing.id,
+                quantity=ing_item["quantity"],
+                unit=ing_item.get("unit"),
+            )
+            db.add(assoc)
+
+    # Update Dietary Tags if provided
+    if "dietary_tag_ids" in update_data and update_data["dietary_tag_ids"] is not None:
+        tags = (
+            db.query(DietaryTag)
+            .filter(DietaryTag.id.in_(update_data["dietary_tag_ids"]))
+            .all()
+        )
+        db_recipe.dietary_tags = tags
+
+    db.commit()
+    db.refresh(db_recipe)
+    return db_recipe
 
 
-def get_match(db: Session, match_id: uuid.UUID) -> Optional[models.Match]:
-    return db.query(models.Match).filter(models.Match.id == match_id).first()
+def delete_recipe(db: Session, db_recipe: Recipe) -> None:
+    db.delete(db_recipe)
+    db.commit()
 
 
-# Standing CRUD
-def get_standings(db: Session, tournament_id: uuid.UUID) -> List[models.Standing]:
-    return (
-        db.query(models.Standing)
-        .filter(models.Standing.tournament_id == tournament_id)
-        .all()
-    )
+# Favorites CRUD
+def add_favorite(db: Session, user: User, recipe: Recipe) -> None:
+    if recipe not in user.favorite_recipes:
+        user.favorite_recipes.append(recipe)
+        db.commit()
 
 
-# Certificate CRUD
-def get_certificate_by_uuid(
-    db: Session, verification_uuid: uuid.UUID
-) -> Optional[models.Certificate]:
-    return (
-        db.query(models.Certificate)
-        .filter(models.Certificate.verification_uuid == verification_uuid)
-        .first()
-    )
+def remove_favorite(db: Session, user: User, recipe: Recipe) -> None:
+    if recipe in user.favorite_recipes:
+        user.favorite_recipes.remove(recipe)
+        db.commit()

@@ -1,102 +1,68 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-import jwt
-from typing import Optional
-from server import crud, schemas, models
+from jose import jwt, JWTError
 from server.database import get_db
-from server.core.security import verify_password, create_access_token
 from server.core.config import settings
+from server.core.security import verify_password, create_access_token
+from server.schemas import UserCreate, UserResponse, LoginRequest, Token, TokenData
+from server import crud
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_current_user(
-    token: Optional[str] = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
-) -> models.User:
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         email: str = payload.get("sub")
         if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-            )
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-        )
+            raise credentials_exception
+        token_data = TokenData(email=email, role=payload.get("role"))
+    except JWTError:
+        raise credentials_exception
 
-    user = crud.get_user_by_email(db, email=email)
-    if user is None or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive",
-        )
+    user = crud.get_user_by_email(db, email=token_data.email)
+    if user is None:
+        raise credentials_exception
     return user
 
 
-def get_current_admin(
-    current_user: models.User = Depends(get_current_user),
-) -> models.User:
-    if current_user.role not in ["admin", "organizer", "librarian"]:
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
+def register(user_in: UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user_in.email)
+    if db_user:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
-    return current_user
+    return crud.create_user(db, user_in=user_in)
 
 
-@router.post("/auth/login", response_model=schemas.Token)
-async def login(
-    request: Request,
-    db: Session = Depends(get_db),
-):
-    email = None
-    password = None
-
-    # Try JSON body first
-    try:
-        data = await request.json()
-        email = data.get("email") or data.get("username")
-        password = data.get("password")
-    except Exception:
-        # Fall back to form data
-        try:
-            form = await request.form()
-            email = form.get("username") or form.get("email")
-            password = form.get("password")
-        except Exception:
-            pass
-
-    if not email or not password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email and password required",
-        )
-
-    user = crud.get_user_by_email(db, email=email)
-    if not user or not verify_password(password, user.hashed_password):
+@router.post("/login", response_model=Token)
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    user = crud.get_user_by_email(db, email=login_data.email)
+    if not user or not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     access_token = create_access_token(subject=user.email, role=user.role)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
-@router.get("/auth/me", response_model=schemas.UserResponse)
-def read_users_me(current_user: models.User = Depends(get_current_user)):
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user=Depends(get_current_user)):
     return current_user

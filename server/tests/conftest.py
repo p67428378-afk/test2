@@ -1,11 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
-from server.main import app
+from sqlalchemy.pool import StaticPool
 from server.database import Base, get_db
+from server.main import app
 
+# Create in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite://"
 
 engine = create_engine(
@@ -18,7 +19,16 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
+    # Create tables
     Base.metadata.create_all(bind=engine)
+
+    # Seed initial data for tests
+    db = TestingSessionLocal()
+    from server.database import seed_data
+
+    seed_data(db)
+    db.close()
+
     yield
     Base.metadata.drop_all(bind=engine)
 
@@ -28,10 +38,6 @@ def db():
     connection = engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
 
     yield session
 

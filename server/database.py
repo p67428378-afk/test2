@@ -1,16 +1,14 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, declarative_base
 from server.core.config import settings
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# For SQLite, we need connect_args={"check_same_thread": False}
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
 
+engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
@@ -23,47 +21,62 @@ def get_db():
 
 
 def init_db():
+    # Import models here to register them on Base.metadata
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
+def seed_data(db):
+    from server.models import User, Category, DietaryTag
     from server.core.security import get_password_hash
+    from sqlalchemy.exc import IntegrityError
 
-    # Ensure tables exist
-    init_db()
+    # Seed Categories
+    categories = ["Breakfast", "Lunch", "Dinner", "Dessert", "Snack"]
+    for cat_name in categories:
+        existing = db.query(Category).filter(Category.name == cat_name).first()
+        if not existing:
+            db.add(Category(name=cat_name))
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
+    # Seed Dietary Tags
+    tags = ["Vegan", "Vegetarian", "Gluten-Free", "Keto", "Low-Carb"]
+    for tag_name in tags:
+        existing = db.query(DietaryTag).filter(DietaryTag.name == tag_name).first()
+        if not existing:
+            db.add(DietaryTag(name=tag_name))
 
     try:
         db.commit()
-    except Exception:
+    except IntegrityError:
         db.rollback()
+
+    # Seed Users
+    users_to_seed = [
+        {
+            "username": "testuser",
+            "email": "test@example.com",
+            "password": "testpassword",
+            "role": "member",
+        },
+        {
+            "username": "adminuser",
+            "email": "admin@example.com",
+            "password": "adminpassword",
+            "role": "admin",
+        },
+    ]
+
+    for u_data in users_to_seed:
+        existing = db.query(User).filter(User.email == u_data["email"]).first()
+        if not existing:
+            hashed_pw = get_password_hash(u_data["password"])
+            new_user = User(
+                username=u_data["username"],
+                email=u_data["email"],
+                hashed_password=hashed_pw,
+                role=u_data["role"],
+            )
+            db.add(new_user)
+            try:
+                db.commit()
+            except IntegrityError:
+                db.rollback()

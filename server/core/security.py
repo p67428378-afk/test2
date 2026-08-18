@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Any, Union
-import jwt
+from typing import Any, Union, Optional
+from jose import jwt
 from passlib.context import CryptContext
 from server.core.config import settings
 
@@ -29,6 +29,6 @@ def create_access_token(
 
     to_encode = {"exp": expire, "sub": str(subject), "role": role}
     encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM
     )
     return encoded_jwt

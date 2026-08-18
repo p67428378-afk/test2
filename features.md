@@ -113,6 +113,7 @@ Not yet authored.
 User Story: Inventory Management Module
 
 ### User Stories
+
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -169,3 +170,11 @@ Not yet authored.
 
 ### Deployment Notes
 Not yet authored.
+
+## SCRUM-31
+
+### Feature Summary
+
+
+### Key Features
+- None specified
