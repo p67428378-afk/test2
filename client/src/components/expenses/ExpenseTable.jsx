@@ -16,7 +16,7 @@ export default function ExpenseTable({
     );
   }
 
-  if (expenses.length === 0) {
+  if (!Array.isArray(expenses) || expenses.length === 0) {
     return (
       <div className="bg-white border border-[#e3e8f0] rounded-xl p-8 text-center text-gray-500 shadow-sm">
         No expense transactions found. Log a new expense to get started!
@@ -44,14 +44,21 @@ export default function ExpenseTable({
                 expense.category_name ||
                 categoriesMap[expense.category_id] ||
                 "Uncategorized";
+              const amountNum =
+                typeof expense.amount === "number"
+                  ? expense.amount
+                  : parseFloat(expense.amount) || 0;
+
               return (
                 <tr
                   key={expense.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    {expense.date}
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      {expense.date}
+                    </span>
                   </td>
                   <td className="px-6 py-4 font-medium max-w-xs truncate">
                     {expense.description || (
@@ -73,12 +80,12 @@ export default function ExpenseTable({
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-[#171c29]">
-                    ${Number(expense.amount).toFixed(2)}
+                    ${amountNum.toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={() => onEdit(expense)}
+                        onClick={() => onEdit && onEdit(expense)}
                         className="text-[#2663eb] hover:text-[#1d4ed8] p-1 rounded hover:bg-blue-50 transition-colors"
                         title="Edit Expense"
                         aria-label="Edit Expense"
@@ -86,7 +93,7 @@ export default function ExpenseTable({
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => onDelete(expense.id)}
+                        onClick={() => onDelete && onDelete(expense.id)}
                         className="text-[#db2626] hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
                         title="Delete Expense"
                         aria-label="Delete Expense"

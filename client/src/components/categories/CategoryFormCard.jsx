@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PlusFolder } from "lucide-react";
+import { FolderPlus } from "lucide-react";
 
 export default function CategoryFormCard({ onSubmit }) {
   const [name, setName] = useState("");
@@ -38,7 +38,7 @@ export default function CategoryFormCard({ onSubmit }) {
   return (
     <div className="bg-white border border-[#e3e8f0] rounded-xl p-6 shadow-sm">
       <h2 className="text-lg font-bold text-[#171c29] mb-4 flex items-center gap-2">
-        Add New Category
+        <FolderPlus className="w-5 h-5 text-[#2663eb]" /> Add New Category
       </h2>
 
       {error && (

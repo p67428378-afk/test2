@@ -32,10 +32,11 @@ export default function ExpensesPage() {
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
-      setCategories(data || []);
+      const list = Array.isArray(data) ? data : [];
+      setCategories(list);
       const map = {};
-      (data || []).forEach((c) => {
-        map[c.id] = c.name;
+      list.forEach((c) => {
+        if (c && c.id) map[c.id] = c.name;
       });
       setCategoriesMap(map);
     } catch (err) {
@@ -54,7 +55,12 @@ export default function ExpensesPage() {
       if (endDate) params.end_date = endDate;
 
       const response = await getExpenses(params);
-      setExpenses(response.items || []);
+      const list = Array.isArray(response)
+        ? response
+        : response?.items && Array.isArray(response.items)
+          ? response.items
+          : [];
+      setExpenses(list);
     } catch (err) {
       console.error(err);
       setError("Failed to load expenses.");
@@ -77,7 +83,14 @@ export default function ExpensesPage() {
     setCategoryId("");
     setStartDate("");
     setEndDate("");
-    getExpenses().then((res) => setExpenses(res.items || []));
+    getExpenses().then((res) => {
+      const list = Array.isArray(res)
+        ? res
+        : res?.items && Array.isArray(res.items)
+          ? res.items
+          : [];
+      setExpenses(list);
+    });
   };
 
   const handleFormSubmit = async (formData) => {

@@ -10,7 +10,7 @@ export default function CategoryTable({ categories = [], loading }) {
     );
   }
 
-  if (categories.length === 0) {
+  if (!Array.isArray(categories) || categories.length === 0) {
     return (
       <div className="bg-white border border-[#e3e8f0] rounded-xl p-8 text-center text-gray-500 shadow-sm">
         No categories found. Create a category to organize your expenses!
@@ -31,10 +31,15 @@ export default function CategoryTable({ categories = [], loading }) {
           </thead>
           <tbody className="divide-y divide-[#e3e8f0] text-sm text-[#171c29]">
             {categories.map((cat) => (
-              <tr key={cat.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-semibold text-[#2663eb] whitespace-nowrap flex items-center gap-2">
-                  <Folder className="w-4 h-4 text-[#2663eb]" />
-                  {cat.name}
+              <tr
+                key={cat.id || cat.name}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                <td className="px-6 py-4 font-semibold text-[#2663eb] whitespace-nowrap">
+                  <span className="flex items-center gap-2">
+                    <Folder className="w-4 h-4 text-[#2663eb]" />
+                    {cat.name}
+                  </span>
                 </td>
                 <td className="px-6 py-4 text-gray-600">
                   {cat.description || (
@@ -43,11 +48,13 @@ export default function CategoryTable({ categories = [], loading }) {
                     </span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-gray-500 whitespace-nowrap flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  {cat.created_at
-                    ? new Date(cat.created_at).toLocaleDateString()
-                    : "System Default"}
+                <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    {cat.created_at
+                      ? new Date(cat.created_at).toLocaleDateString()
+                      : "System Default"}
+                  </span>
                 </td>
               </tr>
             ))}

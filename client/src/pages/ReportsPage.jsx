@@ -40,6 +40,9 @@ export default function ReportsPage() {
     getExpenseSummary().then((data) => setSummary(data));
   };
 
+  const totalSpend =
+    typeof summary?.total_expense === "number" ? summary.total_expense : 0;
+
   return (
     <div className="space-y-6">
       <div>
@@ -106,10 +109,7 @@ export default function ReportsPage() {
           <p className="text-xs uppercase tracking-wider font-semibold opacity-80">
             Filtered Total Spend
           </p>
-          <p className="text-3xl font-bold mt-1">
-            $
-            {summary?.total_expense ? summary.total_expense.toFixed(2) : "0.00"}
-          </p>
+          <p className="text-3xl font-bold mt-1">${totalSpend.toFixed(2)}</p>
           <p className="text-xs mt-1 opacity-90">
             {summary?.start_date || summary?.end_date
               ? `Range: ${summary.start_date || "Beginning"} to ${summary.end_date || "Present"}`
@@ -128,29 +128,35 @@ export default function ReportsPage() {
           <p className="text-sm text-gray-500">Loading summary report...</p>
         ) : summary?.by_category?.length > 0 ? (
           <div className="space-y-6">
-            {summary.by_category.map((item) => (
-              <div key={item.category_id} className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-semibold text-[#171c29] text-base">
-                    {item.category_name}
-                  </span>
-                  <div className="text-right">
-                    <span className="font-bold text-[#2663eb] text-base">
-                      ${item.total_amount.toFixed(2)}
+            {summary.by_category.map((item, idx) => {
+              const amt =
+                typeof item.total_amount === "number" ? item.total_amount : 0;
+              const pct =
+                typeof item.percentage === "number" ? item.percentage : 0;
+              return (
+                <div key={item.category_id || idx} className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-[#171c29] text-base">
+                      {item.category_name || "Uncategorized"}
                     </span>
-                    <span className="text-xs text-[#707a8c] ml-2">
-                      ({item.percentage.toFixed(1)}%)
-                    </span>
+                    <div className="text-right">
+                      <span className="font-bold text-[#2663eb] text-base">
+                        ${amt.toFixed(2)}
+                      </span>
+                      <span className="text-xs text-[#707a8c] ml-2">
+                        ({pct.toFixed(1)}%)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#2663eb] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }}
+                    />
                   </div>
                 </div>
-                <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
-                  <div
-                    className="bg-[#2663eb] h-full rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(item.percentage, 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-gray-500 italic">
