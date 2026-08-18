@@ -1,14 +1,14 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./expenses.db")
+
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -22,47 +22,26 @@ def get_db():
         db.close()
 
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
+def init_db(target_engine=None):
+    bind_engine = target_engine or engine
+    Base.metadata.create_all(bind=bind_engine)
 
 
 def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+    from server.models.category import Category
 
-    # Ensure tables exist
-    init_db()
+    default_categories = [
+        {"name": "Food & Dining", "description": "Restaurants, groceries, and cafes"},
+        {"name": "Transport", "description": "Public transit, gas, parking, and rideshares"},
+        {"name": "Utilities", "description": "Electricity, water, internet, and phone"},
+        {"name": "Entertainment", "description": "Movies, concerts, streaming, and hobbies"},
+    ]
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
+    for cat_data in default_categories:
+        existing = db.query(Category).filter(Category.name == cat_data["name"]).first()
+        if not existing:
+            category = Category(name=cat_data["name"], description=cat_data["description"])
+            db.add(category)
     try:
         db.commit()
     except Exception:

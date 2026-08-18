@@ -1,60 +1,50 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
 from server.database import init_db, seed_data, SessionLocal
+from server.api.v1.router import api_v1_router
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema & seed default data
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Expense Tracker API",
+    description="RESTful API for expense logging, categorization, and reporting",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
+# CORS Middleware (MANDATORY for fullstack projects)
+raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
+allowed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+app.include_router(api_v1_router)
 
 
 @app.get("/")
-def read_root():
+def root():
     return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
+        "message": "Welcome to the Expense Tracker API",
+        "docs_url": "/docs",
+        "version": "1.0.0",
     }
