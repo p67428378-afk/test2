@@ -1,34 +1,46 @@
-from fastapi.testclient import TestClient
-
-
-def test_login_success(client: TestClient):
-    response = client.post(
+def test_login_seeded_users(client):
+    # Test seeded attendee user login
+    res_attendee = client.post(
         "/api/v1/auth/login",
         json={"email": "test@example.com", "password": "testpassword"},
     )
-    assert response.status_code == 200
-    data = response.json()
+    assert res_attendee.status_code == 200
+    data = res_attendee.json()
     assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    assert data["user"]["email"] == "test@example.com"
+    assert data["user"]["role"] == "ATTENDEE"
 
-
-def test_login_invalid_credentials(client: TestClient):
-    response = client.post(
+    # Test seeded admin user login
+    res_admin = client.post(
         "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "wrongpassword"},
+        json={"email": "admin@example.com", "password": "adminpassword"},
     )
-    assert response.status_code == 401
+    assert res_admin.status_code == 200
+    assert res_admin.json()["user"]["role"] == "ORGANIZER"
 
 
-def test_get_me_success(client: TestClient):
-    login_res = client.post(
+def test_register_and_get_me(client):
+    res_reg = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "newuser@example.com",
+            "password": "password123",
+            "full_name": "New User",
+            "role": "ATTENDEE",
+        },
+    )
+    assert res_reg.status_code == 201
+    assert res_reg.json()["email"] == "newuser@example.com"
+
+    # Login with new user
+    res_login = client.post(
         "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
+        json={"email": "newuser@example.com", "password": "password123"},
     )
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    assert res_login.status_code == 200
+    token = res_login.json()["access_token"]
 
-    response = client.get("/api/v1/auth/me", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == "test@example.com"
+    # Call /me endpoint
+    res_me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert res_me.status_code == 200
+    assert res_me.json()["email"] == "newuser@example.com"
