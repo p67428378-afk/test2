@@ -1,39 +1,40 @@
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
 import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends
+from starlette.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
+from server.database import init_db, seed_data, SessionLocal, get_db
+from server.routers import products, claims, documents
+from server.crud import evaluate_all_warranties
 
-# Initialize database tables
-init_db()
-
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
-
-app = FastAPI(
-    title="Chess Tournament Management System API",
-    version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
-)
-
-# CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000",
 ).split(",")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema and seed test accounts on startup
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
+
+app = FastAPI(
+    title="Warranty Tracker API",
+    description="REST API for product registration, warranty expiry tracking, and service claim management.",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# CORS Middleware Setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -42,19 +43,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Include Routers
+app.include_router(products.router)
+app.include_router(claims.router)
+app.include_router(documents.router)
 
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint confirming service and database connectivity."""
+    db.execute(text("SELECT 1"))
+    return {"status": "healthy", "service": "warranty-tracker", "database": "connected"}
+
+
+@app.post("/api/v1/expiry/evaluate")
+def trigger_expiry_evaluation(db: Session = Depends(get_db)):
+    """Manually trigger daily warranty expiry status evaluation and notification check."""
+    updated = evaluate_all_warranties(db)
+    return {"status": "success", "updated_warranties_count": updated}

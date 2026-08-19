@@ -1,11 +1,101 @@
-# Chess Tournament Management System (`SCRUM-55`)
+# Warranty Tracker
 
-An end-to-end tournament management application supporting player registrations, FIDE Swiss-system pairings, match score tracking, live standings with Buchholz and Sonneborn-Berger tie-breaks, and verifiable digital certificates with QR codes.
+A comprehensive Warranty Tracker web application allowing users to register products, store warranty terms, track expiration dates with status indicators, and maintain service and warranty claim history with an audit trail.
+
+---
+
+## 🚀 Full-Stack Local Development
+
+### Prerequisites
+- **Python 3.11+**
+- **Node.js 18+** & **npm**
+
+---
+
+## 🛠️ Server (Backend Setup)
+
+1. **Navigate to the server directory and create a virtual environment:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   pip install -r server/requirements.txt
+   ```
+
+3. **Run Automated Tests:**
+   ```bash
+   pytest server/tests
+   ```
+
+4. **Start the FastAPI Backend Development Server:**
+   ```bash
+   uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+   - API Documentation (Swagger UI): `http://localhost:8000/docs`
+   - Health Check: `http://localhost:8000/health`
+
+---
+
+## 💻 Client (Frontend Setup)
+
+1. **Navigate to the client directory:**
+   ```bash
+   cd client
+   ```
+
+2. **Install frontend dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the Vite Frontend Development Server:**
+   ```bash
+   npm run dev
+   ```
+   - Application URL: `http://localhost:5173`
+
+---
+
+## 🔑 Test Credentials (Pre-seeded Accounts)
+
+- **Regular User Account:**
+  - Email: `test@example.com`
+  - Password: `testpassword`
+
+- **Admin Account:**
+  - Email: `admin@example.com`
+  - Password: `adminpassword`
+
+---
+
+## 📂 Project Structure
+
+```
+.
+├── server/
+│   ├── main.py              # FastAPI app initialization and routes
+│   ├── database.py          # SQLAlchemy engine and session setup
+│   ├── models.py            # Relational database entities
+│   ├── schemas.py           # Pydantic data schemas
+│   ├── crud.py              # Database query logic
+│   ├── conftest.py          # Pytest setup and test fixtures
+│   ├── routers/             # API endpoint handlers
+│   │   ├── products.py
+│   │   ├── claims.py
+│   │   └── documents.py
+│   ├── services/            # Background warranty expiry service
+│   │   └── expiry.py
+│   └── tests/               # Automated pytest suite
+└── README.md
+```
 
 ## Server
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.9+
 - pip and venv
 
 ### Setup
@@ -49,7 +139,7 @@ To run both backend and frontend together locally:
 ### 1. Environment Setup
 ```bash
 # Copy the example environment file
-cp server/.env.example .env
+cp .env.example .env
 ```
 
 ### 2. Start the Backend (Terminal 1)
@@ -72,9 +162,14 @@ Frontend: `http://localhost:5173`
 The frontend connects to the backend API at `http://localhost:8000` by default via the `VITE_API_BASE_URL` environment variable.
 
 ### 4. Test Credentials
-The backend seeds ready-to-use accounts on startup (idempotent):
+If the app has authentication, the backend seeds ready-to-use accounts on startup
+(idempotent). These are guaranteed logged-in-able — every activation/verification
+gate (`is_active`, `is_verified`, `email_verified`, `disabled`) is set to the
+permissive value, so no manual DB step is needed:
 - **Regular user** — Email: `test@example.com`, Password: `testpassword`
-- **Admin/Organizer user** — Email: `admin@example.com`, Password: `adminpassword`, Role: `admin`
+- **Admin user** (only when the app has roles/RBAC) — Email: `admin@example.com`, Password: `adminpassword`, role: `admin`
+
+Passwords are stored hashed with the app's own hashing utility (never in plaintext).
 
 ### Port Reference
 | Service  | Port | URL                        |
@@ -82,3 +177,4 @@ The backend seeds ready-to-use accounts on startup (idempotent):
 | Backend  | 8000 | http://localhost:8000      |
 | Frontend | 5173 | http://localhost:5173      |
 | API Docs | 8000 | http://localhost:8000/docs |
+
