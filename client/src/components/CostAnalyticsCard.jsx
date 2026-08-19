@@ -8,14 +8,14 @@ import {
   BarChart3,
 } from "lucide-react";
 
-export default function CostAnalyticsCard({ summary = {} }) {
+export default function CostAnalyticsCard({ summary }) {
   const {
     total_estimated_cost = 0,
     total_actual_cost = 0,
     cost_variance = 0,
     completed_tasks_count = 0,
     pending_tasks_count = 0,
-  } = summary;
+  } = summary || {};
 
   const isUnderBudget = cost_variance <= 0;
 

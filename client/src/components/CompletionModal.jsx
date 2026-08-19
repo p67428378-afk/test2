@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckCircle2, X, AlertCircle } from "lucide-react";
 
 export default function CompletionModal({
@@ -8,15 +8,23 @@ export default function CompletionModal({
   onConfirm,
   submitting = false,
 }) {
-  if (!isOpen || !task) return null;
-
-  const [actualCost, setActualCost] = useState(
-    task.actual_cost !== undefined && task.actual_cost !== null
-      ? task.actual_cost
-      : task.estimated_cost || "",
-  );
+  const [actualCost, setActualCost] = useState("");
   const [resolutionNotes, setResolutionNotes] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (task && isOpen) {
+      setActualCost(
+        task.actual_cost !== undefined && task.actual_cost !== null
+          ? task.actual_cost
+          : task.estimated_cost ?? "",
+      );
+      setResolutionNotes("");
+      setError("");
+    }
+  }, [task, isOpen]);
+
+  if (!isOpen || !task) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -92,7 +100,7 @@ export default function CompletionModal({
               required
             />
             <p className="text-xs text-[#707a8c] mt-1">
-              Estimated cost was: ${task.estimated_cost?.toFixed(2)}
+              Estimated cost was: ${(task.estimated_cost || 0).toFixed(2)}
             </p>
           </div>
 

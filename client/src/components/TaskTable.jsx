@@ -137,13 +137,15 @@ export default function TaskTable({
                   <td className="py-4 px-4">
                     <div className="text-xs">
                       <span className="font-medium text-[#171c29]">
-                        ${task.estimated_cost?.toFixed(2)}
+                        ${(task.estimated_cost ?? 0).toFixed(2)}
                       </span>
-                      {isCompleted && task.actual_cost !== undefined && (
-                        <div className="text-[#707a8c]">
-                          Act: ${task.actual_cost?.toFixed(2)}
-                        </div>
-                      )}
+                      {isCompleted &&
+                        task.actual_cost !== undefined &&
+                        task.actual_cost !== null && (
+                          <div className="text-[#707a8c]">
+                            Act: ${(task.actual_cost ?? 0).toFixed(2)}
+                          </div>
+                        )}
                     </div>
                   </td>
                   <td className="py-4 px-4 text-[#707a8c] text-xs whitespace-nowrap">
