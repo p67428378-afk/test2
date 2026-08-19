@@ -1,35 +1,40 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
 from server.database import init_db, seed_data, SessionLocal
+from server.routers import (
+    auth,
+    pets,
+    appointments,
+    medical_records,
+    vaccinations,
+    reminders,
+)
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema
+    init_db()
+    # Seed default accounts and data
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Pet Clinic Management System API",
+    description="API for managing pets, appointments, medical visit records, vaccinations, and reminders.",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
+# CORS Configuration
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 ).split(",")
@@ -42,19 +47,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Include Routers
+app.include_router(auth.router)
+app.include_router(pets.router)
+app.include_router(appointments.router)
+app.include_router(medical_records.router)
+app.include_router(vaccinations.router)
+app.include_router(reminders.router)
 
 
 @app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+def root():
+    return {"message": "Pet Clinic Management System API is running"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}

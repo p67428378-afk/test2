@@ -1,1 +1,1 @@
-# Tests package
+# server.tests package

@@ -1,7 +1,4 @@
-from fastapi.testclient import TestClient
-
-
-def test_login_success(client: TestClient):
+def test_login_seeded_user(client):
     response = client.post(
         "/api/v1/auth/login",
         json={"email": "test@example.com", "password": "testpassword"},
@@ -12,23 +9,38 @@ def test_login_success(client: TestClient):
     assert data["token_type"] == "bearer"
 
 
-def test_login_invalid_credentials(client: TestClient):
+def test_register_user(client):
     response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "wrongpassword"},
+        "/api/v1/auth/register",
+        json={
+            "email": "newowner@example.com",
+            "password": "password123",
+            "full_name": "New Owner",
+            "role": "owner",
+        },
     )
-    assert response.status_code == 401
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == "newowner@example.com"
+    assert data["full_name"] == "New Owner"
+    assert data["role"] == "owner"
 
 
-def test_get_me_success(client: TestClient):
-    login_res = client.post(
-        "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
+def test_register_duplicate_email(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "test@example.com",
+            "password": "password123",
+            "full_name": "Duplicate Owner",
+            "role": "owner",
+        },
     )
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    assert response.status_code == 400
 
-    response = client.get("/api/v1/auth/me", headers=headers)
+
+def test_get_me(client, auth_headers):
+    response = client.get("/api/v1/auth/me", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "test@example.com"
