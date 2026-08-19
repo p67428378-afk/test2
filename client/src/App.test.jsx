@@ -1,11 +1,37 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import App from './App';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import App from "./App";
 
-describe('App', () => {
-  it('renders the main application page', () => {
+vi.mock("./services/api", () => ({
+  authAPI: {
+    getMe: vi.fn().mockRejectedValue(new Error("Unauthenticated")),
+    login: vi.fn(),
+    logout: vi.fn(),
+  },
+  tasksAPI: {
+    listTasks: vi.fn().mockResolvedValue([]),
+  },
+  categoriesAPI: {
+    listCategories: vi.fn().mockResolvedValue([]),
+  },
+  usersAPI: {
+    listUsers: vi.fn().mockResolvedValue([]),
+  },
+  costsAPI: {
+    getSummary: vi.fn().mockResolvedValue({
+      total_estimated: 0,
+      total_actual: 0,
+      variance: 0,
+      category_breakdown: [],
+    }),
+  },
+}));
+
+describe("App Component", () => {
+  it("renders application navigation and brand header without crashing", async () => {
     render(<App />);
-    expect(screen.getByText('SecurePay Alerts')).toBeInTheDocument();
-    expect(screen.getByText(/Set Up Debit Card Spend Alert/i)).toBeInTheDocument();
+    const brandElement = await screen.findByText(/HomeKeep/i);
+    expect(brandElement).toBeInTheDocument();
   });
 });

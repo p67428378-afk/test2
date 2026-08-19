@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { setupAlert, verifyOtp } from '../services/api';
+import { useState } from "react";
+import { setupAlert, verifyOtp } from "../services/api";
 
 const useAlertSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,7 +14,7 @@ const useAlertSetup = () => {
       setData(response.data);
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.detail || 'An unexpected error occurred.');
+      setError(err.response?.data?.detail || "An unexpected error occurred.");
       return null;
     } finally {
       setIsSubmitting(false);
@@ -29,7 +29,7 @@ const useAlertSetup = () => {
       setData(response.data);
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.detail || 'An unexpected error occurred.');
+      setError(err.response?.data?.detail || "An unexpected error occurred.");
       return null;
     } finally {
       setIsSubmitting(false);

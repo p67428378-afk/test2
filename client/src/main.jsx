@@ -1,32 +1,60 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.jsx";
+import "./index.css";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error("Uncaught error in ErrorBoundary:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
-      return <h2 style={{padding:'2rem'}}>Something went wrong. Check console.</h2>;
+      return (
+        <div
+          style={{
+            padding: "2rem",
+            fontFamily: "sans-serif",
+            textAlign: "center",
+          }}
+        >
+          <h2>Something went wrong.</h2>
+          <p style={{ color: "#707a8c", fontSize: "0.875rem" }}>
+            {this.state.error?.toString() ||
+              "An unexpected rendering error occurred."}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: "1rem",
+              padding: "0.5rem 1rem",
+              backgroundColor: "#2663eb",
+              color: "#fff",
+              border: "none",
+              borderRadius: "0.375rem",
+              cursor: "pointer",
+            }}
+          >
+            Reload Page
+          </button>
+        </div>
+      );
     }
-
     return this.props.children;
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />

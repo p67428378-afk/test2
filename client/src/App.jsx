@@ -1,35 +1,65 @@
-import React from 'react';
-import DebitCardSpendAlertSetupPage from './pages/DebitCardSpendAlertSetupPage';
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Navbar from "./components/layout/Navbar";
+import DashboardPage from "./pages/DashboardPage";
+import TaskDetailPage from "./pages/TaskDetailPage";
+import CostsPage from "./pages/CostsPage";
+import MembersPage from "./pages/MembersPage";
+import LoginPage from "./pages/LoginPage";
+import { authAPI } from "./services/api";
 
-function App() {
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await authAPI.getMe();
+        setCurrentUser(user);
+      } catch (err) {
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f7fafc] flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <div className="w-8 h-8 border-4 border-[#2663eb] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-semibold text-[#707a8c]">
+            Loading HomeKeep...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-background min-h-screen flex flex-col">
-      <header className="bg-surface dark:bg-surface-container-low shadow-sm w-full h-16 sticky top-0 z-50">
-        <div className="flex justify-between items-center w-full px-margin-desktop max-w-[1200px] mx-auto h-full">
-          <div className="text-title-lg font-title-lg font-bold text-primary dark:text-primary-fixed-dim">SecurePay Alerts</div>
-          <div className="flex items-center gap-md">
-            <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim cursor-pointer p-base rounded-full hover:bg-surface-container-low transition-colors duration-200">lock</span>
-            <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim cursor-pointer p-base rounded-full hover:bg-surface-container-low transition-colors duration-200">account_circle</span>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-grow flex items-center justify-center p-md">
-        <DebitCardSpendAlertSetupPage />
-      </main>
-
-      <footer className="bg-surface-container-low dark:bg-surface-dim border-t border-outline-variant dark:border-outline mt-auto">
-        <div className="w-full py-md px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-sm max-w-[1200px] mx-auto">
-          <div className="text-label-sm font-label-sm text-on-surface-variant">© 2024 SecurePay Financial. All rights reserved. Secured by 256-bit encryption.</div>
-          <div className="flex gap-md">
-            <a href="#" className="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors duration-200">Security Policy</a>
-            <a href="#" className="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors duration-200">Terms of Service</a>
-            <a href="#" className="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors duration-200">Help Center</a>
-          </div>
-        </div>
-      </footer>
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-[#f7fafc] text-[#171c29] flex flex-col font-sans">
+        <Navbar
+          currentUser={currentUser}
+          onLogout={() => setCurrentUser(null)}
+        />
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/tasks/:id" element={<TaskDetailPage />} />
+            <Route path="/costs" element={<CostsPage />} />
+            <Route path="/members" element={<MembersPage />} />
+            <Route
+              path="/login"
+              element={<LoginPage onLoginSuccess={(u) => setCurrentUser(u)} />}
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
-
-export default App;

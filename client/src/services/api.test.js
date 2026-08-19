@@ -1,37 +1,20 @@
-import { describe, it, expect, vi } from 'vitest';
-import axios from 'axios';
-import { setupAlert, verifyOtp } from './api';
+import { describe, it, expect } from "vitest";
+import { authAPI, tasksAPI, costsAPI, categoriesAPI, usersAPI } from "./api";
 
-vi.mock('axios', () => {
-  const mockAxiosInstance = {
-    post: vi.fn(),
-    create: vi.fn(() => mockAxiosInstance)
-  };
-  return {
-    default: mockAxiosInstance
-  };
-});
-
-describe('API Service', () => {
-  it('setupAlert should be a function', () => {
-    expect(typeof setupAlert).toBe('function');
-  });
-
-  it('verifyOtp should be a function', () => {
-    expect(typeof verifyOtp).toBe('function');
-  });
-
-  it('setupAlert should make a POST request to /api/v1/alerts/setup', async () => {
-    const data = { card_number: '123', daily_spend_threshold: 100, alert_delivery_channel: 'SMS' };
-    axios.post.mockResolvedValue({ data: { success: true } });
-    await setupAlert(data);
-    expect(axios.post).toHaveBeenCalledWith('/api/v1/alerts/setup', data);
-  });
-
-  it('verifyOtp should make a POST request to /api/v1/alerts/verify', async () => {
-    const data = { transaction_id: 'abc', otp_code: '123456' };
-    axios.post.mockResolvedValue({ data: { success: true } });
-    await verifyOtp(data);
-    expect(axios.post).toHaveBeenCalledWith('/api/v1/alerts/verify', data);
+describe("API Service Contracts", () => {
+  it("exports required API endpoint methods", () => {
+    expect(typeof authAPI.login).toBe("function");
+    expect(typeof authAPI.getMe).toBe("function");
+    expect(typeof tasksAPI.listTasks).toBe("function");
+    expect(typeof tasksAPI.createTask).toBe("function");
+    expect(typeof tasksAPI.getTask).toBe("function");
+    expect(typeof tasksAPI.updateTask).toBe("function");
+    expect(typeof tasksAPI.deleteTask).toBe("function");
+    expect(typeof tasksAPI.assignTask).toBe("function");
+    expect(typeof tasksAPI.completeTask).toBe("function");
+    expect(typeof tasksAPI.getTaskLogs).toBe("function");
+    expect(typeof costsAPI.getSummary).toBe("function");
+    expect(typeof categoriesAPI.listCategories).toBe("function");
+    expect(typeof usersAPI.listUsers).toBe("function");
   });
 });
