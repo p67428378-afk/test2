@@ -31,8 +31,7 @@ graph TD
 
 ## Backend Modules (server/)
 - server/__init__.py
-- server/conftest.py
-- server/crud.py
+- server/auth.py
 - server/database.py
 - server/main.py
 - server/models.py
@@ -42,15 +41,40 @@ graph TD
 - server/routers/products.py
 - server/schemas.py
 - server/services/__init__.py
-- server/services/expiry.py
+- server/services/warranty_service.py
 - server/tests/__init__.py
+- server/tests/conftest.py
 - server/tests/test_claims.py
 - server/tests/test_documents.py
-- server/tests/test_expiry.py
 - server/tests/test_products.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/components/claims/AuditLogTimeline.jsx
+- client/src/components/claims/ServiceClaimModal.jsx
+- client/src/components/claims/ServiceClaimTable.jsx
+- client/src/components/common/AlertBanner.jsx
+- client/src/components/common/Badge.jsx
+- client/src/components/common/Button.jsx
+- client/src/components/common/Navbar.jsx
+- client/src/components/common/Navbar.test.jsx
+- client/src/components/common/StatCard.jsx
+- client/src/components/products/ProductRegistrationModal.jsx
+- client/src/components/products/ProductTable.jsx
+- client/src/components/products/ReceiptUploadZone.jsx
+- client/src/main.jsx
+- client/src/pages/ClaimsPage.jsx
+- client/src/pages/DashboardPage.jsx
+- client/src/pages/DashboardPage.test.jsx
+- client/src/pages/ProductDetailPage.jsx
+- client/src/services/api.js
+- client/src/services/api.test.js
+- client/src/setup.js
+- client/src/setup.test.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - POST /api/v1/products

@@ -1,9 +1,8 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from passlib.context import CryptContext
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/warranty_tracker.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./warranty_tracker.db")
 
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
@@ -11,9 +10,8 @@ if DATABASE_URL.startswith("sqlite"):
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+Base = declarative_base()
 
 
 def get_db():
@@ -25,40 +23,62 @@ def get_db():
 
 
 def init_db():
+    # Ensure all models register with Base metadata before create_all
+    import server.models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db):
-    from server.models import User
-    from sqlalchemy.exc import IntegrityError
+def seed_data(db: Session = None):
+    from passlib.context import CryptContext
+    import server.models as models
+    from uuid import uuid4
 
-    test_users = [
-        {
-            "email": "test@example.com",
-            "full_name": "Test User",
-            "password": "testpassword",
-            "is_active": True,
-        },
-        {
-            "email": "admin@example.com",
-            "full_name": "Admin User",
-            "password": "adminpassword",
-            "is_active": True,
-        },
-    ]
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    for user_info in test_users:
-        existing = db.query(User).filter(User.email == user_info["email"]).first()
-        if not existing:
-            hashed = pwd_context.hash(user_info["password"])
-            user = User(
-                email=user_info["email"],
-                full_name=user_info["full_name"],
-                hashed_password=hashed,
-                is_active=user_info["is_active"],
+    close_db_at_end = False
+    if db is None:
+        db = SessionLocal()
+        close_db_at_end = True
+
+    try:
+        # Check or create regular user
+        test_user = (
+            db.query(models.User)
+            .filter(models.User.email == "test@example.com")
+            .first()
+        )
+        if not test_user:
+            test_user = models.User(
+                id=str(uuid4()),
+                email="test@example.com",
+                full_name="Test User",
+                hashed_password=pwd_context.hash("testpassword"),
+                is_active=True,
+                is_verified=True,
             )
-            try:
-                db.add(user)
-                db.commit()
-            except IntegrityError:
-                db.rollback()
+            db.add(test_user)
+
+        # Check or create admin user
+        admin_user = (
+            db.query(models.User)
+            .filter(models.User.email == "admin@example.com")
+            .first()
+        )
+        if not admin_user:
+            admin_user = models.User(
+                id=str(uuid4()),
+                email="admin@example.com",
+                full_name="Admin User",
+                hashed_password=pwd_context.hash("adminpassword"),
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(admin_user)
+
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        if close_db_at_end:
+            db.close()

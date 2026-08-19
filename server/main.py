@@ -1,40 +1,35 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
-from starlette.middleware.cors import CORSMiddleware
-from sqlalchemy import text
+from fastapi import FastAPI, Depends, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from server.database import init_db, seed_data, SessionLocal, get_db
-from server.routers import products, claims, documents
-from server.crud import evaluate_all_warranties
-
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000",
-).split(",")
+from server.database import init_db, seed_data, get_db
+from server.routers.products import router as products_router
+from server.routers.claims import router as claims_router
+from server.routers.documents import router as documents_router
+from server.services.warranty_service import evaluate_all_warranties
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB schema and seed test accounts on startup
+    # Initialize DB schema and seed default users
     init_db()
-    db = SessionLocal()
-    try:
-        seed_data(db)
-    finally:
-        db.close()
+    seed_data()
     yield
 
 
 app = FastAPI(
     title="Warranty Tracker API",
-    description="REST API for product registration, warranty expiry tracking, and service claim management.",
+    description="API for registering products, tracking warranties, managing claims, and receipt storage.",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# CORS Middleware Setup
+# CORS Configuration
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+).split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -43,21 +38,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
-app.include_router(products.router)
-app.include_router(claims.router)
-app.include_router(documents.router)
+# Expiry evaluation router
+expiry_router = APIRouter(prefix="/api/v1/expiry", tags=["Expiry Evaluation"])
 
 
-@app.get("/health")
-def health_check(db: Session = Depends(get_db)):
-    """Health check endpoint confirming service and database connectivity."""
-    db.execute(text("SELECT 1"))
-    return {"status": "healthy", "service": "warranty-tracker", "database": "connected"}
-
-
-@app.post("/api/v1/expiry/evaluate")
+@expiry_router.post("/evaluate")
 def trigger_expiry_evaluation(db: Session = Depends(get_db)):
-    """Manually trigger daily warranty expiry status evaluation and notification check."""
-    updated = evaluate_all_warranties(db)
-    return {"status": "success", "updated_warranties_count": updated}
+    """Trigger daily evaluation of warranty statuses and milestone notifications."""
+    return evaluate_all_warranties(db)
+
+
+# Register Routers
+app.include_router(products_router)
+app.include_router(claims_router)
+app.include_router(documents_router)
+app.include_router(expiry_router)
+
+
+@app.get("/health", tags=["Health"])
+@app.get("/api/v1/health", tags=["Health"])
+def health_check():
+    return {"status": "ok", "service": "Warranty Tracker API"}
+
+
+@app.get("/", tags=["Root"])
+def root():
+    return {"message": "Welcome to Warranty Tracker API"}
