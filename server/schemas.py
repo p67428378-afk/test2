@@ -1,130 +1,179 @@
-import uuid
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# --- Apiary Schemas ---
+class ApiaryBase(BaseModel):
+    name: str = Field(..., example="Sunny Valley Apiary")
+    location: str = Field(..., example="North Ridge, Plot 4B")
+    notes: Optional[str] = None
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
+class ApiaryCreate(ApiaryBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class ApiaryResponse(ApiaryBase):
+    id: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# --- Hive Schemas ---
+class HiveBase(BaseModel):
+    apiary_id: str
+    hive_number: str = Field(..., example="HIVE-01")
+    queen_breed: Optional[str] = Field(None, example="Italian Honeybee")
+    queen_installed_date: Optional[date] = None
+    status: str = Field("active", example="active")
+    estimated_population: int = Field(0, ge=0, example=45000)
+    frame_count: int = Field(10, ge=1, example=10)
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class HiveCreate(HiveBase):
+    pass
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+class HiveUpdate(BaseModel):
+    hive_number: Optional[str] = None
+    queen_breed: Optional[str] = None
+    queen_installed_date: Optional[date] = None
+    status: Optional[str] = None
+    estimated_population: Optional[int] = None
+    frame_count: Optional[int] = None
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class HiveResponse(HiveBase):
+    id: str
+    density_bees_per_frame: float = Field(0.0)
+    density_status: str = Field("Optimal")
+    created_at: datetime
+    updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+# --- Telemetry Schemas ---
+class TelemetryIngestRequest(BaseModel):
+    hive_id: str
+    temperature_celsius: float = Field(..., example=34.5)
+    humidity_percent: float = Field(..., example=60.2)
+    weight_kg: Optional[float] = Field(None, example=42.1)
+    recorded_at: Optional[datetime] = None
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+class TelemetryIngestResponse(BaseModel):
+    id: str
+    hive_id: str
+    status: str = "ingested"
+    alert_triggered: bool = False
+    alert_message: Optional[str] = None
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
+class TelemetryLogResponse(BaseModel):
+    id: str
+    hive_id: str
+    temperature_celsius: float
+    humidity_percent: float
+    weight_kg: Optional[float] = None
+    recorded_at: datetime
+    created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# --- Honey Harvest Schemas ---
+class HoneyHarvestBase(BaseModel):
+    hive_id: str
+    harvest_date: date
+    quantity_kg: float = Field(..., gt=0, example=25.5)
+    honey_type: Optional[str] = Field(None, example="Wildflower")
+    moisture_content_percent: Optional[float] = Field(None, example=17.5)
 
-    class Config:
-        from_attributes = True
+
+class HoneyHarvestCreate(HoneyHarvestBase):
+    pass
+
+
+class HoneyHarvestResponse(HoneyHarvestBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Disease Report Schemas ---
+class DiseaseReportBase(BaseModel):
+    hive_id: str
+    disease_name: str = Field(..., example="Varroa Mites")
+    severity_level: str = Field(..., example="Medium")  # Low, Medium, High, Critical
+    symptoms_description: str = Field(
+        ..., example="Elevated mite count found on sticky board."
+    )
+    treatment_applied: Optional[str] = Field(None, example="Applied formic acid strip.")
+
+
+class DiseaseReportCreate(DiseaseReportBase):
+    report_date: Optional[datetime] = None
+
+
+class DiseaseReportResponse(DiseaseReportBase):
+    id: str
+    report_date: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Inspection Schemas ---
+class InspectionBase(BaseModel):
+    hive_id: str
+    scheduled_date: datetime
+    inspector_name: str = Field(..., example="John Beekeeper")
+    status: str = Field("scheduled", example="scheduled")
+    notes: Optional[str] = None
+
+
+class InspectionCreate(InspectionBase):
+    pass
+
+
+class InspectionUpdate(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    completed_at: Optional[datetime] = None
+
+
+class InspectionResponse(InspectionBase):
+    id: str
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Seasonal Analytics Schema ---
+class SeasonalTrendPoint(BaseModel):
+    date: str
+    avg_temperature: float
+    avg_humidity: float
+    total_harvest_kg: float
+
+
+class SeasonalAnalyticsResponse(BaseModel):
+    hive_id: Optional[str] = None
+    season: str
+    year: int
+    total_harvest_yield_kg: float
+    avg_temperature_celsius: float
+    avg_humidity_percent: float
+    estimated_bee_population: int
+    active_disease_alerts_count: int
+    completed_inspections_count: int
+    trends: List[SeasonalTrendPoint] = []
