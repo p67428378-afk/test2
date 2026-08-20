@@ -1,35 +1,28 @@
+"""FastAPI Main Application."""
+
+import os
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
+from server.database import init_db
+from server.api.v1.queue import router as queue_router
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
 
-# Initialize database tables
-init_db()
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Lifespan context manager for database initialization."""
+    init_db()
+    yield
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Digital Queue System API",
+    description="RESTful API for managing digital service queue tickets, real-time position checking, and status transitions.",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 ).split(",")
@@ -42,19 +35,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+app.include_router(queue_router)
 
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+@app.get("/health", tags=["health"])
+@app.get("/api/v1/queue/health", tags=["health"])
+def health_check() -> dict:
+    """Health check endpoint."""
+    return {"status": "ok", "service": "Digital Queue System API"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)

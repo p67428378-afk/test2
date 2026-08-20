@@ -1,37 +1,41 @@
+"""Shared pytest fixtures for server test suite."""
+
 import pytest
-from fastapi.testclient import TestClient
+from typing import Generator
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
-from sqlalchemy.orm import sessionmaker
-from server.main import app
+from fastapi.testclient import TestClient
+
 from server.database import Base, get_db
+from server.main import app
 
-SQLALCHEMY_DATABASE_URL = "sqlite://"
+# In-memory SQLite test engine with StaticPool to keep connection alive across threads
+TEST_DATABASE_URL = "sqlite:///:memory:"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
+test_engine = create_engine(
+    TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_database():
-    Base.metadata.create_all(bind=engine)
+def setup_test_db():
+    """Create all tables in memory once for test session."""
+    Base.metadata.create_all(bind=test_engine)
     yield
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=test_engine)
 
 
 @pytest.fixture(scope="function")
-def db():
-    connection = engine.connect()
+def db_session() -> Generator[Session, None, None]:
+    """Provide a clean transactional session for each test function."""
+    connection = test_engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
 
     yield session
 
@@ -41,14 +45,16 @@ def db():
 
 
 @pytest.fixture(scope="function")
-def client(db):
-    def override_get_db():
+def client(db_session: Session) -> Generator[TestClient, None, None]:
+    """Provide TestClient with database dependency override."""
+
+    def _override_get_db():
         try:
-            yield db
+            yield db_session
         finally:
             pass
 
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
+    app.dependency_overrides[get_db] = _override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
     app.dependency_overrides.clear()
