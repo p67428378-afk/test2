@@ -1,35 +1,40 @@
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
+"""
+Module: server.main
+Purpose: FastAPI application entry point, middleware configuration, and router registration.
+"""
+
 import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
+from server.database import SessionLocal, init_db, seed_data, get_db
+from server.routers import auth, products, claims, documents
+from server.cron import evaluate_warranties
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database schema
+    init_db()
+    # Seed initial data
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Warranty Tracker API",
+    description="API for registering products, tracking warranties, and managing claims.",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
+# CORS Middleware Configuration
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 ).split(",")
@@ -42,19 +47,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Register Routers
+app.include_router(auth.router)
+app.include_router(products.router)
+app.include_router(claims.router)
+app.include_router(documents.router)
 
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+# Health Check Endpoint
+@app.get("/health", response_model=dict)
+def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy"}
+
+
+# Cron Trigger Endpoint
+@app.post("/api/v1/cron/evaluate", response_model=dict)
+def trigger_cron(db: Session = Depends(get_db)):
+    """Manually trigger the daily warranty expiry evaluation and notification queuing."""
+    result = evaluate_warranties(db)
+    return result
