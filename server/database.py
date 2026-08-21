@@ -5,16 +5,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.pool import StaticPool
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+RAW_DB_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")
 
-# If SQLite in-memory or file database
-connect_args = {}
-engine_kwargs = {}
-
-if DATABASE_URL.startswith("sqlite"):
+# Force SQLite in-memory mode for Cloud Run compatibility
+if "sqlite" in RAW_DB_URL:
+    DATABASE_URL = "sqlite:///:memory:"
     connect_args = {"check_same_thread": False}
-    if ":memory:" in DATABASE_URL or DATABASE_URL == "sqlite://":
-        engine_kwargs["poolclass"] = StaticPool
+    engine_kwargs = {"poolclass": StaticPool}
+else:
+    DATABASE_URL = RAW_DB_URL
+    connect_args = {}
+    engine_kwargs = {}
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
