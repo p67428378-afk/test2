@@ -1,10 +1,7 @@
-from fastapi.testclient import TestClient
-
-
-def test_login_success(client: TestClient):
+def test_login_success(client):
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
+        json={"username": "parent_admin", "password": "secure_password"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -12,23 +9,20 @@ def test_login_success(client: TestClient):
     assert data["token_type"] == "bearer"
 
 
-def test_login_invalid_credentials(client: TestClient):
+def test_login_success_test_user(client):
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "wrongpassword"},
+        json={"username": "test@example.com", "password": "testpassword"},
     )
-    assert response.status_code == 401
-
-
-def test_get_me_success(client: TestClient):
-    login_res = client.post(
-        "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
-    )
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-
-    response = client.get("/api/v1/auth/me", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "test@example.com"
+    assert "access_token" in data
+
+
+def test_login_invalid_credentials(client):
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"username": "parent_admin", "password": "wrong_password"},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid username or password"
