@@ -1,9 +1,9 @@
 import os
 import uuid
+import bcrypt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.pool import StaticPool
-from passlib.context import CryptContext
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
 
@@ -21,15 +21,18 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+        )
+    except Exception:
+        return False
 
 
 def get_db():
