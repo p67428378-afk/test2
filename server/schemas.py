@@ -1,130 +1,177 @@
-import uuid
-from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime, date
+from typing import Optional, List, Any
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# User Schemas
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+    full_name: str
+    role: str = Field(
+        default="Patient", description="Admin, Doctor, Nurse, Receptionist, Patient"
+    )
 
 
-class LoginRequest(BaseModel):
+class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 
 class UserResponse(BaseModel):
-    id: uuid.UUID
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
     email: EmailStr
-    full_name: Optional[str] = None
+    full_name: str
     role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+    is_active: bool
+    created_at: datetime
 
 
-class TournamentCreate(TournamentBase):
-    pass
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+# Patient Schemas
+class PatientCreate(BaseModel):
+    ssn_gov_id: str
+    first_name: str
+    last_name: str
+    dob: date
+    gender: str
+    phone: str
+    emergency_contact: str
+    medical_history: Optional[str] = None
+
+
+class PatientUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    emergency_contact: Optional[str] = None
+    medical_history: Optional[str] = None
+
+
+class PatientResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    ssn_gov_id: str
+    first_name: str
+    last_name: str
+    dob: date
+    gender: str
+    phone: str
+    emergency_contact: str
+    medical_history: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+
+# Doctor Schedule Schemas
+class DoctorScheduleCreate(BaseModel):
+    doctor_id: str
+    day_of_week: str
+    start_time: str
+    end_time: str
+    slot_duration_minutes: int = 30
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class DoctorScheduleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    doctor_id: str
+    day_of_week: str
+    start_time: str
+    end_time: str
+    slot_duration_minutes: int
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+# Appointment Schemas
+class AppointmentCreate(BaseModel):
+    patient_id: str
+    doctor_id: str
+    appointment_time: datetime
+    notes: Optional[str] = None
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
+class AppointmentUpdateStatus(BaseModel):
+    status: str  # SCHEDULED, CONFIRMED, COMPLETED, CANCELLED
 
 
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+class AppointmentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    patient_id: str
+    doctor_id: str
+    appointment_time: datetime
+    status: str
+    notes: Optional[str] = None
+    created_at: datetime
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+# Prescription Schemas
+class PrescriptionCreate(BaseModel):
+    medical_record_id: str
+    medication_name: str
+    dosage: str
+    instructions: Optional[str] = None
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class PrescriptionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    medical_record_id: str
+    medication_name: str
+    dosage: str
+    instructions: Optional[str] = None
+    created_at: datetime
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+# Medical Record Schemas
+class MedicalRecordCreate(BaseModel):
+    patient_id: str
+    doctor_id: str
+    appointment_id: str
+    diagnosis: str
+    notes: Optional[str] = None
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
+class MedicalRecordResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: str
+    patient_id: str
+    doctor_id: str
+    appointment_id: str
+    diagnosis: str
+    notes: Optional[str] = None
+    created_at: datetime
+    prescriptions: List[PrescriptionResponse] = []
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# Invoice Schemas
+class InvoiceCreate(BaseModel):
+    appointment_id: str
+    patient_id: str
+    amount: float
+    itemized_details: Optional[List[Any]] = None
 
-    class Config:
-        from_attributes = True
+
+class InvoiceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    appointment_id: str
+    patient_id: str
+    amount: float
+    status: str
+    itemized_details: Optional[List[Any]] = None
+    created_at: datetime
+    updated_at: datetime

@@ -1,34 +1,43 @@
-from fastapi.testclient import TestClient
+def test_register_user(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "nurse_new@example.com",
+            "password": "nursepassword123",
+            "full_name": "Nurse Joy",
+            "role": "Nurse",
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == "nurse_new@example.com"
+    assert data["role"] == "Nurse"
+    assert "id" in data
 
 
-def test_login_success(client: TestClient):
+def test_login_success(client):
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
+        json={"email": "admin@example.com", "password": "adminpassword"},
     )
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
+    assert data["user"]["email"] == "admin@example.com"
 
 
-def test_login_invalid_credentials(client: TestClient):
+def test_login_invalid_password(client):
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "wrongpassword"},
+        json={"email": "admin@example.com", "password": "wrongpassword"},
     )
     assert response.status_code == 401
 
 
-def test_get_me_success(client: TestClient):
-    login_res = client.post(
-        "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
-    )
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-
-    response = client.get("/api/v1/auth/me", headers=headers)
+def test_get_me(client, admin_headers):
+    response = client.get("/api/v1/auth/me", headers=admin_headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "test@example.com"
+    assert data["email"] == "admin@example.com"
+    assert data["role"] == "Admin"
