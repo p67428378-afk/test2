@@ -1,130 +1,86 @@
-import uuid
-from datetime import datetime
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# Deck Schemas
+class DeckBase(BaseModel):
+    title: str = Field(..., description="Title of the study deck")
+    description: Optional[str] = Field(
+        None, description="Optional description of the study deck"
+    )
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
+class DeckCreate(DeckBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class DeckUpdate(BaseModel):
+    title: Optional[str] = Field(None, description="Updated title of the study deck")
+    description: Optional[str] = Field(
+        None, description="Updated description of the study deck"
+    )
+
+
+class DeckResponse(DeckBase):
+    id: str
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# Card Schemas
+class CardBase(BaseModel):
+    front: str = Field(..., description="Front side of the card (question/prompt)")
+    back: str = Field(..., description="Back side of the card (answer/explanation)")
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class CardCreate(CardBase):
+    pass
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
+class CardUpdate(BaseModel):
+    front: Optional[str] = Field(None, description="Updated front side of the card")
+    back: Optional[str] = Field(None, description="Updated back side of the card")
 
 
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+class CardResponse(CardBase):
+    id: str
+    deck_id: str
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+# Quiz Schemas
+class QuizStartRequest(BaseModel):
+    deck_id: str
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class CardQuizResponse(BaseModel):
+    id: str
+    front: str
+    model_config = ConfigDict(from_attributes=True)
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+class QuizStartResponse(BaseModel):
+    quiz_id: str
+    deck_id: str
+    total_cards: int
+    cards: List[CardQuizResponse]
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+class QuizSubmitRequest(BaseModel):
+    score: int = Field(..., description="Number of correct answers")
+    total_cards: int = Field(
+        ..., description="Total number of cards in the quiz session"
+    )
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+class QuizSubmitResponse(BaseModel):
+    id: str
+    deck_id: str
+    score: int
+    total_cards: int
+    completed_at: datetime
+    model_config = ConfigDict(from_attributes=True)
