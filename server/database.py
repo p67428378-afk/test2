@@ -44,6 +44,7 @@ def get_db():
 
 
 def init_db():
+    from server import models  # Ensure models are loaded before create_all
     Base.metadata.create_all(bind=engine)
 
 
