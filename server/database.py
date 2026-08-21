@@ -1,6 +1,6 @@
 import os
 import uuid
-import bcrypt
+import hashlib
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.pool import StaticPool
@@ -23,16 +23,13 @@ Base = declarative_base()
 
 
 def get_password_hash(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    try:
-        return bcrypt.checkpw(
-            plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-        )
-    except Exception:
-        return False
+    return (
+        hashlib.sha256(plain_password.encode("utf-8")).hexdigest() == hashed_password
+    )
 
 
 def get_db():

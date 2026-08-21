@@ -8,14 +8,16 @@ from server.routers import profiles, matches, exchanges
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables
-    init_db()
-    # Seed initial demo data
-    db = SessionLocal()
+    # Initialize database tables and seed initial demo data safely
     try:
-        seed_data(db)
-    finally:
-        db.close()
+        init_db()
+        db = SessionLocal()
+        try:
+            seed_data(db)
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"Startup initialization warning: {e}")
     yield
 
 
@@ -51,3 +53,8 @@ def root():
         "version": "1.0.0",
         "docs_url": "/docs",
     }
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
