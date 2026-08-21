@@ -1,130 +1,93 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class UserSkillCreate(BaseModel):
+    skill_name: str = Field(..., min_length=1, description="Name of the skill")
+    type: str = Field(..., description="TEACH or LEARN")
+    proficiency: str = Field(..., description="BEGINNER, INTERMEDIATE, or EXPERT")
+    category: Optional[str] = None
+    description: Optional[str] = None
 
 
-class LoginRequest(BaseModel):
+class UserSkillResponse(BaseModel):
+    id: str
+    user_id: str
+    skill_id: str
+    skill_name: str
+    type: str
+    proficiency: str
+    category: Optional[str] = None
+    description: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserBase(BaseModel):
     email: EmailStr
+    full_name: str
+
+
+class UserCreate(UserBase):
     password: str
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
+class UserResponse(UserBase):
+    id: str
+    created_at: datetime
+    teach_skills: List[UserSkillResponse] = []
+    learn_skills: List[UserSkillResponse] = []
 
     class Config:
         from_attributes = True
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+class MatchedSkillDetail(BaseModel):
+    user_skill_id: str
+    skill_name: str
+    proficiency: str
 
 
-class TournamentCreate(TournamentBase):
-    pass
+class MatchResponse(BaseModel):
+    partner_id: str
+    partner_name: str
+    partner_email: Optional[str] = None
+    teaches_skill: MatchedSkillDetail
+    learns_skill: Optional[MatchedSkillDetail] = None
+    is_reciprocal: bool
+
+    class Config:
+        from_attributes = True
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
+class ExchangeRequestCreate(BaseModel):
+    recipient_id: str
+    offered_skill_id: str
+    requested_skill_id: str
+    message: Optional[str] = None
+
+
+class ExchangeStatusUpdate(BaseModel):
+    action: str = Field(..., description="ACCEPT, REJECT, or CANCEL")
+
+
+class ExchangeRequestResponse(BaseModel):
+    id: str
+    requester_id: str
+    requester_name: str
+    recipient_id: str
+    recipient_name: str
+    offered_skill_id: str
+    offered_skill_name: str
+    requested_skill_id: str
+    requested_skill_name: str
     status: str
-    current_round: int
+    message: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
-
-
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
-
-
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
-
-
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
-
-
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
 
     class Config:
         from_attributes = True
