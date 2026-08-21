@@ -1,14 +1,18 @@
 import os
+import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+
+print("Loading database module...", flush=True)
 from server.database import init_db, seed_data, SessionLocal
+print("Loading routers...", flush=True)
 from server.routers import profiles, matches, exchanges
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables and seed initial demo data safely
+    print("Executing lifespan startup...", flush=True)
     try:
         init_db()
         db = SessionLocal()
@@ -16,8 +20,9 @@ async def lifespan(app: FastAPI):
             seed_data(db)
         finally:
             db.close()
+        print("Database initialized and seeded successfully.", flush=True)
     except Exception as e:
-        print(f"Startup initialization warning: {e}")
+        print(f"Startup initialization warning: {e}", flush=True)
     yield
 
 
@@ -64,4 +69,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.getenv("PORT", "8080"))
+    print(f"Starting uvicorn on 0.0.0.0:{port}...", flush=True)
     uvicorn.run("server.main:app", host="0.0.0.0", port=port)
