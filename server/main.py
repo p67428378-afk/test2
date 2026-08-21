@@ -1,43 +1,35 @@
-"""
-Module: server.main
-Purpose: FastAPI application entry point and API routers
-Author: Backend Developer Agent
-Created: 2026-08-21
-"""
-
 import os
 import json
 import asyncio
-import logging
 from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 from typing import List, Optional
-from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from server.database import get_db, init_db
-from server.models import ChatSession, ChatMessage
+from server.database import get_db, init_db, SessionLocal, seed_data
+import server.models as models
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Initialize database tables on startup
-init_db()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
 
 app = FastAPI(
     title="ChatGPT-like API",
-    description="FastAPI backend for a ChatGPT-like streaming chat application",
     version="1.0.0",
+    lifespan=lifespan
 )
 
-# CORS Middleware configuration
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
-
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -46,13 +38,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Pydantic Schemas
 class ChatCreate(BaseModel):
-    title: Optional[str] = Field(
-        None, description="Optional initial title for the chat session"
-    )
+    title: Optional[str] = "New Chat"
 
+class ChatRename(BaseModel):
+    title: str
 
 class ChatResponse(BaseModel):
     id: str
@@ -63,14 +54,8 @@ class ChatResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-class ChatRename(BaseModel):
-    title: str = Field(..., min_length=1, description="New title for the chat session")
-
-
 class MessageCreate(BaseModel):
-    content: str = Field(..., min_length=1, description="Content of the message")
-
+    content: str
 
 class MessageResponse(BaseModel):
     id: str
@@ -82,289 +67,185 @@ class MessageResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-# API Endpoints
-
-
-@app.get("/health", response_model=dict)
-def health_check():
-    """
-    Simple health check endpoint.
-    """
-    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
-
-
-@app.post(
-    "/api/v1/chats", response_model=ChatResponse, status_code=status.HTTP_201_CREATED
-)
-def create_chat(chat_data: Optional[ChatCreate] = None, db: Session = Depends(get_db)):
-    """
-    Create a new chat session.
-    """
-    title = "New Chat"
-    if chat_data and chat_data.title:
-        title = chat_data.title
-
-    new_chat = ChatSession(title=title)
-    db.add(new_chat)
-    try:
-        db.commit()
-        db.refresh(new_chat)
-        return new_chat
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error creating chat: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not create chat session",
+# Helper for SSE streaming
+async def generate_ai_response(chat_id: str, user_content: str):
+    user_content_lower = user_content.lower()
+    if "sse" in user_content_lower or "fastapi" in user_content_lower or "server-sent" in user_content_lower:
+        response_text = (
+            "To implement Server-Sent Events (SSE) in FastAPI for streaming LLM responses, "
+            "you can use the StreamingResponse class from fastapi.responses. Here is a step-by-step guide:\n\n"
+            "1. Install dependencies: Make sure you have fastapi and uvicorn installed.\n"
+            "2. Create a generator function: This function will yield chunks of data formatted as SSE events (e.g., data: chunk\\n\\n).\n"
+            "3. Return a StreamingResponse: Pass the generator to StreamingResponse with the media type text/event-stream."
         )
-
-
-@app.get("/api/v1/chats", response_model=List[ChatResponse])
-def list_chats(
-    skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Max number of records to return"),
-    db: Session = Depends(get_db),
-):
-    """
-    List all chat sessions, sorted by most recent activity (updated_at descending).
-    """
-    chats = (
-        db.query(ChatSession)
-        .order_by(ChatSession.updated_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
-    return chats
-
-
-@app.get("/api/v1/chats/{chat_id}/messages", response_model=List[MessageResponse])
-def get_chat_messages(chat_id: str, db: Session = Depends(get_db)):
-    """
-    Retrieve all messages for a specific chat session, sorted chronologically.
-    """
-    chat = db.query(ChatSession).filter(ChatSession.id == chat_id).first()
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Chat session not found"
-        )
-    return chat.messages
-
-
-@app.patch("/api/v1/chats/{chat_id}", response_model=ChatResponse)
-def rename_chat(chat_id: str, rename_data: ChatRename, db: Session = Depends(get_db)):
-    """
-    Rename a chat session title.
-    """
-    chat = db.query(ChatSession).filter(ChatSession.id == chat_id).first()
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Chat session not found"
-        )
-
-    chat.title = rename_data.title
-    chat.updated_at = datetime.now(timezone.utc)
-    try:
-        db.commit()
-        db.refresh(chat)
-        return chat
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error renaming chat: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not rename chat session",
-        )
-
-
-@app.delete("/api/v1/chats/{chat_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_chat(chat_id: str, db: Session = Depends(get_db)):
-    """
-    Delete a chat session and all its associated messages (cascading).
-    """
-    chat = db.query(ChatSession).filter(ChatSession.id == chat_id).first()
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Chat session not found"
-        )
-
-    try:
-        db.delete(chat)
-        db.commit()
-        return
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error deleting chat: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not delete chat session",
-        )
-
-
-# Helper function to generate mock streaming responses
-async def mock_llm_stream(prompt: str):
-    """
-    Simulates a streaming response from an LLM with realistic typing speed.
-    """
-    prompt_lower = prompt.lower()
-    if "quantum computing" in prompt_lower:
+    elif "quantum" in user_content_lower:
         response_text = (
             "Quantum computing is a rapidly-emerging technology that harnesses the laws of quantum mechanics "
-            "to solve problems too complex for classical computers.\n\n"
-            "Unlike classical computers, which use bits (0s and 1s) as the basic unit of information, "
-            "quantum computers use qubits. Qubits can exist in a state of superposition, meaning they can "
-            "represent a 0, a 1, or both simultaneously. This allows quantum computers to process vast amounts "
-            "of possibilities at once, enabling breakthroughs in cryptography, optimization, and molecular modeling."
+            "to solve problems too complex for classical computers. These machines are very different from "
+            "the classical computers that we use today."
         )
-    elif "python script" in prompt_lower or "rest api" in prompt_lower:
+    elif "rest" in user_content_lower or "python" in user_content_lower or "script" in user_content_lower:
         response_text = (
-            "Here is a simple FastAPI REST API script in Python:\n\n"
+            "Here is a simple Python script for a REST API using FastAPI:\n\n"
             "```python\n"
             "from fastapi import FastAPI\n\n"
             "app = FastAPI()\n\n"
             "@app.get('/')\n"
             "def read_root():\n"
-            "    return {'message': 'Hello World'}\n"
-            "```\n\n"
-            "You can run this script using Uvicorn:\n"
-            "```bash\n"
-            "uvicorn main:app --reload\n"
+            "    return {'Hello': 'World'}\n"
             "```"
         )
-    elif "database schema" in prompt_lower:
+    elif "schema" in user_content_lower or "database" in user_content_lower:
         response_text = (
-            "To design a database schema for a chat application, you typically need at least two tables:\n\n"
-            "1. **chats**: Stores session metadata (id, title, created_at, updated_at).\n"
-            "2. **messages**: Stores individual messages (id, chat_id, role, content, created_at).\n\n"
-            "The `messages` table should have a foreign key referencing `chats.id` with a cascading delete constraint."
+            "Designing a database schema for a chat app typically involves at least two tables: "
+            "`chats` (or `sessions`) and `messages`. The `messages` table has a foreign key pointing to "
+            "`chats.id` with a cascade delete constraint."
+        )
+    elif "brainstorm" in user_content_lower or "names" in user_content_lower or "startup" in user_content_lower:
+        response_text = (
+            "Here are some creative names for your AI startup:\n"
+            "1. ChatForge\n"
+            "2. PromptStream\n"
+            "3. SynapseAI\n"
+            "4. LexiFlow\n"
+            "5. CogniChat"
         )
     else:
         response_text = (
-            f"Hello! I am a ChatGPT-like AI assistant. I received your message: '{prompt}'.\n\n"
-            "I can help you brainstorm ideas, write code, explain complex topics, or assist with daily tasks. "
-            "What would you like to explore next?"
+            "I can certainly help you with that! What topic would you like to discuss or "
+            "what question do you have today?"
         )
 
-    # Split response into small chunks to simulate streaming
+    # Split response into small chunks (words)
+    chunks = []
     words = response_text.split(" ")
     for i, word in enumerate(words):
-        chunk = word + (" " if i < len(words) - 1 else "")
-        yield chunk
-        await asyncio.sleep(0.03)  # Simulate typing delay
-
-
-async def real_openai_stream(prompt: str, api_key: str):
-    """
-    Streams responses from the real OpenAI API.
-    """
-    try:
-        from openai import AsyncOpenAI
-
-        client = AsyncOpenAI(api_key=api_key)
-        response = await client.chat.completions.create(
-            model="gpt-4o", messages=[{"role": "user", "content": prompt}], stream=True
-        )
-        async for chunk in response:
-            content = chunk.choices[0].delta.content
-            if content:
-                yield content
-    except Exception as e:
-        logger.error(f"Error streaming from OpenAI: {e}")
-        # Fallback to mock stream if real API fails
-        async for chunk in mock_llm_stream(prompt):
-            yield chunk
-
-
-@app.post("/api/v1/chats/{chat_id}/messages")
-async def send_message(
-    chat_id: str, message_data: MessageCreate, db: Session = Depends(get_db)
-):
-    """
-    Send a new message to a chat session and initiate the SSE stream.
-    """
-    # 1. Verify chat session exists
-    chat = db.query(ChatSession).filter(ChatSession.id == chat_id).first()
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Chat session not found"
-        )
-
-    # 2. Save user message to database
-    user_msg = ChatMessage(chat_id=chat_id, role="user", content=message_data.content)
-    db.add(user_msg)
-
-    # Update chat session's updated_at timestamp and auto-rename if it's the first message
-    chat.updated_at = datetime.now(timezone.utc)
-    if chat.title == "New Chat" or not chat.title:
-        # Use first few words of user message as title (max 30 chars)
-        words = message_data.content.split()
-        title_candidate = " ".join(words[:5])
-        if len(title_candidate) > 30:
-            title_candidate = title_candidate[:27] + "..."
-        chat.title = title_candidate or "New Chat"
-
-    try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error saving user message: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not save user message",
-        )
-
-    # 3. Prepare streaming generator
-    async def sse_generator():
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-
-        # Determine whether to use real OpenAI or mock
-        if (
-            openai_api_key
-            and not openai_api_key.startswith("mock")
-            and not openai_api_key.startswith("your_")
-        ):
-            stream_gen = real_openai_stream(message_data.content, openai_api_key)
+        if i < len(words) - 1:
+            chunks.append(word + " ")
         else:
-            stream_gen = mock_llm_stream(message_data.content)
+            chunks.append(word)
 
-        accumulated_content = ""
+    accumulated_content = ""
+    saved = False
+
+    try:
+        for chunk in chunks:
+            accumulated_content += chunk
+            yield f"data: {json.dumps({'content': chunk, 'done': False})}\n\n"
+            await asyncio.sleep(0.02)  # Simulate streaming delay
+        
+        # Save full response
+        db = SessionLocal()
         try:
-            async for chunk in stream_gen:
-                accumulated_content += chunk
-                # Format as SSE event
-                yield f"data: {json.dumps({'content': chunk})}\n\n"
-        except GeneratorExit:
-            logger.info("Client disconnected from SSE stream (Stop Generating).")
-        except Exception as e:
-            logger.error(f"Error in SSE generator: {e}")
-            yield f"data: {json.dumps({'error': 'An error occurred during generation.'})}\n\n"
+            ai_message = models.Message(
+                chat_id=chat_id,
+                role="assistant",
+                content=accumulated_content
+            )
+            db.add(ai_message)
+            chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
+            if chat:
+                chat.updated_at = datetime.now(timezone.utc)
+            db.commit()
+            saved = True
+            yield f"data: {json.dumps({'content': '', 'done': True, 'message_id': ai_message.id})}\n\n"
+        except Exception:
+            db.rollback()
         finally:
-            # Save assistant message to database
-            if accumulated_content:
-                # We need a fresh DB session because the request session might be closed or in a different thread
-                from server.database import SessionLocal as LocalSession
+            db.close()
 
-                with LocalSession() as local_db:
-                    assistant_msg = ChatMessage(
-                        chat_id=chat_id, role="assistant", content=accumulated_content
-                    )
-                    local_db.add(assistant_msg)
-                    # Also update the chat session's updated_at timestamp
-                    local_chat = (
-                        local_db.query(ChatSession)
-                        .filter(ChatSession.id == chat_id)
-                        .first()
-                    )
-                    if local_chat:
-                        local_chat.updated_at = datetime.now(timezone.utc)
-                    try:
-                        local_db.commit()
-                        logger.info("Successfully saved assistant message to database.")
-                    except Exception as db_err:
-                        local_db.rollback()
-                        logger.error(
-                            f"Error saving assistant message in finally block: {db_err}"
-                        )
+    except asyncio.CancelledError:
+        # Client disconnected / stopped generating
+        if not saved and accumulated_content.strip():
+            db = SessionLocal()
+            try:
+                ai_message = models.Message(
+                    chat_id=chat_id,
+                    role="assistant",
+                    content=accumulated_content
+                )
+                db.add(ai_message)
+                chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
+                if chat:
+                    chat.updated_at = datetime.now(timezone.utc)
+                db.commit()
+            except Exception:
+                db.rollback()
+            finally:
+                db.close()
+        raise
 
-    return StreamingResponse(sse_generator(), media_type="text/event-stream")
+# API Endpoints
+@app.post("/api/v1/chats", response_model=ChatResponse, status_code=status.HTTP_201_CREATED)
+def create_chat(chat_in: Optional[ChatCreate] = None, db: Session = Depends(get_db)):
+    title = chat_in.title if (chat_in and chat_in.title) else "New Chat"
+    chat = models.Chat(title=title)
+    db.add(chat)
+    db.commit()
+    db.refresh(chat)
+    return chat
+
+@app.get("/api/v1/chats", response_model=List[ChatResponse])
+def list_chats(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+    # Sort by updated_at descending
+    chats = db.query(models.Chat).order_by(models.Chat.updated_at.desc()).offset(skip).limit(limit).all()
+    return chats
+
+@app.get("/api/v1/chats/{id}/messages", response_model=List[MessageResponse])
+def get_chat_messages(id: str, db: Session = Depends(get_db)):
+    chat = db.query(models.Chat).filter(models.Chat.id == id).first()
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+    # Sort by created_at ascending
+    messages = db.query(models.Message).filter(models.Message.chat_id == id).order_by(models.Message.created_at.asc()).all()
+    return messages
+
+@app.post("/api/v1/chats/{id}/messages")
+async def send_message(id: str, message_in: MessageCreate, db: Session = Depends(get_db)):
+    chat = db.query(models.Chat).filter(models.Chat.id == id).first()
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+    
+    # Save user message
+    user_message = models.Message(
+        chat_id=id,
+        role="user",
+        content=message_in.content
+    )
+    db.add(user_message)
+    
+    # Auto-rename if title is default
+    if chat.title == "New Chat" or chat.title == "":
+        words = message_in.content.split()
+        title = " ".join(words[:5])
+        if len(words) > 5:
+            title += "..."
+        chat.title = title
+    
+    chat.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    
+    return StreamingResponse(
+        generate_ai_response(id, message_in.content),
+        media_type="text/event-stream"
+    )
+
+@app.delete("/api/v1/chats/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_chat(id: str, db: Session = Depends(get_db)):
+    chat = db.query(models.Chat).filter(models.Chat.id == id).first()
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+    db.delete(chat)
+    db.commit()
+    return None
+
+@app.patch("/api/v1/chats/{id}", response_model=ChatResponse)
+def rename_chat(id: str, chat_in: ChatRename, db: Session = Depends(get_db)):
+    chat = db.query(models.Chat).filter(models.Chat.id == id).first()
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+    chat.title = chat_in.title
+    chat.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(chat)
+    return chat
