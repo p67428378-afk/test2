@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-642** — User Story: Inventory Management Module
+- **SCRUM-115** - Create a ChatGPT-like Chat Application with Real-Time Streaming and Conversation History

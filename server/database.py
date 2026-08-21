@@ -1,20 +1,41 @@
+"""
+Module: server.database
+Purpose: Database configuration and session management
+Author: Backend Developer Agent
+Created: 2026-08-21
+"""
+
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./chat.db")
+
+# SQLite specific configuration for thread safety and StaticPool for tests
+connect_args = {}
+poolclass = None
+
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+    poolclass = StaticPool
 
 engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
+    DATABASE_URL,
+    connect_args=connect_args,
+    poolclass=poolclass,
 )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
 
 def get_db():
+    """
+    FastAPI dependency to yield a database session.
+    """
     db = SessionLocal()
     try:
         yield db
@@ -23,47 +44,16 @@ def get_db():
 
 
 def init_db():
+    """
+    Initialize database tables.
+    """
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
-
-    # Ensure tables exist
-    init_db()
-
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+def seed_data(db):
+    """
+    Idempotent seed data function.
+    Since there is no authentication, we don't need to seed users.
+    We can seed a default welcome chat session if the database is empty.
+    """
+    pass
