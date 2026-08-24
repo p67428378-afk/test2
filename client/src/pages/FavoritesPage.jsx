@@ -54,7 +54,7 @@ export default function FavoritesPage() {
   const handleCopyAll = async () => {
     if (favorites.length === 0) return;
     const textToCopy = favorites
-      .map((f) => `"${f.quote?.text}" — ${f.quote?.author}`)
+      .map((f) => `"${f.quote?.text}" - ${f.quote?.author}`)
       .join("\n\n");
     try {
       await navigator.clipboard.writeText(textToCopy);

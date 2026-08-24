@@ -16,7 +16,7 @@ export default function QuoteCard({
   if (!quote) return null;
 
   const handleCopy = async () => {
-    const textToCopy = `"${quote.text}" — ${quote.author}`;
+    const textToCopy = `"${quote.text}" - ${quote.author}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
