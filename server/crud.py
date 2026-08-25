@@ -1,151 +1,148 @@
-import uuid
-from typing import List, Optional
 from sqlalchemy.orm import Session
-from server import models, schemas
+from sqlalchemy import or_
+from datetime import datetime
+from typing import Optional
+from server.models import User, Task
+from server.schemas import UserSignUp, TaskCreate, TaskUpdate
+from server.auth import get_password_hash, verify_password
 
 
-# User CRUD
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.email == email).first()
+def get_user_by_email(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()
 
 
-# Tournament CRUD
-def create_tournament(
-    db: Session, tournament_in: schemas.TournamentCreate
-) -> models.Tournament:
-    tournament = models.Tournament(
-        name=tournament_in.name,
-        total_rounds=tournament_in.total_rounds,
-        status="DRAFT",
-        current_round=0,
-    )
-    db.add(tournament)
+def create_user(db: Session, user_in: UserSignUp):
+    hashed_password = get_password_hash(user_in.password)
+    db_user = User(email=user_in.email, hashed_password=hashed_password)
+    db.add(db_user)
     db.commit()
-    db.refresh(tournament)
-    return tournament
+    db.refresh(db_user)
+    return db_user
 
 
-def get_tournament(
-    db: Session, tournament_id: uuid.UUID
-) -> Optional[models.Tournament]:
-    return (
-        db.query(models.Tournament)
-        .filter(models.Tournament.id == tournament_id)
-        .first()
+def authenticate_user(db: Session, email: str, password: str):
+    user = get_user_by_email(db, email)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_task(db: Session, task_in: TaskCreate, user_id: str):
+    db_task = Task(
+        user_id=user_id,
+        title=task_in.title,
+        description=task_in.description,
+        status=task_in.status,
+        priority=task_in.priority,
+        due_date=task_in.due_date,
+        tags=task_in.tags,
     )
-
-
-def list_tournaments(
-    db: Session, skip: int = 0, limit: int = 100
-) -> List[models.Tournament]:
-    return db.query(models.Tournament).offset(skip).limit(limit).all()
-
-
-# Player & Registration CRUD
-def register_player(
-    db: Session, player_in: schemas.PlayerCreate, tournament_id: uuid.UUID
-) -> models.Player:
-    # Check if email is already registered in this tournament
-    existing_reg = (
-        db.query(models.Registration)
-        .join(models.Player)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Player.email == player_in.email,
-        )
-        .first()
-    )
-    if existing_reg:
-        raise ValueError("Player email already registered in this tournament")
-
-    # Check if player exists globally, else create
-    player = (
-        db.query(models.Player).filter(models.Player.email == player_in.email).first()
-    )
-    if not player:
-        player = models.Player(
-            full_name=player_in.full_name,
-            email=player_in.email,
-            rating=player_in.rating if player_in.rating is not None else 1200,
-            fide_id=player_in.fide_id,
-        )
-        db.add(player)
-        db.flush()
-
-    # Create registration
-    reg = models.Registration(
-        tournament_id=tournament_id,
-        player_id=player.id,
-        status="ACTIVE",
-    )
-    db.add(reg)
-
-    # Initialize standing entry
-    existing_standing = (
-        db.query(models.Standing)
-        .filter(
-            models.Standing.tournament_id == tournament_id,
-            models.Standing.player_id == player.id,
-        )
-        .first()
-    )
-    if not existing_standing:
-        standing = models.Standing(
-            tournament_id=tournament_id,
-            player_id=player.id,
-            total_points=0.0,
-            buchholz=0.0,
-            sonneborn_berger=0.0,
-        )
-        db.add(standing)
-
+    db.add(db_task)
     db.commit()
-    db.refresh(player)
-    return player
+    db.refresh(db_task)
+    return db_task
 
 
-def get_tournament_players(
-    db: Session, tournament_id: uuid.UUID
-) -> List[models.Player]:
-    return (
-        db.query(models.Player)
-        .join(models.Registration, models.Registration.player_id == models.Player.id)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Registration.status == "ACTIVE",
+def get_task(db: Session, task_id: str, user_id: str):
+    return db.query(Task).filter(Task.id == task_id, Task.user_id == user_id).first()
+
+
+def get_tasks(
+    db: Session,
+    user_id: str,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    tag: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    order: str = "asc",
+    skip: int = 0,
+    limit: int = 20,
+):
+    query = db.query(Task).filter(Task.user_id == user_id)
+
+    if status:
+        query = query.filter(Task.status == status)
+    if priority:
+        query = query.filter(Task.priority == priority)
+    if tag:
+        # SQLite JSON contains check or simple string match
+        # Since tags is a JSON array, we can filter using a custom function or simple like
+        # For SQLite, we can do a simple check:
+        query = query.filter(Task.tags.like(f'%"{tag}"%'))
+
+    if search:
+        query = query.filter(
+            or_(Task.title.ilike(f"%{search}%"), Task.description.ilike(f"%{search}%"))
         )
-        .all()
+
+    # Sorting
+    if sort_by:
+        col = getattr(Task, sort_by, None)
+        if col is not None:
+            if order.lower() == "desc":
+                query = query.order_by(col.desc())
+            else:
+                query = query.order_by(col.asc())
+    else:
+        query = query.order_by(Task.created_at.desc())
+
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+    return items, total
+
+
+def update_task(db: Session, db_task: Task, task_in: TaskUpdate):
+    update_data = task_in.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_task, field, value)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+
+def delete_task(db: Session, db_task: Task):
+    db.delete(db_task)
+    db.commit()
+
+
+def get_dashboard_stats(db: Session, user_id: str):
+    now = datetime.utcnow()
+
+    total_tasks = db.query(Task).filter(Task.user_id == user_id).count()
+    completed_tasks = (
+        db.query(Task)
+        .filter(Task.user_id == user_id, Task.status == "Completed")
+        .count()
+    )
+    in_progress_tasks = (
+        db.query(Task)
+        .filter(Task.user_id == user_id, Task.status == "In Progress")
+        .count()
     )
 
-
-def get_player(db: Session, player_id: uuid.UUID) -> Optional[models.Player]:
-    return db.query(models.Player).filter(models.Player.id == player_id).first()
-
-
-# Round & Match CRUD
-def get_round(db: Session, round_id: uuid.UUID) -> Optional[models.Round]:
-    return db.query(models.Round).filter(models.Round.id == round_id).first()
-
-
-def get_match(db: Session, match_id: uuid.UUID) -> Optional[models.Match]:
-    return db.query(models.Match).filter(models.Match.id == match_id).first()
-
-
-# Standing CRUD
-def get_standings(db: Session, tournament_id: uuid.UUID) -> List[models.Standing]:
-    return (
-        db.query(models.Standing)
-        .filter(models.Standing.tournament_id == tournament_id)
-        .all()
+    # Overdue tasks: status != 'Completed' and due_date < now
+    overdue_tasks = (
+        db.query(Task)
+        .filter(
+            Task.user_id == user_id,
+            Task.status != "Completed",
+            Task.due_date.isnot(None),
+            Task.due_date < now,
+        )
+        .count()
     )
 
+    completion_rate = 0.0
+    if total_tasks > 0:
+        completion_rate = round((completed_tasks / total_tasks) * 100, 2)
 
-# Certificate CRUD
-def get_certificate_by_uuid(
-    db: Session, verification_uuid: uuid.UUID
-) -> Optional[models.Certificate]:
-    return (
-        db.query(models.Certificate)
-        .filter(models.Certificate.verification_uuid == verification_uuid)
-        .first()
-    )
+    return {
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks,
+        "in_progress_tasks": in_progress_tasks,
+        "overdue_tasks": overdue_tasks,
+        "completion_rate": completion_rate,
+    }
