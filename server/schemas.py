@@ -1,44 +1,28 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+    role: str = Field(..., pattern="^(employer|job_seeker)$")
 
 
-class LoginRequest(BaseModel):
+class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
 class UserResponse(BaseModel):
-    id: uuid.UUID
+    id: str
     email: EmailStr
-    full_name: Optional[str] = None
     role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
-    pass
-
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
     created_at: datetime
     updated_at: datetime
 
@@ -46,85 +30,77 @@ class TournamentResponse(TournamentBase):
         from_attributes = True
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class JobCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=255)
+    description: str = Field(..., min_length=10)
+    requirements: str = Field(..., min_length=10)
+    salary_range: Optional[str] = None
+    location: str = Field(..., min_length=2, max_length=255)
+    job_type: str = Field(..., pattern="^(full-time|part-time|contract)$")
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class JobUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=2, max_length=255)
+    description: Optional[str] = Field(None, min_length=10)
+    requirements: Optional[str] = Field(None, min_length=10)
+    salary_range: Optional[str] = None
+    location: Optional[str] = Field(None, min_length=2, max_length=255)
+    job_type: Optional[str] = Field(None, pattern="^(full-time|part-time|contract)$")
+    is_active: Optional[bool] = None
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class JobResponse(BaseModel):
+    id: str
+    employer_id: str
+    title: str
+    description: str
+    requirements: str
+    salary_range: Optional[str]
+    location: str
+    job_type: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class JobListResponse(BaseModel):
+    total: int
+    skip: int
+    limit: int
+    items: List[JobResponse]
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
+class ApplicationResponse(BaseModel):
+    id: str
+    job_id: str
+    job_seeker_id: str
+    cover_letter: Optional[str]
+    resume_url: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class ApplicationStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(Applied|Reviewed|Interviewing|Rejected)$")
+
+
+class ApplicationWithSeekerResponse(BaseModel):
+    id: str
+    job_id: str
+    job_seeker_id: str
+    cover_letter: Optional[str]
+    resume_url: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    job_seeker: UserResponse
 
     class Config:
         from_attributes = True
