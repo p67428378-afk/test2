@@ -42,7 +42,23 @@ graph TD
 - server/tests/test_todos.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/components/layout/Navbar.jsx
+- client/src/components/todo/CreateTaskCard.jsx
+- client/src/components/todo/EditTaskModal.jsx
+- client/src/components/todo/FilterAndSearchBar.jsx
+- client/src/components/todo/MetricGroup.jsx
+- client/src/components/todo/TaskItem.jsx
+- client/src/components/todo/TaskItem.test.jsx
+- client/src/components/todo/TaskList.jsx
+- client/src/main.jsx
+- client/src/pages/TodoDashboardPage.jsx
+- client/src/services/api.js
+- client/src/setup.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - GET /api/v1/todos
