@@ -1,7 +1,8 @@
-
-fastapi
-uvicorn[standard]
-sqlalchemy
-psycopg2-binary
-pydantic
-python-decouple
+fastapi>=0.100.0
+httpx>=0.24.0
+pydantic-settings>=2.0.0
+pydantic>=2.0.0
+pytest>=7.0.0
+sqlalchemy>=2.0.0
+starlette
+uvicorn[standard]>=0.22.0
