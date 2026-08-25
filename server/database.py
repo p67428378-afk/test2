@@ -1,14 +1,16 @@
+import os
+import uuid
+from datetime import datetime, timezone
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -23,46 +25,59 @@ def get_db():
 
 
 def init_db():
+    from server.models.category import Category  # noqa: F401
+    from server.models.expense import Expense  # noqa: F401
+    from server.models.budget import Budget  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
 def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+    from server.models.category import Category
 
-    # Ensure tables exist
-    init_db()
+    default_categories = [
+        {
+            "name": "Food & Dining",
+            "color": "#EF4444",
+            "icon": "utensils",
+            "is_default": True,
+        },
+        {"name": "Housing", "color": "#F59E0B", "icon": "home", "is_default": True},
+        {
+            "name": "Transportation",
+            "color": "#3B82F6",
+            "icon": "car",
+            "is_default": True,
+        },
+        {"name": "Utilities", "color": "#10B981", "icon": "zap", "is_default": True},
+        {
+            "name": "Entertainment",
+            "color": "#8B5CF6",
+            "icon": "film",
+            "is_default": True,
+        },
+        {"name": "Healthcare", "color": "#EC4899", "icon": "heart", "is_default": True},
+        {
+            "name": "Miscellaneous",
+            "color": "#6B7280",
+            "icon": "tag",
+            "is_default": True,
+        },
+    ]
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
+    for cat_data in default_categories:
+        existing = db.query(Category).filter(Category.name == cat_data["name"]).first()
+        if not existing:
+            cat = Category(
+                id=str(uuid.uuid4()),
+                name=cat_data["name"],
+                color=cat_data["color"],
+                icon=cat_data["icon"],
+                is_default=cat_data["is_default"],
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
+            db.add(cat)
     try:
         db.commit()
     except Exception:
