@@ -1,11 +1,73 @@
-# Chess Tournament Management System (`SCRUM-55`)
+# Parking Fine Management System - Backend (`server/`)
 
-An end-to-end tournament management application supporting player registrations, FIDE Swiss-system pairings, match score tracking, live standings with Buchholz and Sonneborn-Berger tie-breaks, and verifiable digital certificates with QR codes.
+Production-ready RESTful API service built with Python 3.11, FastAPI, SQLAlchemy 2.x, and PostgreSQL / SQLite.
+
+## Features
+- **Public Citation Lookup**: Search parking fines by license plate or citation reference number.
+- **Payment Status Verification**: Real-time status checks with dynamic overdue status transitions and penalty calculation.
+- **Admin Fine Management (CRUD)**: Issue new fines, update fine details/payment status, and void citations with administrative justification notes.
+- **Audit Logging**: Automatic recording of administrative actions in an audit log.
+- **Role-Based Access Control (RBAC)**: Public endpoints accessible without authentication; administrative endpoints protected via JWT with `admin` role claim.
+
+---
+
+### 1. Environment & Dependencies
+Python 3.11 is required.
+```bash
+cd server
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Environment Variables
+Environment variables can be set via `.env` or system environment:
+- `DATABASE_URL`: Connection string (Default: `sqlite:///./app.db`)
+- `JWT_SECRET_KEY`: Secret key for JWT signing (Default: `dev-secret-change-in-production`)
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins (Default: `http://localhost:5173,http://localhost:3000`)
+
+### 3. Start Development Server
+```bash
+cd server
+uvicorn main:app --reload --port 8000
+```
+The API documentation is available at:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+### 4. Running Tests
+```bash
+cd server
+pytest -v
+```
+
+---
+
+## Full-Stack Local Development
+
+To run the complete system locally:
+
+1. **Backend Server** (Port 8000):
+   ```bash
+   cd server
+   uvicorn main:app --reload --port 8000
+   ```
+
+2. **Frontend Client** (Port 5173):
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
+
+3. **Test Credentials**:
+   - **Admin Portal**: `admin@example.com` / `adminpassword`
+   - **User Account**: `test@example.com` / `testpassword`
 
 ## Server
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.9+
 - pip and venv
 
 ### Setup
@@ -49,7 +111,7 @@ To run both backend and frontend together locally:
 ### 1. Environment Setup
 ```bash
 # Copy the example environment file
-cp server/.env.example .env
+cp .env.example .env
 ```
 
 ### 2. Start the Backend (Terminal 1)
@@ -72,9 +134,14 @@ Frontend: `http://localhost:5173`
 The frontend connects to the backend API at `http://localhost:8000` by default via the `VITE_API_BASE_URL` environment variable.
 
 ### 4. Test Credentials
-The backend seeds ready-to-use accounts on startup (idempotent):
+If the app has authentication, the backend seeds ready-to-use accounts on startup
+(idempotent). These are guaranteed logged-in-able — every activation/verification
+gate (`is_active`, `is_verified`, `email_verified`, `disabled`) is set to the
+permissive value, so no manual DB step is needed:
 - **Regular user** — Email: `test@example.com`, Password: `testpassword`
-- **Admin/Organizer user** — Email: `admin@example.com`, Password: `adminpassword`, Role: `admin`
+- **Admin user** (only when the app has roles/RBAC) — Email: `admin@example.com`, Password: `adminpassword`, role: `admin`
+
+Passwords are stored hashed with the app's own hashing utility (never in plaintext).
 
 ### Port Reference
 | Service  | Port | URL                        |
@@ -82,3 +149,4 @@ The backend seeds ready-to-use accounts on startup (idempotent):
 | Backend  | 8000 | http://localhost:8000      |
 | Frontend | 5173 | http://localhost:5173      |
 | API Docs | 8000 | http://localhost:8000/docs |
+

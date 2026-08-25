@@ -1,17 +1,21 @@
+import os
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy.exc import IntegrityError
+from passlib.context import CryptContext
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
+
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def get_db():
@@ -23,47 +27,92 @@ def get_db():
 
 
 def init_db():
+    """Idempotently create all tables."""
+    from server import models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
 def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+    """Idempotently seed test users and initial sample fines."""
+    from server.models import User, Fine, AuditLog
 
-    # Ensure tables exist
-    init_db()
-
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
+    # Seed Admin User
+    admin = db.query(User).filter(User.email == "admin@example.com").first()
+    if not admin:
+        hashed_pw = pwd_context.hash("adminpassword")
+        admin_user = User(
             email="admin@example.com",
-            full_name="Admin Organizer",
+            hashed_password=hashed_pw,
             role="admin",
-            hashed_password=get_password_hash("adminpassword"),
             is_active=True,
-            is_verified=True,
         )
         db.add(admin_user)
 
+    # Seed Regular User
+    user = db.query(User).filter(User.email == "test@example.com").first()
+    if not user:
+        hashed_pw = pwd_context.hash("testpassword")
+        reg_user = User(
+            email="test@example.com",
+            hashed_password=hashed_pw,
+            role="user",
+            is_active=True,
+        )
+        db.add(reg_user)
+
     try:
         db.commit()
-    except Exception:
+    except IntegrityError:
         db.rollback()
+
+    # Seed Sample Fines
+    fine1 = db.query(Fine).filter(Fine.ticket_number == "FN-98765").first()
+    now_utc = datetime.now(timezone.utc)
+    if not fine1:
+        fine1 = Fine(
+            ticket_number="FN-98765",
+            license_plate="ABC-1234",
+            violation_type="Overtime Parking",
+            location="Zone 4 - Main St",
+            amount=50.00,
+            status="PAID",
+            issue_date=now_utc - timedelta(days=10),
+            due_date=now_utc + timedelta(days=20),
+            payment_timestamp=now_utc - timedelta(days=2),
+            transaction_reference="TXN-44321",
+        )
+        db.add(fine1)
+
+    fine2 = db.query(Fine).filter(Fine.ticket_number == "FN-10001").first()
+    if not fine2:
+        fine2 = Fine(
+            ticket_number="FN-10001",
+            license_plate="XYZ-5678",
+            violation_type="No Parking Zone",
+            location="Zone 2 - Broadway",
+            amount=35.00,
+            status="UNPAID",
+            issue_date=now_utc - timedelta(days=5),
+            due_date=now_utc + timedelta(days=15),
+        )
+        db.add(fine2)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+
+    # Seed Audit Log entry
+    if fine1 and not db.query(AuditLog).filter(AuditLog.fine_id == fine1.id).first():
+        log1 = AuditLog(
+            fine_id=fine1.id,
+            actor_id="admin@example.com",
+            action="CREATE",
+            notes="Initial ticket creation",
+        )
+        db.add(log1)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()

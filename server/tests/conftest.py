@@ -1,12 +1,14 @@
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import Base, get_db
+from sqlalchemy.pool import StaticPool
+from fastapi.testclient import TestClient
 
-SQLALCHEMY_DATABASE_URL = "sqlite://"
+from server.database import Base, get_db, seed_data
+from server.main import app
+from server.auth import create_access_token
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
@@ -17,21 +19,24 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_database():
+def setup_test_db():
+    from server import models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
     yield
     Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture(scope="function")
-def db():
+@pytest.fixture
+def db_session():
     connection = engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
 
     yield session
 
@@ -40,11 +45,11 @@ def db():
     connection.close()
 
 
-@pytest.fixture(scope="function")
-def client(db):
+@pytest.fixture
+def client(db_session):
     def override_get_db():
         try:
-            yield db
+            yield db_session
         finally:
             pass
 
@@ -52,3 +57,15 @@ def client(db):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def admin_headers():
+    token = create_access_token(data={"sub": "admin@example.com", "role": "admin"})
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def user_headers():
+    token = create_access_token(data={"sub": "test@example.com", "role": "user"})
+    return {"Authorization": f"Bearer {token}"}
