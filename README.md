@@ -1,84 +1,86 @@
-# Chess Tournament Management System (`SCRUM-55`)
+# Weather Dashboard
 
-An end-to-end tournament management application supporting player registrations, FIDE Swiss-system pairings, match score tracking, live standings with Buchholz and Sonneborn-Berger tie-breaks, and verifiable digital certificates with QR codes.
+A responsive web application that allows users to search for cities, view current weather conditions, see a 5-day forecast, and visualize temperature trends on an interactive chart.
 
-## Server
+## Features
+- **City Search and Selection**: Search for cities by name and select them to view weather data.
+- **Current Weather & 5-Day Forecast**: Displays temperature, humidity, wind speed, pressure, and a 5-day daily forecast.
+- **Temperature Trend Chart**: Interactive visualization of temperature trends over the next 5 days.
+- **Unit Toggle**: Instantly switch between Fahrenheit and Celsius.
 
-### Prerequisites
-- Python 3.11+
-- pip and venv
-
-### Setup
-
-1. Create and activate virtual environment:
-```bash
-python -m venv server/.venv
-# On Windows:
-server\.venv\Scripts\activate
-# On macOS/Linux:
-source server/.venv/bin/activate
-```
-
-2. Install dependencies:
-```bash
-cd server
-pip install -r requirements.txt
-cd ..
-```
-
-### Running Tests
-```bash
-cd server
-python -m pytest -v
-cd ..
-```
-
-### Starting the Development Server
-```bash
-# Run from the repo root so that `from server.X` imports resolve correctly
-python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-The API will be available at `http://localhost:8000`
-API documentation: `http://localhost:8000/docs`
+---
 
 ## Full-Stack Local Development
 
-To run both backend and frontend together locally:
+This project consists of a FastAPI backend and a React/Vite frontend.
 
-### 1. Environment Setup
+### Port Conventions
+- **Backend**: Runs on port `8000`
+- **Frontend**: Runs on port `5173`
+
+---
+
+### 1. Backend Setup (FastAPI)
+
+#### Prerequisites
+- Python 3.11+
+
+#### Installation
+1. Navigate to the `server/` directory:
+   ```bash
+   cd server
+   ```
+2. Create a virtual environment and activate it:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+#### Running the Server
+Start the FastAPI development server:
 ```bash
-# Copy the example environment file
-cp server/.env.example .env
+uvicorn server.main:app --reload --port 8000
+```
+The API will be available at `http://localhost:8000`.
+Interactive API documentation (Swagger UI) is available at `http://localhost:8000/docs`.
+
+#### Running Tests
+Run the backend test suite using pytest:
+```bash
+pytest
 ```
 
-### 2. Start the Backend (Terminal 1)
-```bash
-python -m venv server/.venv
-source server/.venv/bin/activate  # On Windows: server\.venv\Scripts\activate
-pip install -r server/requirements.txt
-python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
-```
-Backend API: `http://localhost:8000` | API Docs: `http://localhost:8000/docs`
+---
 
-### 3. Start the Frontend (Terminal 2)
+### 2. Frontend Setup (React / Vite / Tailwind CSS)
+
+#### Prerequisites
+- Node.js 18+
+- npm
+
+#### Installation
+1. Navigate to the `client/` directory:
+   ```bash
+   cd client
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+#### Running the Frontend
+Start the Vite development server:
 ```bash
-cd client
-npm install
 npm run dev
 ```
-Frontend: `http://localhost:5173`
+The frontend will be available at `http://localhost:5173`.
 
-The frontend connects to the backend API at `http://localhost:8000` by default via the `VITE_API_BASE_URL` environment variable.
-
-### 4. Test Credentials
-The backend seeds ready-to-use accounts on startup (idempotent):
-- **Regular user** — Email: `test@example.com`, Password: `testpassword`
-- **Admin/Organizer user** — Email: `admin@example.com`, Password: `adminpassword`, Role: `admin`
-
-### Port Reference
-| Service  | Port | URL                        |
-|----------|------|----------------------------|
-| Backend  | 8000 | http://localhost:8000      |
-| Frontend | 5173 | http://localhost:5173      |
-| API Docs | 8000 | http://localhost:8000/docs |
+#### Running Tests
+Run the frontend test suite:
+```bash
+npm run test
+```

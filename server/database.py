@@ -1,16 +1,15 @@
+import uuid
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker
+from server.config import settings
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+# For SQLite, we need connect_args={"check_same_thread": False}
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 
@@ -23,47 +22,74 @@ def get_db():
 
 
 def init_db():
+    # Import models here to register them on Base.metadata
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+def seed_data(db):
+    # Idempotent seeding of some default cities
+    from server.models import City, SearchStatistics
+    from datetime import datetime, timezone
 
-    # Ensure tables exist
-    init_db()
+    default_cities = [
+        {
+            "name": "Seattle",
+            "state": "WA",
+            "country": "US",
+            "latitude": 47.6062,
+            "longitude": -122.3321,
+        },
+        {
+            "name": "New York",
+            "state": "NY",
+            "country": "US",
+            "latitude": 40.7128,
+            "longitude": -74.0060,
+        },
+        {
+            "name": "London",
+            "state": None,
+            "country": "GB",
+            "latitude": 51.5074,
+            "longitude": -0.1278,
+        },
+        {
+            "name": "Tokyo",
+            "state": None,
+            "country": "JP",
+            "latitude": 35.6762,
+            "longitude": 139.6503,
+        },
+    ]
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
+    for city_data in default_cities:
+        # Check if city already exists
+        existing = (
+            db.query(City)
+            .filter(
+                City.name == city_data["name"], City.country == city_data["country"]
+            )
+            .first()
         )
-        db.add(test_user)
+        if not existing:
+            city = City(
+                id=str(uuid.uuid4()),
+                name=city_data["name"],
+                state=city_data["state"],
+                country=city_data["country"],
+                latitude=city_data["latitude"],
+                longitude=city_data["longitude"],
+            )
+            db.add(city)
+            db.commit()
+            db.refresh(city)
 
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+            # Add initial search statistic
+            stats = SearchStatistics(
+                id=str(uuid.uuid4()),
+                city_id=city.id,
+                search_count=1,
+                last_searched_at=datetime.now(timezone.utc),
+            )
+            db.add(stats)
+            db.commit()
