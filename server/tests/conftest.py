@@ -1,37 +1,35 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import Base, get_db
+from sqlalchemy.pool import StaticPool
 
+from server.app.main import app
+from server.app.database import Base, get_db
+# Import models to register them on Base.metadata
+
+# Use SQLite in-memory database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite://"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_database():
+@pytest.fixture(scope="session")
+def db_engine():
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
-    yield
+    yield engine
     Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
-def db():
-    connection = engine.connect()
+def db_session(db_engine):
+    connection = db_engine.connect()
     transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
+    Session = sessionmaker(bind=connection)
+    session = Session()
 
     yield session
 
@@ -41,10 +39,10 @@ def db():
 
 
 @pytest.fixture(scope="function")
-def client(db):
+def client(db_session):
     def override_get_db():
         try:
-            yield db
+            yield db_session
         finally:
             pass
 
