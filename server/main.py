@@ -27,7 +27,9 @@ ALLOWED_ORIGINS_ENV = os.getenv(
     "ALLOWED_ORIGINS",
     "http://localhost:5173,http://localhost:3000",
 )
-ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",") if origin.strip()]
+ALLOWED_ORIGINS = [
+    origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",") if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,

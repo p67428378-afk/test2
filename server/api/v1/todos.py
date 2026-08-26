@@ -17,9 +17,15 @@ router = APIRouter(prefix="/todos", tags=["todos"])
     summary="List all TODO items",
 )
 def list_todos(
-    skip: int = Query(default=0, ge=0, description="Number of items to skip for pagination"),
-    limit: int = Query(default=100, ge=1, le=1000, description="Maximum number of items to return"),
-    completed: Optional[bool] = Query(default=None, description="Filter items by completion status"),
+    skip: int = Query(
+        default=0, ge=0, description="Number of items to skip for pagination"
+    ),
+    limit: int = Query(
+        default=100, ge=1, le=1000, description="Maximum number of items to return"
+    ),
+    completed: Optional[bool] = Query(
+        default=None, description="Filter items by completion status"
+    ),
     db: Session = Depends(get_db),
 ):
     query = db.query(Todo)

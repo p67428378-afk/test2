@@ -33,6 +33,7 @@ def init_db() -> None:
     """Initialize database schema idempotently."""
     # Import all models before calling create_all
     import server.models.todo  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 

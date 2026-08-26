@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -47,6 +46,10 @@ def test_create_todo_validation_error(client: TestClient):
     response_empty = client.post("/api/v1/todos", json={"title": ""})
     assert response_empty.status_code == 422
 
+    # Whitespace-only title
+    response_ws = client.post("/api/v1/todos", json={"title": "   "})
+    assert response_ws.status_code in (400, 422)
+
 
 def test_list_todos_and_pagination(client: TestClient):
     # Create 3 items
@@ -90,7 +93,9 @@ def test_list_todos_filter_by_completed(client: TestClient):
 
 
 def test_get_todo_by_id(client: TestClient):
-    create_res = client.post("/api/v1/todos", json={"title": "Get Single Item", "description": "Details"})
+    create_res = client.post(
+        "/api/v1/todos", json={"title": "Get Single Item", "description": "Details"}
+    )
     todo_id = create_res.json()["id"]
 
     response = client.get(f"/api/v1/todos/{todo_id}")
@@ -108,7 +113,10 @@ def test_get_todo_not_found(client: TestClient):
 
 
 def test_update_todo_success(client: TestClient):
-    create_res = client.post("/api/v1/todos", json={"title": "Original Title", "description": "Original Desc"})
+    create_res = client.post(
+        "/api/v1/todos",
+        json={"title": "Original Title", "description": "Original Desc"},
+    )
     todo_id = create_res.json()["id"]
 
     update_payload = {
@@ -125,7 +133,9 @@ def test_update_todo_success(client: TestClient):
 
 
 def test_update_todo_partial(client: TestClient):
-    create_res = client.post("/api/v1/todos", json={"title": "Keep Title", "description": "Keep Desc"})
+    create_res = client.post(
+        "/api/v1/todos", json={"title": "Keep Title", "description": "Keep Desc"}
+    )
     todo_id = create_res.json()["id"]
 
     # Update only status
@@ -135,6 +145,17 @@ def test_update_todo_partial(client: TestClient):
     assert data["title"] == "Keep Title"
     assert data["description"] == "Keep Desc"
     assert data["completed"] is True
+
+
+def test_update_todo_validation_error(client: TestClient):
+    create_res = client.post("/api/v1/todos", json={"title": "Task To Update"})
+    todo_id = create_res.json()["id"]
+
+    response_empty = client.put(f"/api/v1/todos/{todo_id}", json={"title": ""})
+    assert response_empty.status_code == 422
+
+    response_ws = client.put(f"/api/v1/todos/{todo_id}", json={"title": "   "})
+    assert response_ws.status_code in (400, 422)
 
 
 def test_update_todo_not_found(client: TestClient):

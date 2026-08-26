@@ -40,7 +40,21 @@ graph TD
 - server/tests/test_todos.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/App.test.jsx
+- client/src/components/Navbar.jsx
+- client/src/components/StatCard.jsx
+- client/src/components/TaskToolbar.jsx
+- client/src/components/TodoModal.jsx
+- client/src/components/TodoTable.jsx
+- client/src/main.jsx
+- client/src/pages/DashboardPage.jsx
+- client/src/services/api.js
+- client/src/setup.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - GET /api/v1/todos
