@@ -1,39 +1,35 @@
+"""FastAPI application entry point for Podcast Discovery Hub."""
+
+import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
+from server.config import ALLOWED_ORIGINS
+from server.database import init_db
+from server.routers import episodes, podcasts
 
-# Initialize database tables
-init_db()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("podcast_hub")
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle manager to initialize database and seed sample data."""
+    logger.info("Initializing Podcast Discovery Hub database...")
+    init_db()
+    logger.info("Database initialized successfully.")
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Podcast Discovery Hub API",
+    description="RESTful API for browsing podcast shows, searching episodes, and streaming metadata.",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
-
+# Mandatory CORS Middleware configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -42,19 +38,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Include Routers
+app.include_router(podcasts.router)
+app.include_router(episodes.router)
 
 
-@app.get("/")
-def read_root():
+@app.get("/health", tags=["system"])
+def health_check():
+    """Health check endpoint."""
+    return {"status": "ok", "database": "connected"}
+
+
+@app.get("/", tags=["system"])
+def root():
+    """Root endpoint providing service metadata."""
     return {
-        "message": "Welcome to the Chess Tournament Management System API",
+        "message": "Podcast Discovery Hub API",
+        "version": "1.0.0",
         "docs": "/docs",
     }

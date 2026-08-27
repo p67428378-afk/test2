@@ -1,130 +1,70 @@
-import uuid
+"""Pydantic schemas for request validation and response serialization."""
+
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import List
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# --- Podcast Schemas ---
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class PodcastBase(BaseModel):
+    title: str = Field(..., max_length=255, description="Title of the podcast show")
+    description: str = Field(..., description="Show summary and overview")
+    author: str = Field(..., max_length=255, description="Host / Author name")
+    cover_image_url: str = Field(..., max_length=512, description="Cover art image URL")
+    category: str = Field(..., max_length=100, description="Primary category tag")
+    total_subscribers: int = Field(0, ge=0, description="Subscriber count metric")
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
+class PodcastCreate(PodcastBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class Podcast(PodcastBase):
+    id: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class PodcastListResponse(BaseModel):
+    items: List[Podcast]
+    total: int
+    page: int
+    limit: int
+    pages: int
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+# --- Episode Schemas ---
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+class EpisodeBase(BaseModel):
+    title: str = Field(..., max_length=255, description="Title of the episode")
+    description: str = Field(..., description="Episode summary / show notes")
+    audio_url: str = Field(..., max_length=512, description="Direct audio stream URL")
+    duration_seconds: int = Field(..., ge=0, description="Total duration in seconds")
+    episode_number: int = Field(..., ge=1, description="Sequential episode number")
+    publish_date: datetime = Field(..., description="Release date in UTC")
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+class EpisodeCreate(EpisodeBase):
+    podcast_id: str
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class Episode(EpisodeBase):
+    id: str
+    podcast_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+class EpisodeListResponse(BaseModel):
+    items: List[Episode]
+    total: int
+    page: int
+    limit: int
+    pages: int
