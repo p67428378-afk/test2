@@ -1,7 +1,4 @@
-from fastapi.testclient import TestClient
-
-
-def test_login_success(client: TestClient):
+def test_login_donor_success(client):
     response = client.post(
         "/api/v1/auth/login",
         json={"email": "test@example.com", "password": "testpassword"},
@@ -9,10 +6,23 @@ def test_login_success(client: TestClient):
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    assert data["user"]["email"] == "test@example.com"
+    assert data["user"]["role"] == "Donor"
 
 
-def test_login_invalid_credentials(client: TestClient):
+def test_login_admin_success(client):
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@example.com", "password": "adminpassword"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["user"]["email"] == "admin@example.com"
+    assert data["user"]["role"] == "Admin"
+
+
+def test_login_invalid_password(client):
     response = client.post(
         "/api/v1/auth/login",
         json={"email": "test@example.com", "password": "wrongpassword"},
@@ -20,15 +30,24 @@ def test_login_invalid_credentials(client: TestClient):
     assert response.status_code == 401
 
 
-def test_get_me_success(client: TestClient):
-    login_res = client.post(
-        "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
+def test_register_user_success(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "newdonor@example.com",
+            "password": "password123",
+            "full_name": "New Donor",
+            "role": "Donor",
+        },
     )
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == "newdonor@example.com"
+    assert data["full_name"] == "New Donor"
 
-    response = client.get("/api/v1/auth/me", headers=headers)
+
+def test_read_users_me(client, donor_headers):
+    response = client.get("/api/v1/auth/me", headers=donor_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "test@example.com"
