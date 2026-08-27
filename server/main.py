@@ -1,14 +1,58 @@
+"""FastAPI Main Application Entrypoint."""
 
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from server.api.v1.endpoints import password_reset
-from server.database import Base, engine
+from starlette.middleware.cors import CORSMiddleware
 
-Base.metadata.create_all(bind=engine)
+from server.database import init_db, seed_data
+from server.routers.documents import router as documents_router
 
-app = FastAPI()
 
-app.include_router(password_reset.router, prefix="/api/v1", tags=["password-reset"])
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application startup and shutdown lifecycle."""
+    init_db()
+    seed_data()
+    yield
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Password Reset Microservice"}
+
+app = FastAPI(
+    title="Browser Markdown Editor API",
+    description="Backend REST API for saving, updating, loading, and listing Markdown documents.",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# CORS Middleware
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000",
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Routers
+app.include_router(documents_router)
+
+
+@app.get("/health", tags=["system"])
+def health_check():
+    """Service health check endpoint."""
+    return {"status": "healthy", "service": "browser-markdown-editor-backend"}
+
+
+@app.get("/", tags=["system"])
+def root():
+    """Root welcoming endpoint."""
+    return {
+        "message": "Browser Markdown Editor API",
+        "docs_url": "/docs",
+        "health": "/health",
+    }
