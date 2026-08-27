@@ -37,19 +37,26 @@ graph TD
 - server/tests/__init__.py
 - server/tests/conftest.py
 - server/tests/test_calculator.py
-- server/tests/test_main.py
 
 ## Frontend Modules (client/)
 - client/eslint.config.js
 - client/postcss.config.js
 - client/src/App.jsx
 - client/src/App.test.jsx
+- client/src/components/BillTipInputCard.jsx
+- client/src/components/BillTipInputCard.test.jsx
+- client/src/components/CalculationSummaryCard.jsx
+- client/src/components/CalculationSummaryCard.test.jsx
 - client/src/components/CertificateVerificationCard.jsx
 - client/src/components/CertificateVerificationCard.test.jsx
+- client/src/components/DetailedSplitBreakdownTable.jsx
+- client/src/components/DetailedSplitBreakdownTable.test.jsx
 - client/src/components/Header.jsx
 - client/src/components/LiveLeaderboardTable.jsx
 - client/src/components/LiveLeaderboardTable.test.jsx
 - client/src/components/Modal.jsx
+- client/src/components/Navbar.jsx
+- client/src/components/Navbar.test.jsx
 - client/src/components/PlayerRegistrationForm.jsx
 - client/src/components/PlayerRegistrationForm.test.jsx
 - client/src/components/PlayerRosterTable.jsx
@@ -68,14 +75,6 @@ graph TD
 - client/src/components/common/SearchBar.jsx
 - client/src/components/dashboard/ActiveLoansTable.jsx
 - client/src/components/dashboard/OverdueFinesTable.jsx
-- client/src/components/dashboard/QuickActionsPanel.jsx
-- client/src/components/dashboard/StatCard.jsx
-- client/src/components/inventory/InventoryForm.jsx
-- client/src/components/inventory/InventoryTable.jsx
-- client/src/components/layout/Header.jsx
-- client/src/components/layout/Sidebar.jsx
-- client/src/components/member/BookCard.jsx
-- client/src/components/member/MyFinesPanel.jsx
 - client/src/main.jsx
 - client/src/setup.js
 - client/tailwind.config.js

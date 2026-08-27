@@ -1,28 +1,31 @@
+from decimal import Decimal, ROUND_HALF_UP
 from server.schemas.calculator import TipCalculationRequest, TipCalculationResponse
 
 
 def calculate_tip(request: TipCalculationRequest) -> TipCalculationResponse:
     """
-    Calculate total tip, total bill, and per-person split amounts.
-
-    Formulas:
-    - total_tip = round(bill_amount * (tip_percentage / 100.0), 2)
-    - total_bill = round(bill_amount + total_tip, 2)
-    - tip_per_person = round(total_tip / num_people, 2)
-    - total_per_person = round(total_bill / num_people, 2)
+    Calculate tip amounts and per-person breakdown with exact 2 decimal place rounding.
     """
-    bill_amount = request.bill_amount
-    tip_percentage = request.tip_percentage
-    num_people = request.num_people
+    bill = Decimal(str(request.bill_amount))
+    tip_pct = Decimal(str(request.tip_percentage))
+    people = Decimal(str(request.num_people))
 
-    total_tip = round(bill_amount * (tip_percentage / 100.0), 2)
-    total_bill = round(bill_amount + total_tip, 2)
-    tip_per_person = round(total_tip / num_people, 2)
-    total_per_person = round(total_bill / num_people, 2)
+    total_tip_dec = (bill * tip_pct / Decimal("100")).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    total_bill_dec = (bill + total_tip_dec).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    tip_per_person_dec = (total_tip_dec / people).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    total_per_person_dec = (total_bill_dec / people).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
 
     return TipCalculationResponse(
-        total_tip=total_tip,
-        total_bill=total_bill,
-        tip_per_person=tip_per_person,
-        total_per_person=total_per_person,
+        total_tip=float(total_tip_dec),
+        total_bill=float(total_bill_dec),
+        tip_per_person=float(tip_per_person_dec),
+        total_per_person=float(total_per_person_dec),
     )

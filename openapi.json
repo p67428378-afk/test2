@@ -2,18 +2,15 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Tip Calculator API",
-    "description": "Stateless Tip Calculator REST API providing calculation and splitting endpoints.",
+    "description": "Stateless Tip Calculator REST API for calculating tips and bill splits.",
     "version": "1.0.0"
   },
   "paths": {
     "/api/v1/calculate-tip": {
       "post": {
-        "tags": [
-          "Tip Calculator"
-        ],
-        "summary": "Calculate Tip and Split Totals",
-        "description": "Calculates total tip, total bill, tip per person, and total per person based on bill amount, tip percentage, and number of people splitting.",
-        "operationId": "compute_tip_endpoint_api_v1_calculate_tip_post",
+        "summary": "Calculate tip and bill split breakdown",
+        "description": "Calculates total tip, total bill, tip per person, and total per person based on bill_amount, tip_percentage, and num_people.",
+        "operationId": "calculate_tip_endpoint_api_v1_calculate_tip_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -54,28 +51,7 @@
           "Health"
         ],
         "summary": "Health Check",
-        "description": "Service health check endpoint.",
         "operationId": "health_check_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/health": {
-      "get": {
-        "tags": [
-          "Health"
-        ],
-        "summary": "Api Health Check",
-        "description": "API versioned health check endpoint.",
-        "operationId": "api_health_check_api_v1_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -110,20 +86,20 @@
             "type": "number",
             "exclusiveMinimum": 0.0,
             "title": "Bill Amount",
-            "description": "Total bill amount before tip. Must be greater than 0.0."
+            "description": "Total monetary amount of the bill before tip (must be > 0.0)"
           },
           "tip_percentage": {
             "type": "number",
             "maximum": 100.0,
             "minimum": 0.0,
             "title": "Tip Percentage",
-            "description": "Tip percentage between 0.0 and 100.0."
+            "description": "Tip percentage (0.0 to 100.0)"
           },
           "num_people": {
             "type": "integer",
             "minimum": 1.0,
             "title": "Num People",
-            "description": "Number of people splitting the bill. Must be an integer >= 1.",
+            "description": "Number of individuals splitting the bill (default: 1, minimum: 1)",
             "default": 1
           }
         },
@@ -132,30 +108,29 @@
           "bill_amount",
           "tip_percentage"
         ],
-        "title": "TipCalculationRequest",
-        "description": "Request schema for tip calculation."
+        "title": "TipCalculationRequest"
       },
       "TipCalculationResponse": {
         "properties": {
           "total_tip": {
             "type": "number",
             "title": "Total Tip",
-            "description": "Total tip amount rounded to 2 decimal places."
+            "description": "Total calculated tip amount rounded to 2 decimal places"
           },
           "total_bill": {
             "type": "number",
             "title": "Total Bill",
-            "description": "Total bill amount including tip, rounded to 2 decimal places."
+            "description": "Sum of bill amount and total tip rounded to 2 decimal places"
           },
           "tip_per_person": {
             "type": "number",
             "title": "Tip Per Person",
-            "description": "Tip amount owed per person, rounded to 2 decimal places."
+            "description": "Tip portion allocated per individual rounded to 2 decimal places"
           },
           "total_per_person": {
             "type": "number",
             "title": "Total Per Person",
-            "description": "Total amount owed per person (bill + tip), rounded to 2 decimal places."
+            "description": "Combined bill and tip portion per individual rounded to 2 decimal places"
           }
         },
         "type": "object",
@@ -165,8 +140,7 @@
           "tip_per_person",
           "total_per_person"
         ],
-        "title": "TipCalculationResponse",
-        "description": "Response schema containing calculated tip and split breakdowns."
+        "title": "TipCalculationResponse"
       },
       "ValidationError": {
         "properties": {

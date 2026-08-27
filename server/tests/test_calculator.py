@@ -1,161 +1,150 @@
-from fastapi.testclient import TestClient
+import pytest
 from server.schemas.calculator import TipCalculationRequest
 from server.services.calculator_service import calculate_tip
 
 
-def test_calculate_tip_service_unit():
-    """Unit test for calculator_service math and rounding."""
-    req = TipCalculationRequest(bill_amount=100.0, tip_percentage=15.0, num_people=2)
-    resp = calculate_tip(req)
-    assert resp.total_tip == 15.0
-    assert resp.total_bill == 115.0
-    assert resp.tip_per_person == 7.5
-    assert resp.total_per_person == 57.5
-
-
-def test_calculate_tip_hld_example(client: TestClient):
-    """Test standard HLD example calculation: $120.00 bill, 15% tip, 2 people."""
-    payload = {"bill_amount": 120.00, "tip_percentage": 15.0, "num_people": 2}
-    response = client.post("/api/v1/calculate-tip", json=payload)
+def test_health_check(client):
+    response = client.get("/health")
     assert response.status_code == 200
-    data = response.json()
-    assert data["total_tip"] == 18.00
-    assert data["total_bill"] == 138.00
-    assert data["tip_per_person"] == 9.00
-    assert data["total_per_person"] == 69.00
+    assert response.json() == {"status": "ok"}
 
 
-def test_calculate_tip_preset_percentages(client: TestClient):
-    """Test standard preset tip percentages: 10%, 15%, 18%, 20%."""
-    presets = [
-        (10.0, 10.0, 110.0, 10.0, 110.0),
-        (15.0, 15.0, 115.0, 15.0, 115.0),
-        (18.0, 18.0, 118.0, 18.0, 118.0),
-        (20.0, 20.0, 120.0, 20.0, 120.0),
-    ]
-    for (
-        tip_pct,
-        expected_tip,
-        expected_bill,
-        expected_tip_pp,
-        expected_bill_pp,
-    ) in presets:
-        response = client.post(
-            "/api/v1/calculate-tip",
-            json={"bill_amount": 100.00, "tip_percentage": tip_pct, "num_people": 1},
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["total_tip"] == expected_tip
-        assert data["total_bill"] == expected_bill
-        assert data["tip_per_person"] == expected_tip_pp
-        assert data["total_per_person"] == expected_bill_pp
+def test_calculate_tip_service_standard():
+    req = TipCalculationRequest(bill_amount=100.0, tip_percentage=15.0, num_people=2)
+    res = calculate_tip(req)
+    assert res.total_tip == 15.0
+    assert res.total_bill == 115.0
+    assert res.tip_per_person == 7.5
+    assert res.total_per_person == 57.5
 
 
-def test_calculate_tip_custom_percentage_bounds(client: TestClient):
-    """Test custom tip percentages at boundary values: 0% and 100%."""
+def test_calculate_tip_service_presets():
+    # Test 10%
+    res10 = calculate_tip(TipCalculationRequest(bill_amount=120.0, tip_percentage=10.0, num_people=2))
+    assert res10.total_tip == 12.0
+    assert res10.total_bill == 132.0
+    assert res10.tip_per_person == 6.0
+    assert res10.total_per_person == 66.0
+
+    # Test 15% (example from HLD: $120, 15%, 2 people)
+    res15 = calculate_tip(TipCalculationRequest(bill_amount=120.0, tip_percentage=15.0, num_people=2))
+    assert res15.total_tip == 18.0
+    assert res15.total_bill == 138.0
+    assert res15.tip_per_person == 9.0
+    assert res15.total_per_person == 69.0
+
+    # Test 18%
+    res18 = calculate_tip(TipCalculationRequest(bill_amount=100.0, tip_percentage=18.0, num_people=1))
+    assert res18.total_tip == 18.0
+    assert res18.total_bill == 118.0
+    assert res18.tip_per_person == 18.0
+    assert res18.total_per_person == 118.0
+
+    # Test 20%
+    res20 = calculate_tip(TipCalculationRequest(bill_amount=100.0, tip_percentage=20.0, num_people=4))
+    assert res20.total_tip == 20.0
+    assert res20.total_bill == 120.0
+    assert res20.tip_per_person == 5.0
+    assert res20.total_per_person == 30.0
+
+
+def test_calculate_tip_service_custom_percentages():
     # 0% tip
-    res_zero = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": 50.00, "tip_percentage": 0.0, "num_people": 1},
-    )
-    assert res_zero.status_code == 200
-    assert res_zero.json()["total_tip"] == 0.00
-    assert res_zero.json()["total_bill"] == 50.00
-    assert res_zero.json()["tip_per_person"] == 0.00
-    assert res_zero.json()["total_per_person"] == 50.00
+    res0 = calculate_tip(TipCalculationRequest(bill_amount=50.0, tip_percentage=0.0, num_people=1))
+    assert res0.total_tip == 0.0
+    assert res0.total_bill == 50.0
+    assert res0.tip_per_person == 0.0
+    assert res0.total_per_person == 50.0
 
     # 100% tip
-    res_hundred = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": 50.00, "tip_percentage": 100.0, "num_people": 2},
-    )
-    assert res_hundred.status_code == 200
-    assert res_hundred.json()["total_tip"] == 50.00
-    assert res_hundred.json()["total_bill"] == 100.00
-    assert res_hundred.json()["tip_per_person"] == 25.00
-    assert res_hundred.json()["total_per_person"] == 50.00
+    res100 = calculate_tip(TipCalculationRequest(bill_amount=50.0, tip_percentage=100.0, num_people=2))
+    assert res100.total_tip == 50.0
+    assert res100.total_bill == 100.0
+    assert res100.tip_per_person == 25.0
+    assert res100.total_per_person == 50.0
+
+    # Fractional tip percentage (e.g. 12.5%)
+    res_frac = calculate_tip(TipCalculationRequest(bill_amount=80.0, tip_percentage=12.5, num_people=2))
+    assert res_frac.total_tip == 10.0
+    assert res_frac.total_bill == 90.0
+    assert res_frac.tip_per_person == 5.0
+    assert res_frac.total_per_person == 45.0
 
 
-def test_calculate_tip_default_num_people(client: TestClient):
-    """Test default num_people parameter defaults to 1."""
-    payload = {"bill_amount": 80.00, "tip_percentage": 20.0}
+def test_calculate_tip_endpoint_success_default_people(client):
+    payload = {
+        "bill_amount": 100.0,
+        "tip_percentage": 15.0
+    }
     response = client.post("/api/v1/calculate-tip", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert data["total_tip"] == 16.00
-    assert data["total_bill"] == 96.00
-    assert data["tip_per_person"] == 16.00
-    assert data["total_per_person"] == 96.00
+    assert data["total_tip"] == 15.0
+    assert data["total_bill"] == 115.0
+    assert data["tip_per_person"] == 15.0
+    assert data["total_per_person"] == 115.0
 
 
-def test_calculate_tip_rounding_precision(client: TestClient):
-    """Test fractional division with strict currency rounding."""
-    payload = {"bill_amount": 33.33, "tip_percentage": 18.5, "num_people": 3}
-    # total_tip = round(33.33 * 0.185, 2) = round(6.16605, 2) = 6.17
-    # total_bill = round(33.33 + 6.17, 2) = 39.50
-    # tip_per_person = round(6.17 / 3, 2) = round(2.05666..., 2) = 2.06
-    # total_per_person = round(39.50 / 3, 2) = round(13.1666..., 2) = 13.17
+def test_calculate_tip_endpoint_success_split(client):
+    payload = {
+        "bill_amount": 120.0,
+        "tip_percentage": 15.0,
+        "num_people": 2
+    }
     response = client.post("/api/v1/calculate-tip", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert data["total_tip"] == 6.17
-    assert data["total_bill"] == 39.50
-    assert data["tip_per_person"] == 2.06
-    assert data["total_per_person"] == 13.17
+    assert data["total_tip"] == 18.0
+    assert data["total_bill"] == 138.0
+    assert data["tip_per_person"] == 9.0
+    assert data["total_per_person"] == 69.0
 
 
-def test_validation_negative_or_zero_bill_amount(client: TestClient):
-    """Validation test: bill amount must be greater than 0."""
-    res_negative = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": -10.0, "tip_percentage": 15.0, "num_people": 1},
-    )
-    assert res_negative.status_code == 422
-
-    res_zero = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": 0.0, "tip_percentage": 15.0, "num_people": 1},
-    )
-    assert res_zero.status_code == 422
-
-
-def test_validation_tip_percentage_bounds(client: TestClient):
-    """Validation test: tip percentage must be between 0 and 100."""
-    res_neg_tip = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": 50.0, "tip_percentage": -1.0, "num_people": 1},
-    )
-    assert res_neg_tip.status_code == 422
-
-    res_over_tip = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": 50.0, "tip_percentage": 105.0, "num_people": 1},
-    )
-    assert res_over_tip.status_code == 422
+def test_calculate_tip_endpoint_rounding_precision(client):
+    # $33.33 bill, 15% tip, 3 people
+    # total_tip = 33.33 * 0.15 = 4.9995 -> 5.00
+    # total_bill = 33.33 + 5.00 = 38.33
+    # tip_per_person = 5.00 / 3 = 1.6666... -> 1.67
+    # total_per_person = 38.33 / 3 = 12.7766... -> 12.78
+    payload = {
+        "bill_amount": 33.33,
+        "tip_percentage": 15.0,
+        "num_people": 3
+    }
+    response = client.post("/api/v1/calculate-tip", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_tip"] == 5.00
+    assert data["total_bill"] == 38.33
+    assert data["tip_per_person"] == 1.67
+    assert data["total_per_person"] == 12.78
 
 
-def test_validation_invalid_num_people(client: TestClient):
-    """Validation test: num_people must be >= 1."""
-    res_zero_people = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": 50.0, "tip_percentage": 15.0, "num_people": 0},
-    )
-    assert res_zero_people.status_code == 422
+def test_calculate_tip_endpoint_validation_errors(client):
+    # Negative bill amount
+    res = client.post("/api/v1/calculate-tip", json={"bill_amount": -10.0, "tip_percentage": 15.0, "num_people": 1})
+    assert res.status_code == 422
 
-    res_neg_people = client.post(
-        "/api/v1/calculate-tip",
-        json={"bill_amount": 50.0, "tip_percentage": 15.0, "num_people": -3},
-    )
-    assert res_neg_people.status_code == 422
+    # Zero bill amount
+    res = client.post("/api/v1/calculate-tip", json={"bill_amount": 0.0, "tip_percentage": 15.0, "num_people": 1})
+    assert res.status_code == 422
 
+    # Negative tip percentage
+    res = client.post("/api/v1/calculate-tip", json={"bill_amount": 100.0, "tip_percentage": -5.0, "num_people": 1})
+    assert res.status_code == 422
 
-def test_validation_missing_fields(client: TestClient):
-    """Validation test: missing required fields return 422."""
-    res_missing_bill = client.post(
-        "/api/v1/calculate-tip", json={"tip_percentage": 15.0}
-    )
-    assert res_missing_bill.status_code == 422
+    # Tip percentage > 100
+    res = client.post("/api/v1/calculate-tip", json={"bill_amount": 100.0, "tip_percentage": 105.0, "num_people": 1})
+    assert res.status_code == 422
 
-    res_missing_tip = client.post("/api/v1/calculate-tip", json={"bill_amount": 50.0})
-    assert res_missing_tip.status_code == 422
+    # num_people < 1
+    res = client.post("/api/v1/calculate-tip", json={"bill_amount": 100.0, "tip_percentage": 15.0, "num_people": 0})
+    assert res.status_code == 422
+
+    # Missing required bill_amount
+    res = client.post("/api/v1/calculate-tip", json={"tip_percentage": 15.0, "num_people": 1})
+    assert res.status_code == 422
+
+    # Missing required tip_percentage
+    res = client.post("/api/v1/calculate-tip", json={"bill_amount": 100.0, "num_people": 1})
+    assert res.status_code == 422
