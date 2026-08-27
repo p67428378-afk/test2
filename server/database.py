@@ -1,16 +1,22 @@
+import os
+import uuid
+from datetime import datetime, timezone
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy.pool import StaticPool
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")
+
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool if ":memory:" in DATABASE_URL else None,
+    )
+else:
+    engine = create_engine(DATABASE_URL, pool_size=10, max_overflow=20)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 
@@ -23,47 +29,40 @@ def get_db():
 
 
 def init_db():
+    """Idempotently create all tables."""
+    import server.models.document  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
 def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+    """Idempotently seed initial documents if database is empty."""
+    from server.models.document import Document
 
-    # Ensure tables exist
-    init_db()
+    existing = db.query(Document).first()
+    if existing:
+        return
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
+    sample_docs = [
+        Document(
+            id=uuid.UUID("e4b3c2a1-890d-4e5f-b678-9a0b1c2d3e4f"),
+            title="Sample Markdown Document",
+            content="# Welcome to Markdown Editor\n\nThis is a sample document with **bold** text, *italic* text, and `inline code`.\n\n- Feature 1: Live Preview\n- Feature 2: Fast Formatting\n- Feature 3: Export to .md\n",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        ),
+        Document(
+            id=uuid.UUID("11111111-2222-3333-4444-555555555555"),
+            title="Product Specification",
+            content="# Product Specification\n\n## Overview\nMarkdown editor in the browser.\n\n```python\nprint('Hello world!')\n```\n",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        ),
+    ]
 
     try:
+        for doc in sample_docs:
+            db.add(doc)
         db.commit()
     except Exception:
         db.rollback()

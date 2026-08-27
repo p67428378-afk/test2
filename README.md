@@ -1,11 +1,83 @@
-# Chess Tournament Management System (`SCRUM-55`)
+# Browser Markdown Editor
 
-An end-to-end tournament management application supporting player registrations, FIDE Swiss-system pairings, match score tracking, live standings with Buchholz and Sonneborn-Berger tie-breaks, and verifiable digital certificates with QR codes.
+A modern web-based Markdown Editor with real-time text formatting, live side-by-side HTML preview rendering, export capabilities, and RESTful document storage persistence.
+
+---
+
+## Features
+- **Markdown Text Editing & Formatting Toolbar**: Format text with Bold, Italic, Headings (H1-H3), Lists, Code, Links, and Blockquotes.
+- **Live HTML Preview**: Real-time side-by-side HTML preview with client-side XSS sanitization (`marked` + `DOMPurify`).
+- **Export & Copy Actions**: Copy raw Markdown or generated HTML to clipboard, download `.md` file.
+- **RESTful Document API**: Store, retrieve, update, and delete documents via FastAPI and PostgreSQL/SQLite.
+
+---
+
+## Tech Stack
+- **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.x, Pydantic v2, SQLite (dev/test) / PostgreSQL (prod), pytest
+- **Frontend**: React 18, Vite, Tailwind CSS, Lucide Icons, Marked, DOMPurify
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+ and npm
+
+### Environment Variables
+Copy `.env.example` to `.env` in the root and configure if needed:
+```bash
+cp .env.example .env
+```
+
+Default variables:
+```
+DATABASE_URL=sqlite:///./markdown_editor.db
+JWT_SECRET_KEY=dev-secret-key-change-in-production
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+---
+
+## Client Setup & Running
+
+1. Navigate to the `client/` directory:
+   ```bash
+   cd client
+   npm install
+   ```
+
+2. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Access the application in your browser:
+   - http://localhost:5173
+
+---
+
+## Full-Stack Local Development
+
+To run both backend and frontend locally:
+
+1. **Terminal 1 (Backend)**:
+   ```bash
+   uvicorn server.main:app --reload --port 8000
+   ```
+
+2. **Terminal 2 (Frontend)**:
+   ```bash
+   cd client
+   npm run dev
+   ```
+
+Open http://localhost:5173 to use the Markdown Editor with live backend document persistence!
 
 ## Server
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.9+
 - pip and venv
 
 ### Setup
@@ -49,7 +121,7 @@ To run both backend and frontend together locally:
 ### 1. Environment Setup
 ```bash
 # Copy the example environment file
-cp server/.env.example .env
+cp .env.example .env
 ```
 
 ### 2. Start the Backend (Terminal 1)
@@ -72,9 +144,14 @@ Frontend: `http://localhost:5173`
 The frontend connects to the backend API at `http://localhost:8000` by default via the `VITE_API_BASE_URL` environment variable.
 
 ### 4. Test Credentials
-The backend seeds ready-to-use accounts on startup (idempotent):
+If the app has authentication, the backend seeds ready-to-use accounts on startup
+(idempotent). These are guaranteed logged-in-able — every activation/verification
+gate (`is_active`, `is_verified`, `email_verified`, `disabled`) is set to the
+permissive value, so no manual DB step is needed:
 - **Regular user** — Email: `test@example.com`, Password: `testpassword`
-- **Admin/Organizer user** — Email: `admin@example.com`, Password: `adminpassword`, Role: `admin`
+- **Admin user** (only when the app has roles/RBAC) — Email: `admin@example.com`, Password: `adminpassword`, role: `admin`
+
+Passwords are stored hashed with the app's own hashing utility (never in plaintext).
 
 ### Port Reference
 | Service  | Port | URL                        |
@@ -82,3 +159,4 @@ The backend seeds ready-to-use accounts on startup (idempotent):
 | Backend  | 8000 | http://localhost:8000      |
 | Frontend | 5173 | http://localhost:5173      |
 | API Docs | 8000 | http://localhost:8000/docs |
+

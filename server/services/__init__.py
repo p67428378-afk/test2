@@ -1,1 +1,3 @@
-# Services package
+from server.services.document_service import DocumentService
+
+__all__ = ["DocumentService"]
