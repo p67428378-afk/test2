@@ -211,3 +211,18 @@ application_default_credentials.json
 scratch/
 tmp/
 temp/
+
+# Frontend / Node.js
+# Secrets & credentials
+# Node.js / npm
+# React / Vite
+# Testing & QA
+playwright-report/
+playwright/.cache/
+# Docker / Cloud
+# Agent-internal files
+.frontend_validated
+# Miscellaneous
+
+# Frontend build artifacts (auto-added by Frontend Agent)
+client/node_modules/
