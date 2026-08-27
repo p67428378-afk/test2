@@ -1,94 +1,77 @@
+from typing import List, Optional
+from pydantic import BaseModel
 
-from pydantic import BaseModel, UUID4
-from typing import Optional, List, Any
-from datetime import datetime
-# from geojson_pydantic.geometries import Polygon
 
-class SensorData(BaseModel):
-    source: str
-    timestamp: datetime
+class LocationSchema(BaseModel):
+    name: str
+    region: Optional[str] = None
+    country: str = "United States"
     latitude: float
     longitude: float
-    data: Any
 
-    class Config:
-        orm_mode = True
 
-class NwpModelOutput(BaseModel):
-    model_name: str
-    run_time: datetime
-    forecast_time: datetime
-    variable: str
-    grid_data: Any
+class CurrentWeatherDetail(BaseModel):
+    temperature: float
+    unit: str = "fahrenheit"
+    condition: str
+    condition_icon: str
+    humidity_percent: float
+    wind_speed_mph: float
+    feels_like: float
+    timestamp: str
 
-    class Config:
-        orm_mode = True
 
-class ForecastGridBase(BaseModel):
+class CurrentWeatherResponse(BaseModel):
+    location: LocationSchema
+    current: CurrentWeatherDetail
+
+
+class DailyForecastItem(BaseModel):
+    date: str
+    day_name: str
+    temp_high: float
+    temp_low: float
+    condition: str
+    condition_icon: str
+    precipitation_chance_percent: float
+    humidity_percent: float
+
+
+class ForecastResponse(BaseModel):
+    location: LocationSchema
+    forecast: List[DailyForecastItem]
+
+
+class TrendPoint(BaseModel):
+    timestamp: str
+    time_label: str
+    temperature: float
+    condition: str
+
+
+class TrendSummary(BaseModel):
+    peak_high: float
+    peak_high_time: str
+    overnight_low: float
+    overnight_low_time: str
+
+
+class TrendsResponse(BaseModel):
+    location: LocationSchema
+    timeframe: str = "24h"
+    unit: str = "fahrenheit"
+    trend_points: List[TrendPoint]
+    summary: TrendSummary
+
+
+class SearchResultItem(BaseModel):
+    id: str
     name: str
-    grid_data: Any
+    region: Optional[str] = None
+    country: str
+    latitude: float
+    longitude: float
 
-class ForecastGridCreate(ForecastGridBase):
-    pass
 
-class ForecastGrid(ForecastGridBase):
-    id: UUID4
-    user_id: UUID4
-    version: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class WarningBase(BaseModel):
-    warning_type: str
-    severity: str
-    # polygon: Polygon
-    issued_at: datetime
-    expires_at: datetime
-    status: str = 'active'
-
-class WarningCreate(BaseModel):
-    warning_type: str
-    severity: str
-    details: str
-    polygon_coords: List
-    start_time: datetime
-    end_time: datetime
-
-class WarningUpdate(BaseModel):
-    action: str
-    new_end_time: Optional[datetime] = None
-    reason: str
-
-class Warning(WarningBase):
-    id: UUID4
-    user_id: UUID4
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class TextProductBase(BaseModel):
-    title: str
-    product_code: str
-    content: str
-
-class TextProductCreate(TextProductBase):
-    pass
-
-class TextProduct(TextProductBase):
-    id: UUID4
-    user_id: UUID4
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class VisualizationData(BaseModel):
-    radar: Any
-    satellite: Any
-    sensors: Any
+class SearchResponse(BaseModel):
+    results: List[SearchResultItem]

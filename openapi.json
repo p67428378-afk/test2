@@ -1,0 +1,780 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SkyPulse Local Weather Dashboard API",
+    "description": "RESTful API for real-time weather forecasts, interactive temperature trends, and location search.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/weather/current": {
+      "get": {
+        "tags": [
+          "weather"
+        ],
+        "summary": "Get Current Weather",
+        "description": "Retrieve current weather conditions for a specified location or coordinates.",
+        "operationId": "get_current_weather_api_v1_weather_current_get",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "City name or zip code",
+              "title": "Location"
+            },
+            "description": "City name or zip code"
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Latitude",
+              "title": "Lat"
+            },
+            "description": "Latitude"
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Longitude",
+              "title": "Lon"
+            },
+            "description": "Longitude"
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Temperature unit: fahrenheit or celsius",
+              "default": "fahrenheit",
+              "title": "Unit"
+            },
+            "description": "Temperature unit: fahrenheit or celsius"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentWeatherResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/weather/forecast": {
+      "get": {
+        "tags": [
+          "weather"
+        ],
+        "summary": "Get Weather Forecast",
+        "description": "Retrieve multi-day weather forecast breakdown for a location.",
+        "operationId": "get_weather_forecast_api_v1_weather_forecast_get",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "City name or zip code",
+              "title": "Location"
+            },
+            "description": "City name or zip code"
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 7,
+              "minimum": 1,
+              "description": "Number of forecast days (1-7)",
+              "default": 7,
+              "title": "Days"
+            },
+            "description": "Number of forecast days (1-7)"
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Temperature unit: fahrenheit or celsius",
+              "default": "fahrenheit",
+              "title": "Unit"
+            },
+            "description": "Temperature unit: fahrenheit or celsius"
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Latitude",
+              "title": "Lat"
+            },
+            "description": "Latitude"
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Longitude",
+              "title": "Lon"
+            },
+            "description": "Longitude"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/weather/trends": {
+      "get": {
+        "tags": [
+          "weather"
+        ],
+        "summary": "Get Weather Trends",
+        "description": "Retrieve hourly and daily temperature trend data points for interactive charts.",
+        "operationId": "get_weather_trends_api_v1_weather_trends_get",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "City name or zip code",
+              "title": "Location"
+            },
+            "description": "City name or zip code"
+          },
+          {
+            "name": "timeframe",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Timeframe: 24h or 7d",
+              "default": "24h",
+              "title": "Timeframe"
+            },
+            "description": "Timeframe: 24h or 7d"
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Temperature unit: fahrenheit or celsius",
+              "default": "fahrenheit",
+              "title": "Unit"
+            },
+            "description": "Temperature unit: fahrenheit or celsius"
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Latitude",
+              "title": "Lat"
+            },
+            "description": "Latitude"
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Longitude",
+              "title": "Lon"
+            },
+            "description": "Longitude"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/weather/locations/search": {
+      "get": {
+        "tags": [
+          "weather"
+        ],
+        "summary": "Search Locations",
+        "description": "Search locations by query string for autocomplete and search inputs.",
+        "operationId": "search_locations_api_v1_weather_locations_search_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query string (city name or zip code)",
+              "title": "Query"
+            },
+            "description": "Search query string (city name or zip code)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Check",
+        "description": "Health check endpoint to verify database connectivity and service status.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CurrentWeatherDetail": {
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "title": "Temperature"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "default": "fahrenheit"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition"
+          },
+          "condition_icon": {
+            "type": "string",
+            "title": "Condition Icon"
+          },
+          "humidity_percent": {
+            "type": "number",
+            "title": "Humidity Percent"
+          },
+          "wind_speed_mph": {
+            "type": "number",
+            "title": "Wind Speed Mph"
+          },
+          "feels_like": {
+            "type": "number",
+            "title": "Feels Like"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "temperature",
+          "condition",
+          "condition_icon",
+          "humidity_percent",
+          "wind_speed_mph",
+          "feels_like",
+          "timestamp"
+        ],
+        "title": "CurrentWeatherDetail"
+      },
+      "CurrentWeatherResponse": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema"
+          },
+          "current": {
+            "$ref": "#/components/schemas/CurrentWeatherDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "current"
+        ],
+        "title": "CurrentWeatherResponse"
+      },
+      "DailyForecastItem": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "day_name": {
+            "type": "string",
+            "title": "Day Name"
+          },
+          "temp_high": {
+            "type": "number",
+            "title": "Temp High"
+          },
+          "temp_low": {
+            "type": "number",
+            "title": "Temp Low"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition"
+          },
+          "condition_icon": {
+            "type": "string",
+            "title": "Condition Icon"
+          },
+          "precipitation_chance_percent": {
+            "type": "number",
+            "title": "Precipitation Chance Percent"
+          },
+          "humidity_percent": {
+            "type": "number",
+            "title": "Humidity Percent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "day_name",
+          "temp_high",
+          "temp_low",
+          "condition",
+          "condition_icon",
+          "precipitation_chance_percent",
+          "humidity_percent"
+        ],
+        "title": "DailyForecastItem"
+      },
+      "ForecastResponse": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema"
+          },
+          "forecast": {
+            "items": {
+              "$ref": "#/components/schemas/DailyForecastItem"
+            },
+            "type": "array",
+            "title": "Forecast"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "forecast"
+        ],
+        "title": "ForecastResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LocationSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "default": "United States"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "latitude",
+          "longitude"
+        ],
+        "title": "LocationSchema"
+      },
+      "SearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SearchResultItem"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "SearchResponse"
+      },
+      "SearchResultItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "country",
+          "latitude",
+          "longitude"
+        ],
+        "title": "SearchResultItem"
+      },
+      "TrendPoint": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "time_label": {
+            "type": "string",
+            "title": "Time Label"
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "time_label",
+          "temperature",
+          "condition"
+        ],
+        "title": "TrendPoint"
+      },
+      "TrendSummary": {
+        "properties": {
+          "peak_high": {
+            "type": "number",
+            "title": "Peak High"
+          },
+          "peak_high_time": {
+            "type": "string",
+            "title": "Peak High Time"
+          },
+          "overnight_low": {
+            "type": "number",
+            "title": "Overnight Low"
+          },
+          "overnight_low_time": {
+            "type": "string",
+            "title": "Overnight Low Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "peak_high",
+          "peak_high_time",
+          "overnight_low",
+          "overnight_low_time"
+        ],
+        "title": "TrendSummary"
+      },
+      "TrendsResponse": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema"
+          },
+          "timeframe": {
+            "type": "string",
+            "title": "Timeframe",
+            "default": "24h"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "default": "fahrenheit"
+          },
+          "trend_points": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Trend Points"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/TrendSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "trend_points",
+          "summary"
+        ],
+        "title": "TrendsResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
