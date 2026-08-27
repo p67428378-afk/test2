@@ -4,13 +4,24 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#10B981",
-        accent: "#10B981",
-        surface: "#1E293B",
-        background: "#0F172A",
+        brand: {
+          primary: "#2663EB",
+          accent: "#3B82F6",
+          dark: "#1D4ED8",
+          light: "#EFF6FF",
+        },
+        editor: {
+          bg: "#F7FAFC",
+          surface: "#FFFFFF",
+          inputBg: "#F8FAFC",
+          border: "#E2E8F0",
+          textPrimary: "#171C29",
+          textSecondary: "#64748B",
+        },
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["Fira Code", "monospace"],
       },
     },
   },

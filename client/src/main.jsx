@@ -14,26 +14,26 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Uncaught render error:", error, errorInfo);
+    console.error("Uncaught error in component tree:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-          <div className="bg-slate-900 border border-red-500/40 rounded-xl p-6 max-w-lg w-full shadow-2xl">
-            <h2 className="text-xl font-bold text-red-400 mb-2">
-              Something went wrong.
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+          <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-red-100 p-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+              <span className="text-xl font-bold">!</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Something went wrong
             </h2>
-            <p className="text-sm text-slate-300 mb-4">
-              An uncaught rendering error occurred in the application.
+            <p className="text-sm text-gray-600 mb-4">
+              An unexpected error occurred. Please check the browser console.
             </p>
-            <pre className="bg-slate-950 p-3 rounded text-xs text-red-300 font-mono overflow-x-auto">
-              {this.state.error?.toString() || "Unknown Error"}
-            </pre>
             <button
               onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               Reload Page
             </button>
