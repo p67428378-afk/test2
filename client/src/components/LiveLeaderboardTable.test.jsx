@@ -28,15 +28,15 @@ describe("LiveLeaderboardTable Component", () => {
   it("renders standings ranks and tie-break scores", () => {
     render(<LiveLeaderboardTable standings={sampleStandings} />);
 
-    expect(screen.getByText("Magnus Carlsen")).toBeInView();
-    expect(screen.getByText("Hikaru Nakamura")).toBeInView();
-    expect(screen.getByText("3.5")).toBeInView();
-    expect(screen.getByText("3.0")).toBeInView();
+    expect(screen.getByText("Magnus Carlsen")).toBeInTheDocument();
+    expect(screen.getByText("Hikaru Nakamura")).toBeInTheDocument();
+    expect(screen.getByText("3.5")).toBeInTheDocument();
+    expect(screen.getByText("3.0")).toBeInTheDocument();
   });
 
   it("renders empty state when standings are empty", () => {
     render(<LiveLeaderboardTable standings={[]} />);
 
-    expect(screen.getByText(/No standings available yet/i)).toBeInView();
+    expect(screen.getByText(/No standings available yet/i)).toBeInTheDocument();
   });
 });

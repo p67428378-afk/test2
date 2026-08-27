@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  tipCalculatorService,
   tournamentService,
   playerService,
   pairingService,
@@ -10,6 +11,10 @@ import {
 } from "./api";
 
 describe("API Service Exports", () => {
+  it("exports tipCalculatorService methods", () => {
+    expect(typeof tipCalculatorService.calculateTip).toBe("function");
+  });
+
   it("exports tournamentService methods", () => {
     expect(typeof tournamentService.getTournaments).toBe("function");
     expect(typeof tournamentService.getTournament).toBe("function");

@@ -12,8 +12,8 @@ describe("DashboardPage", () => {
       </BrowserRouter>,
     );
 
-    expect(screen.getByText("Registered Roster")).toBeInView();
-    expect(screen.getByText("Current Round")).toBeInView();
-    expect(screen.getByText("Tournament Status")).toBeInView();
+    expect(screen.getByText("Registered Roster")).toBeInTheDocument();
+    expect(screen.getByText("Current Round")).toBeInTheDocument();
+    expect(screen.getByText("Tournament Status")).toBeInTheDocument();
   });
 });

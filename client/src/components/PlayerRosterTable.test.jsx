@@ -26,15 +26,15 @@ describe("PlayerRosterTable Component", () => {
   it("renders player roster rows", () => {
     render(<PlayerRosterTable players={samplePlayers} />);
 
-    expect(screen.getByText("Garry Kasparov")).toBeInView();
-    expect(screen.getByText("Anatoly Karpov")).toBeInView();
-    expect(screen.getByText("2800")).toBeInView();
-    expect(screen.getByText("2750")).toBeInView();
+    expect(screen.getByText("Garry Kasparov")).toBeInTheDocument();
+    expect(screen.getByText("Anatoly Karpov")).toBeInTheDocument();
+    expect(screen.getByText("2800")).toBeInTheDocument();
+    expect(screen.getByText("2750")).toBeInTheDocument();
   });
 
   it("renders empty state when roster is empty", () => {
     render(<PlayerRosterTable players={[]} />);
 
-    expect(screen.getByText("No players registered yet.")).toBeInView();
+    expect(screen.getByText("No players registered yet.")).toBeInTheDocument();
   });
 });

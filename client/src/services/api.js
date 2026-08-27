@@ -20,6 +20,17 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+export const tipCalculatorService = {
+  calculateTip: async ({ bill_amount, tip_percentage, num_people = 1 }) => {
+    const response = await api.post("/api/v1/calculate-tip", {
+      bill_amount: Number(bill_amount),
+      tip_percentage: Number(tip_percentage),
+      num_people: Number(num_people),
+    });
+    return response.data;
+  },
+};
+
 export const authService = {
   login: async (email, password) => {
     const response = await api.post("/api/v1/auth/login", { email, password });
