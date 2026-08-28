@@ -1,130 +1,115 @@
-import uuid
-from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from datetime import date, datetime
+from typing import Optional, List, Union
+from pydantic import BaseModel, ConfigDict, EmailStr, model_validator, field_validator
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
+class WorkExperienceBase(BaseModel):
+    company_name: str
     role: str
+    start_date: date
+    end_date: Optional[date] = None
+    is_current: bool = False
+    description: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValueError("End date cannot be prior to start date")
+        return self
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
+class WorkExperienceCreate(WorkExperienceBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class WorkExperienceResponse(WorkExperienceBase):
+    id: str
+    created_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EducationEntryBase(BaseModel):
+    institution: str
+    degree: str
+    start_date: date
+    end_date: Optional[date] = None
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValueError("End date cannot be prior to start date")
+        return self
+
+
+class EducationEntryCreate(EducationEntryBase):
+    pass
+
+
+class EducationEntryResponse(EducationEntryBase):
+    id: str
+    created_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ResumeSkillCreate(BaseModel):
+    skill_name: str
+
+
+class ResumeSkillResponse(BaseModel):
+    id: str
+    skill_name: str
+    created_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ResumeCreate(BaseModel):
+    title: str
+    full_name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    summary: Optional[str] = None
+    experiences: List[WorkExperienceCreate] = []
+    education: List[EducationEntryCreate] = []
+    skills: List[Union[str, ResumeSkillCreate]] = []
+
+
+class ResumeUpdate(BaseModel):
+    title: Optional[str] = None
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    summary: Optional[str] = None
+    experiences: Optional[List[WorkExperienceCreate]] = None
+    education: Optional[List[EducationEntryCreate]] = None
+    skills: Optional[List[Union[str, ResumeSkillCreate]]] = None
+
+
+class ResumeResponse(BaseModel):
+    id: str
+    title: str
+    full_name: str
+    email: str
+    phone: Optional[str] = None
+    summary: Optional[str] = None
+    experiences: List[WorkExperienceResponse] = []
+    education: List[EducationEntryResponse] = []
+    skills: List[str] = []
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
-
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
-
-
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
-
-
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
-
-
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
-
-
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    @field_validator("skills", mode="before")
+    @classmethod
+    def serialize_skills(cls, v):
+        if isinstance(v, list):
+            result = []
+            for item in v:
+                if isinstance(item, str):
+                    result.append(item)
+                elif hasattr(item, "skill_name"):
+                    result.append(item.skill_name)
+                elif isinstance(item, dict) and "skill_name" in item:
+                    result.append(item["skill_name"])
+            return result
+        return v
