@@ -2,114 +2,56 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-const api = axios.create({
+export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-    }
-    return response.data;
-  },
-  logout: () => {
-    localStorage.removeItem("token");
-  },
+export const getResumes = async (skip = 0, limit = 50) => {
+  const response = await apiClient.get("/api/v1/resumes", {
+    params: { skip, limit },
+  });
+  return response.data;
 };
 
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
-    return response.data;
-  },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
-    return response.data;
-  },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
-    return response.data;
-  },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
-    return response.data;
-  },
+export const getResumeById = async (id) => {
+  const response = await apiClient.get(`/api/v1/resumes/${id}`);
+  return response.data;
 };
 
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
-    return response.data;
-  },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
-    );
-    return response.data;
-  },
+export const createResume = async (resumeData) => {
+  const response = await apiClient.post("/api/v1/resumes", resumeData);
+  return response.data;
 };
 
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
-    return response.data;
-  },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
-  },
+export const updateResume = async (id, resumeData) => {
+  const response = await apiClient.put(`/api/v1/resumes/${id}`, resumeData);
+  return response.data;
 };
 
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
-    });
-    return response.data;
-  },
+export const deleteResume = async (id) => {
+  const response = await apiClient.delete(`/api/v1/resumes/${id}`);
+  return response.data;
 };
 
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
-    );
-    return response.data;
-  },
+export const exportResumePdf = async (id) => {
+  const response = await apiClient.get(`/api/v1/resumes/${id}/export`, {
+    responseType: "blob",
+  });
+  return response.data;
 };
 
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
-    return response.data;
-  },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
-  },
+export const downloadPdfBlob = (blob, filename = "resume.pdf") => {
+  const url = window.URL.createObjectURL(
+    new Blob([blob], { type: "application/pdf" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  link.parentNode.removeChild(link);
+  window.URL.revokeObjectURL(url);
 };
-
-export default api;

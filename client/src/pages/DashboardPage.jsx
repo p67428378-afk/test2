@@ -1,331 +1,444 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  Users,
-  Trophy,
-  Plus,
-  RefreshCw,
-  CheckCircle2,
+  FileText,
+  PlusCircle,
+  Search,
+  Download,
+  Edit,
+  Trash2,
+  Calendar,
+  Layers,
+  Sparkles,
   AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Eye,
 } from "lucide-react";
-import TournamentHeader from "../components/TournamentHeader";
-import PlayerRegistrationForm from "../components/PlayerRegistrationForm";
-import PlayerRosterTable from "../components/PlayerRosterTable";
-import { tournamentService, playerService } from "../services/api";
+import {
+  getResumes,
+  deleteResume,
+  exportResumePdf,
+  downloadPdfBlob,
+} from "../services/api";
 
 export default function DashboardPage() {
-  const [tournaments, setTournaments] = useState([]);
-  const [activeTournament, setActiveTournament] = useState(null);
-  const [roster, setRoster] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showCreateTournamentModal, setShowCreateTournamentModal] =
-    useState(false);
-  const [newTournamentName, setNewTournamentName] = useState("");
-  const [newTotalRounds, setNewTotalRounds] = useState(5);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
-
-  const loadTournaments = async () => {
-    setLoading(true);
-    try {
-      const list = await tournamentService.getTournaments();
-      setTournaments(list);
-      if (list.length > 0) {
-        if (!activeTournament) {
-          setActiveTournament(list[0]);
-        } else {
-          const refreshed =
-            list.find((t) => t.id === activeTournament.id) || list[0];
-          setActiveTournament(refreshed);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadRoster = async (tournamentId) => {
-    if (!tournamentId) return;
-    try {
-      const players = await playerService.getRoster(tournamentId);
-      setRoster(players);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const navigate = useNavigate();
+  const [resumes, setResumes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [exportingId, setExportingId] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    loadTournaments();
+    fetchResumes();
   }, []);
 
-  useEffect(() => {
-    if (activeTournament) {
-      loadRoster(activeTournament.id);
-    }
-  }, [activeTournament]);
-
-  const handleCreateTournament = async (e) => {
-    e.preventDefault();
-    if (!newTournamentName.trim()) return;
-    setErrorMsg("");
-    setSuccessMsg("");
-
+  const fetchResumes = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const created = await tournamentService.createTournament({
-        name: newTournamentName.trim(),
-        total_rounds: Number(newTotalRounds) || 5,
+      const data = await getResumes();
+      setResumes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch resumes:", err);
+      setError(
+        err.response?.data?.detail ||
+          err.message ||
+          "Unable to load resumes. Ensure backend server is running on port 8000.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    setIsDeleting(true);
+    try {
+      await deleteResume(deleteTargetId);
+      setResumes(resumes.filter((r) => r.id !== deleteTargetId));
+      setNotification({
+        type: "success",
+        message: "Resume deleted successfully.",
       });
-      setSuccessMsg(`Tournament '${created.name}' created!`);
-      setNewTournamentName("");
-      setShowCreateTournamentModal(false);
-      loadTournaments();
-      setActiveTournament(created);
+      setDeleteTargetId(null);
     } catch (err) {
-      const detail =
-        err.response?.data?.detail || "Failed to create tournament.";
-      setErrorMsg(typeof detail === "string" ? detail : JSON.stringify(detail));
+      console.error("Delete failed:", err);
+      setNotification({
+        type: "error",
+        message: err.response?.data?.detail || "Failed to delete resume.",
+      });
+    } finally {
+      setIsDeleting(false);
+      setTimeout(() => setNotification(null), 4000);
     }
   };
 
-  const handleFinishTournament = async () => {
-    if (!activeTournament) return;
-    if (
-      !window.confirm(
-        `Conclude tournament '${activeTournament.name}' and issue digital certificates?`,
-      )
-    ) {
-      return;
-    }
-    setErrorMsg("");
-    setSuccessMsg("");
-
+  const handleExportPdf = async (resume) => {
+    setExportingId(resume.id);
     try {
-      const res = await tournamentService.finishTournament(activeTournament.id);
-      setSuccessMsg(res.message || "Tournament concluded successfully!");
-      loadTournaments();
+      const blob = await exportResumePdf(resume.id);
+      const filename = `Resume_${(resume.title || "Resume").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+      downloadPdfBlob(blob, filename);
+      setNotification({ type: "success", message: `Downloaded ${filename}` });
     } catch (err) {
-      const detail =
-        err.response?.data?.detail || "Failed to conclude tournament.";
-      setErrorMsg(typeof detail === "string" ? detail : JSON.stringify(detail));
+      console.error("PDF export failed:", err);
+      setNotification({
+        type: "error",
+        message: err.response?.data?.detail || "Failed to export PDF.",
+      });
+    } finally {
+      setExportingId(null);
+      setTimeout(() => setNotification(null), 4000);
     }
   };
+
+  const filteredResumes = resumes.filter((r) => {
+    const query = searchQuery.toLowerCase();
+    const titleMatch = r.title?.toLowerCase().includes(query);
+    const nameMatch = r.full_name?.toLowerCase().includes(query);
+    const emailMatch = r.email?.toLowerCase().includes(query);
+    return titleMatch || nameMatch || emailMatch;
+  });
+
+  const totalResumes = resumes.length;
+  const totalExperiences = resumes.reduce(
+    (acc, curr) => acc + (curr.experiences ? curr.experiences.length : 0),
+    0,
+  );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <TournamentHeader
-        tournaments={tournaments}
-        activeTournament={activeTournament}
-        onSelectTournament={(t) => setActiveTournament(t)}
-        onOpenRegisterModal={() => setShowRegisterModal(true)}
-        onFinishTournament={handleFinishTournament}
-      />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Top Summary Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Active Tournament
-              </span>
-              <span className="text-xl font-bold text-white mt-1 block truncate max-w-[180px]">
-                {activeTournament ? activeTournament.name : "None"}
-              </span>
-            </div>
-            <div className="p-3 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
-              <Trophy className="w-6 h-6" />
-            </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Toast Notification */}
+      {notification && (
+        <div
+          className={`mb-6 p-4 rounded-xl flex items-center justify-between border shadow-sm transition-all ${
+            notification.type === "success"
+              ? "bg-green-50 text-green-800 border-green-200"
+              : "bg-red-50 text-red-800 border-red-200"
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            {notification.type === "success" ? (
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            )}
+            <span className="text-sm font-medium">{notification.message}</span>
           </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="text-gray-400 hover:text-gray-600 text-sm font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Registered Roster
-              </span>
-              <span className="text-2xl font-bold text-emerald-400 mt-1 block">
-                {roster.length} Players
-              </span>
-            </div>
-            <div className="p-3 bg-emerald-600/20 text-emerald-400 rounded-xl border border-emerald-500/30">
-              <Users className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Current Round
-              </span>
-              <span className="text-2xl font-bold text-amber-400 mt-1 block">
-                {activeTournament
-                  ? `Round ${activeTournament.current_round}`
-                  : "N/A"}
-              </span>
-            </div>
-            <div className="p-3 bg-amber-600/20 text-amber-400 rounded-xl border border-amber-500/30">
-              <RefreshCw className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Tournament Status
-              </span>
-              <span className="text-xl font-bold text-indigo-300 mt-1 block">
-                {activeTournament ? activeTournament.status : "Inactive"}
-              </span>
-            </div>
-            <div className="p-3 bg-indigo-600/20 text-indigo-300 rounded-xl border border-indigo-500/30">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-          </div>
+      {/* Header & Hero Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            Resume Dashboard
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage your profiles, create tailored resumes, and export clean PDF
+            CVs on-demand.
+          </p>
         </div>
 
-        {/* Global Banners */}
-        {errorMsg && (
-          <div
-            role="alert"
-            className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center space-x-3 text-red-400 text-sm"
+        <div className="flex items-center gap-3">
+          <Link
+            to="/editor"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-all"
           >
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
+            <PlusCircle className="w-4 h-4" />
+            <span>Create New Resume</span>
+          </Link>
+        </div>
+      </div>
 
-        {successMsg && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-3 text-emerald-400 text-sm">
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span>{successMsg}</span>
+      {/* Metric Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+        <div className="bg-white p-5 rounded-xl border border-[#e3e8f0] shadow-xs flex items-center space-x-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <FileText className="w-6 h-6" />
           </div>
-        )}
-
-        {/* Action Header Banner */}
-        <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-indigo-900/60 to-slate-900 border border-indigo-500/30 p-6 rounded-xl shadow-xl gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-white">
-              {activeTournament
-                ? activeTournament.name
-                : "Tournament Dashboard"}
-            </h1>
-            <p className="text-sm text-slate-300 mt-1">
-              Manage player registrations, compute FIDE Swiss pairings, record
-              match scores, and issue digital certificates.
+            <p className="text-xs font-semibold text-gray-500 uppercase">
+              Total Resumes
+            </p>
+            <p className="text-2xl font-extrabold text-gray-900 mt-0.5">
+              {totalResumes}
             </p>
           </div>
+        </div>
 
-          <div className="flex items-center space-x-3 shrink-0">
-            <button
-              onClick={() => setShowCreateTournamentModal(true)}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold rounded-lg shadow transition-colors flex items-center space-x-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Tournament</span>
-            </button>
-
-            <button
-              onClick={() => setShowRegisterModal(true)}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow transition-colors flex items-center space-x-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Register Player</span>
-            </button>
+        <div className="bg-white p-5 rounded-xl border border-[#e3e8f0] shadow-xs flex items-center space-x-4">
+          <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+            <Layers className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase">
+              Recorded Positions
+            </p>
+            <p className="text-2xl font-extrabold text-gray-900 mt-0.5">
+              {totalExperiences}
+            </p>
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Roster Table (2 cols) */}
-          <div className="lg:col-span-2">
-            <PlayerRosterTable
-              players={roster}
-              loading={loading}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-            />
+        <div className="bg-white p-5 rounded-xl border border-[#e3e8f0] shadow-xs flex items-center space-x-4">
+          <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+            <Sparkles className="w-6 h-6" />
           </div>
-
-          {/* Quick Registration Sidebar (1 col) */}
-          <div className="lg:col-span-1">
-            <PlayerRegistrationForm
-              activeTournamentId={activeTournament?.id}
-              onPlayerRegistered={() => loadRoster(activeTournament?.id)}
-            />
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase">
+              PDF Generation
+            </p>
+            <p className="text-2xl font-extrabold text-gray-900 mt-0.5">
+              Ready
+            </p>
           </div>
         </div>
-      </main>
+      </div>
 
-      {/* Register Player Modal */}
-      {showRegisterModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full">
-            <PlayerRegistrationForm
-              activeTournamentId={activeTournament?.id}
-              onPlayerRegistered={() => {
-                loadRoster(activeTournament?.id);
-                setShowRegisterModal(false);
-              }}
-              onClose={() => setShowRegisterModal(false)}
-            />
+      {/* Search & Actions Bar */}
+      <div className="bg-white p-4 rounded-xl border border-[#e3e8f0] shadow-xs mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative w-full sm:w-96">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, name, or email..."
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div className="text-xs text-gray-500 font-medium self-end sm:self-center">
+          Showing {filteredResumes.length} of {totalResumes} resumes
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      {isLoading ? (
+        <div className="bg-white rounded-xl border border-[#e3e8f0] p-12 text-center shadow-xs">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+          <p className="text-sm font-medium text-gray-600">
+            Loading saved resumes...
+          </p>
+        </div>
+      ) : error ? (
+        <div className="bg-white rounded-xl border border-red-200 p-8 text-center shadow-xs">
+          <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-gray-900 mb-1">
+            Failed to Load Resumes
+          </h3>
+          <p className="text-sm text-red-600 max-w-md mx-auto mb-4">{error}</p>
+          <button
+            onClick={fetchResumes}
+            className="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      ) : filteredResumes.length === 0 ? (
+        <div className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-12 text-center shadow-xs">
+          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-gray-900 mb-1">
+            {searchQuery
+              ? "No matching resumes found"
+              : "No resumes created yet"}
+          </h3>
+          <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">
+            {searchQuery
+              ? "Try adjusting your search terms or clear the search input."
+              : "Get started by building your first tailored resume profile with experience and skills."}
+          </p>
+          <Link
+            to="/editor"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm transition-all"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Create Your First Resume</span>
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-[#e3e8f0] shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-[#f8fafc]">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Resume Title &amp; Candidate
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Experience
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Skills
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Last Updated
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3.5 text-right text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {filteredResumes.map((resume) => {
+                  const expCount = resume.experiences?.length || 0;
+                  const skillCount = resume.skills?.length || 0;
+                  const isExporting = exportingId === resume.id;
+
+                  return (
+                    <tr
+                      key={resume.id}
+                      className="hover:bg-blue-50/40 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">
+                              {resume.title}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {resume.full_name} • {resume.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          {expCount} {expCount === 1 ? "position" : "positions"}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs text-gray-600 font-medium">
+                          {skillCount} {skillCount === 1 ? "skill" : "skills"}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                          <span>
+                            {resume.updated_at
+                              ? new Date(resume.updated_at).toLocaleDateString()
+                              : "Recently"}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleExportPdf(resume)}
+                            disabled={isExporting}
+                            aria-label={`Export PDF for ${resume.title}`}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors title='Export PDF'"
+                          >
+                            {isExporting ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                            ) : (
+                              <Download className="w-4 h-4" />
+                            )}
+                          </button>
+
+                          <Link
+                            to={`/export/${resume.id}`}
+                            aria-label={`Preview and Export ${resume.title}`}
+                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+
+                          <Link
+                            to={`/editor/${resume.id}`}
+                            aria-label={`Edit ${resume.title}`}
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTargetId(resume.id)}
+                            aria-label={`Delete ${resume.title}`}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* Create Tournament Modal */}
-      {showCreateTournamentModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-2xl max-w-md w-full text-slate-100">
-            <h3 className="text-xl font-bold text-white mb-4">
-              Create New Tournament
+      {/* Delete Confirmation Modal */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Delete Resume?
             </h3>
-            <form onSubmit={handleCreateTournament} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-                  Tournament Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newTournamentName}
-                  onChange={(e) => setNewTournamentName(e.target.value)}
-                  placeholder="e.g. FIDE Swiss Open 2026"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-                  Total Rounds
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="15"
-                  value={newTotalRounds}
-                  onChange={(e) => setNewTotalRounds(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateTournamentModal(false)}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow"
-                >
-                  Create Tournament
-                </button>
-              </div>
-            </form>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete this resume? This will permanently
+              remove all associated experience, education, and skills entries.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setDeleteTargetId(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center space-x-1.5"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : null}
+                <span>{isDeleting ? "Deleting..." : "Confirm Delete"}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
