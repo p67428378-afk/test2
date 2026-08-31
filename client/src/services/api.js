@@ -23,6 +23,9 @@ export const getGuides = (params = {}) =>
   apiClient.get("/api/v1/guides", { params });
 export const getGuide = (id) => apiClient.get(`/api/v1/guides/${id}`);
 export const createGuide = (data) => apiClient.post("/api/v1/guides", data);
+export const updateGuide = (id, data) =>
+  apiClient.put(`/api/v1/guides/${id}`, data);
+export const deleteGuide = (id) => apiClient.delete(`/api/v1/guides/${id}`);
 
 // Schedules
 export const getSchedules = (params = {}) =>
@@ -44,16 +47,19 @@ export const getBookings = (params = {}) =>
   apiClient.get("/api/v1/bookings", { params });
 export const getBooking = (id) => apiClient.get(`/api/v1/bookings/${id}`);
 export const createBooking = (data) => apiClient.post("/api/v1/bookings", data);
+export const updateBooking = (id, data) =>
+  apiClient.put(`/api/v1/bookings/${id}`, data);
 export const cancelBooking = (id) =>
-  apiClient.put(`/api/v1/bookings/${id}/cancel`);
+  apiClient.post(`/api/v1/bookings/${id}/cancel`);
 
 // Attendance
 export const recordCheckIn = (data) =>
   apiClient.post("/api/v1/attendance/check-in", data);
 export const getAttendanceRecords = (params = {}) =>
   apiClient.get("/api/v1/attendance", { params });
+export const getAttendance = (id) => apiClient.get(`/api/v1/attendance/${id}`);
 
 // Health
-export const getHealth = () => apiClient.get("/api/v1/health");
+export const getHealth = () => apiClient.get("/health");
 
 export default apiClient;

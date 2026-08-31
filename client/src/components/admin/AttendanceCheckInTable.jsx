@@ -35,7 +35,7 @@ export default function AttendanceCheckInTable({
     try {
       const payload = {
         booking_id: bookingId.trim(),
-        schedule_id: scheduleId.trim(),
+        schedule_id: scheduleId.trim() || null,
         attended_count: parseInt(attendedCount, 10),
         notes: notes.trim() || null,
       };
@@ -81,6 +81,16 @@ export default function AttendanceCheckInTable({
       setIsLoadingReport(false);
     }
   };
+
+  const bookedCount = reportData
+    ? reportData.total_booked_tickets ?? reportData.total_booked ?? 0
+    : 0;
+  const attendedCountVal = reportData
+    ? reportData.total_attended_tickets ?? reportData.total_attended ?? 0
+    : 0;
+  const noShowsCount = reportData
+    ? reportData.no_shows ?? Math.max(0, bookedCount - attendedCountVal)
+    : 0;
 
   return (
     <div className="space-y-8">
@@ -284,7 +294,7 @@ export default function AttendanceCheckInTable({
                     Total Booked
                   </span>
                   <span className="text-xl font-extrabold text-slate-900">
-                    {reportData.total_booked}
+                    {bookedCount}
                   </span>
                 </div>
                 <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
@@ -292,7 +302,7 @@ export default function AttendanceCheckInTable({
                     Attended
                   </span>
                   <span className="text-xl font-extrabold text-emerald-800">
-                    {reportData.total_attended}
+                    {attendedCountVal}
                   </span>
                 </div>
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
@@ -300,7 +310,7 @@ export default function AttendanceCheckInTable({
                     No-Shows
                   </span>
                   <span className="text-xl font-extrabold text-amber-800">
-                    {reportData.no_shows}
+                    {noShowsCount}
                   </span>
                 </div>
               </div>
@@ -364,7 +374,9 @@ export default function AttendanceCheckInTable({
                       {rec.booking_id}
                     </td>
                     <td className="py-3 px-4 font-mono text-slate-600">
-                      {rec.schedule_id.slice(0, 8)}...
+                      {rec.schedule_id
+                        ? `${rec.schedule_id.slice(0, 8)}...`
+                        : "-"}
                     </td>
                     <td className="py-3 px-4 font-bold text-slate-900">
                       {rec.attended_count}
