@@ -1,94 +1,132 @@
+from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session, joinedload
-
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 from server.database import get_db
-from server.models import Attendance, Guide, Schedule, Tour
+from server.models import Schedule, Tour, Guide, Booking, Attendance
 from server.schemas import (
-    AttendanceReportResponse,
-    AttendanceResponse,
-    ScheduleAssignGuide,
     ScheduleCreate,
-    ScheduleResponse,
     ScheduleUpdate,
+    ScheduleAssignGuide,
+    ScheduleResponse,
+    ScheduleAttendanceReport,
 )
 
 router = APIRouter(prefix="/api/v1/schedules", tags=["Schedules"])
 
 
-def _build_schedule_response(schedule: Schedule) -> ScheduleResponse:
-    booked = sum(
-        b.ticket_quantity for b in schedule.bookings if b.booking_status == "Confirmed"
+def build_schedule_response(schedule: Schedule, db: Session) -> ScheduleResponse:
+    # Calculate booked tickets for confirmed bookings
+    booked = (
+        db.query(func.coalesce(func.sum(Booking.ticket_quantity), 0))
+        .filter(
+            Booking.schedule_id == schedule.id,
+            Booking.booking_status == "Confirmed",
+        )
+        .scalar()
     )
-    remaining = max(0, int(schedule.max_capacity) - booked)
+    booked_tickets = int(booked or 0)
+    remaining = max(0, schedule.max_capacity - booked_tickets)
+
+    tour_title = schedule.tour.title if schedule.tour else None
+    guide_name = schedule.guide.name if schedule.guide else None
+
     return ScheduleResponse(
-        id=str(schedule.id),
-        tour_id=str(schedule.tour_id),
-        tour_title=str(schedule.tour.title) if schedule.tour else None,
-        guide_id=str(schedule.guide_id) if schedule.guide_id else None,
-        guide_name=str(schedule.guide.name) if schedule.guide else None,
+        id=schedule.id,
+        tour_id=schedule.tour_id,
+        tour_title=tour_title,
+        guide_id=schedule.guide_id,
+        guide_name=guide_name,
         start_time=schedule.start_time,
         end_time=schedule.end_time,
-        max_capacity=int(schedule.max_capacity),
-        status=str(schedule.status),
-        booked_tickets=booked,
-        booked_count=booked,
+        max_capacity=schedule.max_capacity,
+        booked_tickets=booked_tickets,
+        booked_count=booked_tickets,
         remaining_capacity=remaining,
-        available_capacity=remaining,
+        status=schedule.status,
         created_at=schedule.created_at,
         updated_at=schedule.updated_at,
     )
 
 
+def check_guide_overlap(
+    guide_id: str,
+    start_time: datetime,
+    end_time: datetime,
+    exclude_schedule_id: Optional[str],
+    db: Session,
+):
+    query = db.query(Schedule).filter(
+        Schedule.guide_id == guide_id,
+        Schedule.status != "Cancelled",
+        Schedule.start_time < end_time,
+        Schedule.end_time > start_time,
+    )
+    if exclude_schedule_id:
+        query = query.filter(Schedule.id != exclude_schedule_id)
+
+    conflict = query.first()
+    if conflict:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Guide is already assigned to an overlapping tour schedule.",
+        )
+
+
 @router.get("", response_model=List[ScheduleResponse])
+@router.get("/", response_model=List[ScheduleResponse], include_in_schema=False)
 def list_schedules(
+    status_filter: Optional[str] = Query(None, alias="status"),
     tour_id: Optional[str] = None,
     guide_id: Optional[str] = None,
-    status_filter: Optional[str] = None,
-    available_only: bool = False,
-    skip: int = 0,
-    limit: int = 100,
+    available_only: bool = Query(False),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
-    """Browse published tour schedules with real-time seat availability filter."""
-    query = db.query(Schedule).options(
-        joinedload(Schedule.tour),
-        joinedload(Schedule.guide),
-        joinedload(Schedule.bookings),
-    )
-
+    query = db.query(Schedule)
+    if status_filter and status_filter != "ALL":
+        query = query.filter(Schedule.status == status_filter)
     if tour_id:
         query = query.filter(Schedule.tour_id == tour_id)
     if guide_id:
         query = query.filter(Schedule.guide_id == guide_id)
-    if status_filter:
-        query = query.filter(Schedule.status == status_filter)
 
-    schedules = query.order_by(Schedule.start_time).offset(skip).limit(limit).all()
-    results = [_build_schedule_response(s) for s in schedules]
+    query = query.order_by(Schedule.start_time.asc())
+    schedules = query.offset(skip).limit(limit).all()
 
-    if available_only:
-        results = [
-            r for r in results if r.remaining_capacity > 0 and r.status == "Published"
-        ]
-
+    results = []
+    for s in schedules:
+        resp = build_schedule_response(s, db)
+        if available_only and resp.remaining_capacity <= 0:
+            continue
+        results.append(resp)
     return results
 
 
 @router.post("", response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED)
-def create_schedule(schedule_in: ScheduleCreate, db: Session = Depends(get_db)):
-    """Create and publish a new tour schedule slot with max capacity."""
-    if schedule_in.start_time >= schedule_in.end_time:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Schedule start_time must be strictly before end_time.",
-        )
-
+@router.post(
+    "/",
+    response_model=ScheduleResponse,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
+def create_schedule(
+    schedule_in: ScheduleCreate,
+    db: Session = Depends(get_db),
+):
     tour = db.query(Tour).filter(Tour.id == schedule_in.tour_id).first()
     if not tour:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tour with ID '{schedule_in.tour_id}' not found",
+            detail=f"Tour with id '{schedule_in.tour_id}' not found.",
+        )
+
+    if schedule_in.start_time >= schedule_in.end_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Start time must be before end time.",
         )
 
     if schedule_in.guide_id:
@@ -96,25 +134,15 @@ def create_schedule(schedule_in: ScheduleCreate, db: Session = Depends(get_db)):
         if not guide:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Guide with ID '{schedule_in.guide_id}' not found",
+                detail=f"Guide with id '{schedule_in.guide_id}' not found.",
             )
-
-        # Conflict check for guide schedule overlap: (start_time < new_end) AND (end_time > new_start)
-        conflict = (
-            db.query(Schedule)
-            .filter(
-                Schedule.guide_id == schedule_in.guide_id,
-                Schedule.status != "Cancelled",
-                Schedule.start_time < schedule_in.end_time,
-                Schedule.end_time > schedule_in.start_time,
-            )
-            .first()
+        check_guide_overlap(
+            guide_id=schedule_in.guide_id,
+            start_time=schedule_in.start_time,
+            end_time=schedule_in.end_time,
+            exclude_schedule_id=None,
+            db=db,
         )
-        if conflict:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Guide is already assigned to an overlapping tour schedule.",
-            )
 
     schedule = Schedule(
         tour_id=schedule_in.tour_id,
@@ -128,253 +156,179 @@ def create_schedule(schedule_in: ScheduleCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(schedule)
 
-    # Reload with relationships
-    schedule = (
-        db.query(Schedule)
-        .options(
-            joinedload(Schedule.tour),
-            joinedload(Schedule.guide),
-            joinedload(Schedule.bookings),
-        )
-        .filter(Schedule.id == schedule.id)
-        .first()
-    )
-    return _build_schedule_response(schedule)
+    return build_schedule_response(schedule, db)
 
 
-@router.get("/{schedule_id}", response_model=ScheduleResponse)
-def get_schedule(schedule_id: str, db: Session = Depends(get_db)):
-    """Retrieve schedule details with remaining capacity."""
-    schedule = (
-        db.query(Schedule)
-        .options(
-            joinedload(Schedule.tour),
-            joinedload(Schedule.guide),
-            joinedload(Schedule.bookings),
-        )
-        .filter(Schedule.id == schedule_id)
-        .first()
-    )
-    if not schedule:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Schedule with ID '{schedule_id}' not found",
-        )
-    return _build_schedule_response(schedule)
-
-
-@router.put("/{schedule_id}", response_model=ScheduleResponse)
-def update_schedule(
-    schedule_id: str, schedule_in: ScheduleUpdate, db: Session = Depends(get_db)
+@router.get("/{id}", response_model=ScheduleResponse)
+def get_schedule(
+    id: str,
+    db: Session = Depends(get_db),
 ):
-    """Update schedule details, status, or capacity limit."""
-    schedule = (
-        db.query(Schedule)
-        .options(
-            joinedload(Schedule.tour),
-            joinedload(Schedule.guide),
-            joinedload(Schedule.bookings),
-        )
-        .filter(Schedule.id == schedule_id)
-        .first()
-    )
+    schedule = db.query(Schedule).filter(Schedule.id == id).first()
     if not schedule:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Schedule with ID '{schedule_id}' not found",
+            detail=f"Schedule with id '{id}' not found.",
+        )
+    return build_schedule_response(schedule, db)
+
+
+@router.put("/{id}", response_model=ScheduleResponse)
+def update_schedule(
+    id: str,
+    schedule_in: ScheduleUpdate,
+    db: Session = Depends(get_db),
+):
+    schedule = db.query(Schedule).filter(Schedule.id == id).first()
+    if not schedule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Schedule with id '{id}' not found.",
         )
 
-    new_start = (
-        schedule_in.start_time
-        if schedule_in.start_time is not None
-        else schedule.start_time
-    )
-    new_end = (
-        schedule_in.end_time if schedule_in.end_time is not None else schedule.end_time
+    new_start = schedule_in.start_time or schedule.start_time
+    new_end = schedule_in.end_time or schedule.end_time
+    new_guide = (
+        schedule_in.guide_id if schedule_in.guide_id is not None else schedule.guide_id
     )
 
     if new_start >= new_end:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Schedule start_time must be strictly before end_time.",
+            detail="Start time must be before end time.",
         )
 
-    if schedule_in.tour_id is not None and schedule_in.tour_id != schedule.tour_id:
+    if schedule_in.tour_id is not None:
         tour = db.query(Tour).filter(Tour.id == schedule_in.tour_id).first()
         if not tour:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tour with ID '{schedule_in.tour_id}' not found",
+                detail=f"Tour with id '{schedule_in.tour_id}' not found.",
             )
         schedule.tour_id = schedule_in.tour_id
 
-    new_guide_id = (
-        schedule_in.guide_id if schedule_in.guide_id is not None else schedule.guide_id
-    )
-    if new_guide_id:
-        guide = db.query(Guide).filter(Guide.id == new_guide_id).first()
+    if new_guide:
+        guide = db.query(Guide).filter(Guide.id == new_guide).first()
         if not guide:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Guide with ID '{new_guide_id}' not found",
+                detail=f"Guide with id '{new_guide}' not found.",
             )
-
-        conflict = (
-            db.query(Schedule)
-            .filter(
-                Schedule.id != schedule.id,
-                Schedule.guide_id == new_guide_id,
-                Schedule.status != "Cancelled",
-                Schedule.start_time < new_end,
-                Schedule.end_time > new_start,
-            )
-            .first()
+        check_guide_overlap(
+            guide_id=new_guide,
+            start_time=new_start,
+            end_time=new_end,
+            exclude_schedule_id=schedule.id,
+            db=db,
         )
-        if conflict:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Guide is already assigned to an overlapping tour schedule.",
-            )
+    schedule.guide_id = new_guide
 
-    if schedule_in.max_capacity is not None:
-        booked = sum(
-            b.ticket_quantity
-            for b in schedule.bookings
-            if b.booking_status == "Confirmed"
-        )
-        if schedule_in.max_capacity < booked:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot reduce capacity to {schedule_in.max_capacity} because {booked} tickets are already booked.",
-            )
-        schedule.max_capacity = schedule_in.max_capacity
-
-    if schedule_in.guide_id is not None:
-        schedule.guide_id = schedule_in.guide_id
     if schedule_in.start_time is not None:
         schedule.start_time = schedule_in.start_time
     if schedule_in.end_time is not None:
         schedule.end_time = schedule_in.end_time
+    if schedule_in.max_capacity is not None:
+        schedule.max_capacity = schedule_in.max_capacity
     if schedule_in.status is not None:
         schedule.status = schedule_in.status
 
     db.commit()
     db.refresh(schedule)
-    return _build_schedule_response(schedule)
+    return build_schedule_response(schedule, db)
 
 
-@router.post("/{schedule_id}/assign-guide", response_model=ScheduleResponse)
+@router.post("/{id}/assign-guide", response_model=ScheduleResponse)
 def assign_guide_to_schedule(
-    schedule_id: str, assign_in: ScheduleAssignGuide, db: Session = Depends(get_db)
+    id: str,
+    payload: ScheduleAssignGuide,
+    db: Session = Depends(get_db),
 ):
-    """Assign a qualified guide to a tour schedule slot with overlap conflict check."""
-    schedule = (
-        db.query(Schedule)
-        .options(
-            joinedload(Schedule.tour),
-            joinedload(Schedule.guide),
-            joinedload(Schedule.bookings),
-        )
-        .filter(Schedule.id == schedule_id)
-        .first()
-    )
+    schedule = db.query(Schedule).filter(Schedule.id == id).first()
     if not schedule:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Schedule with ID '{schedule_id}' not found",
+            detail=f"Schedule with id '{id}' not found.",
         )
 
-    guide = db.query(Guide).filter(Guide.id == assign_in.guide_id).first()
+    guide = db.query(Guide).filter(Guide.id == payload.guide_id).first()
     if not guide:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Guide with ID '{assign_in.guide_id}' not found",
+            detail=f"Guide with id '{payload.guide_id}' not found.",
         )
 
-    # Check for overlapping schedules
-    conflict = (
-        db.query(Schedule)
-        .filter(
-            Schedule.id != schedule.id,
-            Schedule.guide_id == assign_in.guide_id,
-            Schedule.status != "Cancelled",
-            Schedule.start_time < schedule.end_time,
-            Schedule.end_time > schedule.start_time,
-        )
-        .first()
+    check_guide_overlap(
+        guide_id=payload.guide_id,
+        start_time=schedule.start_time,
+        end_time=schedule.end_time,
+        exclude_schedule_id=schedule.id,
+        db=db,
     )
-    if conflict:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Guide is already assigned to an overlapping tour schedule.",
-        )
 
-    schedule.guide_id = assign_in.guide_id
+    schedule.guide_id = payload.guide_id
     db.commit()
     db.refresh(schedule)
-
-    # Reload relationships
-    schedule = (
-        db.query(Schedule)
-        .options(
-            joinedload(Schedule.tour),
-            joinedload(Schedule.guide),
-            joinedload(Schedule.bookings),
-        )
-        .filter(Schedule.id == schedule.id)
-        .first()
-    )
-    return _build_schedule_response(schedule)
+    return build_schedule_response(schedule, db)
 
 
-@router.get("/{schedule_id}/attendance-report", response_model=AttendanceReportResponse)
-def get_schedule_attendance_report(schedule_id: str, db: Session = Depends(get_db)):
-    """Generate attendance summary report for a completed tour session."""
-    schedule = (
-        db.query(Schedule)
-        .options(
-            joinedload(Schedule.tour),
-            joinedload(Schedule.bookings),
-            joinedload(Schedule.attendance_records).joinedload(Attendance.booking),
-        )
-        .filter(Schedule.id == schedule_id)
-        .first()
-    )
+@router.get("/{id}/attendance-report", response_model=ScheduleAttendanceReport)
+def get_schedule_attendance_report(
+    id: str,
+    db: Session = Depends(get_db),
+):
+    schedule = db.query(Schedule).filter(Schedule.id == id).first()
     if not schedule:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Schedule with ID '{schedule_id}' not found",
+            detail=f"Schedule with id '{id}' not found.",
         )
 
-    total_booked = sum(
-        b.ticket_quantity for b in schedule.bookings if b.booking_status == "Confirmed"
+    # Booked tickets
+    booked = (
+        db.query(func.coalesce(func.sum(Booking.ticket_quantity), 0))
+        .filter(
+            Booking.schedule_id == schedule.id,
+            Booking.booking_status == "Confirmed",
+        )
+        .scalar()
     )
-    total_attended = sum(a.attended_count for a in schedule.attendance_records)
+    total_booked = int(booked or 0)
 
-    rate = round((total_attended / total_booked) * 100, 2) if total_booked > 0 else 0.0
+    # Attended tickets
+    attended = (
+        db.query(func.coalesce(func.sum(Attendance.attended_count), 0))
+        .filter(Attendance.schedule_id == schedule.id)
+        .scalar()
+    )
+    total_attended = int(attended or 0)
+    no_shows = max(0, total_booked - total_attended)
 
-    check_in_responses = [
-        AttendanceResponse(
-            id=str(a.id),
-            booking_id=str(a.booking_id),
-            schedule_id=str(a.schedule_id),
-            visitor_name=str(a.booking.visitor_name) if a.booking else None,
-            attended_count=int(a.attended_count),
-            check_in_time=a.check_in_time,
-            notes=str(a.notes) if a.notes else None,
-            created_at=a.created_at,
+    rate = 0.0
+    if total_booked > 0:
+        rate = round((total_attended / total_booked) * 100.0, 2)
+
+    bookings_count = (
+        db.query(func.count(Booking.id))
+        .filter(
+            Booking.schedule_id == schedule.id,
+            Booking.booking_status == "Confirmed",
         )
-        for a in schedule.attendance_records
-    ]
+        .scalar()
+        or 0
+    )
 
-    return AttendanceReportResponse(
-        schedule_id=str(schedule.id),
-        tour_title=str(schedule.tour.title) if schedule.tour else "Guided Tour",
+    return ScheduleAttendanceReport(
+        schedule_id=schedule.id,
+        tour_id=schedule.tour_id,
+        tour_title=schedule.tour.title if schedule.tour else "Unknown Tour",
+        guide_id=schedule.guide_id,
+        guide_name=schedule.guide.name if schedule.guide else None,
         start_time=schedule.start_time,
         end_time=schedule.end_time,
-        max_capacity=int(schedule.max_capacity),
-        total_booked_tickets=total_booked,
-        total_attended_tickets=total_attended,
+        max_capacity=schedule.max_capacity,
+        total_booked=total_booked,
+        total_attended=total_attended,
+        no_shows=no_shows,
         attendance_rate_percentage=rate,
-        check_ins=check_in_responses,
+        bookings_count=bookings_count,
     )

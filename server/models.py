@@ -1,16 +1,22 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    Text,
+    DateTime,
+    ForeignKey,
+)
 from sqlalchemy.orm import relationship
-
 from server.database import Base
 
 
-def generate_uuid() -> str:
+def generate_uuid():
     return str(uuid.uuid4())
 
 
-def get_utc_now():
+def utc_now():
     return datetime.now(timezone.utc)
 
 
@@ -21,9 +27,9 @@ class Tour(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     duration_minutes = Column(Integer, nullable=False, default=60)
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
     )
 
     schedules = relationship(
@@ -36,11 +42,11 @@ class Guide(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(255), nullable=False)
-    email = Column(String(255), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=False)
     specialization = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
     )
 
     schedules = relationship("Schedule", back_populates="guide")
@@ -51,26 +57,20 @@ class Schedule(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     tour_id = Column(
-        String(36),
-        ForeignKey("tours.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        String(36), ForeignKey("tours.id", ondelete="CASCADE"), nullable=False
     )
     guide_id = Column(
-        String(36),
-        ForeignKey("guides.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
+        String(36), ForeignKey("guides.id", ondelete="SET NULL"), nullable=True
     )
-    start_time = Column(DateTime, nullable=False, index=True)
-    end_time = Column(DateTime, nullable=False)
-    max_capacity = Column(Integer, nullable=False, default=20)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    max_capacity = Column(Integer, nullable=False, default=25)
     status = Column(
-        String(50), nullable=False, default="Published", index=True
+        String(50), nullable=False, default="Published"
     )  # Draft, Published, Cancelled
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
     )
 
     tour = relationship("Tour", back_populates="schedules")
@@ -88,20 +88,17 @@ class Booking(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     schedule_id = Column(
-        String(36),
-        ForeignKey("schedules.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        String(36), ForeignKey("schedules.id", ondelete="CASCADE"), nullable=False
     )
     visitor_name = Column(String(255), nullable=False)
-    visitor_email = Column(String(255), nullable=False, index=True)
+    visitor_email = Column(String(255), nullable=False)
     ticket_quantity = Column(Integer, nullable=False, default=1)
     booking_status = Column(
-        String(50), nullable=False, default="Confirmed", index=True
+        String(50), nullable=False, default="Confirmed"
     )  # Confirmed, Cancelled
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
     )
 
     schedule = relationship("Schedule", back_populates="bookings")
@@ -115,23 +112,17 @@ class Attendance(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     booking_id = Column(
-        String(36),
-        ForeignKey("bookings.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        String(36), ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False
     )
     schedule_id = Column(
-        String(36),
-        ForeignKey("schedules.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        String(36), ForeignKey("schedules.id", ondelete="CASCADE"), nullable=False
     )
     attended_count = Column(Integer, nullable=False, default=1)
-    check_in_time = Column(DateTime, default=get_utc_now, nullable=False)
+    check_in_time = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
     )
 
     booking = relationship("Booking", back_populates="attendance_records")

@@ -1,1 +1,1 @@
-"""Routers package for Museum Tour Management API."""
+"""Routers package for API endpoints."""

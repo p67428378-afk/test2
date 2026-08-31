@@ -1,16 +1,15 @@
 import os
 from contextlib import asynccontextmanager
-from typing import Dict
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-
-from server.database import SessionLocal, init_db, seed_data
-from server.routers import attendance, bookings, guides, schedules, tours
+from server.database import init_db, seed_data, SessionLocal
+from server.routers import tours, guides, schedules, bookings, attendance
+from server.schemas import HealthResponse
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager to initialize database and seed initial data."""
+    # Initialize schema and seed data
     init_db()
     db = SessionLocal()
     try:
@@ -22,15 +21,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Museum Tour Management System API",
-    description="API for managing museum tour routes, schedules, guide assignments, visitor bookings, capacity controls, and attendance check-in.",
+    description="API for guided tour scheduling, capacity management, guide assignment, visitor bookings, and attendance tracking.",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# CORS Middleware Configuration
-ALLOWED_ORIGINS = os.getenv(
+# CORS Configuration
+allowed_origins_env = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
+)
+ALLOWED_ORIGINS = [
+    origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,7 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register API Routers
+# Routers
 app.include_router(tours.router)
 app.include_router(guides.router)
 app.include_router(schedules.router)
@@ -48,17 +50,17 @@ app.include_router(bookings.router)
 app.include_router(attendance.router)
 
 
-@app.get("/health", response_model=Dict[str, str], tags=["Health"])
+@app.get("/health", response_model=HealthResponse, tags=["Health"])
+@app.get("/api/v1/health", response_model=HealthResponse, tags=["Health"])
 def health_check():
-    """Health check endpoint for container environments and uptime monitors."""
-    return {"status": "healthy", "service": "museum-tour-management"}
+    return HealthResponse(
+        status="ok",
+        app="Museum Tour Management System",
+        version="1.0.0",
+    )
 
 
-@app.get("/", response_model=Dict[str, str], tags=["Root"])
-def root():
-    """Root endpoint with service summary and documentation links."""
-    return {
-        "message": "Museum Tour Management System API",
-        "version": "1.0.0",
-        "docs_url": "/docs",
-    }
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)
