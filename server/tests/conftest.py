@@ -6,9 +6,8 @@ from fastapi.testclient import TestClient
 
 from server.database import Base, get_db, seed_data
 from server.main import app
-import server.models  # noqa: F401
 
-# In-memory SQLite test engine with StaticPool
+# Shared SQLite in-memory engine with StaticPool for consistent test session
 TEST_DATABASE_URL = "sqlite:///:memory:"
 
 test_engine = create_engine(
@@ -21,16 +20,18 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_db():
+def setup_database():
     Base.metadata.create_all(bind=test_engine)
     db = TestingSessionLocal()
-    seed_data(db)
-    db.close()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
     yield
     Base.metadata.drop_all(bind=test_engine)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def db_session():
     db = TestingSessionLocal()
     try:
@@ -39,7 +40,7 @@ def db_session():
         db.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def client(db_session):
     def override_get_db():
         try:
@@ -48,28 +49,6 @@ def client(db_session):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
+    with TestClient(app) as test_client:
+        yield test_client
     app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def auth_headers(client):
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
-    )
-    assert response.status_code == 200, response.text
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
-
-
-@pytest.fixture
-def admin_auth_headers(client):
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "admin@example.com", "password": "adminpassword"},
-    )
-    assert response.status_code == 200, response.text
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}

@@ -1,18 +1,4 @@
-# Pet Clinic Management System
-
-A comprehensive Pet Clinic Management System for pet owners, veterinarians, and clinic administrators.
-
-## Features
-- **User Authentication**: Role-based access for Owners, Vets, and Admins.
-- **Pet Directory**: Register and manage pet profiles.
-- **Appointment Scheduling**: Book appointments and update booking status.
-- **Medical Visit Records**: Track diagnoses, treatments, prescriptions, and visit history.
-- **Vaccination Schedules**: Monitor vaccine administration and upcoming due dates.
-- **Reminders**: Automated evaluation and dispatch of vaccination reminders.
-
-## Tech Stack
-- **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.x, SQLite / PostgreSQL, PyJWT, passlib/bcrypt, pytest
-- **Frontend**: React 18, Vite, Tailwind CSS
+# Project
 
 ## Server
 

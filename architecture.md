@@ -31,8 +31,7 @@ graph TD
 
 ## Backend Modules (server/)
 - server/__init__.py
-- server/auth.py
-- server/conftest.py
+- server/crud.py
 - server/database.py
 - server/main.py
 - server/models.py
@@ -45,15 +44,40 @@ graph TD
 - server/routers/vaccinations.py
 - server/schemas.py
 - server/tests/__init__.py
-- server/tests/test_appointments.py
-- server/tests/test_auth.py
-- server/tests/test_medical_records.py
-- server/tests/test_pets.py
-- server/tests/test_reminders.py
-- server/tests/test_vaccinations.py
+- server/tests/conftest.py
+- server/tests/test_api.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/components/Navbar.test.jsx
+- client/src/components/appointments/AppointmentRoster.jsx
+- client/src/components/appointments/BookingFormModal.jsx
+- client/src/components/layout/Navbar.jsx
+- client/src/components/medical/MedicalRecordModal.jsx
+- client/src/components/medical/MedicalVisitTimeline.jsx
+- client/src/components/pets/PetFormModal.jsx
+- client/src/components/pets/PetProfileHero.jsx
+- client/src/components/pets/PetRegistryTable.jsx
+- client/src/components/vaccinations/ReminderDispatchCard.jsx
+- client/src/components/vaccinations/VaccinationModal.jsx
+- client/src/components/vaccinations/VaccinationTrackerTable.jsx
+- client/src/context/AuthContext.jsx
+- client/src/main.jsx
+- client/src/pages/AppointmentsPage.jsx
+- client/src/pages/AppointmentsPage.test.jsx
+- client/src/pages/DashboardPage.jsx
+- client/src/pages/DashboardPage.test.jsx
+- client/src/pages/LoginPage.jsx
+- client/src/pages/PetProfilePage.jsx
+- client/src/pages/RegisterPage.jsx
+- client/src/pages/VaccinationsPage.jsx
+- client/src/services/api.js
+- client/src/services/api.test.js
+- client/src/setup.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - POST /api/v1/auth/register

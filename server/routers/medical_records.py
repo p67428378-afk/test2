@@ -1,69 +1,62 @@
-from typing import List
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from server.database import get_db
-from server.models import MedicalRecord, Pet, User
-from server.schemas import MedicalRecordCreate, MedicalRecordResponse
-from server.auth import get_current_user
 
-router = APIRouter(prefix="/api/v1", tags=["medical-records"])
+from server.database import get_db
+from server.models import User
+from server.schemas import MedicalRecordCreate, MedicalRecordOut
+from server.crud import (
+    create_medical_record,
+    get_medical_records_by_pet,
+    get_medical_record,
+    get_pet,
+)
+from server.routers.auth import get_current_user
+
+router = APIRouter(tags=["medical_records"])
 
 
 @router.post(
-    "/medical-records",
-    response_model=MedicalRecordResponse,
+    "/api/v1/medical-records",
+    response_model=MedicalRecordOut,
     status_code=status.HTTP_201_CREATED,
 )
-def create_medical_record(
+def log_medical_record(
     rec_in: MedicalRecordCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
-    # Verify pet exists
-    pet = db.query(Pet).filter(Pet.id == rec_in.pet_id).first()
+    pet = get_pet(db=db, pet_id=rec_in.pet_id)
     if not pet:
-        raise HTTPException(status_code=404, detail="Pet not found")
-
-    vet_id = rec_in.vet_id if rec_in.vet_id else current_user.id
-    visit_date = rec_in.visit_date if rec_in.visit_date else datetime.now(timezone.utc)
-
-    record = MedicalRecord(
-        pet_id=rec_in.pet_id,
-        appointment_id=rec_in.appointment_id,
-        vet_id=vet_id,
-        visit_date=visit_date,
-        diagnosis=rec_in.diagnosis,
-        treatment=rec_in.treatment,
-        prescriptions=rec_in.prescriptions,
-        notes=rec_in.notes,
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    return record
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pet with id '{rec_in.pet_id}' not found",
+        )
+    vet_id = rec_in.vet_id
+    if not vet_id and current_user and current_user.role == "vet":
+        vet_id = current_user.id
+    return create_medical_record(db=db, rec_in=rec_in, vet_id=vet_id)
 
 
 @router.get(
-    "/pets/{pet_id}/medical-records", response_model=List[MedicalRecordResponse]
+    "/api/v1/pets/{pet_id}/medical-records", response_model=List[MedicalRecordOut]
 )
-def get_pet_medical_records(
-    pet_id: str,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
-    db: Session = Depends(get_db),
-):
-    # Verify pet exists
-    pet = db.query(Pet).filter(Pet.id == pet_id).first()
+def retrieve_pet_medical_records(pet_id: str, db: Session = Depends(get_db)):
+    pet = get_pet(db=db, pet_id=pet_id)
     if not pet:
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pet with id '{pet_id}' not found",
+        )
+    return get_medical_records_by_pet(db=db, pet_id=pet_id)
 
-    records = (
-        db.query(MedicalRecord)
-        .filter(MedicalRecord.pet_id == pet_id)
-        .order_by(MedicalRecord.visit_date.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
-    return records
+
+@router.get("/api/v1/medical-records/{id}", response_model=MedicalRecordOut)
+def retrieve_medical_record(id: str, db: Session = Depends(get_db)):
+    rec = get_medical_record(db=db, record_id=id)
+    if not rec:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Medical record with id '{id}' not found",
+        )
+    return rec

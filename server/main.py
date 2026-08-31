@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from server.database import init_db, seed_data, SessionLocal
+from server.database import SessionLocal, init_db, seed_data
 from server.routers import (
     auth,
     pets,
@@ -16,9 +16,8 @@ from server.routers import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB schema
+    # Initialize database tables and seed test data
     init_db()
-    # Seed default accounts and data
     db = SessionLocal()
     try:
         seed_data(db)
@@ -29,15 +28,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Pet Clinic Management System API",
-    description="API for managing pets, appointments, medical visit records, vaccinations, and reminders.",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# CORS Configuration
-ALLOWED_ORIGINS = os.getenv(
+# CORS configuration
+allowed_origins_raw = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
+)
+ALLOWED_ORIGINS = [
+    origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,7 +48,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
+# Include API Routers
 app.include_router(auth.router)
 app.include_router(pets.router)
 app.include_router(appointments.router)
@@ -56,11 +57,12 @@ app.include_router(vaccinations.router)
 app.include_router(reminders.router)
 
 
+@app.get("/health")
+@app.get("/api/v1/health")
+def health_check():
+    return {"status": "healthy", "service": "pet-clinic-api"}
+
+
 @app.get("/")
 def root():
-    return {"message": "Pet Clinic Management System API is running"}
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+    return {"message": "Pet Clinic Management API is running", "version": "1.0.0"}

@@ -1,69 +1,60 @@
-from typing import List
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from server.database import get_db
-from server.models import Vaccination, Pet, User
-from server.schemas import VaccinationCreate, VaccinationResponse
-from server.auth import get_current_user
 
-router = APIRouter(prefix="/api/v1", tags=["vaccinations"])
+from server.database import get_db
+from server.models import User
+from server.schemas import VaccinationCreate, VaccinationOut
+from server.crud import (
+    create_vaccination,
+    get_vaccinations_by_pet,
+    get_vaccination,
+    get_pet,
+)
+from server.routers.auth import get_current_user
+
+router = APIRouter(tags=["vaccinations"])
 
 
 @router.post(
-    "/vaccinations",
-    response_model=VaccinationResponse,
+    "/api/v1/vaccinations",
+    response_model=VaccinationOut,
     status_code=status.HTTP_201_CREATED,
 )
-def create_vaccination(
+def record_vaccination(
     vax_in: VaccinationCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
-    # Verify pet exists
-    pet = db.query(Pet).filter(Pet.id == vax_in.pet_id).first()
+    pet = get_pet(db=db, pet_id=vax_in.pet_id)
     if not pet:
-        raise HTTPException(status_code=404, detail="Pet not found")
-
-    vet_id = vax_in.vet_id if vax_in.vet_id else current_user.id
-    administered_date = (
-        vax_in.administered_date
-        if vax_in.administered_date
-        else datetime.now(timezone.utc)
-    )
-
-    vaccination = Vaccination(
-        pet_id=vax_in.pet_id,
-        vaccine_name=vax_in.vaccine_name,
-        administered_date=administered_date,
-        next_due_date=vax_in.next_due_date,
-        vet_id=vet_id,
-        status=vax_in.status or "UP_TO_DATE",
-    )
-    db.add(vaccination)
-    db.commit()
-    db.refresh(vaccination)
-    return vaccination
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pet with id '{vax_in.pet_id}' not found",
+        )
+    vet_id = vax_in.vet_id
+    if not vet_id and current_user and current_user.role == "vet":
+        vet_id = current_user.id
+    return create_vaccination(db=db, vax_in=vax_in, vet_id=vet_id)
 
 
-@router.get("/pets/{pet_id}/vaccinations", response_model=List[VaccinationResponse])
-def get_pet_vaccinations(
-    pet_id: str,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
-    db: Session = Depends(get_db),
-):
-    # Verify pet exists
-    pet = db.query(Pet).filter(Pet.id == pet_id).first()
+@router.get("/api/v1/pets/{pet_id}/vaccinations", response_model=List[VaccinationOut])
+def retrieve_pet_vaccinations(pet_id: str, db: Session = Depends(get_db)):
+    pet = get_pet(db=db, pet_id=pet_id)
     if not pet:
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pet with id '{pet_id}' not found",
+        )
+    return get_vaccinations_by_pet(db=db, pet_id=pet_id)
 
-    vaccinations = (
-        db.query(Vaccination)
-        .filter(Vaccination.pet_id == pet_id)
-        .order_by(Vaccination.administered_date.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
-    return vaccinations
+
+@router.get("/api/v1/vaccinations/{id}", response_model=VaccinationOut)
+def retrieve_vaccination(id: str, db: Session = Depends(get_db)):
+    vax = get_vaccination(db=db, vax_id=id)
+    if not vax:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Vaccination with id '{id}' not found",
+        )
+    return vax
