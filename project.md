@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-642** — User Story: Inventory Management Module
+- **SCRUM-190** - Bill Splitter - Enter Group Expenses and Calculate Individual Shares

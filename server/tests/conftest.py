@@ -1,15 +1,14 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
-from server.main import app
+from sqlalchemy.pool import StaticPool
 from server.database import Base, get_db
+from server.main import app
 
-SQLALCHEMY_DATABASE_URL = "sqlite://"
-
+TEST_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
+    TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
@@ -17,38 +16,33 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_database():
+def _create_schema_once():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture(scope="function")
-def db():
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+@pytest.fixture(autouse=True)
+def _clean_tables():
+    """Function-scoped: wipe data between tests for isolation."""
+    yield
+    with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            conn.execute(table.delete())
 
 
-@pytest.fixture(scope="function")
-def client(db):
-    def override_get_db():
-        try:
-            yield db
-        finally:
-            pass
+def _override_get_db():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    app.dependency_overrides[get_db] = override_get_db
+
+app.dependency_overrides[get_db] = _override_get_db
+
+
+@pytest.fixture
+def client():
     with TestClient(app) as c:
         yield c
-    app.dependency_overrides.clear()

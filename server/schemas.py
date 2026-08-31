@@ -1,130 +1,130 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# Member Schemas
+class MemberCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255, description="Member name")
+    email: Optional[str] = Field(
+        None, max_length=255, description="Optional email address"
+    )
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class MemberResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
+    id: str
+    group_id: str
     name: str
-    total_rounds: int = Field(default=5, ge=1)
+    email: Optional[str] = None
+    created_at: datetime
 
 
-class TournamentCreate(TournamentBase):
-    pass
+# Group Schemas
+class GroupCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255, description="Group name")
+    description: Optional[str] = Field(None, description="Optional group description")
+    members: List[MemberCreate] = Field(
+        ..., min_length=1, description="List of group members"
+    )
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class GroupResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    description: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    members: List[MemberResponse] = []
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class GroupSummaryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    member_count: int = 0
+    total_spent: float = 0.0
+    members: List[MemberResponse] = []
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+# Split Schemas
+class ExpenseSplitInput(BaseModel):
+    member_id: str = Field(..., description="ID of the participating member")
+    split_value: Optional[float] = Field(
+        None,
+        description="Value for split (percentage e.g. 50.0, fixed amount e.g. 40.0, or optional for equal)",
+    )
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
+class ExpenseSplitResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+    id: str
+    expense_id: Optional[str] = None
+    member_id: str
+    member_name: Optional[str] = None
+    split_value: float
+    computed_amount: float
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+# Expense Schemas
+class ExpenseCreate(BaseModel):
+    group_id: str = Field(..., description="Target group ID")
+    title: str = Field(..., min_length=1, max_length=255, description="Expense title")
+    total_amount: float = Field(
+        ..., gt=0, description="Total expense amount (must be > 0)"
+    )
+    payer_id: str = Field(..., description="Member ID of payer")
+    category: Optional[str] = Field(
+        "General", max_length=100, description="Expense category"
+    )
+    split_type: str = Field("EQUAL", description="Split type: EQUAL, PERCENTAGE, FIXED")
+    expense_date: Optional[datetime] = Field(None, description="Date of expense")
+    splits: List[ExpenseSplitInput] = Field(
+        ..., min_length=1, description="List of participant splits"
+    )
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
+class ExpenseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+    id: str
+    group_id: str
+    title: str
+    total_amount: float
+    payer_id: str
+    payer_name: Optional[str] = None
+    category: str
+    split_type: str
+    expense_date: datetime
+    created_at: datetime
+    updated_at: datetime
+    splits: List[ExpenseSplitResponse] = []
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# Settlement Schemas
+class MemberBalance(BaseModel):
+    member_id: str
+    member_name: str
+    net_balance: float
 
-    class Config:
-        from_attributes = True
+
+class SettlementTransfer(BaseModel):
+    from_member: str
+    to_member: str
+    amount: float
+    from_member_id: Optional[str] = None
+    to_member_id: Optional[str] = None
+
+
+class SettlementResponse(BaseModel):
+    group_id: str
+    balances: List[MemberBalance]
+    settlements: List[SettlementTransfer]

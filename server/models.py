@@ -1,250 +1,125 @@
 import uuid
-from sqlalchemy import (
-    Column,
-    String,
-    DateTime,
-    Boolean,
-    ForeignKey,
-    Integer,
-    Float,
-    UniqueConstraint,
-    TypeDecorator,
-    CHAR,
-)
+from datetime import datetime, timezone
+from sqlalchemy import Column, String, Text, Numeric, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from server.database import Base
 
 
-class GUID(TypeDecorator):
-    """Platform-independent GUID type.
-    Uses PostgreSQL's UUID type, otherwise uses CHAR(36).
-    """
+class Group(Base):
+    __tablename__ = "groups"
 
-    impl = CHAR
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
-            from sqlalchemy.dialects.postgresql import UUID
-
-            return dialect.type_descriptor(UUID(as_uuid=True))
-        else:
-            return dialect.type_descriptor(CHAR(36))
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        elif dialect.name == "postgresql":
-            return str(value)
-        else:
-            if not isinstance(value, uuid.UUID):
-                return str(uuid.UUID(value))
-            else:
-                return str(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            if not isinstance(value, uuid.UUID):
-                return uuid.UUID(value)
-            else:
-                return value
-
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    full_name = Column(String(255), nullable=True)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(
-        String(50), default="member", nullable=False
-    )  # 'admin', 'organizer', 'member'
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_verified = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-
-class Tournament(Base):
-    __tablename__ = "tournaments"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(255), nullable=False)
-    status = Column(
-        String(50), default="DRAFT", nullable=False
-    )  # 'DRAFT', 'ACTIVE', 'COMPLETED'
-    total_rounds = Column(Integer, default=5, nullable=False)
-    current_round = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    registrations = relationship(
-        "Registration", back_populates="tournament", cascade="all, delete-orphan"
+    members = relationship(
+        "GroupMember",
+        back_populates="group",
+        cascade="all, delete-orphan",
+        order_by="GroupMember.created_at",
     )
-    rounds = relationship(
-        "Round", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="tournament", cascade="all, delete-orphan"
+    expenses = relationship(
+        "Expense",
+        back_populates="group",
+        cascade="all, delete-orphan",
+        order_by="Expense.created_at",
     )
 
 
-class Player(Base):
-    __tablename__ = "players"
+class GroupMember(Base):
+    __tablename__ = "group_members"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    full_name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False, index=True)
-    rating = Column(Integer, default=1200, nullable=False)
-    fide_id = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    group_id = Column(
+        String(36),
+        ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    group = relationship("Group", back_populates="members")
+    expenses_paid = relationship(
+        "Expense",
+        back_populates="payer",
+        foreign_keys="Expense.payer_id",
+    )
+    splits = relationship(
+        "ExpenseSplit",
+        back_populates="member",
+        cascade="all, delete-orphan",
+    )
+
+
+class Expense(Base):
+    __tablename__ = "expenses"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    group_id = Column(
+        String(36),
+        ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    title = Column(String(255), nullable=False)
+    total_amount = Column(Numeric(10, 2), nullable=False)
+    payer_id = Column(
+        String(36),
+        ForeignKey("group_members.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    category = Column(String(100), nullable=False, default="General")
+    split_type = Column(
+        String(50), nullable=False, default="EQUAL"
+    )  # EQUAL, PERCENTAGE, FIXED
+    expense_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    registrations = relationship(
-        "Registration", back_populates="player", cascade="all, delete-orphan"
+    group = relationship("Group", back_populates="expenses")
+    payer = relationship(
+        "GroupMember", back_populates="expenses_paid", foreign_keys=[payer_id]
     )
-    standings = relationship(
-        "Standing", back_populates="player", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="player", cascade="all, delete-orphan"
-    )
-
-
-class Registration(Base):
-    __tablename__ = "registrations"
-    __table_args__ = (
-        UniqueConstraint("tournament_id", "player_id", name="uq_tournament_player"),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    status = Column(
-        String(50), default="ACTIVE", nullable=False
-    )  # 'ACTIVE', 'WITHDRAWN'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="registrations")
-    player = relationship("Player", back_populates="registrations")
-
-
-class Round(Base):
-    __tablename__ = "rounds"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    round_number = Column(Integer, nullable=False)
-    is_closed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="rounds")
-    matches = relationship(
-        "Match", back_populates="round", cascade="all, delete-orphan"
+    splits = relationship(
+        "ExpenseSplit",
+        back_populates="expense",
+        cascade="all, delete-orphan",
+        order_by="ExpenseSplit.created_at",
     )
 
 
-class Match(Base):
-    __tablename__ = "matches"
+class ExpenseSplit(Base):
+    __tablename__ = "expense_splits"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    round_id = Column(
-        GUID(), ForeignKey("rounds.id", ondelete="CASCADE"), nullable=False
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    expense_id = Column(
+        String(36),
+        ForeignKey("expenses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    board_number = Column(Integer, nullable=True)
-    white_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
+    member_id = Column(
+        String(36),
+        ForeignKey("group_members.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    black_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    result = Column(
-        String(50), default="PENDING", nullable=False
-    )  # 'PENDING', '1-0', '0-1', '0.5-0.5', 'BYE'
-    is_bye = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    split_value = Column(Numeric(10, 2), nullable=False)
+    computed_amount = Column(Numeric(10, 2), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    round = relationship("Round", back_populates="matches")
-    white_player = relationship("Player", foreign_keys=[white_player_id])
-    black_player = relationship("Player", foreign_keys=[black_player_id])
-
-
-class Standing(Base):
-    __tablename__ = "standings"
-    __table_args__ = (
-        UniqueConstraint(
-            "tournament_id", "player_id", name="uq_tournament_player_standing"
-        ),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    total_points = Column(Float, default=0.0, nullable=False)
-    buchholz = Column(Float, default=0.0, nullable=False)
-    sonneborn_berger = Column(Float, default=0.0, nullable=False)
-    rank = Column(Integer, nullable=True)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    tournament = relationship("Tournament", back_populates="standings")
-    player = relationship("Player", back_populates="standings")
-
-
-class Certificate(Base):
-    __tablename__ = "certificates"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    verification_uuid = Column(
-        GUID(), default=uuid.uuid4, unique=True, index=True, nullable=False
-    )
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    rank = Column(Integer, nullable=False)
-    total_points = Column(Float, default=0.0, nullable=False)
-    issued_at = Column(DateTime, default=func.now(), nullable=False)
-    qr_code_url = Column(String(512), nullable=True)
-
-    tournament = relationship("Tournament", back_populates="certificates")
-    player = relationship("Player", back_populates="certificates")
-
-
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    admin_id = Column(String(255), nullable=True)
-    match_id = Column(
-        GUID(), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True
-    )
-    original_score = Column(String(50), nullable=True)
-    new_score = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=func.now(), nullable=False)
+    expense = relationship("Expense", back_populates="splits")
+    member = relationship("GroupMember", back_populates="splits")
