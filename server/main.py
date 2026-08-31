@@ -1,60 +1,63 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
+from server.database import init_db
+from server.routers import cart, chocolates, orders
+from server.schemas import HealthResponse
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Exotic Chocolate Storefront & Order Management API",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    description="Backend API for browsing artisanal exotic chocolates, persistent cart, and temperature-controlled checkout.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
+# Configure CORS Middleware
 ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173",
 ).split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Include Routers
+app.include_router(chocolates.router)
+app.include_router(cart.router)
+app.include_router(orders.router)
 
 
-@app.get("/")
-def read_root():
+@app.get("/api/v1/health", response_model=HealthResponse, tags=["Health"])
+def health_check():
+    return {"status": "ok", "database": "connected"}
+
+
+@app.get("/", tags=["Root"])
+def root():
     return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
+        "message": "Welcome to the Exotic Chocolate Storefront API",
+        "docs_url": "/docs",
+        "version": "1.0.0",
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", 8000))
+    host = os.getenv("HOST", "0.0.0.0")
+    uvicorn.run("server.main:app", host=host, port=port, reload=True)

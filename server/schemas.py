@@ -1,130 +1,134 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# ==========================================
+# Chocolate Schemas
+# ==========================================
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class ChocolateBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    cocoa_percentage: int = Field(..., ge=50, le=100)
+    origin_region: str
+    flavor_notes: str
+    dietary_flags: str
+    price: float = Field(..., gt=0)
+    stock_quantity: int = Field(default=0, ge=0)
+    is_heat_sensitive: bool = True
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
+class ChocolateCreate(ChocolateBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class ChocolateResponse(ChocolateBase):
+    id: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# ==========================================
+# Cart Schemas
+# ==========================================
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class CartItemBase(BaseModel):
+    chocolate_id: str
+    quantity: int = Field(default=1, ge=1)
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+class CartItemCreate(BaseModel):
+    cart_id: Optional[str] = None
+    chocolate_id: str
+    quantity: int = Field(default=1, ge=1)
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+class CartItemUpdate(BaseModel):
+    quantity: int = Field(..., ge=1)
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class CartItemResponse(BaseModel):
+    id: str
+    cart_id: str
+    chocolate_id: str
+    quantity: int
+    item_subtotal: Optional[float] = None
+    chocolate: Optional[ChocolateResponse] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
+class CartResponse(BaseModel):
+    id: str
+    cart_id: str
+    session_token: str
+    items: List[CartItemResponse] = []
+    subtotal: float = 0.0
+    updated_items_count: int = 0
+    created_at: datetime
+    updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# ==========================================
+# Order Schemas
+# ==========================================
 
-    class Config:
-        from_attributes = True
+
+class OrderItemResponse(BaseModel):
+    id: str
+    order_id: str
+    chocolate_id: str
+    unit_price: float
+    quantity: int
+    item_subtotal: Optional[float] = None
+    chocolate: Optional[ChocolateResponse] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderCreate(BaseModel):
+    cart_id: str
+    customer_name: str = Field(..., min_length=1)
+    customer_email: EmailStr
+    shipping_address: str = Field(..., min_length=5)
+    shipping_method: str = Field(default="standard_ground")
+
+
+class OrderResponse(BaseModel):
+    id: str
+    order_id: str
+    order_code: str
+    customer_name: str
+    customer_email: str
+    shipping_address: str
+    shipping_method: str
+    shipping_fee: float
+    subtotal_amount: float
+    total_amount: float
+    order_status: str
+    status: str
+    items: List[OrderItemResponse] = []
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==========================================
+# Common / Health Schemas
+# ==========================================
+
+
+class HealthResponse(BaseModel):
+    status: str
+    database: str
