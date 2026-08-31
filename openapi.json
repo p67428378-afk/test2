@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Museum Tour Management System API",
-    "description": "API for museum guided tour scheduling, visitor booking, capacity enforcement, guide assignment, and attendance recording.",
+    "description": "API for managing museum tour routes, schedules, guide assignments, visitor bookings, capacity controls, and attendance check-in.",
     "version": "1.0.0"
   },
   "paths": {
@@ -12,7 +12,7 @@
           "Tours"
         ],
         "summary": "List Tours",
-        "description": "List available tour routes.",
+        "description": "List available tour routes with pagination.",
         "operationId": "list_tours_api_v1_tours_get",
         "parameters": [
           {
@@ -21,7 +21,6 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -32,29 +31,9 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
+              "default": 100,
               "title": "Limit"
             }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Search tour title or description",
-              "title": "Search"
-            },
-            "description": "Search tour title or description"
           }
         ],
         "responses": {
@@ -89,7 +68,7 @@
           "Tours"
         ],
         "summary": "Create Tour",
-        "description": "Create a new museum tour route definition.",
+        "description": "Create a new tour route definition.",
         "operationId": "create_tour_api_v1_tours_post",
         "requestBody": {
           "required": true,
@@ -125,22 +104,22 @@
         }
       }
     },
-    "/api/v1/tours/{id}": {
+    "/api/v1/tours/{tour_id}": {
       "get": {
         "tags": [
           "Tours"
         ],
         "summary": "Get Tour",
-        "description": "Get a specific tour route by ID.",
-        "operationId": "get_tour_api_v1_tours__id__get",
+        "description": "Retrieve a single tour by ID.",
+        "operationId": "get_tour_api_v1_tours__tour_id__get",
         "parameters": [
           {
-            "name": "id",
+            "name": "tour_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Tour Id"
             }
           }
         ],
@@ -172,16 +151,16 @@
           "Tours"
         ],
         "summary": "Update Tour",
-        "description": "Update a tour route definition.",
-        "operationId": "update_tour_api_v1_tours__id__put",
+        "description": "Update an existing tour route.",
+        "operationId": "update_tour_api_v1_tours__tour_id__put",
         "parameters": [
           {
-            "name": "id",
+            "name": "tour_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Tour Id"
             }
           }
         ],
@@ -224,15 +203,15 @@
         ],
         "summary": "Delete Tour",
         "description": "Delete a tour route.",
-        "operationId": "delete_tour_api_v1_tours__id__delete",
+        "operationId": "delete_tour_api_v1_tours__tour_id__delete",
         "parameters": [
           {
-            "name": "id",
+            "name": "tour_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Tour Id"
             }
           }
         ],
@@ -268,7 +247,6 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -279,29 +257,9 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
+              "default": 100,
               "title": "Limit"
             }
-          },
-          {
-            "name": "specialization",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by specialization",
-              "title": "Specialization"
-            },
-            "description": "Filter by specialization"
           }
         ],
         "responses": {
@@ -336,7 +294,7 @@
           "Guides"
         ],
         "summary": "Create Guide",
-        "description": "Register a new museum tour guide.",
+        "description": "Register a new tour guide.",
         "operationId": "create_guide_api_v1_guides_post",
         "requestBody": {
           "required": true,
@@ -372,22 +330,22 @@
         }
       }
     },
-    "/api/v1/guides/{id}": {
+    "/api/v1/guides/{guide_id}": {
       "get": {
         "tags": [
           "Guides"
         ],
         "summary": "Get Guide",
-        "description": "Get guide profile by ID.",
-        "operationId": "get_guide_api_v1_guides__id__get",
+        "description": "Retrieve guide profile by ID.",
+        "operationId": "get_guide_api_v1_guides__guide_id__get",
         "parameters": [
           {
-            "name": "id",
+            "name": "guide_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Guide Id"
             }
           }
         ],
@@ -413,6 +371,91 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Guides"
+        ],
+        "summary": "Update Guide",
+        "description": "Update guide details.",
+        "operationId": "update_guide_api_v1_guides__guide_id__put",
+        "parameters": [
+          {
+            "name": "guide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Guide Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuideUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuideResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Guides"
+        ],
+        "summary": "Delete Guide",
+        "description": "Delete a guide profile.",
+        "operationId": "delete_guide_api_v1_guides__guide_id__delete",
+        "parameters": [
+          {
+            "name": "guide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Guide Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/schedules": {
@@ -421,27 +464,9 @@
           "Schedules"
         ],
         "summary": "List Schedules",
-        "description": "List tour schedule slots with real-time seat availability.",
+        "description": "Browse published tour schedules with real-time seat availability filter.",
         "operationId": "list_schedules_api_v1_schedules_get",
         "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by status (Draft, Published, Cancelled)",
-              "title": "Status"
-            },
-            "description": "Filter by status (Draft, Published, Cancelled)"
-          },
           {
             "name": "tour_id",
             "in": "query",
@@ -455,10 +480,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by tour ID",
               "title": "Tour Id"
-            },
-            "description": "Filter by tour ID"
+            }
           },
           {
             "name": "guide_id",
@@ -473,10 +496,24 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by guide ID",
               "title": "Guide Id"
-            },
-            "description": "Filter by guide ID"
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
           },
           {
             "name": "available_only",
@@ -484,11 +521,9 @@
             "required": false,
             "schema": {
               "type": "boolean",
-              "description": "Filter only slots with remaining seats",
               "default": false,
               "title": "Available Only"
-            },
-            "description": "Filter only slots with remaining seats"
+            }
           },
           {
             "name": "skip",
@@ -496,7 +531,6 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -507,9 +541,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
+              "default": 100,
               "title": "Limit"
             }
           }
@@ -546,7 +578,7 @@
           "Schedules"
         ],
         "summary": "Create Schedule",
-        "description": "Create and publish a new tour schedule slot.",
+        "description": "Create and publish a new tour schedule slot with max capacity.",
         "operationId": "create_schedule_api_v1_schedules_post",
         "requestBody": {
           "required": true,
@@ -582,22 +614,22 @@
         }
       }
     },
-    "/api/v1/schedules/{id}": {
+    "/api/v1/schedules/{schedule_id}": {
       "get": {
         "tags": [
           "Schedules"
         ],
         "summary": "Get Schedule",
-        "description": "Get schedule slot by ID.",
-        "operationId": "get_schedule_api_v1_schedules__id__get",
+        "description": "Retrieve schedule details with remaining capacity.",
+        "operationId": "get_schedule_api_v1_schedules__schedule_id__get",
         "parameters": [
           {
-            "name": "id",
+            "name": "schedule_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Schedule Id"
             }
           }
         ],
@@ -629,16 +661,16 @@
           "Schedules"
         ],
         "summary": "Update Schedule",
-        "description": "Update schedule details or capacity limit.",
-        "operationId": "update_schedule_api_v1_schedules__id__put",
+        "description": "Update schedule details, status, or capacity limit.",
+        "operationId": "update_schedule_api_v1_schedules__schedule_id__put",
         "parameters": [
           {
-            "name": "id",
+            "name": "schedule_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Schedule Id"
             }
           }
         ],
@@ -676,56 +708,31 @@
         }
       }
     },
-    "/api/v1/schedules/{id}/assign-guide": {
+    "/api/v1/schedules/{schedule_id}/assign-guide": {
       "post": {
         "tags": [
           "Schedules"
         ],
         "summary": "Assign Guide To Schedule",
         "description": "Assign a qualified guide to a tour schedule slot with overlap conflict check.",
-        "operationId": "assign_guide_to_schedule_api_v1_schedules__id__assign_guide_post",
+        "operationId": "assign_guide_to_schedule_api_v1_schedules__schedule_id__assign_guide_post",
         "parameters": [
           {
-            "name": "id",
+            "name": "schedule_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Schedule Id"
             }
-          },
-          {
-            "name": "guide_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Guide ID query param fallback",
-              "title": "Guide Id"
-            },
-            "description": "Guide ID query param fallback"
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/GuideAssignRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
+                "$ref": "#/components/schemas/ScheduleAssignGuide"
               }
             }
           }
@@ -754,22 +761,22 @@
         }
       }
     },
-    "/api/v1/schedules/{id}/attendance-report": {
+    "/api/v1/schedules/{schedule_id}/attendance-report": {
       "get": {
         "tags": [
           "Schedules"
         ],
-        "summary": "Get Attendance Report",
-        "description": "Generate attendance summary report for a tour session.",
-        "operationId": "get_attendance_report_api_v1_schedules__id__attendance_report_get",
+        "summary": "Get Schedule Attendance Report",
+        "description": "Generate attendance summary report for a completed tour session.",
+        "operationId": "get_schedule_attendance_report_api_v1_schedules__schedule_id__attendance_report_get",
         "parameters": [
           {
-            "name": "id",
+            "name": "schedule_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "title": "Schedule Id"
             }
           }
         ],
@@ -798,12 +805,100 @@
       }
     },
     "/api/v1/bookings": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "List Bookings",
+        "description": "List bookings with optional filtering by schedule or visitor email.",
+        "operationId": "list_bookings_api_v1_bookings_get",
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Schedule Id"
+            }
+          },
+          {
+            "name": "visitor_email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Visitor Email"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookingResponse"
+                  },
+                  "title": "Response List Bookings Api V1 Bookings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "Bookings"
         ],
         "summary": "Create Booking",
-        "description": "Reserve tickets for a tour schedule with atomic capacity validation.",
+        "description": "Reserve tour tickets with atomic capacity locking.",
         "operationId": "create_booking_api_v1_bookings_post",
         "requestBody": {
           "required": true,
@@ -837,14 +932,153 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/v1/bookings/{booking_id}": {
       "get": {
         "tags": [
           "Bookings"
         ],
-        "summary": "List Bookings",
-        "description": "List bookings with optional filters.",
-        "operationId": "list_bookings_api_v1_bookings_get",
+        "summary": "Get Booking",
+        "description": "Retrieve booking confirmation by reservation ID.",
+        "operationId": "get_booking_api_v1_bookings__booking_id__get",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Booking Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Update Booking",
+        "description": "Update or cancel a booking.",
+        "operationId": "update_booking_api_v1_bookings__booking_id__put",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Booking Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings/{booking_id}/cancel": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Cancel Booking",
+        "description": "Cancel a booking reservation.",
+        "operationId": "cancel_booking_api_v1_bookings__booking_id__cancel_post",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Booking Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/attendance": {
+      "get": {
+        "tags": [
+          "Attendance"
+        ],
+        "summary": "List Attendance",
+        "description": "List attendance check-in records.",
+        "operationId": "list_attendance_api_v1_attendance_get",
         "parameters": [
           {
             "name": "schedule_id",
@@ -859,13 +1093,11 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter bookings by schedule ID",
               "title": "Schedule Id"
-            },
-            "description": "Filter bookings by schedule ID"
+            }
           },
           {
-            "name": "visitor_email",
+            "name": "booking_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -877,10 +1109,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter bookings by visitor email",
-              "title": "Visitor Email"
-            },
-            "description": "Filter bookings by visitor email"
+              "title": "Booking Id"
+            }
           },
           {
             "name": "skip",
@@ -888,7 +1118,6 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -899,9 +1128,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
+              "default": 100,
               "title": "Limit"
             }
           }
@@ -914,95 +1141,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BookingResponse"
+                    "$ref": "#/components/schemas/AttendanceResponse"
                   },
-                  "title": "Response List Bookings Api V1 Bookings Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/bookings/{id}": {
-      "get": {
-        "tags": [
-          "Bookings"
-        ],
-        "summary": "Get Booking",
-        "description": "Retrieve booking confirmation by reservation ID.",
-        "operationId": "get_booking_api_v1_bookings__id__get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookingResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/bookings/{id}/cancel": {
-      "put": {
-        "tags": [
-          "Bookings"
-        ],
-        "summary": "Cancel Booking",
-        "description": "Cancel a visitor booking reservation.",
-        "operationId": "cancel_booking_api_v1_bookings__id__cancel_put",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookingResponse"
+                  "title": "Response List Attendance Api V1 Attendance Get"
                 }
               }
             }
@@ -1062,72 +1203,22 @@
         }
       }
     },
-    "/api/v1/attendance": {
+    "/api/v1/attendance/{attendance_id}": {
       "get": {
         "tags": [
           "Attendance"
         ],
-        "summary": "List Attendance Records",
-        "description": "List visitor attendance check-in records.",
-        "operationId": "list_attendance_records_api_v1_attendance_get",
+        "summary": "Get Attendance",
+        "description": "Retrieve an attendance check-in record by ID.",
+        "operationId": "get_attendance_api_v1_attendance__attendance_id__get",
         "parameters": [
           {
-            "name": "schedule_id",
-            "in": "query",
-            "required": false,
+            "name": "attendance_id",
+            "in": "path",
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter attendance by schedule ID",
-              "title": "Schedule Id"
-            },
-            "description": "Filter attendance by schedule ID"
-          },
-          {
-            "name": "booking_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter attendance by booking ID",
-              "title": "Booking Id"
-            },
-            "description": "Filter attendance by booking ID"
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+              "type": "string",
+              "title": "Attendance Id"
             }
           }
         ],
@@ -1137,11 +1228,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AttendanceResponse"
-                  },
-                  "title": "Response List Attendance Records Api V1 Attendance Get"
+                  "$ref": "#/components/schemas/AttendanceResponse"
                 }
               }
             }
@@ -1159,40 +1246,52 @@
         }
       }
     },
-    "/api/v1/health": {
-      "get": {
-        "tags": [
-          "Health"
-        ],
-        "summary": "Health Check",
-        "description": "Health check endpoint.",
-        "operationId": "health_check_api_v1_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
     "/health": {
       "get": {
         "tags": [
           "Health"
         ],
         "summary": "Health Check",
-        "description": "Health check endpoint.",
+        "description": "Health check endpoint for container environments and uptime monitors.",
         "operationId": "health_check_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Root"
+        ],
+        "summary": "Root",
+        "description": "Root endpoint with service summary and documentation links.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
               }
             }
           }
@@ -1206,19 +1305,23 @@
         "properties": {
           "booking_id": {
             "type": "string",
-            "title": "Booking Id",
-            "description": "Reservation ID to check in"
+            "title": "Booking Id"
           },
           "schedule_id": {
-            "type": "string",
-            "title": "Schedule Id",
-            "description": "Schedule slot ID"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Id"
           },
           "attended_count": {
             "type": "integer",
-            "minimum": 1.0,
+            "exclusiveMinimum": 0.0,
             "title": "Attended Count",
-            "description": "Actual number of visitors present",
             "default": 1
           },
           "notes": {
@@ -1230,14 +1333,12 @@
                 "type": "null"
               }
             ],
-            "title": "Notes",
-            "description": "Optional notes or comments from the guide/admin"
+            "title": "Notes"
           }
         },
         "type": "object",
         "required": [
-          "booking_id",
-          "schedule_id"
+          "booking_id"
         ],
         "title": "AttendanceCheckInCreate"
       },
@@ -1265,28 +1366,25 @@
             "type": "integer",
             "title": "Max Capacity"
           },
-          "total_booked": {
+          "total_booked_tickets": {
             "type": "integer",
-            "title": "Total Booked"
+            "title": "Total Booked Tickets"
           },
-          "total_attended": {
+          "total_attended_tickets": {
             "type": "integer",
-            "title": "Total Attended"
-          },
-          "no_shows": {
-            "type": "integer",
-            "title": "No Shows"
+            "title": "Total Attended Tickets"
           },
           "attendance_rate_percentage": {
             "type": "number",
             "title": "Attendance Rate Percentage"
           },
-          "records": {
+          "check_ins": {
             "items": {
               "$ref": "#/components/schemas/AttendanceResponse"
             },
             "type": "array",
-            "title": "Records"
+            "title": "Check Ins",
+            "default": []
           }
         },
         "type": "object",
@@ -1296,11 +1394,9 @@
           "start_time",
           "end_time",
           "max_capacity",
-          "total_booked",
-          "total_attended",
-          "no_shows",
-          "attendance_rate_percentage",
-          "records"
+          "total_booked_tickets",
+          "total_attended_tickets",
+          "attendance_rate_percentage"
         ],
         "title": "AttendanceReportResponse"
       },
@@ -1317,6 +1413,17 @@
           "schedule_id": {
             "type": "string",
             "title": "Schedule Id"
+          },
+          "visitor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visitor Name"
           },
           "attended_count": {
             "type": "integer",
@@ -1342,11 +1449,6 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
           }
         },
         "type": "object",
@@ -1356,8 +1458,7 @@
           "schedule_id",
           "attended_count",
           "check_in_time",
-          "created_at",
-          "updated_at"
+          "created_at"
         ],
         "title": "AttendanceResponse"
       },
@@ -1365,28 +1466,24 @@
         "properties": {
           "schedule_id": {
             "type": "string",
-            "title": "Schedule Id",
-            "description": "ID of the tour schedule to book"
+            "title": "Schedule Id"
           },
           "visitor_name": {
             "type": "string",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Visitor Name",
-            "description": "Full name of the lead visitor"
+            "title": "Visitor Name"
           },
           "visitor_email": {
             "type": "string",
             "format": "email",
-            "title": "Visitor Email",
-            "description": "Contact email for confirmation"
+            "title": "Visitor Email"
           },
           "ticket_quantity": {
             "type": "integer",
-            "maximum": 20.0,
-            "minimum": 1.0,
+            "maximum": 50.0,
+            "exclusiveMinimum": 0.0,
             "title": "Ticket Quantity",
-            "description": "Number of tickets requested",
             "default": 1
           }
         },
@@ -1407,6 +1504,17 @@
           "schedule_id": {
             "type": "string",
             "title": "Schedule Id"
+          },
+          "tour_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tour Title"
           },
           "visitor_name": {
             "type": "string",
@@ -1448,19 +1556,34 @@
         ],
         "title": "BookingResponse"
       },
-      "GuideAssignRequest": {
+      "BookingUpdate": {
         "properties": {
-          "guide_id": {
-            "type": "string",
-            "title": "Guide Id",
-            "description": "ID of the guide to assign to the schedule"
+          "booking_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Status"
+          },
+          "ticket_quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticket Quantity"
           }
         },
         "type": "object",
-        "required": [
-          "guide_id"
-        ],
-        "title": "GuideAssignRequest"
+        "title": "BookingUpdate"
       },
       "GuideCreate": {
         "properties": {
@@ -1468,14 +1591,12 @@
             "type": "string",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Name",
-            "description": "Full name of the tour guide"
+            "title": "Name"
           },
           "email": {
             "type": "string",
             "format": "email",
-            "title": "Email",
-            "description": "Unique email address of the tour guide"
+            "title": "Email"
           },
           "specialization": {
             "anyOf": [
@@ -1486,8 +1607,7 @@
                 "type": "null"
               }
             ],
-            "title": "Specialization",
-            "description": "Area of expertise or specialization"
+            "title": "Specialization"
           }
         },
         "type": "object",
@@ -1503,14 +1623,12 @@
             "type": "string",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Name",
-            "description": "Full name of the tour guide"
+            "title": "Name"
           },
           "email": {
             "type": "string",
             "format": "email",
-            "title": "Email",
-            "description": "Unique email address of the tour guide"
+            "title": "Email"
           },
           "specialization": {
             "anyOf": [
@@ -1521,8 +1639,7 @@
                 "type": "null"
               }
             ],
-            "title": "Specialization",
-            "description": "Area of expertise or specialization"
+            "title": "Specialization"
           },
           "id": {
             "type": "string",
@@ -1549,6 +1666,48 @@
         ],
         "title": "GuideResponse"
       },
+      "GuideUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "specialization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialization"
+          }
+        },
+        "type": "object",
+        "title": "GuideUpdate"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1562,66 +1721,21 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "ScheduleCreate": {
+      "ScheduleAssignGuide": {
         "properties": {
-          "tour_id": {
-            "type": "string",
-            "title": "Tour Id",
-            "description": "ID of the associated tour"
-          },
           "guide_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Guide Id",
-            "description": "Optional ID of the assigned guide"
-          },
-          "start_time": {
             "type": "string",
-            "format": "date-time",
-            "title": "Start Time",
-            "description": "Start timestamp of the tour slot"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time",
-            "title": "End Time",
-            "description": "End timestamp of the tour slot"
-          },
-          "max_capacity": {
-            "type": "integer",
-            "maximum": 500.0,
-            "minimum": 1.0,
-            "title": "Max Capacity",
-            "description": "Maximum visitor capacity limit",
-            "default": 25
-          },
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Schedule status: Draft, Published, Cancelled",
-            "default": "Published"
+            "title": "Guide Id"
           }
         },
         "type": "object",
         "required": [
-          "tour_id",
-          "start_time",
-          "end_time"
+          "guide_id"
         ],
-        "title": "ScheduleCreate"
+        "title": "ScheduleAssignGuide"
       },
-      "ScheduleResponse": {
+      "ScheduleCreate": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
           "tour_id": {
             "type": "string",
             "title": "Tour Id"
@@ -1649,11 +1763,33 @@
           },
           "max_capacity": {
             "type": "integer",
-            "title": "Max Capacity"
+            "exclusiveMinimum": 0.0,
+            "title": "Max Capacity",
+            "default": 20
           },
           "status": {
             "type": "string",
-            "title": "Status"
+            "title": "Status",
+            "default": "Published"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tour_id",
+          "start_time",
+          "end_time"
+        ],
+        "title": "ScheduleCreate"
+      },
+      "ScheduleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tour_id": {
+            "type": "string",
+            "title": "Tour Id"
           },
           "tour_title": {
             "anyOf": [
@@ -1666,6 +1802,17 @@
             ],
             "title": "Tour Title"
           },
+          "guide_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guide Id"
+          },
           "guide_name": {
             "anyOf": [
               {
@@ -1677,14 +1824,42 @@
             ],
             "title": "Guide Name"
           },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "max_capacity": {
+            "type": "integer",
+            "title": "Max Capacity"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
           "booked_tickets": {
             "type": "integer",
             "title": "Booked Tickets",
             "default": 0
           },
+          "booked_count": {
+            "type": "integer",
+            "title": "Booked Count",
+            "default": 0
+          },
           "remaining_capacity": {
             "type": "integer",
             "title": "Remaining Capacity",
+            "default": 0
+          },
+          "available_capacity": {
+            "type": "integer",
+            "title": "Available Capacity",
             "default": 0
           },
           "created_at": {
@@ -1763,8 +1938,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 500.0,
-                "minimum": 1.0
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "null"
@@ -1793,8 +1967,7 @@
             "type": "string",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Title",
-            "description": "Title of the tour"
+            "title": "Title"
           },
           "description": {
             "anyOf": [
@@ -1805,15 +1978,12 @@
                 "type": "null"
               }
             ],
-            "title": "Description",
-            "description": "Detailed description of the tour route"
+            "title": "Description"
           },
           "duration_minutes": {
             "type": "integer",
-            "maximum": 480.0,
-            "minimum": 15.0,
+            "exclusiveMinimum": 0.0,
             "title": "Duration Minutes",
-            "description": "Duration in minutes",
             "default": 60
           }
         },
@@ -1829,8 +1999,7 @@
             "type": "string",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Title",
-            "description": "Title of the tour"
+            "title": "Title"
           },
           "description": {
             "anyOf": [
@@ -1841,15 +2010,12 @@
                 "type": "null"
               }
             ],
-            "title": "Description",
-            "description": "Detailed description of the tour route"
+            "title": "Description"
           },
           "duration_minutes": {
             "type": "integer",
-            "maximum": 480.0,
-            "minimum": 15.0,
+            "exclusiveMinimum": 0.0,
             "title": "Duration Minutes",
-            "description": "Duration in minutes",
             "default": 60
           },
           "id": {
@@ -1906,8 +2072,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 480.0,
-                "minimum": 15.0
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "null"

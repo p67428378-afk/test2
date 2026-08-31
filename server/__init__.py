@@ -1,1 +1,1 @@
-"""Museum Tour Management System Backend Package."""
+"""Museum Tour Management System Server Package."""

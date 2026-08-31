@@ -1,53 +1,91 @@
 # Museum Tour Management System
 
-A full-stack web application enabling visitors to browse and book guided museum tours with real-time seat availability, allowing administrators to manage tour schedules, assign tour guides, enforce capacity limits, and record visitor attendance.
+A full-stack web application for managing guided museum tours, tour schedules, guide assignments, visitor ticket bookings with atomic capacity controls, and visitor attendance tracking.
 
 ## Features
-- **Tour Schedule & Capacity Management**: Admin creation, modification, and publishing of tour routes, time slots, and visitor capacity limits.
-- **Visitor Tour Booking & Instant Confirmation**: Real-time remaining seat calculation and atomic reservation processing.
-- **Tour Guide Assignment & Availability Conflict Check**: Guide assignment with automatic detection of overlapping tour slots.
-- **Visitor Attendance Recording & Check-in Tracker**: Check in visitors upon arrival and generate comprehensive session attendance reports.
 
-## Tech Stack
-- **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.x, SQLite (dev/test) / PostgreSQL (prod), Pytest
-- **Frontend**: React 18, Vite, Tailwind CSS, Lucide Icons, Axios
+- **Tour Schedule & Capacity Management**: Administrators create, update, and publish tour routes and schedule slots with maximum capacity limits.
+- **Visitor Booking & Instant Confirmation**: Visitors browse real-time available tour slots and book tickets with instant capacity validation.
+- **Guide Assignment & Conflict Resolution**: Administrators assign qualified guides while preventing overlapping schedule double-booking.
+- **Attendance Tracker & Check-in Desk**: Guides and administrators record visitor check-ins on arrival and generate tour session attendance reports.
 
-### 1. Prerequisites
+---
+
+### Prerequisites
 - Python 3.11+
-- Virtualenv or `venv`
+- Virtual environment (`venv`)
 
-### 2. Installation
+### 1. Setup Virtual Environment & Install Dependencies
 ```bash
-cd server
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+source venv/bin/activate   # On Windows: venv\Scripts\activate
+pip install -r server/requirements.txt
 ```
 
-### 3. Running the Backend Server
+### 2. Configure Environment Variables
+Create a `.env` file at the root or set environment variables:
 ```bash
-# From the repository root or server directory
-uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
+DATABASE_URL=sqlite:////tmp/museum_tours.db
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
-API Documentation will be available at `http://localhost:8000/docs`.
 
-### 4. Running Backend Tests
+### 3. Run the Backend API Server
 ```bash
-pytest tests/ -v --cov=server
+python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
 ```
+Interactive Swagger API documentation will be available at: `http://localhost:8000/docs`
+
+### 4. Run Test Suite
+```bash
+pytest tests/ -v
+```
+
+---
 
 ## Full-Stack Local Development
-1. Start the Backend server on port `8000`:
-   ```bash
-   uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
-   ```
-2. Start the Frontend dev server on port `5173`:
-   ```bash
-   cd client
-   npm install
-   npm run dev
-   ```
-3. Open `http://localhost:5173` in your browser.
+
+### Starting the Backend
+```bash
+python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Starting the Frontend Client
+```bash
+cd client
+npm install
+npm run dev
+```
+The frontend dev server runs at `http://localhost:5173`.
+
+---
+
+## API Endpoints Summary
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/tours` | List available tour routes |
+| `POST` | `/api/v1/tours` | Create a new tour route definition |
+| `GET` | `/api/v1/tours/{id}` | Retrieve tour details |
+| `PUT` | `/api/v1/tours/{id}` | Update tour route details |
+| `DELETE` | `/api/v1/tours/{id}` | Delete tour route |
+| `GET` | `/api/v1/guides` | List tour guides |
+| `POST` | `/api/v1/guides` | Register a new tour guide |
+| `GET` | `/api/v1/guides/{id}` | Retrieve guide profile |
+| `PUT` | `/api/v1/guides/{id}` | Update guide profile |
+| `DELETE` | `/api/v1/guides/{id}` | Delete guide profile |
+| `GET` | `/api/v1/schedules` | Browse published tour schedules with seat availability |
+| `POST` | `/api/v1/schedules` | Create & publish tour schedule slot |
+| `GET` | `/api/v1/schedules/{id}` | Retrieve schedule slot details |
+| `PUT` | `/api/v1/schedules/{id}` | Update schedule details or capacity |
+| `POST` | `/api/v1/schedules/{id}/assign-guide` | Assign guide with conflict overlap check |
+| `GET` | `/api/v1/schedules/{id}/attendance-report` | Generate session attendance summary report |
+| `GET` | `/api/v1/bookings` | List booking reservations |
+| `POST` | `/api/v1/bookings` | Reserve tour tickets with atomic capacity locking |
+| `GET` | `/api/v1/bookings/{id}` | Retrieve booking confirmation |
+| `POST` | `/api/v1/bookings/{id}/cancel` | Cancel a booking reservation |
+| `POST` | `/api/v1/attendance/check-in` | Record visitor check-in attendance |
+| `GET` | `/api/v1/attendance` | List attendance check-in records |
+| `GET` | `/health` | Health check endpoint |
 
 ## Server
 

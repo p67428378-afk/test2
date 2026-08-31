@@ -1,23 +1,9 @@
-"""Unit and integration tests for Guide management APIs."""
-
-
-def test_list_guides(client):
-    """Test retrieving list of registered tour guides."""
-    response = client.get("/api/v1/guides")
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) >= 1
-    assert "email" in data[0]
-    assert "specialization" in data[0]
-
-
 def test_create_guide(client):
-    """Test registering a new guide."""
+    # AC3: Administrators can manage guide profiles
     payload = {
-        "name": "Sarah Connor",
+        "name": "Dr. Sarah Connor",
         "email": "sarah.connor@museum.org",
-        "specialization": "Contemporary Asian Art",
+        "specialization": "Sculpture & Renaissance",
     }
     response = client.post("/api/v1/guides", json=payload)
     assert response.status_code == 201
@@ -27,41 +13,81 @@ def test_create_guide(client):
     assert "id" in data
 
 
-def test_create_duplicate_guide_email(client):
-    """Test duplicate email rejection (HTTP 400)."""
+def test_create_guide_duplicate_email(client):
+    # AC3: Prevent duplicate guide email
     payload = {
-        "name": "Original Guide",
-        "email": "duplicate.test@museum.org",
-        "specialization": "History",
+        "name": "Dr. Sarah Connor",
+        "email": "sarah.connor@museum.org",
+        "specialization": "Sculpture",
     }
-    res1 = client.post("/api/v1/guides", json=payload)
-    assert res1.status_code == 201
+    client.post("/api/v1/guides", json=payload)
+    dup_res = client.post("/api/v1/guides", json=payload)
+    assert dup_res.status_code == 400
+    assert "already exists" in dup_res.json()["detail"]
 
-    res2 = client.post("/api/v1/guides", json=payload)
-    assert res2.status_code == 400
-    assert "already exists" in res2.json()["detail"]
+
+def test_list_guides(client):
+    # AC3: View guide list
+    client.post(
+        "/api/v1/guides",
+        json={"name": "Alice", "email": "alice@museum.org", "specialization": "Art"},
+    )
+    client.post(
+        "/api/v1/guides",
+        json={"name": "Bob", "email": "bob@museum.org", "specialization": "History"},
+    )
+
+    response = client.get("/api/v1/guides")
+    assert response.status_code == 200
+    guides = response.json()
+    assert len(guides) >= 2
 
 
 def test_get_guide_by_id(client):
-    """Test getting a guide by ID."""
     create_res = client.post(
         "/api/v1/guides",
         json={
-            "name": "Marcus Aurelius",
-            "email": "marcus.aurelius@museum.org",
-            "specialization": "Stoic Philosophy & Antiquities",
+            "name": "Charlie",
+            "email": "charlie@museum.org",
+            "specialization": "Science",
         },
     )
-    assert create_res.status_code == 201
     guide_id = create_res.json()["id"]
 
+    response = client.get(f"/api/v1/guides/{guide_id}")
+    assert response.status_code == 200
+    assert response.json()["name"] == "Charlie"
+
+
+def test_update_guide(client):
+    create_res = client.post(
+        "/api/v1/guides",
+        json={
+            "name": "David",
+            "email": "david@museum.org",
+            "specialization": "Antiquities",
+        },
+    )
+    guide_id = create_res.json()["id"]
+
+    update_res = client.put(
+        f"/api/v1/guides/{guide_id}",
+        json={"name": "David Bowie", "specialization": "Modern Art"},
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["name"] == "David Bowie"
+    assert update_res.json()["specialization"] == "Modern Art"
+
+
+def test_delete_guide(client):
+    create_res = client.post(
+        "/api/v1/guides",
+        json={"name": "Eve", "email": "eve@museum.org", "specialization": "Coins"},
+    )
+    guide_id = create_res.json()["id"]
+
+    del_res = client.delete(f"/api/v1/guides/{guide_id}")
+    assert del_res.status_code == 204
+
     get_res = client.get(f"/api/v1/guides/{guide_id}")
-    assert get_res.status_code == 200
-    assert get_res.json()["name"] == "Marcus Aurelius"
-
-
-def test_get_nonexistent_guide(client):
-    """Test 404 for nonexistent guide."""
-    response = client.get("/api/v1/guides/non-existent-guide-id")
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Guide not found"
+    assert get_res.status_code == 404
