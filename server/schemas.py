@@ -1,11 +1,16 @@
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional, List
+from pydantic import BaseModel, Field, ConfigDict
 
 
-# ==========================================
-# Tour Schemas
-# ==========================================
+# --- Health ---
+class HealthResponse(BaseModel):
+    status: str = "ok"
+    version: str = "1.0.0"
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+# --- Tours ---
 class TourBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
@@ -30,9 +35,7 @@ class TourResponse(TourBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ==========================================
-# Guide Schemas
-# ==========================================
+# --- Guides ---
 class GuideBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., min_length=3, max_length=255)
@@ -43,12 +46,6 @@ class GuideCreate(GuideBase):
     pass
 
 
-class GuideUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    email: Optional[str] = Field(None, min_length=3, max_length=255)
-    specialization: Optional[str] = None
-
-
 class GuideResponse(GuideBase):
     id: str
     created_at: datetime
@@ -57,9 +54,7 @@ class GuideResponse(GuideBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ==========================================
-# Schedule Schemas
-# ==========================================
+# --- Schedules ---
 class ScheduleBase(BaseModel):
     tour_id: str
     guide_id: Optional[str] = None
@@ -82,37 +77,36 @@ class ScheduleUpdate(BaseModel):
     status: Optional[str] = None
 
 
-class ScheduleAssignGuide(BaseModel):
-    guide_id: str
+class AssignGuideRequest(BaseModel):
+    guide_id: str = Field(..., min_length=1)
 
 
 class ScheduleResponse(BaseModel):
     id: str
     tour_id: str
-    tour_title: Optional[str] = None
     guide_id: Optional[str] = None
-    guide_name: Optional[str] = None
     start_time: datetime
     end_time: datetime
     max_capacity: int
-    booked_tickets: int = 0
-    booked_count: int = 0
-    remaining_capacity: int = 0
     status: str
     created_at: datetime
     updated_at: datetime
 
+    # Enriched fields for frontend display
+    tour_title: Optional[str] = None
+    guide_name: Optional[str] = None
+    booked_tickets: int = 0
+    remaining_capacity: int = 0
+
     model_config = ConfigDict(from_attributes=True)
 
 
-# ==========================================
-# Booking Schemas
-# ==========================================
+# --- Bookings ---
 class BookingCreate(BaseModel):
-    schedule_id: str
+    schedule_id: str = Field(..., min_length=1)
     visitor_name: str = Field(..., min_length=1, max_length=255)
     visitor_email: str = Field(..., min_length=3, max_length=255)
-    ticket_quantity: int = Field(default=1, ge=1, le=50)
+    ticket_quantity: int = Field(default=1, ge=1, le=10)
 
 
 class BookingResponse(BaseModel):
@@ -128,13 +122,11 @@ class BookingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ==========================================
-# Attendance Schemas
-# ==========================================
-class AttendanceCheckInRequest(BaseModel):
-    booking_id: str
-    schedule_id: str
-    attended_count: int = Field(default=1, ge=1, le=50)
+# --- Attendance ---
+class CheckInRequest(BaseModel):
+    booking_id: str = Field(..., min_length=1)
+    schedule_id: str = Field(..., min_length=1)
+    attended_count: int = Field(default=1, ge=1)
     notes: Optional[str] = None
 
 
@@ -151,15 +143,20 @@ class AttendanceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ==========================================
-# Report Schemas
-# ==========================================
-class ScheduleAttendanceReport(BaseModel):
+class AttendanceReportRecord(BaseModel):
+    id: str
+    booking_id: str
+    visitor_name: str
+    visitor_email: str
+    booked_quantity: int
+    attended_count: int
+    check_in_time: datetime
+    notes: Optional[str] = None
+
+
+class AttendanceReportResponse(BaseModel):
     schedule_id: str
-    tour_id: str
     tour_title: str
-    guide_id: Optional[str] = None
-    guide_name: Optional[str] = None
     start_time: datetime
     end_time: datetime
     max_capacity: int
@@ -167,13 +164,6 @@ class ScheduleAttendanceReport(BaseModel):
     total_attended: int
     no_shows: int
     attendance_rate_percentage: float
-    bookings_count: int = 0
+    records: List[AttendanceReportRecord] = []
 
-
-# ==========================================
-# Health Schema
-# ==========================================
-class HealthResponse(BaseModel):
-    status: str
-    app: str
-    version: str
+    model_config = ConfigDict(from_attributes=True)

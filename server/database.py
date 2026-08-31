@@ -1,29 +1,42 @@
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
+from server.models import Base, Tour, Guide, Schedule, Booking
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./museum_tours.db")
+TESTING = os.getenv("TESTING", "false").lower() in ("true", "1", "yes")
 
-if DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-    if ":memory:" in DATABASE_URL or os.getenv("TESTING", "").lower() in ("true", "1"):
-        engine = create_engine(
-            DATABASE_URL,
-            connect_args=connect_args,
-            poolclass=StaticPool,
-        )
-    else:
-        engine = create_engine(DATABASE_URL, connect_args=connect_args)
+if (
+    TESTING
+    or DATABASE_URL.startswith("sqlite:///:memory:")
+    or DATABASE_URL == "sqlite://"
+):
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+elif DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+    )
 else:
-    engine = create_engine(DATABASE_URL)
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
 
-def get_db():
+def init_db() -> None:
+    """Initialize database tables idempotently."""
+    Base.metadata.create_all(bind=engine)
+
+
+def get_db() -> Generator[Session, None, None]:
+    """FastAPI database session dependency."""
     db = SessionLocal()
     try:
         yield db
@@ -31,157 +44,98 @@ def get_db():
         db.close()
 
 
-def init_db():
-    from server import models  # noqa: F401
+def seed_data(db: Session) -> None:
+    """Seed initial sample museum data idempotently."""
+    # Seed default Tours if not present
+    existing_tours = db.query(Tour).count()
+    if existing_tours == 0:
+        tour1 = Tour(
+            id="11111111-1111-1111-1111-111111111111",
+            title="Renaissance Masterpieces & Mona Lisa",
+            description="Explore the defining masterworks of the Italian Renaissance including Leonardo da Vinci's Mona Lisa.",
+            duration_minutes=90,
+        )
+        tour2 = Tour(
+            id="22222222-2222-2222-2222-222222222222",
+            title="Ancient Egyptian Antiquities",
+            description="Journey through the pharaonic dynasties, royal sarcophagi, and the Great Sphinx crypts.",
+            duration_minutes=75,
+        )
+        tour3 = Tour(
+            id="33333333-3333-3333-3333-333333333333",
+            title="Impressionist Highlights & Sculpture Garden",
+            description="Discover Monet, Degas, Rodin, and French modern art across open gallery wings.",
+            duration_minutes=60,
+        )
+        db.add_all([tour1, tour2, tour3])
+        db.commit()
 
-    Base.metadata.create_all(bind=engine)
+    # Seed default Guides if not present
+    existing_guides = db.query(Guide).count()
+    if existing_guides == 0:
+        guide1 = Guide(
+            id="44444444-4444-4444-4444-444444444444",
+            name="Jean-Luc Picard",
+            email="jeanluc.picard@museum.org",
+            specialization="Renaissance & Classical Art",
+        )
+        guide2 = Guide(
+            id="55555555-5555-5555-5555-555555555555",
+            name="Amelia Vance",
+            email="amelia.vance@museum.org",
+            specialization="Egyptology & Ancient Civilizations",
+        )
+        guide3 = Guide(
+            id="66666666-6666-6666-6666-666666666666",
+            name="Marcelle Dupuis",
+            email="marcelle.dupuis@museum.org",
+            specialization="19th Century French Impressionism",
+        )
+        db.add_all([guide1, guide2, guide3])
+        db.commit()
 
+    # Seed default Schedules if not present
+    existing_schedules = db.query(Schedule).count()
+    if existing_schedules == 0:
+        now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+        s1 = Schedule(
+            id="77777777-7777-7777-7777-777777777777",
+            tour_id="11111111-1111-1111-1111-111111111111",
+            guide_id="44444444-4444-4444-4444-444444444444",
+            start_time=now + timedelta(hours=2),
+            end_time=now + timedelta(hours=3, minutes=30),
+            max_capacity=25,
+            status="Published",
+        )
+        s2 = Schedule(
+            id="88888888-8888-8888-8888-888888888888",
+            tour_id="22222222-2222-2222-2222-222222222222",
+            guide_id="55555555-5555-5555-5555-555555555555",
+            start_time=now + timedelta(hours=4),
+            end_time=now + timedelta(hours=5, minutes=15),
+            max_capacity=20,
+            status="Published",
+        )
+        s3 = Schedule(
+            id="99999999-9999-9999-9999-999999999999",
+            tour_id="33333333-3333-3333-3333-333333333333",
+            guide_id="66666666-6666-6666-6666-666666666666",
+            start_time=now + timedelta(hours=6),
+            end_time=now + timedelta(hours=7),
+            max_capacity=30,
+            status="Published",
+        )
+        db.add_all([s1, s2, s3])
+        db.commit()
 
-def seed_data(db):
-    from server.models import Tour, Guide, Schedule, Booking, Attendance
-
-    # Seed Tours
-    tours_data = [
-        {
-            "id": "11111111-1111-1111-1111-111111111111",
-            "title": "Renaissance Masterpieces",
-            "description": "Explore Mona Lisa, Winged Victory of Samothrace, and classical Italian renaissance paintings.",
-            "duration_minutes": 90,
-        },
-        {
-            "id": "22222222-2222-2222-2222-222222222222",
-            "title": "Ancient Egyptian Antiquities",
-            "description": "Discover pharaoh tombs, sarcophagi, hieroglyphics, and sphinx artifacts.",
-            "duration_minutes": 75,
-        },
-        {
-            "id": "33333333-3333-3333-3333-333333333333",
-            "title": "Impressionist Highlights",
-            "description": "Experience Monet, Degas, Renoir, and Van Gogh masterpieces in daylight galleries.",
-            "duration_minutes": 60,
-        },
-    ]
-
-    for t_info in tours_data:
-        existing_tour = db.query(Tour).filter(Tour.title == t_info["title"]).first()
-        if not existing_tour:
-            new_tour = Tour(
-                id=t_info["id"],
-                title=t_info["title"],
-                description=t_info["description"],
-                duration_minutes=t_info["duration_minutes"],
-            )
-            db.add(new_tour)
-    db.commit()
-
-    # Seed Guides
-    guides_data = [
-        {
-            "id": "aaaa1111-aaaa-1111-aaaa-111111111111",
-            "name": "Alice Smith",
-            "email": "alice.smith@museum.org",
-            "specialization": "Renaissance Art & Sculpture",
-        },
-        {
-            "id": "bbbb2222-bbbb-2222-bbbb-222222222222",
-            "name": "David Miller",
-            "email": "david.miller@museum.org",
-            "specialization": "Ancient Egyptian Civilizations",
-        },
-        {
-            "id": "cccc3333-cccc-3333-cccc-333333333333",
-            "name": "Elena Rostova",
-            "email": "elena.rostova@museum.org",
-            "specialization": "19th Century French Impressionism",
-        },
-    ]
-
-    for g_info in guides_data:
-        existing_guide = db.query(Guide).filter(Guide.email == g_info["email"]).first()
-        if not existing_guide:
-            new_guide = Guide(
-                id=g_info["id"],
-                name=g_info["name"],
-                email=g_info["email"],
-                specialization=g_info["specialization"],
-            )
-            db.add(new_guide)
-    db.commit()
-
-    # Seed Schedules
-    now = datetime.now(timezone.utc)
-    schedules_data = [
-        {
-            "id": "s1111111-1111-1111-1111-111111111111",
-            "tour_id": "11111111-1111-1111-1111-111111111111",
-            "guide_id": "aaaa1111-aaaa-1111-aaaa-111111111111",
-            "start_time": now + timedelta(hours=2),
-            "end_time": now + timedelta(hours=3, minutes=30),
-            "max_capacity": 20,
-            "status": "Published",
-        },
-        {
-            "id": "s2222222-2222-2222-2222-222222222222",
-            "tour_id": "22222222-2222-2222-2222-222222222222",
-            "guide_id": "bbbb2222-bbbb-2222-bbbb-222222222222",
-            "start_time": now + timedelta(hours=4),
-            "end_time": now + timedelta(hours=5, minutes=15),
-            "max_capacity": 15,
-            "status": "Published",
-        },
-        {
-            "id": "s3333333-3333-3333-3333-333333333333",
-            "tour_id": "33333333-3333-3333-3333-333333333333",
-            "guide_id": "cccc3333-cccc-3333-cccc-333333333333",
-            "start_time": now + timedelta(hours=6),
-            "end_time": now + timedelta(hours=7),
-            "max_capacity": 25,
-            "status": "Published",
-        },
-    ]
-
-    for s_info in schedules_data:
-        existing_sched = db.query(Schedule).filter(Schedule.id == s_info["id"]).first()
-        if not existing_sched:
-            new_sched = Schedule(
-                id=s_info["id"],
-                tour_id=s_info["tour_id"],
-                guide_id=s_info["guide_id"],
-                start_time=s_info["start_time"],
-                end_time=s_info["end_time"],
-                max_capacity=s_info["max_capacity"],
-                status=s_info["status"],
-            )
-            db.add(new_sched)
-    db.commit()
-
-    # Seed Sample Booking
-    sample_booking_id = "b1111111-1111-1111-1111-111111111111"
-    existing_booking = db.query(Booking).filter(Booking.id == sample_booking_id).first()
-    if not existing_booking:
-        new_booking = Booking(
-            id=sample_booking_id,
-            schedule_id="s1111111-1111-1111-1111-111111111111",
-            visitor_name="John Doe",
-            visitor_email="john.doe@example.com",
+        # Seed a sample booking for s1
+        b1 = Booking(
+            id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            schedule_id="77777777-7777-7777-7777-777777777777",
+            visitor_name="Alice Walker",
+            visitor_email="alice.walker@example.com",
             ticket_quantity=2,
             booking_status="Confirmed",
         )
-        db.add(new_booking)
+        db.add(b1)
         db.commit()
-
-        # Seed Sample Attendance
-        sample_att_id = "c1111111-1111-1111-1111-111111111111"
-        existing_att = (
-            db.query(Attendance).filter(Attendance.id == sample_att_id).first()
-        )
-        if not existing_att:
-            new_att = Attendance(
-                id=sample_att_id,
-                booking_id=sample_booking_id,
-                schedule_id="s1111111-1111-1111-1111-111111111111",
-                attended_count=2,
-                notes="Checked in on time",
-            )
-            db.add(new_att)
-            db.commit()

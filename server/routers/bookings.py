@@ -10,13 +10,12 @@ router = APIRouter(prefix="/api/v1/bookings", tags=["Bookings"])
 
 
 @router.get("", response_model=List[BookingResponse])
-@router.get("/", response_model=List[BookingResponse], include_in_schema=False)
 def list_bookings(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
     schedule_id: Optional[str] = None,
     visitor_email: Optional[str] = None,
-    booking_status: Optional[str] = None,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
+    status_filter: Optional[str] = Query(None, alias="status"),
     db: Session = Depends(get_db),
 ):
     query = db.query(Booking)
@@ -24,40 +23,33 @@ def list_bookings(
         query = query.filter(Booking.schedule_id == schedule_id)
     if visitor_email:
         query = query.filter(Booking.visitor_email.ilike(f"%{visitor_email}%"))
-    if booking_status:
-        query = query.filter(Booking.booking_status == booking_status)
+    if status_filter:
+        query = query.filter(Booking.booking_status == status_filter)
 
-    query = query.order_by(Booking.created_at.desc())
-    return query.offset(skip).limit(limit).all()
+    return query.order_by(Booking.created_at.desc()).offset(skip).limit(limit).all()
 
 
 @router.post("", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
-@router.post(
-    "/",
-    response_model=BookingResponse,
-    status_code=status.HTTP_201_CREATED,
-    include_in_schema=False,
-)
 def create_booking(
     booking_in: BookingCreate,
     db: Session = Depends(get_db),
 ):
-    # Find schedule
+    # Retrieve schedule
     schedule = db.query(Schedule).filter(Schedule.id == booking_in.schedule_id).first()
     if not schedule:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Schedule with id '{booking_in.schedule_id}' not found.",
+            detail=f"Tour schedule with ID '{booking_in.schedule_id}' not found",
         )
 
-    if schedule.status == "Cancelled":
+    if schedule.status != "Published":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot book tickets for a cancelled tour schedule.",
+            detail=f"Cannot book tickets for a schedule with status '{schedule.status}'. Only Published schedules accept bookings.",
         )
 
-    # Atomic capacity check
-    current_booked = (
+    # Compute currently booked tickets
+    booked_sum = (
         db.query(func.coalesce(func.sum(Booking.ticket_quantity), 0))
         .filter(
             Booking.schedule_id == schedule.id,
@@ -65,72 +57,55 @@ def create_booking(
         )
         .scalar()
     )
-    current_booked_tickets = int(current_booked or 0)
-    remaining_capacity = schedule.max_capacity - current_booked_tickets
+    currently_booked = int(booked_sum or 0)
+    remaining = schedule.max_capacity - currently_booked
 
-    if current_booked_tickets + booking_in.ticket_quantity > schedule.max_capacity:
+    if booking_in.ticket_quantity > remaining:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Insufficient ticket capacity available. Only {max(0, remaining_capacity)} seats remaining for this tour slot.",
+            detail="Insufficient ticket capacity available.",
         )
 
-    new_booking = Booking(
+    booking = Booking(
         schedule_id=booking_in.schedule_id,
         visitor_name=booking_in.visitor_name,
         visitor_email=booking_in.visitor_email,
         ticket_quantity=booking_in.ticket_quantity,
         booking_status="Confirmed",
     )
-    db.add(new_booking)
+    db.add(booking)
     db.commit()
-    db.refresh(new_booking)
+    db.refresh(booking)
+    return booking
 
-    return new_booking
 
-
-@router.get("/{id}", response_model=BookingResponse)
+@router.get("/{booking_id}", response_model=BookingResponse)
 def get_booking(
-    id: str,
+    booking_id: str,
     db: Session = Depends(get_db),
 ):
-    booking = db.query(Booking).filter(Booking.id == id).first()
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Booking reservation with id '{id}' not found.",
+            detail=f"Booking with ID '{booking_id}' not found",
         )
     return booking
 
 
-@router.put("/{id}/cancel", response_model=BookingResponse)
+@router.put("/{booking_id}/cancel", response_model=BookingResponse)
 def cancel_booking(
-    id: str,
+    booking_id: str,
     db: Session = Depends(get_db),
 ):
-    booking = db.query(Booking).filter(Booking.id == id).first()
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Booking reservation with id '{id}' not found.",
+            detail=f"Booking with ID '{booking_id}' not found",
         )
 
     booking.booking_status = "Cancelled"
     db.commit()
     db.refresh(booking)
     return booking
-
-
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_booking(
-    id: str,
-    db: Session = Depends(get_db),
-):
-    booking = db.query(Booking).filter(Booking.id == id).first()
-    if not booking:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Booking reservation with id '{id}' not found.",
-        )
-    db.delete(booking)
-    db.commit()
-    return None

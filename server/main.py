@@ -9,7 +9,7 @@ from server.schemas import HealthResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize schema and seed data
+    # Initialize schema & seed default data
     init_db()
     db = SessionLocal()
     try:
@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Museum Tour Management System API",
-    description="API for guided tour scheduling, capacity management, guide assignment, visitor bookings, and attendance tracking.",
+    description="Backend API for managing museum tours, schedules, bookings, guide assignments, and attendance tracking.",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -30,19 +30,19 @@ app = FastAPI(
 allowed_origins_env = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 )
-ALLOWED_ORIGINS = [
+allowed_origins = [
     origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routers
+# Include Routers
 app.include_router(tours.router)
 app.include_router(guides.router)
 app.include_router(schedules.router)
@@ -53,14 +53,13 @@ app.include_router(attendance.router)
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["Health"])
 def health_check():
-    return HealthResponse(
-        status="ok",
-        app="Museum Tour Management System",
-        version="1.0.0",
-    )
+    return HealthResponse(status="ok", version="1.0.0")
 
 
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)
+@app.get("/", tags=["Root"])
+def root():
+    return {
+        "message": "Welcome to the Museum Tour Management System API",
+        "docs_url": "/docs",
+        "health_url": "/api/v1/health",
+    }
