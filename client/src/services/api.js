@@ -59,6 +59,21 @@ export const getAttendanceRecords = (params = {}) =>
   apiClient.get("/api/v1/attendance", { params });
 export const getAttendance = (id) => apiClient.get(`/api/v1/attendance/${id}`);
 
+// Reviews & Feedback
+export const submitReview = (data) => apiClient.post("/api/v1/reviews", data);
+export const createReview = submitReview;
+export const getReviews = (params = {}) =>
+  apiClient.get("/api/v1/reviews", { params });
+export const getReview = (id) => apiClient.get(`/api/v1/reviews/${id}`);
+
+// Admin Metrics & Summaries
+export const getGuideMetrics = (guideId) =>
+  apiClient.get(`/api/v1/admin/guides/${guideId}/metrics`);
+export const getAdminGuideMetrics = getGuideMetrics;
+export const getAdminFeedbackSummary = () =>
+  apiClient.get("/api/v1/admin/feedback/summary");
+export const getFeedbackSummary = getAdminFeedbackSummary;
+
 // Health
 export const getHealth = () => apiClient.get("/health");
 

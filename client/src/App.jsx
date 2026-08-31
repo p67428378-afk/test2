@@ -9,15 +9,19 @@ import VisitorBookingPage from "./pages/VisitorBookingPage";
 import AdminSchedulePage from "./pages/AdminSchedulePage";
 import GuideManagementPage from "./pages/GuideManagementPage";
 import AttendancePage from "./pages/AttendancePage";
+import ReviewSubmissionPage from "./pages/ReviewSubmissionPage";
+import GuidePerformanceDashboard from "./pages/GuidePerformanceDashboard";
 
 export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<VisitorBookingPage />} />
+        <Route path="/reviews/submit" element={<ReviewSubmissionPage />} />
         <Route path="/admin/schedules" element={<AdminSchedulePage />} />
         <Route path="/admin/guides" element={<GuideManagementPage />} />
         <Route path="/admin/attendance" element={<AttendancePage />} />
+        <Route path="/admin/feedback" element={<GuidePerformanceDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

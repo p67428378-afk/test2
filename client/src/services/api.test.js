@@ -33,4 +33,13 @@ describe("API Services Module", () => {
     expect(typeof api.recordCheckIn).toBe("function");
     expect(typeof api.getAttendanceRecords).toBe("function");
   });
+
+  it("exports all expected reviews and admin metrics endpoints", () => {
+    expect(typeof api.submitReview).toBe("function");
+    expect(typeof api.createReview).toBe("function");
+    expect(typeof api.getReviews).toBe("function");
+    expect(typeof api.getReview).toBe("function");
+    expect(typeof api.getGuideMetrics).toBe("function");
+    expect(typeof api.getAdminFeedbackSummary).toBe("function");
+  });
 });
