@@ -2,114 +2,157 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-const api = axios.create({
+export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("mbbs_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-export const authService = {
+export const authApi = {
   login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
+    const response = await apiClient.post("/api/v1/auth/login", {
+      email,
+      password,
+    });
+    if (response.data?.access_token) {
+      localStorage.setItem("mbbs_token", response.data.access_token);
+      localStorage.setItem("mbbs_user", JSON.stringify(response.data.user));
     }
+    return response.data;
+  },
+  register: async (userData) => {
+    const response = await apiClient.post("/api/v1/auth/register", userData);
+    if (response.data?.access_token) {
+      localStorage.setItem("mbbs_token", response.data.access_token);
+      localStorage.setItem("mbbs_user", JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+  getMe: async () => {
+    const response = await apiClient.get("/api/v1/auth/me");
     return response.data;
   },
   logout: () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("mbbs_token");
+    localStorage.removeItem("mbbs_user");
+  },
+  getCurrentUser: () => {
+    try {
+      const userStr = localStorage.getItem("mbbs_user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
   },
 };
 
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
+export const modulesApi = {
+  listModules: async (subject = null, skip = 0, limit = 50) => {
+    const params = { skip, limit };
+    if (subject && subject !== "all") {
+      params.subject = subject.toLowerCase();
+    }
+    const response = await apiClient.get("/api/v1/modules", { params });
     return response.data;
   },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
+  getModule: async (id) => {
+    const response = await apiClient.get(`/api/v1/modules/${id}`);
     return response.data;
   },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
-    return response.data;
-  },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
+  createModule: async (moduleData) => {
+    const response = await apiClient.post("/api/v1/modules", moduleData);
     return response.data;
   },
 };
 
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
+export const annotationsApi = {
+  getAnnotations: async (moduleId) => {
+    const response = await apiClient.get(
+      `/api/v1/annotations/module/${moduleId}`,
+    );
     return response.data;
   },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
+  createLayer: async (layerData) => {
+    const response = await apiClient.post(
+      "/api/v1/annotations/layers",
+      layerData,
+    );
+    return response.data;
+  },
+  createHotspot: async (hotspotData) => {
+    const response = await apiClient.post(
+      "/api/v1/annotations/hotspots",
+      hotspotData,
     );
     return response.data;
   },
 };
 
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
+export const quizzesApi = {
+  getQuizzes: async (moduleId) => {
+    const response = await apiClient.get(`/api/v1/quizzes/module/${moduleId}`);
     return response.data;
   },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
-  },
-};
-
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
+  evaluateAnswer: async (checkpointId, selectedOption) => {
+    const response = await apiClient.post("/api/v1/quizzes/evaluate", {
+      checkpoint_id: checkpointId,
+      selected_option: selectedOption,
     });
     return response.data;
   },
-};
-
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
+  createCheckpoint: async (checkpointData) => {
+    const response = await apiClient.post(
+      "/api/v1/quizzes/checkpoints",
+      checkpointData,
     );
     return response.data;
   },
 };
 
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
+export const progressApi = {
+  recordProgress: async (progressData) => {
+    const response = await apiClient.post("/api/v1/progress", progressData);
     return response.data;
   },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
+  listProgress: async (userId = null, moduleId = null) => {
+    const params = {};
+    if (userId) params.user_id = userId;
+    if (moduleId) params.module_id = moduleId;
+    const response = await apiClient.get("/api/v1/progress", { params });
+    return response.data;
+  },
+  getSummary: async (userId = null) => {
+    const params = {};
+    if (userId) params.user_id = userId;
+    const response = await apiClient.get("/api/v1/progress/summary", {
+      params,
+    });
+    return response.data;
+  },
+  getModuleProgress: async (moduleId, userId = null) => {
+    const params = {};
+    if (userId) params.user_id = userId;
+    const response = await apiClient.get(
+      `/api/v1/progress/module/${moduleId}`,
+      { params },
+    );
+    return response.data;
   },
 };
 
-export default api;
+export default {
+  auth: authApi,
+  modules: modulesApi,
+  annotations: annotationsApi,
+  quizzes: quizzesApi,
+  progress: progressApi,
+};
