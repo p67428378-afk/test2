@@ -1,12 +1,24 @@
-import '@testing-library/jest-dom';
-import Modal from 'react-modal';
+import "@testing-library/jest-dom";
 
-global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+global.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 };
 
-if (typeof document !== 'undefined') {
-    Modal.setAppElement(document.body);
+if (typeof window !== "undefined") {
+  window.matchMedia =
+    window.matchMedia ||
+    function () {
+      return {
+        matches: false,
+        addListener: function () {},
+        removeListener: function () {},
+        addEventListener: function () {},
+        removeEventListener: function () {},
+        dispatchEvent: function () {
+          return false;
+        },
+      };
+    };
 }
