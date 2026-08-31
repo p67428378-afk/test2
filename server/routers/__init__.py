@@ -1,1 +1,1 @@
-"""Museum Tour Management System Routers Package."""
+"""Routers package initialization."""

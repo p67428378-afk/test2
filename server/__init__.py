@@ -1,1 +1,1 @@
-"""Museum Tour Management System Server Package."""
+"""Server package initialization."""

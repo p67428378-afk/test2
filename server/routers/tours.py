@@ -1,5 +1,5 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from server.database import get_db
 from server.models import Tour
@@ -9,23 +9,23 @@ router = APIRouter(prefix="/api/v1/tours", tags=["Tours"])
 
 
 @router.get("", response_model=List[TourResponse])
-def list_tours(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
-    search: Optional[str] = None,
-    db: Session = Depends(get_db),
-):
-    query = db.query(Tour)
-    if search:
-        query = query.filter(Tour.title.ilike(f"%{search}%"))
-    return query.offset(skip).limit(limit).all()
+def get_tours(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    tours = db.query(Tour).offset(skip).limit(limit).all()
+    return tours
+
+
+@router.get("/{tour_id}", response_model=TourResponse)
+def get_tour(tour_id: str, db: Session = Depends(get_db)):
+    tour = db.query(Tour).filter(Tour.id == tour_id).first()
+    if not tour:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tour not found"
+        )
+    return tour
 
 
 @router.post("", response_model=TourResponse, status_code=status.HTTP_201_CREATED)
-def create_tour(
-    tour_in: TourCreate,
-    db: Session = Depends(get_db),
-):
+def create_tour(tour_in: TourCreate, db: Session = Depends(get_db)):
     tour = Tour(
         title=tour_in.title,
         description=tour_in.description,
@@ -37,52 +37,30 @@ def create_tour(
     return tour
 
 
-@router.get("/{tour_id}", response_model=TourResponse)
-def get_tour(
-    tour_id: str,
-    db: Session = Depends(get_db),
-):
-    tour = db.query(Tour).filter(Tour.id == tour_id).first()
-    if not tour:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tour with ID '{tour_id}' not found",
-        )
-    return tour
-
-
 @router.put("/{tour_id}", response_model=TourResponse)
-def update_tour(
-    tour_id: str,
-    tour_in: TourUpdate,
-    db: Session = Depends(get_db),
-):
+def update_tour(tour_id: str, tour_in: TourUpdate, db: Session = Depends(get_db)):
     tour = db.query(Tour).filter(Tour.id == tour_id).first()
     if not tour:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tour with ID '{tour_id}' not found",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tour not found"
         )
-
-    update_data = tour_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(tour, field, value)
-
+    if tour_in.title is not None:
+        tour.title = tour_in.title
+    if tour_in.description is not None:
+        tour.description = tour_in.description
+    if tour_in.duration_minutes is not None:
+        tour.duration_minutes = tour_in.duration_minutes
     db.commit()
     db.refresh(tour)
     return tour
 
 
 @router.delete("/{tour_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_tour(
-    tour_id: str,
-    db: Session = Depends(get_db),
-):
+def delete_tour(tour_id: str, db: Session = Depends(get_db)):
     tour = db.query(Tour).filter(Tour.id == tour_id).first()
     if not tour:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tour with ID '{tour_id}' not found",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tour not found"
         )
     db.delete(tour)
     db.commit()

@@ -2,14 +2,22 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+
 from server.database import init_db, seed_data, SessionLocal
-from server.routers import tours, guides, schedules, bookings, attendance
-from server.schemas import HealthResponse
+from server.routers import (
+    tours,
+    guides,
+    schedules,
+    bookings,
+    attendance,
+    reviews,
+    admin,
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize schema & seed default data
+    # Initialize DB schema and seed default data
     init_db()
     db = SessionLocal()
     try:
@@ -21,45 +29,34 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Museum Tour Management System API",
-    description="Backend API for managing museum tours, schedules, bookings, guide assignments, and attendance tracking.",
+    description="API for guided tour scheduling, bookings, attendance tracking, and visitor feedback reviews.",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# CORS Configuration
-allowed_origins_env = os.getenv(
+# CORS Middleware configuration
+ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-)
-allowed_origins = [
-    origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
-]
+).split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers
+# Mount Routers
 app.include_router(tours.router)
 app.include_router(guides.router)
 app.include_router(schedules.router)
 app.include_router(bookings.router)
 app.include_router(attendance.router)
+app.include_router(reviews.router)
+app.include_router(admin.router)
 
 
-@app.get("/health", response_model=HealthResponse, tags=["Health"])
-@app.get("/api/v1/health", response_model=HealthResponse, tags=["Health"])
+@app.get("/health", tags=["Health"])
 def health_check():
-    return HealthResponse(status="ok", version="1.0.0")
-
-
-@app.get("/", tags=["Root"])
-def root():
-    return {
-        "message": "Welcome to the Museum Tour Management System API",
-        "docs_url": "/docs",
-        "health_url": "/api/v1/health",
-    }
+    return {"status": "ok", "app": "Museum Tour Management System"}

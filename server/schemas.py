@@ -1,20 +1,13 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field, ConfigDict
 
 
-# --- Health ---
-class HealthResponse(BaseModel):
-    status: str = "ok"
-    version: str = "1.0.0"
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-
-# --- Tours ---
+# --- Tour Schemas ---
 class TourBase(BaseModel):
-    title: str = Field(..., min_length=1, max_length=255)
+    title: str
     description: Optional[str] = None
-    duration_minutes: int = Field(default=60, ge=15, le=480)
+    duration_minutes: int = 60
 
 
 class TourCreate(TourBase):
@@ -22,9 +15,9 @@ class TourCreate(TourBase):
 
 
 class TourUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    title: Optional[str] = None
     description: Optional[str] = None
-    duration_minutes: Optional[int] = Field(None, ge=15, le=480)
+    duration_minutes: Optional[int] = None
 
 
 class TourResponse(TourBase):
@@ -35,15 +28,21 @@ class TourResponse(TourBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# --- Guides ---
+# --- Guide Schemas ---
 class GuideBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=255)
-    email: str = Field(..., min_length=3, max_length=255)
+    name: str
+    email: str
     specialization: Optional[str] = None
 
 
 class GuideCreate(GuideBase):
     pass
+
+
+class GuideUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    specialization: Optional[str] = None
 
 
 class GuideResponse(GuideBase):
@@ -54,14 +53,14 @@ class GuideResponse(GuideBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# --- Schedules ---
+# --- Schedule Schemas ---
 class ScheduleBase(BaseModel):
     tour_id: str
     guide_id: Optional[str] = None
     start_time: datetime
     end_time: datetime
-    max_capacity: int = Field(default=25, ge=1, le=500)
-    status: str = Field(default="Published")  # Draft, Published, Cancelled
+    max_capacity: int = 25
+    status: str = "Published"
 
 
 class ScheduleCreate(ScheduleBase):
@@ -73,12 +72,12 @@ class ScheduleUpdate(BaseModel):
     guide_id: Optional[str] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    max_capacity: Optional[int] = Field(None, ge=1, le=500)
+    max_capacity: Optional[int] = None
     status: Optional[str] = None
 
 
 class AssignGuideRequest(BaseModel):
-    guide_id: str = Field(..., min_length=1)
+    guide_id: str
 
 
 class ScheduleResponse(BaseModel):
@@ -89,24 +88,41 @@ class ScheduleResponse(BaseModel):
     end_time: datetime
     max_capacity: int
     status: str
-    created_at: datetime
-    updated_at: datetime
-
-    # Enriched fields for frontend display
     tour_title: Optional[str] = None
     guide_name: Optional[str] = None
     booked_tickets: int = 0
-    remaining_capacity: int = 0
+    remaining_capacity: int = 25
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
-# --- Bookings ---
+class AttendanceReportResponse(BaseModel):
+    schedule_id: str
+    tour_title: str
+    start_time: datetime
+    end_time: datetime
+    max_capacity: int
+    total_booked_tickets: int
+    total_attended_tickets: int
+    no_shows: int
+    attendance_rate_percentage: float
+
+
+# --- Booking Schemas ---
 class BookingCreate(BaseModel):
-    schedule_id: str = Field(..., min_length=1)
-    visitor_name: str = Field(..., min_length=1, max_length=255)
-    visitor_email: str = Field(..., min_length=3, max_length=255)
-    ticket_quantity: int = Field(default=1, ge=1, le=10)
+    schedule_id: str
+    visitor_name: str
+    visitor_email: str
+    ticket_quantity: int = Field(1, ge=1)
+
+
+class BookingUpdate(BaseModel):
+    visitor_name: Optional[str] = None
+    visitor_email: Optional[str] = None
+    ticket_quantity: Optional[int] = None
+    booking_status: Optional[str] = None
 
 
 class BookingResponse(BaseModel):
@@ -122,18 +138,18 @@ class BookingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# --- Attendance ---
-class CheckInRequest(BaseModel):
-    booking_id: str = Field(..., min_length=1)
-    schedule_id: str = Field(..., min_length=1)
-    attended_count: int = Field(default=1, ge=1)
+# --- Attendance Schemas ---
+class AttendanceCheckInRequest(BaseModel):
+    booking_id: str
+    schedule_id: Optional[str] = None
+    attended_count: int = Field(1, ge=1)
     notes: Optional[str] = None
 
 
 class AttendanceResponse(BaseModel):
     id: str
     booking_id: str
-    schedule_id: str
+    schedule_id: Optional[str] = None
     attended_count: int
     check_in_time: datetime
     notes: Optional[str] = None
@@ -143,27 +159,43 @@ class AttendanceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class AttendanceReportRecord(BaseModel):
+# --- Review Schemas ---
+class ReviewCreate(BaseModel):
+    booking_id: str
+    rating: int = Field(..., ge=1, le=5, description="1 to 5 integer rating")
+    comment: Optional[str] = None
+
+
+class ReviewResponse(BaseModel):
     id: str
     booking_id: str
-    visitor_name: str
-    visitor_email: str
-    booked_quantity: int
-    attended_count: int
-    check_in_time: datetime
-    notes: Optional[str] = None
-
-
-class AttendanceReportResponse(BaseModel):
-    schedule_id: str
-    tour_title: str
-    start_time: datetime
-    end_time: datetime
-    max_capacity: int
-    total_booked: int
-    total_attended: int
-    no_shows: int
-    attendance_rate_percentage: float
-    records: List[AttendanceReportRecord] = []
+    tour_id: str
+    guide_id: Optional[str] = None
+    rating: int
+    comment: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class GuideMetricsResponse(BaseModel):
+    guide_id: str
+    guide_name: str
+    average_rating: float
+    total_reviews: int
+    rating_breakdown: Dict[str, int]
+    recent_comments: List[str]
+
+
+class TourSummaryItem(BaseModel):
+    tour_id: str
+    tour_title: str
+    average_rating: float
+    total_reviews: int
+
+
+class FeedbackSummaryResponse(BaseModel):
+    total_reviews_collected: int
+    system_average_rating: float
+    tours_summary: List[TourSummaryItem]
