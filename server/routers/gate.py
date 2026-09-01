@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from server.database import get_db
@@ -33,7 +33,8 @@ def scan_qr_pass(scan_req: schemas.QRScanRequest, db: Session = Depends(get_db))
 
     # 2. Check Expiration
     exp_timestamp = payload.get("exp", 0)
-    if datetime.utcnow().timestamp() > exp_timestamp:
+    current_utc_ts = datetime.now(timezone.utc).timestamp()
+    if current_utc_ts > exp_timestamp:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="QR Pass has expired",
@@ -70,11 +71,11 @@ def scan_qr_pass(scan_req: schemas.QRScanRequest, db: Session = Depends(get_db))
             )
 
     # 6. Log Entry in EntryExitLogs
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     entry_log = models.EntryExitLog(
         appointment_id=appointment.id,
         officer_id=scan_req.officer_id,
-        check_in_time=now,
+        check_in_time=now.replace(tzinfo=None),
         entry_method="QR_SCAN",
     )
     db.add(entry_log)
@@ -83,6 +84,7 @@ def scan_qr_pass(scan_req: schemas.QRScanRequest, db: Session = Depends(get_db))
         digital_pass.is_used = True
 
     db.commit()
+    db.refresh(entry_log)
 
     visitor_name = visitor.full_name if visitor else "Unknown Visitor"
     inmate_name = (
@@ -92,6 +94,7 @@ def scan_qr_pass(scan_req: schemas.QRScanRequest, db: Session = Depends(get_db))
     )
 
     return {
+        "id": entry_log.id,
         "status": "APPROVED",
         "message": "Express check-in successful",
         "check_in_timestamp": now,

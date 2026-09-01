@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
@@ -26,8 +26,10 @@ def _issue_digital_pass(
     if existing_pass:
         return existing_pass
 
-    # Expiration: End of the visit day + 4 hours buffer
-    visit_datetime = datetime.combine(appointment.visit_date, appointment.start_time)
+    # Expiration: End of the visit day + 4 hours buffer (UTC)
+    visit_datetime = datetime.combine(
+        appointment.visit_date, appointment.start_time
+    ).replace(tzinfo=timezone.utc)
     expires_at = visit_datetime + timedelta(
         minutes=appointment.slot_duration_minutes + 240
     )
@@ -47,7 +49,7 @@ def _issue_digital_pass(
         pass_token=pass_token,
         qr_code_data_url=qr_data_url,
         pdf_download_url=pdf_url,
-        expires_at=expires_at,
+        expires_at=expires_at.replace(tzinfo=None),
         is_used=False,
     )
     db.add(digital_pass)
@@ -158,13 +160,13 @@ def update_appointment_status(
     if status_update.rejection_reason:
         appointment.rejection_reason = status_update.rejection_reason
 
-    db.commit()
-    db.refresh(appointment)
-
     # Automatic Digital Pass Generation upon approval
     if new_status == "APPROVED":
-        _issue_digital_pass(db, appointment)
-        db.refresh(appointment)
+        digital_pass = _issue_digital_pass(db, appointment)
+        appointment.digital_pass = digital_pass
+
+    db.commit()
+    db.refresh(appointment)
 
     return appointment
 

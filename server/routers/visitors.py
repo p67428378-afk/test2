@@ -74,11 +74,6 @@ def get_visitor_profile(
         if visitor:
             return visitor
 
-    # Fallback to first visitor if exists for easy testing
-    first_visitor = query.first()
-    if first_visitor:
-        return first_visitor
-
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Visitor profile not found",

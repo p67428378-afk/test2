@@ -23,8 +23,13 @@ def generate_pass_token(
     visit_date: str,
     expires_at: datetime,
 ) -> str:
-    now_ts = int(datetime.now(timezone.utc).timestamp())
-    exp_ts = int(expires_at.timestamp())
+    now_utc = datetime.now(timezone.utc)
+    now_ts = int(now_utc.timestamp())
+    if expires_at.tzinfo is None:
+        expires_at_utc = expires_at.replace(tzinfo=timezone.utc)
+    else:
+        expires_at_utc = expires_at.astimezone(timezone.utc)
+    exp_ts = int(expires_at_utc.timestamp())
     payload = {
         "appointment_id": appointment_id,
         "visitor_id": visitor_id,

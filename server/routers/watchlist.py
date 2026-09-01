@@ -115,5 +115,26 @@ def remove_from_watchlist(entry_id: str, db: Session = Depends(get_db)):
         )
 
     entry.is_active = False
+
+    # Check if any other active watchlist entry exists for this national_id
+    clean_id = entry.national_id.strip().upper()
+    other_active = (
+        db.query(models.WatchlistEntry)
+        .filter(
+            models.WatchlistEntry.national_id.ilike(clean_id),
+            models.WatchlistEntry.is_active.is_(True),
+            models.WatchlistEntry.id != entry_id,
+        )
+        .first()
+    )
+    if not other_active:
+        matching_visitors = (
+            db.query(models.Visitor)
+            .filter(models.Visitor.national_id.ilike(clean_id))
+            .all()
+        )
+        for v in matching_visitors:
+            v.is_watchlist_flagged = False
+
     db.commit()
     return None

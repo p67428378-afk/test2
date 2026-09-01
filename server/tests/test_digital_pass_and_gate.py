@@ -35,7 +35,10 @@ def test_express_qr_scan_success(client):
     approve_resp = client.patch(
         f"/api/v1/appointments/{appt_id}/status", json={"status": "APPROVED"}
     )
-    pass_token = approve_resp.json()["digital_pass"]["pass_token"]
+    approve_data = approve_resp.json()
+    assert approve_data["id"] == appt_id
+    assert approve_data["digital_pass"]["id"] is not None
+    pass_token = approve_data["digital_pass"]["pass_token"]
 
     # 2. Express QR Scan at Gate
     scan_resp = client.post(
@@ -48,6 +51,7 @@ def test_express_qr_scan_success(client):
     )
     assert scan_resp.status_code == 200
     scan_data = scan_resp.json()
+    assert "id" in scan_data and scan_data["id"] is not None
     assert scan_data["status"] == "APPROVED"
     assert scan_data["appointment_id"] == appt_id
     assert scan_data["security_status"] == "CLEARED"

@@ -2007,6 +2007,10 @@
       },
       "QRScanResponse": {
         "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -2043,6 +2047,7 @@
         },
         "type": "object",
         "required": [
+          "id",
           "status",
           "message",
           "check_in_timestamp",

@@ -237,6 +237,7 @@ class QRScanRequest(BaseModel):
 
 
 class QRScanResponse(BaseModel):
+    id: str
     status: str
     message: str
     check_in_timestamp: datetime
@@ -245,6 +246,8 @@ class QRScanResponse(BaseModel):
     inmate_name: str
     duration_minutes: int
     security_status: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Visitor History

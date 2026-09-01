@@ -21,6 +21,7 @@ def test_add_to_watchlist(client):
     )
     assert resp.status_code == 201
     data = resp.json()
+    assert data["id"] is not None
     assert data["national_id"] == "FLAG-4444"
     assert data["severity_level"] == "HIGH"
 
@@ -47,7 +48,19 @@ def test_screen_visitor_endpoint(client):
     assert "CLEARED" in clean_data["message"]
 
 
-def test_deactivate_watchlist_entry(client):
+def test_deactivate_watchlist_entry_clears_visitor_flag(client):
+    # Register visitor
+    v_resp = client.post(
+        "/api/v1/visitors/register",
+        json={
+            "full_name": "Temporary Ban Person",
+            "national_id": "TEMP-BAN-123",
+            "email": "tempban@example.com",
+            "visitor_type": "STANDARD",
+        },
+    )
+    v_id = v_resp.json()["id"]
+
     create_resp = client.post(
         "/api/v1/watchlist",
         json={
@@ -59,6 +72,11 @@ def test_deactivate_watchlist_entry(client):
     )
     entry_id = create_resp.json()["id"]
 
+    # Check visitor is flagged
+    v_get = client.get(f"/api/v1/visitors/{v_id}").json()
+    assert v_get["is_watchlist_flagged"] is True
+
+    # Delete entry
     del_resp = client.delete(f"/api/v1/watchlist/{entry_id}")
     assert del_resp.status_code == 204
 
@@ -68,3 +86,7 @@ def test_deactivate_watchlist_entry(client):
         json={"national_id": "TEMP-BAN-123"},
     )
     assert screen_resp.json()["is_flagged"] is False
+
+    # Check visitor flag is now cleared
+    v_get2 = client.get(f"/api/v1/visitors/{v_id}").json()
+    assert v_get2["is_watchlist_flagged"] is False
