@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { listAppointments, updateAppointmentStatus } from "../services/api";
+import {
+  listAppointments,
+  updateAppointmentStatus,
+  generateDigitalPass,
+} from "../services/api";
 import {
   CheckCircle,
   XCircle,
   Clock,
-  Search,
   RefreshCw,
   Calendar,
   AlertCircle,
+  ShieldCheck,
+  ShieldAlert,
+  QrCode,
 } from "lucide-react";
 
-const AppointmentApprovalsTable = () => {
+const AppointmentApprovalsTable = ({ onPassGenerated }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -46,7 +52,11 @@ const AppointmentApprovalsTable = () => {
     setSuccessMsg(null);
     try {
       await updateAppointmentStatus(id, { status: "APPROVED" });
-      setSuccessMsg("Appointment approved successfully.");
+      const pass = await generateDigitalPass(id);
+      setSuccessMsg("Appointment approved & Digital Pass issued successfully.");
+      if (onPassGenerated) {
+        onPassGenerated(pass);
+      }
       fetchAppointments();
     } catch (err) {
       const msg =
@@ -83,18 +93,19 @@ const AppointmentApprovalsTable = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-4">
+    <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 space-y-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-100 gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-blue-50 text-blue-800 rounded-lg">
             <Clock className="w-6 h-6" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-800">
-              Visit Appointment Approval Queue
+              Appointment Approval Requests & Quota Control
             </h2>
             <p className="text-sm text-slate-500">
-              Enforce inmate 2-visit/week quota and review visit requests
+              Review visit requests, category quotas, and watchlist clearance
+              flags
             </p>
           </div>
         </div>
@@ -125,20 +136,19 @@ const AppointmentApprovalsTable = () => {
             <option value="APPROVED">APPROVED</option>
             <option value="REJECTED">REJECTED</option>
             <option value="COMPLETED">COMPLETED</option>
-            <option value="CANCELLED">CANCELLED</option>
           </select>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex items-center space-x-2">
+        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200 flex items-center space-x-2">
+        <div className="p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200 flex items-center space-x-2">
           <CheckCircle className="w-4 h-4 flex-shrink-0" />
           <span>{successMsg}</span>
         </div>
@@ -159,86 +169,102 @@ const AppointmentApprovalsTable = () => {
               <tr className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
                 <th className="p-3">Visitor</th>
                 <th className="p-3">Inmate Target</th>
-                <th className="p-3">Visit Date & Slot</th>
-                <th className="p-3">Relationship</th>
+                <th className="p-3">Category / Slot</th>
+                <th className="p-3">Watchlist</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {appointments.map((apt) => (
-                <tr key={apt.id} className="hover:bg-slate-50">
-                  <td className="p-3 font-medium text-slate-800">
-                    <div>{apt.visitor?.full_name || apt.visitor_id}</div>
-                    <div className="text-xs text-slate-400">
-                      ID: {apt.visitor?.national_id || "N/A"}
-                    </div>
-                  </td>
-                  <td className="p-3 text-slate-700">
-                    <div>{apt.inmate?.full_name || apt.inmate_id}</div>
-                    <div className="text-xs text-slate-400">
-                      No: {apt.inmate?.inmate_number} | Cell:{" "}
-                      {apt.inmate?.cell_location}
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <div className="font-semibold text-slate-800 flex items-center space-x-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{apt.visit_date}</span>
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {apt.start_time} (30 mins)
-                    </div>
-                  </td>
-                  <td className="p-3 text-slate-600">{apt.relationship}</td>
-                  <td className="p-3">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        apt.status === "APPROVED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : apt.status === "REJECTED"
-                            ? "bg-red-100 text-red-800"
-                            : apt.status === "COMPLETED"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {apt.status}
-                    </span>
-                    {apt.rejection_reason && (
-                      <div className="text-xs text-red-600 mt-1 italic">
-                        Reason: {apt.rejection_reason}
+              {appointments.map((apt) => {
+                const isWatchlistFlagged =
+                  apt.visitor?.is_watchlist_flagged || false;
+                const visitorType = apt.visitor?.visitor_type || "STANDARD";
+                return (
+                  <tr key={apt.id} className="hover:bg-slate-50">
+                    <td className="p-3 font-medium text-slate-800">
+                      <div>{apt.visitor?.full_name || apt.visitor_id}</div>
+                      <div className="text-xs text-slate-400">
+                        ID: {apt.visitor?.national_id || "N/A"}
                       </div>
-                    )}
-                  </td>
-                  <td className="p-3 text-right">
-                    {apt.status === "PENDING" ? (
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => handleApprove(apt.id)}
-                          disabled={submitting}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold flex items-center space-x-1"
-                        >
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          <span>Approve</span>
-                        </button>
-                        <button
-                          onClick={() => setRejectingAppt(apt)}
-                          disabled={submitting}
-                          className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold flex items-center space-x-1"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>Reject</span>
-                        </button>
+                    </td>
+                    <td className="p-3 text-slate-700">
+                      <div>{apt.inmate?.full_name || apt.inmate_id}</div>
+                      <div className="text-xs text-slate-400">
+                        No: {apt.inmate?.inmate_number || "N/A"} | Cell:{" "}
+                        {apt.inmate?.cell_location || "N/A"}
                       </div>
-                    ) : (
-                      <span className="text-xs text-slate-400 italic">
-                        No action
+                    </td>
+                    <td className="p-3">
+                      <div className="font-semibold text-slate-800 flex items-center space-x-1">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span>
+                          {apt.visit_date} ({apt.start_time})
+                        </span>
+                      </div>
+                      <div className="text-xs text-blue-900 font-medium">
+                        {visitorType === "LEGAL"
+                          ? "Legal Counsel (60 min)"
+                          : "Standard (30 min)"}
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      {isWatchlistFlagged ? (
+                        <span className="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-bold flex items-center space-x-1 w-max">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          <span>FLAGGED</span>
+                        </span>
+                      ) : (
+                        <span className="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold flex items-center space-x-1 w-max">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>CLEARED</span>
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          apt.status === "APPROVED"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : apt.status === "REJECTED"
+                              ? "bg-red-100 text-red-800"
+                              : apt.status === "COMPLETED"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {apt.status}
                       </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="p-3 text-right">
+                      {apt.status === "PENDING" ? (
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => handleApprove(apt.id)}
+                            disabled={submitting || isWatchlistFlagged}
+                            className="bg-blue-900 hover:bg-blue-800 text-white text-xs px-3 py-1.5 rounded font-medium flex items-center space-x-1 shadow-sm disabled:opacity-50"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                            <span>Approve & Issue Pass</span>
+                          </button>
+                          <button
+                            onClick={() => setRejectingAppt(apt)}
+                            disabled={submitting}
+                            className="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded font-medium flex items-center space-x-1"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Reject</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">
+                          No action required
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -248,7 +274,7 @@ const AppointmentApprovalsTable = () => {
         <div className="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-slate-800 mb-2">
-              Reject Visit Appointment
+              Reject Visit Appointment Request
             </h3>
             <p className="text-xs text-slate-500 mb-4">
               Visitor:{" "}
@@ -265,7 +291,7 @@ const AppointmentApprovalsTable = () => {
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="e.g. Inmate has reached maximum weekly 2-visit quota, or unverified identity clearance."
+                placeholder="e.g. Weekly visit limit reached or security watchlist flag."
                 rows="3"
                 className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500"
               />

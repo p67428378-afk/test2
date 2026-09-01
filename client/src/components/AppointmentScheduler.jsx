@@ -24,13 +24,17 @@ const TIME_SLOTS = [
   "03:30 PM",
 ];
 
-const AppointmentScheduler = ({ initialVisitorId = "" }) => {
+const AppointmentScheduler = ({
+  initialVisitorId = "",
+  onAppointmentCreated,
+}) => {
   const [inmates, setInmates] = useState([]);
   const [visitors, setVisitors] = useState([]);
   const [visitorId, setVisitorId] = useState(initialVisitorId);
   const [inmateId, setInmateId] = useState("");
   const [visitDate, setVisitDate] = useState("");
   const [startTime, setStartTime] = useState("10:00 AM");
+  const [slotDuration, setSlotDuration] = useState(30);
   const [relationship, setRelationship] = useState("Family");
 
   const [loading, setLoading] = useState(false);
@@ -45,8 +49,9 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
   useEffect(() => {
     if (initialVisitorId) {
       setVisitorId(initialVisitorId);
+      autoSelectCategoryDuration(initialVisitorId);
     }
-  }, [initialVisitorId]);
+  }, [initialVisitorId, visitors]);
 
   const loadOptions = async () => {
     setFetchingData(true);
@@ -61,13 +66,36 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
         setInmateId(inmateRes[0].id);
       }
       if (visitorRes?.length > 0 && !visitorId && !initialVisitorId) {
-        setVisitorId(visitorRes[0].id);
+        const firstV = visitorRes[0];
+        setVisitorId(firstV.id);
+        if (firstV.visitor_type === "LEGAL") {
+          setSlotDuration(60);
+          setRelationship("Attorney");
+        }
       }
     } catch (err) {
       console.error("Error loading options:", err);
     } finally {
       setFetchingData(false);
     }
+  };
+
+  const autoSelectCategoryDuration = (vid) => {
+    const selectedV = visitors.find((v) => v.id === vid);
+    if (selectedV) {
+      if (selectedV.visitor_type === "LEGAL") {
+        setSlotDuration(60);
+        setRelationship("Attorney");
+      } else {
+        setSlotDuration(30);
+      }
+    }
+  };
+
+  const handleVisitorChange = (e) => {
+    const vid = e.target.value;
+    setVisitorId(vid);
+    autoSelectCategoryDuration(vid);
   };
 
   const handleSubmit = async (e) => {
@@ -98,11 +126,15 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
         inmate_id: inmateId,
         visit_date: visitDate,
         start_time: startTime,
+        slot_duration_minutes: parseInt(slotDuration, 10),
         relationship: relationship,
       };
 
       const result = await createAppointment(payload);
       setSuccessMsg(`Appointment requested successfully! ID: ${result.id}`);
+      if (onAppointmentCreated) {
+        onAppointmentCreated(result);
+      }
     } catch (err) {
       const msg =
         err.response?.data?.detail ||
@@ -115,39 +147,39 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 max-w-2xl mx-auto">
-      <div className="flex items-center space-x-3 mb-6 border-b border-slate-100 pb-4">
+    <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 max-w-2xl mx-auto space-y-4">
+      <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
         <div className="p-3 bg-emerald-50 text-emerald-800 rounded-lg">
           <Calendar className="w-6 h-6" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-slate-800">
-            Schedule Visit Appointment
+            Schedule Visit & Pass Request
           </h2>
           <p className="text-sm text-slate-500">
-            Book a 30-minute visitation slot with an eligible inmate
+            Book visit slots with category quota enforcement & dynamic durations
           </p>
         </div>
       </div>
 
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 flex items-start space-x-2">
+      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 flex items-start space-x-2">
         <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold">Facility Quota Policy:</span> Inmates
-          are allowed a maximum of 2 approved visits per calendar week. Identity
-          verification must be completed prior to visit clearance.
+          <span className="font-bold">Dynamic Quotas & Durations:</span>{" "}
+          Standard Visitors (30-min slot, 2 visits/wk). Legal Counsel (60-min
+          slot, 5 visits/wk quota).
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded flex items-start space-x-2">
+        <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded flex items-start space-x-2">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span className="text-sm font-medium">{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 rounded flex items-start space-x-2">
+        <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 rounded flex items-start space-x-2">
           <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span className="text-sm font-medium">{successMsg}</span>
         </div>
@@ -166,14 +198,15 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
             <select
               id="visitor_select"
               value={visitorId}
-              onChange={(e) => setVisitorId(e.target.value)}
+              onChange={handleVisitorChange}
               required
               className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="">-- Choose Registered Visitor --</option>
               {visitors.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.full_name} ({v.national_id}) - [{v.verification_status}]
+                  {v.full_name} ({v.national_id}) - [
+                  {v.visitor_type || "STANDARD"}]
                 </option>
               ))}
             </select>
@@ -185,7 +218,7 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
             className="block text-xs font-semibold text-slate-700 uppercase mb-1"
             htmlFor="inmate_select"
           >
-            Select Inmate *
+            Select Inmate Target *
           </label>
           <select
             id="inmate_select"
@@ -201,6 +234,49 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              className="block text-xs font-semibold text-slate-700 uppercase mb-1"
+              htmlFor="slot_duration"
+            >
+              Slot Duration
+            </label>
+            <select
+              id="slot_duration"
+              value={slotDuration}
+              onChange={(e) => setSlotDuration(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm font-semibold"
+            >
+              <option value={30}>30 Minutes (Standard Visitor)</option>
+              <option value={60}>60 Minutes (Legal Counsel / Attorney)</option>
+            </select>
+          </div>
+
+          <div>
+            <label
+              className="block text-xs font-semibold text-slate-700 uppercase mb-1"
+              htmlFor="relationship"
+            >
+              Relationship to Inmate *
+            </label>
+            <select
+              id="relationship"
+              value={relationship}
+              onChange={(e) => setRelationship(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              <option value="Spouse">Spouse</option>
+              <option value="Parent">Parent</option>
+              <option value="Child">Child</option>
+              <option value="Sibling">Sibling</option>
+              <option value="Attorney">Attorney / Legal Counsel</option>
+              <option value="Friend">Friend / Relative</option>
+            </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,7 +303,7 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
               className="block text-xs font-semibold text-slate-700 uppercase mb-1"
               htmlFor="start_time"
             >
-              Start Time Slot (30 mins) *
+              Start Time Slot *
             </label>
             <div className="flex items-center space-x-2">
               <Clock className="w-5 h-5 text-slate-400" />
@@ -248,39 +324,16 @@ const AppointmentScheduler = ({ initialVisitorId = "" }) => {
           </div>
         </div>
 
-        <div>
-          <label
-            className="block text-xs font-semibold text-slate-700 uppercase mb-1"
-            htmlFor="relationship"
-          >
-            Relationship to Inmate *
-          </label>
-          <select
-            id="relationship"
-            value={relationship}
-            onChange={(e) => setRelationship(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-          >
-            <option value="Spouse">Spouse</option>
-            <option value="Parent">Parent</option>
-            <option value="Child">Child</option>
-            <option value="Sibling">Sibling</option>
-            <option value="Attorney">Attorney / Legal Counsel</option>
-            <option value="Friend">Friend / Relative</option>
-          </select>
-        </div>
-
         <div className="pt-3">
           <button
             type="submit"
             disabled={loading || fetchingData}
-            className="w-full py-2.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-medium rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center space-x-2"
+            className="w-full py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white font-medium rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center space-x-2"
           >
             {loading ? (
               <span>Submitting Request...</span>
             ) : (
-              <span>Submit Visit Request</span>
+              <span>Submit Request & Issue Digital Pass</span>
             )}
           </button>
         </div>

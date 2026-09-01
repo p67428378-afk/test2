@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { registerVisitor } from "../services/api";
+import { registerVisitor, screenVisitorWatchlist } from "../services/api";
 import {
   UserCheck,
   Upload,
   AlertCircle,
   CheckCircle,
-  Shield,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 
 const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
@@ -16,9 +17,11 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
     phone: "",
     address: "",
     photo_id_url: "",
+    visitor_type: "STANDARD",
   });
 
   const [loading, setLoading] = useState(false);
+  const [screeningStatus, setScreeningStatus] = useState(null);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [registeredVisitor, setRegisteredVisitor] = useState(null);
@@ -28,6 +31,19 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleScreeningCheck = async () => {
+    if (!formData.national_id) return;
+    try {
+      const res = await screenVisitorWatchlist({
+        national_id: formData.national_id,
+        full_name: formData.full_name,
+      });
+      setScreeningStatus(res);
+    } catch (err) {
+      console.error("Watchlist check warning:", err);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -68,10 +84,10 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
         </div>
         <div>
           <h2 className="text-xl font-bold text-slate-800">
-            Online Visitor Registration
+            Online Visitor Registration & Watchlist Screening
           </h2>
           <p className="text-sm text-slate-500">
-            Register your profile for prison visitation clearance
+            Register visitor details for automated facility security clearance
           </p>
         </div>
       </div>
@@ -89,12 +105,25 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
           <div>
             <p className="text-sm font-medium">{successMsg}</p>
             {registeredVisitor && (
-              <p className="text-xs mt-1 text-emerald-800">
-                Status:{" "}
-                <span className="font-semibold">
-                  {registeredVisitor.verification_status}
+              <div className="text-xs mt-1 text-emerald-800 flex items-center space-x-2">
+                <span>
+                  Status:{" "}
+                  <strong className="font-semibold">
+                    {registeredVisitor.verification_status}
+                  </strong>
                 </span>
-              </p>
+                {registeredVisitor.is_watchlist_flagged ? (
+                  <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold flex items-center space-x-1">
+                    <ShieldAlert className="w-3 h-3" />
+                    <span>WATCHLIST FLAG DETECTED</span>
+                  </span>
+                ) : (
+                  <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold flex items-center space-x-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>WATCHLIST CLEARED</span>
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -117,7 +146,7 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
               value={formData.full_name}
               onChange={handleChange}
               placeholder="e.g. Jane Doe"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
@@ -135,13 +164,57 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
               required
               value={formData.national_id}
               onChange={handleChange}
+              onBlur={handleScreeningCheck}
               placeholder="e.g. ID-98765432"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
         </div>
 
+        {screeningStatus && (
+          <div
+            className={`p-2.5 rounded-lg text-xs font-medium flex items-center space-x-2 ${
+              screeningStatus.is_flagged
+                ? "bg-red-100 text-red-800 border border-red-300"
+                : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+            }`}
+          >
+            {screeningStatus.is_flagged ? (
+              <ShieldAlert className="w-4 h-4 text-red-600 flex-shrink-0" />
+            ) : (
+              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            )}
+            <span>
+              Automated Watchlist Check:{" "}
+              <strong>{screeningStatus.message}</strong>
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              className="block text-xs font-semibold text-slate-700 uppercase mb-1"
+              htmlFor="visitor_type"
+            >
+              Visitor Category *
+            </label>
+            <select
+              id="visitor_type"
+              name="visitor_type"
+              value={formData.visitor_type}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+            >
+              <option value="STANDARD">
+                Standard Visitor (2 Visits/Wk Quota)
+              </option>
+              <option value="LEGAL">
+                Legal Counsel / Attorney (5 Visits/Wk Quota)
+              </option>
+            </select>
+          </div>
+
           <div>
             <label
               className="block text-xs font-semibold text-slate-700 uppercase mb-1"
@@ -157,10 +230,12 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
               value={formData.email}
               onChange={handleChange}
               placeholder="e.g. jane.doe@example.com"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               className="block text-xs font-semibold text-slate-700 uppercase mb-1"
@@ -175,27 +250,27 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
               value={formData.phone}
               onChange={handleChange}
               placeholder="e.g. +1 555-0199"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
-        </div>
 
-        <div>
-          <label
-            className="block text-xs font-semibold text-slate-700 uppercase mb-1"
-            htmlFor="address"
-          >
-            Residential Address
-          </label>
-          <input
-            id="address"
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            placeholder="e.g. 123 Main St, Springfield"
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-          />
+          <div>
+            <label
+              className="block text-xs font-semibold text-slate-700 uppercase mb-1"
+              htmlFor="address"
+            >
+              Residential Address
+            </label>
+            <input
+              id="address"
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              placeholder="e.g. 123 Main St, Springfield"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
         </div>
 
         <div>
@@ -213,15 +288,12 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
               value={formData.photo_id_url}
               onChange={handleChange}
               placeholder="https://example.com/id_card.png"
-              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
             />
             <div className="p-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-500">
               <Upload className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Accepts PNG, JPG, or PDF document links
-          </p>
         </div>
 
         <div className="pt-3">
@@ -231,11 +303,11 @@ const VisitorRegistrationForm = ({ onVisitorRegistered }) => {
             className="w-full py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white font-medium rounded-lg shadow transition disabled:opacity-50 flex items-center justify-center space-x-2"
           >
             {loading ? (
-              <span>Submitting Profile...</span>
+              <span>Submitting Profile & Running Watchlist Check...</span>
             ) : (
               <>
-                <Shield className="w-4 h-4" />
-                <span>Submit Registration Profile</span>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Submit Profile & Execute Security Screening</span>
               </>
             )}
           </button>
