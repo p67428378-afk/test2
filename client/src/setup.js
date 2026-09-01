@@ -1,12 +1,7 @@
-import '@testing-library/jest-dom';
-import Modal from 'react-modal';
+import "@testing-library/jest-dom";
 
 global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 };
-
-if (typeof document !== 'undefined') {
-    Modal.setAppElement(document.body);
-}
