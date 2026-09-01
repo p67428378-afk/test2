@@ -9,106 +9,30 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-    }
+export const passwordService = {
+  generatePassword: async (options = {}) => {
+    const payload = {
+      length: options.length ?? 16,
+      include_uppercase: options.include_uppercase ?? true,
+      include_lowercase: options.include_lowercase ?? true,
+      include_digits: options.include_digits ?? true,
+      include_symbols: options.include_symbols ?? true,
+    };
+    const response = await api.post("/api/v1/passwords/generate", payload);
     return response.data;
   },
-  logout: () => {
-    localStorage.removeItem("token");
-  },
-};
-
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
-    return response.data;
-  },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
-    return response.data;
-  },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
-    return response.data;
-  },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
-    return response.data;
-  },
-};
-
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
-    return response.data;
-  },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
+  generateBatch: async (count = 10, options = {}) => {
+    const requests = Array.from({ length: count }, () =>
+      passwordService.generatePassword(options),
     );
-    return response.data;
+    return await Promise.all(requests);
   },
 };
 
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
+export const healthService = {
+  checkHealth: async () => {
+    const response = await api.get("/api/v1/health");
     return response.data;
-  },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
-  },
-};
-
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
-    });
-    return response.data;
-  },
-};
-
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
-    );
-    return response.data;
-  },
-};
-
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
-    return response.data;
-  },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
   },
 };
 
