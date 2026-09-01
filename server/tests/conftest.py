@@ -1,50 +1,49 @@
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
+from fastapi.testclient import TestClient
+
+from server.models.parking import Base
+from server.database import get_db, seed_data
 from server.main import app
-from server.database import Base, get_db
 
-SQLALCHEMY_DATABASE_URL = "sqlite://"
+# In-memory SQLite with StaticPool for test suite
+TEST_DATABASE_URL = "sqlite:///:memory:"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
+test_engine = create_engine(
+    TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_database():
-    Base.metadata.create_all(bind=engine)
+def setup_test_db():
+    Base.metadata.create_all(bind=test_engine)
+    db = TestingSessionLocal()
+    seed_data(db)
+    db.close()
     yield
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=test_engine)
 
 
-@pytest.fixture(scope="function")
-def db():
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+@pytest.fixture
+def db_session():
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
-@pytest.fixture(scope="function")
-def client(db):
+@pytest.fixture
+def client(db_session):
     def override_get_db():
         try:
-            yield db
+            yield db_session
         finally:
             pass
 

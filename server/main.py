@@ -1,60 +1,72 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
 from server.database import init_db, seed_data, SessionLocal
+from server.api.v1.endpoints import parking_spots, realtime
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema & seed data
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="ParkFind Locator & Hourly Rates API",
+    description="Real-time parking spot locator, hourly rate calculator, and availability streaming platform.",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
+# Mandatory CORS Middleware
 ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173",
 ).split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Include Routers
+app.include_router(
+    parking_spots.router,
+    prefix="/api/v1/parking-spots",
+    tags=["parking-spots"],
+)
+
+app.include_router(
+    realtime.router,
+    prefix="/api/v1/parking-spots",
+    tags=["realtime"],
+)
 
 
-@app.get("/")
-def read_root():
+@app.get("/api/v1/health", tags=["system"])
+def health_check():
     return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
+        "status": "healthy",
+        "service": "parking-locator-api",
+        "version": "1.0.0",
+    }
+
+
+@app.get("/", tags=["system"])
+def root():
+    return {
+        "message": "Welcome to the ParkFind Locator API",
+        "docs_url": "/docs",
+        "health_url": "/api/v1/health",
     }
