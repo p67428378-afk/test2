@@ -1,130 +1,166 @@
-import uuid
-from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List, Dict, Any, Literal
+from datetime import datetime, date
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# User & Auth Schemas
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    role: Literal["Admin", "Doctor", "Staff", "Patient"] = "Patient"
 
 
-class LoginRequest(BaseModel):
+class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 
 class UserResponse(BaseModel):
-    id: uuid.UUID
+    id: str
     email: EmailStr
-    full_name: Optional[str] = None
     role: str
+    created_at: datetime
 
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+    model_config = ConfigDict(from_attributes=True)
 
 
-class TournamentCreate(TournamentBase):
-    pass
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+# Patient Schemas
+class PatientCreate(BaseModel):
+    user_id: Optional[str] = None
+    full_name: str = Field(..., min_length=1)
+    date_of_birth: date
+    gender: str = Field(..., min_length=1)
+    phone: str = Field(..., min_length=3)
+    emergency_contact: str = Field(..., min_length=1)
+    medical_history: Optional[str] = None
+    insurance_provider: Optional[str] = None
+    insurance_policy_number: Optional[str] = None
+
+
+class PatientUpdate(BaseModel):
+    full_name: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    gender: Optional[str] = None
+    phone: Optional[str] = None
+    emergency_contact: Optional[str] = None
+    medical_history: Optional[str] = None
+    insurance_provider: Optional[str] = None
+    insurance_policy_number: Optional[str] = None
+
+
+class PatientResponse(BaseModel):
+    id: str
+    user_id: Optional[str] = None
+    full_name: str
+    date_of_birth: date
+    gender: str
+    phone: str
+    emergency_contact: str
+    medical_history: Optional[str] = None
+    insurance_provider: Optional[str] = None
+    insurance_policy_number: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# Doctor Slot Schemas
+class DoctorSlotCreate(BaseModel):
+    doctor_id: str
+    department: str
+    start_time: datetime
+    end_time: datetime
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class DoctorSlotResponse(BaseModel):
+    id: str
+    doctor_id: str
+    department: str
+    start_time: datetime
+    end_time: datetime
+    is_booked: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+# Appointment Schemas
+class AppointmentCreate(BaseModel):
+    patient_id: str
+    doctor_id: str
+    slot_id: str
+    reason_for_visit: Optional[str] = None
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+class AppointmentStatusUpdate(BaseModel):
+    status: Literal["Scheduled", "In-Progress", "Completed", "Cancelled"]
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class AppointmentResponse(BaseModel):
+    id: str
+    patient_id: str
+    doctor_id: str
+    slot_id: str
+    status: str
+    reason_for_visit: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+# EMR Schemas
+class EMRRecordCreate(BaseModel):
+    appointment_id: str
+    patient_id: str
+    doctor_id: str
+    diagnosis: str
+    clinical_notes: str
+    prescriptions: List[Dict[str, Any]] = Field(default_factory=list)
+    lab_orders: List[Dict[str, Any]] = Field(default_factory=list)
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class EMRRecordResponse(BaseModel):
+    id: str
+    appointment_id: str
+    patient_id: str
+    doctor_id: str
+    diagnosis: str
+    clinical_notes: str
+    prescriptions: List[Dict[str, Any]] = Field(default_factory=list)
+    lab_orders: List[Dict[str, Any]] = Field(default_factory=list)
+    created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Invoice Schemas
+class InvoiceCreate(BaseModel):
+    appointment_id: str
+    patient_id: str
+    total_amount: float
+    line_items: List[Dict[str, Any]] = Field(default_factory=list)
+    payment_status: Literal["Pending", "Paid", "Refunded"] = "Pending"
+
+
+class InvoicePaymentUpdate(BaseModel):
+    payment_status: Literal["Pending", "Paid", "Refunded"]
+
+
+class InvoiceResponse(BaseModel):
+    id: str
+    appointment_id: str
+    patient_id: str
+    total_amount: float
+    line_items: List[Dict[str, Any]] = Field(default_factory=list)
+    payment_status: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

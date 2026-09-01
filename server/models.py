@@ -1,250 +1,167 @@
 import uuid
+from datetime import datetime
 from sqlalchemy import (
     Column,
     String,
-    DateTime,
     Boolean,
-    ForeignKey,
-    Integer,
+    DateTime,
+    Date,
     Float,
-    UniqueConstraint,
-    TypeDecorator,
-    CHAR,
+    ForeignKey,
+    Text,
+    JSON,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from server.database import Base
+from sqlalchemy.orm import declarative_base, relationship
+
+Base = declarative_base()
 
 
-class GUID(TypeDecorator):
-    """Platform-independent GUID type.
-    Uses PostgreSQL's UUID type, otherwise uses CHAR(36).
-    """
-
-    impl = CHAR
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
-            from sqlalchemy.dialects.postgresql import UUID
-
-            return dialect.type_descriptor(UUID(as_uuid=True))
-        else:
-            return dialect.type_descriptor(CHAR(36))
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        elif dialect.name == "postgresql":
-            return str(value)
-        else:
-            if not isinstance(value, uuid.UUID):
-                return str(uuid.UUID(value))
-            else:
-                return str(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            if not isinstance(value, uuid.UUID):
-                return uuid.UUID(value)
-            else:
-                return value
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    full_name = Column(String(255), nullable=True)
-    hashed_password = Column(String(255), nullable=False)
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
     role = Column(
-        String(50), default="member", nullable=False
-    )  # 'admin', 'organizer', 'member'
+        String(50), nullable=False, default="Patient"
+    )  # Admin, Doctor, Staff, Patient
     is_active = Column(Boolean, default=True, nullable=False)
-    is_verified = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    patient_profile = relationship("Patient", back_populates="user", uselist=False)
+    doctor_slots = relationship("DoctorSlot", back_populates="doctor")
+    doctor_appointments = relationship(
+        "Appointment", foreign_keys="Appointment.doctor_id", back_populates="doctor"
+    )
+    emr_records = relationship(
+        "EMRRecord", foreign_keys="EMRRecord.doctor_id", back_populates="doctor"
     )
 
 
-class Tournament(Base):
-    __tablename__ = "tournaments"
+class Patient(Base):
+    __tablename__ = "patients"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    status = Column(
-        String(50), default="DRAFT", nullable=False
-    )  # 'DRAFT', 'ACTIVE', 'COMPLETED'
-    total_rounds = Column(Integer, default=5, nullable=False)
-    current_round = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    full_name = Column(String(255), nullable=False, index=True)
+    date_of_birth = Column(Date, nullable=False)
+    gender = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=False, index=True)
+    emergency_contact = Column(String(255), nullable=False)
+    medical_history = Column(Text, nullable=True)
+    insurance_provider = Column(String(255), nullable=True)
+    insurance_policy_number = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    registrations = relationship(
-        "Registration", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    rounds = relationship(
-        "Round", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="tournament", cascade="all, delete-orphan"
-    )
+    user = relationship("User", back_populates="patient_profile")
+    appointments = relationship("Appointment", back_populates="patient")
+    emr_records = relationship("EMRRecord", back_populates="patient")
+    invoices = relationship("Invoice", back_populates="patient")
 
 
-class Player(Base):
-    __tablename__ = "players"
+class DoctorSlot(Base):
+    __tablename__ = "doctor_slots"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    full_name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False, index=True)
-    rating = Column(Integer, default=1200, nullable=False)
-    fide_id = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    doctor_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    department = Column(String(100), nullable=False, index=True)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    is_booked = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    registrations = relationship(
-        "Registration", back_populates="player", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="player", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="player", cascade="all, delete-orphan"
-    )
+    doctor = relationship("User", back_populates="doctor_slots")
+    appointment = relationship("Appointment", back_populates="slot", uselist=False)
 
 
-class Registration(Base):
-    __tablename__ = "registrations"
-    __table_args__ = (
-        UniqueConstraint("tournament_id", "player_id", name="uq_tournament_player"),
-    )
+class Appointment(Base):
+    __tablename__ = "appointments"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    patient_id = Column(
+        String(36), ForeignKey("patients.id"), nullable=False, index=True
     )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
+    doctor_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    slot_id = Column(
+        String(36), ForeignKey("doctor_slots.id"), nullable=False, unique=True
     )
     status = Column(
-        String(50), default="ACTIVE", nullable=False
-    )  # 'ACTIVE', 'WITHDRAWN'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="registrations")
-    player = relationship("Player", back_populates="registrations")
-
-
-class Round(Base):
-    __tablename__ = "rounds"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    round_number = Column(Integer, nullable=False)
-    is_closed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="rounds")
-    matches = relationship(
-        "Match", back_populates="round", cascade="all, delete-orphan"
-    )
-
-
-class Match(Base):
-    __tablename__ = "matches"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    round_id = Column(
-        GUID(), ForeignKey("rounds.id", ondelete="CASCADE"), nullable=False
-    )
-    board_number = Column(Integer, nullable=True)
-    white_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    black_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    result = Column(
-        String(50), default="PENDING", nullable=False
-    )  # 'PENDING', '1-0', '0-1', '0.5-0.5', 'BYE'
-    is_bye = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    round = relationship("Round", back_populates="matches")
-    white_player = relationship("Player", foreign_keys=[white_player_id])
-    black_player = relationship("Player", foreign_keys=[black_player_id])
-
-
-class Standing(Base):
-    __tablename__ = "standings"
-    __table_args__ = (
-        UniqueConstraint(
-            "tournament_id", "player_id", name="uq_tournament_player_standing"
-        ),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    total_points = Column(Float, default=0.0, nullable=False)
-    buchholz = Column(Float, default=0.0, nullable=False)
-    sonneborn_berger = Column(Float, default=0.0, nullable=False)
-    rank = Column(Integer, nullable=True)
+        String(50), default="Scheduled", nullable=False
+    )  # Scheduled, In-Progress, Completed, Cancelled
+    reason_for_visit = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    tournament = relationship("Tournament", back_populates="standings")
-    player = relationship("Player", back_populates="standings")
-
-
-class Certificate(Base):
-    __tablename__ = "certificates"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    verification_uuid = Column(
-        GUID(), default=uuid.uuid4, unique=True, index=True, nullable=False
+    patient = relationship("Patient", back_populates="appointments")
+    doctor = relationship(
+        "User", foreign_keys=[doctor_id], back_populates="doctor_appointments"
     )
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
+    slot = relationship("DoctorSlot", back_populates="appointment")
+    emr_records = relationship("EMRRecord", back_populates="appointment")
+    invoices = relationship("Invoice", back_populates="appointment")
+
+
+class EMRRecord(Base):
+    __tablename__ = "emr_records"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    appointment_id = Column(
+        String(36), ForeignKey("appointments.id"), nullable=False, index=True
     )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
+    patient_id = Column(
+        String(36), ForeignKey("patients.id"), nullable=False, index=True
     )
-    rank = Column(Integer, nullable=False)
-    total_points = Column(Float, default=0.0, nullable=False)
-    issued_at = Column(DateTime, default=func.now(), nullable=False)
-    qr_code_url = Column(String(512), nullable=True)
-
-    tournament = relationship("Tournament", back_populates="certificates")
-    player = relationship("Player", back_populates="certificates")
-
-
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    admin_id = Column(String(255), nullable=True)
-    match_id = Column(
-        GUID(), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True
+    doctor_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    diagnosis = Column(Text, nullable=False)
+    clinical_notes = Column(Text, nullable=False)
+    prescriptions = Column(JSON, default=list, nullable=False)
+    lab_orders = Column(JSON, default=list, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
-    original_score = Column(String(50), nullable=True)
-    new_score = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=func.now(), nullable=False)
+
+    appointment = relationship("Appointment", back_populates="emr_records")
+    patient = relationship("Patient", back_populates="emr_records")
+    doctor = relationship(
+        "User", foreign_keys=[doctor_id], back_populates="emr_records"
+    )
+
+
+class Invoice(Base):
+    __tablename__ = "invoices"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    appointment_id = Column(
+        String(36), ForeignKey("appointments.id"), nullable=False, index=True
+    )
+    patient_id = Column(
+        String(36), ForeignKey("patients.id"), nullable=False, index=True
+    )
+    total_amount = Column(Float, nullable=False)
+    line_items = Column(JSON, default=list, nullable=False)
+    payment_status = Column(
+        String(50), default="Pending", nullable=False
+    )  # Pending, Paid, Refunded
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    appointment = relationship("Appointment", back_populates="invoices")
+    patient = relationship("Patient", back_populates="invoices")

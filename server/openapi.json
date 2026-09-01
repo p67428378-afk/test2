@@ -1,198 +1,35 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Library Management System API",
+    "title": "Hospital Management System API",
+    "description": "Enterprise API for Patient Registration, Doctor Scheduling, Appointments, EMR, and Billing",
     "version": "1.0.0"
   },
   "paths": {
-    "/api/v1/password-reset/initiate": {
+    "/api/v1/auth/register": {
       "post": {
         "tags": [
-          "password-reset"
+          "Authentication"
         ],
-        "summary": "Initiate Password Reset",
-        "operationId": "initiate_password_reset_api_v1_password_reset_initiate_post",
+        "summary": "Register",
+        "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PasswordResetInitiateRequest"
+                "$ref": "#/components/schemas/UserRegister"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PasswordResetInitiateResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/verify-otp": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Verify Otp",
-        "operationId": "verify_otp_api_v1_password_reset_verify_otp_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OTPVerifyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OTPVerifyResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/verify-security-question": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Verify Security Question",
-        "operationId": "verify_security_question_api_v1_password_reset_verify_security_question_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SecurityQuestionVerifyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SecurityQuestionVerifyResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/set-new-password": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Set New Password",
-        "operationId": "set_new_password_api_v1_password_reset_set_new_password_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetNewPasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetNewPasswordResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/token": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Login For Access Token",
-        "operationId": "login_for_access_token_api_v1_auth_token_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_login_for_access_token_api_v1_auth_token_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -213,15 +50,15 @@
     "/api/v1/auth/login": {
       "post": {
         "tags": [
-          "auth"
+          "Authentication"
         ],
-        "summary": "Login Json",
-        "operationId": "login_json_api_v1_auth_login_post",
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
+                "$ref": "#/components/schemas/UserLogin"
               }
             }
           },
@@ -233,7 +70,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Token"
+                  "$ref": "#/components/schemas/TokenResponse"
                 }
               }
             }
@@ -251,13 +88,13 @@
         }
       }
     },
-    "/api/v1/users/me": {
+    "/api/v1/auth/me": {
       "get": {
         "tags": [
-          "auth"
+          "Authentication"
         ],
-        "summary": "Read Users Me",
-        "operationId": "read_users_me_api_v1_users_me_get",
+        "summary": "Get Me",
+        "operationId": "get_me_api_v1_auth_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -272,21 +109,65 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ]
       }
     },
-    "/api/v1/books": {
-      "get": {
+    "/api/v1/patients": {
+      "post": {
         "tags": [
-          "books"
+          "Patients"
         ],
-        "summary": "Read Books",
-        "operationId": "read_books_api_v1_books_get",
+        "summary": "Create Patient",
+        "operationId": "create_patient_api_v1_patients_post",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "List Patients",
+        "operationId": "list_patients_api_v1_patients_get",
+        "security": [
+          {
+            "HTTPBearer": []
           }
         ],
         "parameters": [
@@ -303,13 +184,274 @@
                   "type": "null"
                 }
               ],
-              "description": "Search by title, author, or ISBN",
+              "description": "Search by name or phone",
               "title": "Search"
             },
-            "description": "Search by title, author, or ISBN"
+            "description": "Search by name or phone"
           },
           {
-            "name": "genre",
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientResponse"
+                  },
+                  "title": "Response List Patients Api V1 Patients Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patients/{patient_id}": {
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Get Patient",
+        "operationId": "get_patient_api_v1_patients__patient_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Update Patient",
+        "operationId": "update_patient_api_v1_patients__patient_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Update Patient",
+        "operationId": "update_patient_api_v1_patients__patient_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctors/slots": {
+      "post": {
+        "tags": [
+          "Doctors & Slots"
+        ],
+        "summary": "Create Doctor Slot",
+        "operationId": "create_doctor_slot_api_v1_doctors_slots_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DoctorSlotCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DoctorSlotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Doctors & Slots"
+        ],
+        "summary": "List Slots",
+        "operationId": "list_slots_api_v1_doctors_slots_get",
+        "parameters": [
+          {
+            "name": "department",
             "in": "query",
             "required": false,
             "schema": {
@@ -321,10 +463,46 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by genre",
-              "title": "Genre"
+              "description": "Filter by department",
+              "title": "Department"
             },
-            "description": "Filter by genre"
+            "description": "Filter by department"
+          },
+          {
+            "name": "doctor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by doctor UUID",
+              "title": "Doctor Id"
+            },
+            "description": "Filter by doctor UUID"
+          },
+          {
+            "name": "is_booked",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by booking status",
+              "title": "Is Booked"
+            },
+            "description": "Filter by booking status"
           },
           {
             "name": "skip",
@@ -332,6 +510,7 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -342,7 +521,9 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
               "title": "Limit"
             }
           }
@@ -355,9 +536,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BookResponse"
+                    "$ref": "#/components/schemas/DoctorSlotResponse"
                   },
-                  "title": "Response Read Books Api V1 Books Get"
+                  "title": "Response List Slots Api V1 Doctors Slots Get"
                 }
               }
             }
@@ -373,16 +554,82 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/v1/doctors/{doctor_id}/slots": {
+      "get": {
+        "tags": [
+          "Doctors & Slots"
+        ],
+        "summary": "Get Doctor Slots",
+        "operationId": "get_doctor_slots_api_v1_doctors__doctor_id__slots_get",
+        "parameters": [
+          {
+            "name": "doctor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Doctor Id"
+            }
+          },
+          {
+            "name": "is_booked",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by booked status",
+              "title": "Is Booked"
+            },
+            "description": "Filter by booked status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DoctorSlotResponse"
+                  },
+                  "title": "Response Get Doctor Slots Api V1 Doctors  Doctor Id  Slots Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments": {
       "post": {
         "tags": [
-          "books"
+          "Appointments"
         ],
-        "summary": "Create Book",
-        "operationId": "create_book_api_v1_books_post",
+        "summary": "Book Appointment",
+        "operationId": "book_appointment_api_v1_appointments_post",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "requestBody": {
@@ -390,7 +637,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BookCreate"
+                "$ref": "#/components/schemas/AppointmentCreate"
               }
             }
           }
@@ -401,55 +648,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/books/{book_id}": {
-      "get": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Read Book",
-        "operationId": "read_book_api_v1_books__book_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -466,121 +665,79 @@
           }
         }
       },
-      "put": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Update Book",
-        "operationId": "update_book_api_v1_books__book_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BookUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Delete Book",
-        "operationId": "delete_book_api_v1_books__book_id__delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members": {
       "get": {
         "tags": [
-          "members"
+          "Appointments"
         ],
-        "summary": "Read Members",
-        "operationId": "read_members_api_v1_members_get",
+        "summary": "List Appointments",
+        "operationId": "list_appointments_api_v1_appointments_get",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "parameters": [
+          {
+            "name": "patient_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by patient UUID",
+              "title": "Patient Id"
+            },
+            "description": "Filter by patient UUID"
+          },
+          {
+            "name": "doctor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by doctor UUID",
+              "title": "Doctor Id"
+            },
+            "description": "Filter by doctor UUID"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status",
+              "title": "Status"
+            },
+            "description": "Filter by status"
+          },
           {
             "name": "skip",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
+              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -591,7 +748,9 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
               "title": "Limit"
             }
           }
@@ -604,53 +763,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UserResponse"
+                    "$ref": "#/components/schemas/AppointmentResponse"
                   },
-                  "title": "Response Read Members Api V1 Members Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Create Member",
-        "operationId": "create_member_api_v1_members_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "title": "Response List Appointments Api V1 Appointments Get"
                 }
               }
             }
@@ -668,27 +783,26 @@
         }
       }
     },
-    "/api/v1/members/{member_id}": {
+    "/api/v1/appointments/{appointment_id}": {
       "get": {
         "tags": [
-          "members"
+          "Appointments"
         ],
-        "summary": "Read Member",
-        "operationId": "read_member_api_v1_members__member_id__get",
+        "summary": "Get Appointment",
+        "operationId": "get_appointment_api_v1_appointments__appointment_id__get",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "parameters": [
           {
-            "name": "member_id",
+            "name": "appointment_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
+              "title": "Appointment Id"
             }
           }
         ],
@@ -698,7 +812,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -714,27 +828,28 @@
             }
           }
         }
-      },
-      "put": {
+      }
+    },
+    "/api/v1/appointments/{appointment_id}/status": {
+      "patch": {
         "tags": [
-          "members"
+          "Appointments"
         ],
-        "summary": "Update Member",
-        "operationId": "update_member_api_v1_members__member_id__put",
+        "summary": "Update Appointment Status",
+        "operationId": "update_appointment_status_api_v1_appointments__appointment_id__status_patch",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "parameters": [
           {
-            "name": "member_id",
+            "name": "appointment_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
+              "title": "Appointment Id"
             }
           }
         ],
@@ -743,7 +858,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UserUpdate"
+                "$ref": "#/components/schemas/AppointmentStatusUpdate"
               }
             }
           }
@@ -754,7 +869,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -772,90 +887,18 @@
         }
       }
     },
-    "/api/v1/members/{member_id}/loans": {
-      "get": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Read Member Loans",
-        "operationId": "read_member_loans_api_v1_members__member_id__loans_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoanResponse"
-                  },
-                  "title": "Response Read Member Loans Api V1 Members  Member Id  Loans Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans": {
+    "/api/v1/emr/records": {
       "post": {
         "tags": [
-          "loans"
+          "Electronic Medical Records"
         ],
-        "summary": "Checkout Book",
-        "operationId": "checkout_book_api_v1_loans_post",
+        "summary": "Create Emr Record",
+        "operationId": "create_emr_record_api_v1_emr_records_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoanCreate"
+                "$ref": "#/components/schemas/EMRRecordCreate"
               }
             }
           },
@@ -867,7 +910,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
+                  "$ref": "#/components/schemas/EMRRecordResponse"
                 }
               }
             }
@@ -885,114 +928,31 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ]
       }
     },
-    "/api/v1/loans/{loan_id}/return": {
-      "put": {
+    "/api/v1/emr/patients/{patient_id}": {
+      "get": {
         "tags": [
-          "loans"
+          "Electronic Medical Records"
         ],
-        "summary": "Return Book",
-        "operationId": "return_book_api_v1_loans__loan_id__return_put",
+        "summary": "Get Patient Emr History",
+        "operationId": "get_patient_emr_history_api_v1_emr_patients__patient_id__get",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "parameters": [
           {
-            "name": "loan_id",
+            "name": "patient_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Loan Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans/reminders": {
-      "post": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Send Due Reminders",
-        "operationId": "send_due_reminders_api_v1_loans_reminders_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/fines": {
-      "get": {
-        "tags": [
-          "fines"
-        ],
-        "summary": "Read Fines",
-        "operationId": "read_fines_api_v1_fines_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
+              "title": "Patient Id"
             }
           }
         ],
@@ -1004,9 +964,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/FineResponse"
+                    "$ref": "#/components/schemas/EMRRecordResponse"
                   },
-                  "title": "Response Read Fines Api V1 Fines Get"
+                  "title": "Response Get Patient Emr History Api V1 Emr Patients  Patient Id  Get"
                 }
               }
             }
@@ -1024,27 +984,26 @@
         }
       }
     },
-    "/api/v1/fines/{fine_id}/pay": {
-      "post": {
+    "/api/v1/emr/records/{record_id}": {
+      "get": {
         "tags": [
-          "fines"
+          "Electronic Medical Records"
         ],
-        "summary": "Pay Fine",
-        "operationId": "pay_fine_api_v1_fines__fine_id__pay_post",
+        "summary": "Get Emr Record",
+        "operationId": "get_emr_record_api_v1_emr_records__record_id__get",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "parameters": [
           {
-            "name": "fine_id",
+            "name": "record_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Fine Id"
+              "title": "Record Id"
             }
           }
         ],
@@ -1054,7 +1013,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FineResponse"
+                  "$ref": "#/components/schemas/EMRRecordResponse"
                 }
               }
             }
@@ -1072,112 +1031,16 @@
         }
       }
     },
-    "/api/v1/inventory": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Read Inventory Items",
-        "operationId": "read_inventory_items_api_v1_inventory_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Search by name, supplier, or category",
-              "title": "Search"
-            },
-            "description": "Search by name, supplier, or category"
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by category",
-              "title": "Category"
-            },
-            "description": "Filter by category"
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryItemResponse"
-                  },
-                  "title": "Response Read Inventory Items Api V1 Inventory Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/api/v1/invoices": {
       "post": {
         "tags": [
-          "inventory"
+          "Billing & Invoices"
         ],
-        "summary": "Create Inventory Item",
-        "operationId": "create_inventory_item_api_v1_inventory_post",
+        "summary": "Create Invoice",
+        "operationId": "create_invoice_api_v1_invoices_post",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "requestBody": {
@@ -1185,7 +1048,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InventoryItemCreate"
+                "$ref": "#/components/schemas/InvoiceCreate"
               }
             }
           }
@@ -1196,7 +1059,106 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+                  "$ref": "#/components/schemas/InvoiceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Billing & Invoices"
+        ],
+        "summary": "List Invoices",
+        "operationId": "list_invoices_api_v1_invoices_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by patient UUID",
+              "title": "Patient Id"
+            },
+            "description": "Filter by patient UUID"
+          },
+          {
+            "name": "payment_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by payment status",
+              "title": "Payment Status"
+            },
+            "description": "Filter by payment status"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceResponse"
+                  },
+                  "title": "Response List Invoices Api V1 Invoices Get"
                 }
               }
             }
@@ -1214,27 +1176,26 @@
         }
       }
     },
-    "/api/v1/inventory/{item_id}": {
+    "/api/v1/invoices/{invoice_id}": {
       "get": {
         "tags": [
-          "inventory"
+          "Billing & Invoices"
         ],
-        "summary": "Read Inventory Item",
-        "operationId": "read_inventory_item_api_v1_inventory__item_id__get",
+        "summary": "Get Invoice",
+        "operationId": "get_invoice_api_v1_invoices__invoice_id__get",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "parameters": [
           {
-            "name": "item_id",
+            "name": "invoice_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
+              "title": "Invoice Id"
             }
           }
         ],
@@ -1244,7 +1205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+                  "$ref": "#/components/schemas/InvoiceResponse"
                 }
               }
             }
@@ -1260,27 +1221,28 @@
             }
           }
         }
-      },
-      "put": {
+      }
+    },
+    "/api/v1/invoices/{invoice_id}/payment": {
+      "patch": {
         "tags": [
-          "inventory"
+          "Billing & Invoices"
         ],
-        "summary": "Update Inventory Item",
-        "operationId": "update_inventory_item_api_v1_inventory__item_id__put",
+        "summary": "Update Payment Status",
+        "operationId": "update_payment_status_api_v1_invoices__invoice_id__payment_patch",
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "HTTPBearer": []
           }
         ],
         "parameters": [
           {
-            "name": "item_id",
+            "name": "invoice_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
+              "title": "Invoice Id"
             }
           }
         ],
@@ -1289,7 +1251,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InventoryItemUpdate"
+                "$ref": "#/components/schemas/InvoicePaymentUpdate"
               }
             }
           }
@@ -1300,52 +1262,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+                  "$ref": "#/components/schemas/InvoiceResponse"
                 }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Delete Inventory Item",
-        "operationId": "delete_inventory_item_api_v1_inventory__item_id__delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           },
@@ -1362,10 +1280,13 @@
         }
       }
     },
-    "/": {
+    "/health": {
       "get": {
-        "summary": "Read Root",
-        "operationId": "read_root__get",
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1381,35 +1302,21 @@
   },
   "components": {
     "schemas": {
-      "Body_login_for_access_token_api_v1_auth_token_post": {
+      "AppointmentCreate": {
         "properties": {
-          "grant_type": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^password$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Grant Type"
-          },
-          "username": {
+          "patient_id": {
             "type": "string",
-            "title": "Username"
+            "title": "Patient Id"
           },
-          "password": {
+          "doctor_id": {
             "type": "string",
-            "format": "password",
-            "title": "Password"
+            "title": "Doctor Id"
           },
-          "scope": {
+          "slot_id": {
             "type": "string",
-            "title": "Scope",
-            "default": ""
+            "title": "Slot Id"
           },
-          "client_id": {
+          "reason_for_visit": {
             "anyOf": [
               {
                 "type": "string"
@@ -1418,285 +1325,270 @@
                 "type": "null"
               }
             ],
-            "title": "Client Id"
-          },
-          "client_secret": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "format": "password",
-            "title": "Client Secret"
+            "title": "Reason For Visit"
           }
         },
         "type": "object",
         "required": [
-          "username",
-          "password"
+          "patient_id",
+          "doctor_id",
+          "slot_id"
         ],
-        "title": "Body_login_for_access_token_api_v1_auth_token_post"
+        "title": "AppointmentCreate"
       },
-      "BookCreate": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "author": {
-            "type": "string",
-            "title": "Author"
-          },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "author",
-          "isbn"
-        ],
-        "title": "BookCreate"
-      },
-      "BookResponse": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "author": {
-            "type": "string",
-            "title": "Author"
-          },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "available_copies": {
-            "type": "integer",
-            "title": "Available Copies"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "author",
-          "isbn",
-          "id",
-          "available_copies",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "BookResponse"
-      },
-      "BookUpdate": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author"
-          },
-          "isbn": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Copies"
-          },
-          "available_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Available Copies"
-          }
-        },
-        "type": "object",
-        "title": "BookUpdate"
-      },
-      "FineResponse": {
+      "AppointmentResponse": {
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "loan_id": {
+          "patient_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Loan Id"
+            "title": "Patient Id"
           },
-          "amount": {
-            "type": "number",
-            "title": "Amount"
+          "doctor_id": {
+            "type": "string",
+            "title": "Doctor Id"
+          },
+          "slot_id": {
+            "type": "string",
+            "title": "Slot Id"
           },
           "status": {
             "type": "string",
             "title": "Status"
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "loan": {
+          "reason_for_visit": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/LoanResponse"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Reason For Visit"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "loan_id",
-          "amount",
+          "patient_id",
+          "doctor_id",
+          "slot_id",
           "status",
-          "created_at",
-          "updated_at"
+          "created_at"
         ],
-        "title": "FineResponse"
+        "title": "AppointmentResponse"
+      },
+      "AppointmentStatusUpdate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "Scheduled",
+              "In-Progress",
+              "Completed",
+              "Cancelled"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "AppointmentStatusUpdate"
+      },
+      "DoctorSlotCreate": {
+        "properties": {
+          "doctor_id": {
+            "type": "string",
+            "title": "Doctor Id"
+          },
+          "department": {
+            "type": "string",
+            "title": "Department"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "doctor_id",
+          "department",
+          "start_time",
+          "end_time"
+        ],
+        "title": "DoctorSlotCreate"
+      },
+      "DoctorSlotResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "doctor_id": {
+            "type": "string",
+            "title": "Doctor Id"
+          },
+          "department": {
+            "type": "string",
+            "title": "Department"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "is_booked": {
+            "type": "boolean",
+            "title": "Is Booked"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doctor_id",
+          "department",
+          "start_time",
+          "end_time",
+          "is_booked",
+          "created_at"
+        ],
+        "title": "DoctorSlotResponse"
+      },
+      "EMRRecordCreate": {
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "title": "Appointment Id"
+          },
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "doctor_id": {
+            "type": "string",
+            "title": "Doctor Id"
+          },
+          "diagnosis": {
+            "type": "string",
+            "title": "Diagnosis"
+          },
+          "clinical_notes": {
+            "type": "string",
+            "title": "Clinical Notes"
+          },
+          "prescriptions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Prescriptions"
+          },
+          "lab_orders": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Lab Orders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "appointment_id",
+          "patient_id",
+          "doctor_id",
+          "diagnosis",
+          "clinical_notes"
+        ],
+        "title": "EMRRecordCreate"
+      },
+      "EMRRecordResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "appointment_id": {
+            "type": "string",
+            "title": "Appointment Id"
+          },
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "doctor_id": {
+            "type": "string",
+            "title": "Doctor Id"
+          },
+          "diagnosis": {
+            "type": "string",
+            "title": "Diagnosis"
+          },
+          "clinical_notes": {
+            "type": "string",
+            "title": "Clinical Notes"
+          },
+          "prescriptions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Prescriptions"
+          },
+          "lab_orders": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Lab Orders"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "appointment_id",
+          "patient_id",
+          "doctor_id",
+          "diagnosis",
+          "clinical_notes",
+          "created_at"
+        ],
+        "title": "EMRRecordResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1711,292 +1603,94 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "InventoryItemCreate": {
+      "InvoiceCreate": {
         "properties": {
-          "name": {
+          "appointment_id": {
             "type": "string",
-            "title": "Name"
+            "title": "Appointment Id"
           },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "quantity": {
-            "type": "integer",
-            "title": "Quantity",
-            "default": 0
-          },
-          "unit": {
+          "patient_id": {
             "type": "string",
-            "title": "Unit"
+            "title": "Patient Id"
           },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount"
+          },
+          "line_items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Line Items"
+          },
+          "payment_status": {
+            "type": "string",
+            "enum": [
+              "Pending",
+              "Paid",
+              "Refunded"
             ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
+            "title": "Payment Status",
+            "default": "Pending"
           }
         },
         "type": "object",
         "required": [
-          "name",
-          "unit"
+          "appointment_id",
+          "patient_id",
+          "total_amount"
         ],
-        "title": "InventoryItemCreate"
+        "title": "InvoiceCreate"
       },
-      "InventoryItemResponse": {
+      "InvoicePaymentUpdate": {
         "properties": {
-          "name": {
+          "payment_status": {
             "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
+            "enum": [
+              "Pending",
+              "Paid",
+              "Refunded"
             ],
-            "title": "Description"
-          },
-          "quantity": {
-            "type": "integer",
-            "title": "Quantity",
-            "default": 0
-          },
-          "unit": {
-            "type": "string",
-            "title": "Unit"
-          },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
-          },
-          "item_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Item Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "is_low_stock": {
-            "type": "boolean",
-            "title": "Is Low Stock",
-            "default": false
+            "title": "Payment Status"
           }
         },
         "type": "object",
         "required": [
-          "name",
-          "unit",
-          "item_id",
-          "created_at",
-          "updated_at"
+          "payment_status"
         ],
-        "title": "InventoryItemResponse"
+        "title": "InvoicePaymentUpdate"
       },
-      "InventoryItemUpdate": {
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "quantity": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Quantity"
-          },
-          "unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit"
-          },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Low Stock Threshold"
-          }
-        },
-        "type": "object",
-        "title": "InventoryItemUpdate"
-      },
-      "LoanCreate": {
-        "properties": {
-          "book_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
-          },
-          "member_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "book_id",
-          "member_id"
-        ],
-        "title": "LoanCreate"
-      },
-      "LoanResponse": {
+      "InvoiceResponse": {
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "book_id": {
+          "appointment_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
+            "title": "Appointment Id"
           },
-          "member_id": {
+          "patient_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
+            "title": "Patient Id"
           },
-          "checkout_date": {
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount"
+          },
+          "line_items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Line Items"
+          },
+          "payment_status": {
             "type": "string",
-            "format": "date-time",
-            "title": "Checkout Date"
-          },
-          "due_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Due Date"
-          },
-          "return_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Return Date"
+            "title": "Payment Status"
           },
           "created_at": {
             "type": "string",
@@ -2007,193 +1701,293 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
-          },
-          "book": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/BookResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "member": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UserResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "type": "object",
         "required": [
           "id",
-          "book_id",
-          "member_id",
-          "checkout_date",
-          "due_date",
+          "appointment_id",
+          "patient_id",
+          "total_amount",
+          "payment_status",
           "created_at",
           "updated_at"
         ],
-        "title": "LoanResponse"
+        "title": "InvoiceResponse"
       },
-      "LoginRequest": {
+      "PatientCreate": {
         "properties": {
-          "email": {
-            "type": "string",
-            "title": "Email"
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
           },
-          "password": {
+          "full_name": {
             "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "title": "LoginRequest"
-      },
-      "OTPVerifyRequest": {
-        "properties": {
-          "otp_code": {
-            "type": "string",
-            "title": "Otp Code"
+            "minLength": 1,
+            "title": "Full Name"
           },
-          "otp_session_id": {
+          "date_of_birth": {
             "type": "string",
-            "title": "Otp Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_code",
-          "otp_session_id"
-        ],
-        "title": "OTPVerifyRequest"
-      },
-      "OTPVerifyResponse": {
-        "properties": {
-          "security_question_session_id": {
-            "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "security_question_session_id"
-        ],
-        "title": "OTPVerifyResponse"
-      },
-      "PasswordResetInitiateRequest": {
-        "properties": {
-          "login_id": {
-            "type": "string",
-            "title": "Login Id"
+            "format": "date",
+            "title": "Date Of Birth"
           },
-          "mobile_number": {
+          "gender": {
             "type": "string",
-            "title": "Mobile Number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "login_id",
-          "mobile_number"
-        ],
-        "title": "PasswordResetInitiateRequest"
-      },
-      "PasswordResetInitiateResponse": {
-        "properties": {
-          "otp_session_id": {
-            "type": "string",
-            "title": "Otp Session Id"
+            "minLength": 1,
+            "title": "Gender"
           },
-          "security_question": {
+          "phone": {
             "type": "string",
-            "title": "Security Question"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_session_id",
-          "security_question"
-        ],
-        "title": "PasswordResetInitiateResponse"
-      },
-      "SecurityQuestionVerifyRequest": {
-        "properties": {
-          "answer": {
-            "type": "string",
-            "title": "Answer"
+            "minLength": 3,
+            "title": "Phone"
           },
-          "security_question_session_id": {
+          "emergency_contact": {
             "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "answer",
-          "security_question_session_id"
-        ],
-        "title": "SecurityQuestionVerifyRequest"
-      },
-      "SecurityQuestionVerifyResponse": {
-        "properties": {
-          "password_reset_session_id": {
-            "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "password_reset_session_id"
-        ],
-        "title": "SecurityQuestionVerifyResponse"
-      },
-      "SetNewPasswordRequest": {
-        "properties": {
-          "new_password": {
-            "type": "string",
-            "title": "New Password"
+            "minLength": 1,
+            "title": "Emergency Contact"
           },
-          "password_reset_session_id": {
-            "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "new_password",
-          "password_reset_session_id"
-        ],
-        "title": "SetNewPasswordRequest"
-      },
-      "SetNewPasswordResponse": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status"
+          "medical_history": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Medical History"
           },
-          "login_link": {
-            "type": "string",
-            "title": "Login Link"
+          "insurance_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance Provider"
+          },
+          "insurance_policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance Policy Number"
           }
         },
         "type": "object",
         "required": [
-          "status",
-          "login_link"
+          "full_name",
+          "date_of_birth",
+          "gender",
+          "phone",
+          "emergency_contact"
         ],
-        "title": "SetNewPasswordResponse"
+        "title": "PatientCreate"
       },
-      "Token": {
+      "PatientResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Of Birth"
+          },
+          "gender": {
+            "type": "string",
+            "title": "Gender"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "emergency_contact": {
+            "type": "string",
+            "title": "Emergency Contact"
+          },
+          "medical_history": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Medical History"
+          },
+          "insurance_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance Provider"
+          },
+          "insurance_policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance Policy Number"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "date_of_birth",
+          "gender",
+          "phone",
+          "emergency_contact",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PatientResponse"
+      },
+      "PatientUpdate": {
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "date_of_birth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Of Birth"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "emergency_contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emergency Contact"
+          },
+          "medical_history": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Medical History"
+          },
+          "insurance_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance Provider"
+          },
+          "insurance_policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance Policy Number"
+          }
+        },
+        "type": "object",
+        "title": "PatientUpdate"
+      },
+      "TokenResponse": {
         "properties": {
           "access_token": {
             "type": "string",
@@ -2201,30 +1995,26 @@
           },
           "token_type": {
             "type": "string",
-            "title": "Token Type"
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
           }
         },
         "type": "object",
         "required": [
           "access_token",
-          "token_type"
+          "user"
         ],
-        "title": "Token"
+        "title": "TokenResponse"
       },
-      "UserCreate": {
+      "UserLogin": {
         "properties": {
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
-          },
-          "full_name": {
-            "type": "string",
-            "title": "Full Name"
-          },
-          "role": {
-            "type": "string",
-            "title": "Role",
-            "default": "member"
           },
           "password": {
             "type": "string",
@@ -2234,101 +2024,70 @@
         "type": "object",
         "required": [
           "email",
-          "full_name",
           "password"
         ],
-        "title": "UserCreate"
+        "title": "UserLogin"
       },
-      "UserResponse": {
+      "UserRegister": {
         "properties": {
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
           },
-          "full_name": {
+          "password": {
             "type": "string",
-            "title": "Full Name"
+            "minLength": 8,
+            "title": "Password"
           },
           "role": {
             "type": "string",
+            "enum": [
+              "Admin",
+              "Doctor",
+              "Staff",
+              "Patient"
+            ],
             "title": "Role",
-            "default": "member"
-          },
+            "default": "Patient"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserRegister"
+      },
+      "UserResponse": {
+        "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
-          "email",
-          "full_name",
           "id",
-          "created_at",
-          "updated_at"
+          "email",
+          "role",
+          "created_at"
         ],
         "title": "UserResponse"
-      },
-      "UserUpdate": {
-        "properties": {
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
-          "full_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Full Name"
-          },
-          "role": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Role"
-          },
-          "password": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "title": "UserUpdate"
       },
       "ValidationError": {
         "properties": {
@@ -2372,14 +2131,9 @@
       }
     },
     "securitySchemes": {
-      "OAuth2PasswordBearer": {
-        "type": "oauth2",
-        "flows": {
-          "password": {
-            "scopes": {},
-            "tokenUrl": "/api/v1/auth/token"
-          }
-        }
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }
