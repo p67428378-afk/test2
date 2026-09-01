@@ -15,7 +15,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<SearchPage />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/spots/:id text-slate-100" element={<SpotDetailPage />} />
         <Route path="/spots/:id" element={<SpotDetailPage />} />
         <Route path="/rates" element={<SearchPage />} />
         <Route path="/monitor" element={<MonitorPage />} />
