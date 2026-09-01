@@ -1,64 +1,90 @@
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class SpotOverviewItem(BaseModel):
-    spot_id: str
-    location_id: Optional[str] = None
-    name: str
-    address: str
-    latitude: float
-    longitude: float
-    distance_km: float = 0.0
-    hourly_rate: float
-    currency: str = "USD"
-    status: str = "AVAILABLE"
-    total_capacity: int
-    available_spots: int
-    spot_type: str
-    has_ev_charging: bool
-    is_peak_hours: bool = False
-    updated_at: str
-
+class HourlyRateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: str
+    location_id: str
+    base_rate_per_hour: float
+    peak_rate_per_hour: float
+    weekend_rate_per_hour: Optional[float] = None
+    peak_start_time: Optional[str] = "07:00:00"
+    peak_end_time: Optional[str] = "19:00:00"
+    max_daily_rate: Optional[float] = None
+    currency: str = "USD"
 
-class ParkingSearchResponse(BaseModel):
-    total: int
-    spots: List[SpotOverviewItem]
 
-
-class RateBreakdown(BaseModel):
-    standard_rate: str
-    peak_rate: str
-    weekend_rate: str
-
-
-class HourlyRateDetailResponse(BaseModel):
+class RateBreakdownResponse(BaseModel):
     spot_id: str
     base_hourly_rate: float
     currency: str = "USD"
-    rate_breakdown: RateBreakdown
+    rate_breakdown: Dict[str, str]
     current_active_rate: float
     is_peak: bool
-    max_daily_cap: float
+    max_daily_cap: Optional[float] = None
 
+
+class ParkingSpotSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-
-class ParkingSpotItem(BaseModel):
     id: str
     location_id: str
     spot_number: str
     status: str
     last_status_change: datetime
 
+
+class ParkingLocationCreate(BaseModel):
+    name: str
+    address: str
+    latitude: float
+    longitude: float
+    spot_type: str = "garage"
+    has_ev_charging: bool = False
+    total_capacity: int = 10
+    base_rate_per_hour: float = 5.0
+    peak_rate_per_hour: float = 8.0
+    weekend_rate_per_hour: Optional[float] = 6.0
+    max_daily_rate: Optional[float] = 35.0
+
+
+class SpotSearchItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    spot_id: str
+    id: Optional[str] = None
+    name: str
+    address: str
+    latitude: float
+    longitude: float
+    distance_km: float
+    hourly_rate: float
+    base_hourly_rate: Optional[float] = None
+    current_active_rate: Optional[float] = None
+    currency: str = "USD"
+    status: str
+    total_capacity: int
+    available_spots: int
+    spot_type: str
+    has_ev_charging: bool
+    is_peak_hours: bool
+    is_peak: Optional[bool] = None
+    updated_at: datetime
 
-class ParkingLocationDetailResponse(BaseModel):
+
+class SpotSearchResponse(BaseModel):
+    total: int
+    spots: List[SpotSearchItem]
+
+
+class ParkingLocationDetail(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
+    spot_id: str
     name: str
     address: str
     latitude: float
@@ -67,60 +93,50 @@ class ParkingLocationDetailResponse(BaseModel):
     has_ev_charging: bool
     total_capacity: int
     available_spots: int
+    status: str
+    hourly_rate: float
     base_hourly_rate: float
     current_active_rate: float
     is_peak: bool
-    rates: Optional[HourlyRateDetailResponse] = None
-    individual_spots: List[ParkingSpotItem] = []
+    is_peak_hours: bool
+    currency: str = "USD"
+    rates: Optional[RateBreakdownResponse] = None
+    spots: Optional[List[ParkingSpotSchema]] = None
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
 
-
-class ParkingLocationCreate(BaseModel):
-    name: str = Field(..., min_length=1)
-    address: str = Field(..., min_length=1)
-    latitude: float
-    longitude: float
-    spot_type: str = "garage"
-    has_ev_charging: bool = False
-    total_capacity: int = Field(50, gt=0)
+class SpotStatusUpdate(BaseModel):
+    status: Optional[str] = None
     available_spots: Optional[int] = None
-    base_hourly_rate: float = Field(5.0, ge=0)
-    peak_rate_per_hour: Optional[float] = None
-    weekend_rate_per_hour: Optional[float] = None
-    max_daily_rate: Optional[float] = None
+    spot_number: Optional[str] = None
 
 
-class ParkingSpotStatusUpdate(BaseModel):
-    status: Optional[str] = Field(None, description="AVAILABLE, OCCUPIED, or RESERVED")
-    available_spots: Optional[int] = Field(
-        None, ge=0, description="Updated count of open spots"
-    )
-
-
-class CostEstimateRequest(BaseModel):
-    hours: float = Field(..., gt=0, description="Number of hours to park")
-    start_time: Optional[str] = Field(
-        None, description="ISO timestamp or HH:MM:SS for arrival time"
-    )
-
-
-class CostEstimateResponse(BaseModel):
-    spot_id: str
-    name: str
-    requested_hours: float
-    estimated_cost: float
-    currency: str = "USD"
-    capped_at_daily_max: bool
-    applied_rate_per_hour: float
-    is_peak: bool
-
-
-class RealtimeStatusEvent(BaseModel):
-    event: str = "SPOT_STATUS_CHANGED"
+class SpotStatusResponse(BaseModel):
     spot_id: str
     status: str
     available_spots: int
-    timestamp: str
+    updated_at: datetime
+
+
+class CalculateCostRequest(BaseModel):
+    hours: float = Field(..., gt=0)
+    start_time: Optional[str] = None
+
+
+class CalculateCostResponse(BaseModel):
+    spot_id: str
+    hours: float
+    estimated_cost: float
+    currency: str = "USD"
+    rate_applied: float
+    breakdown: str
+
+
+class SensorEventResponse(BaseModel):
+    event: str = "SPOT_STATUS_CHANGED"
+    spot_id: str
+    name: Optional[str] = None
+    status: str
+    available_spots: int
+    timestamp: datetime

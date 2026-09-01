@@ -3,13 +3,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from server.database import init_db, seed_data, SessionLocal
-from server.api.v1.endpoints import parking_spots, realtime
+from server.api.v1.endpoints.parking_spots import router as parking_router
+from server.api.v1.endpoints.realtime import router as realtime_router
+from server.database import SessionLocal, init_db, seed_data
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB schema & seed data
+    # Safe DB schema initialization and seeding via importable functions
     init_db()
     db = SessionLocal()
     try:
@@ -20,53 +21,32 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ParkFind Locator & Hourly Rates API",
-    description="Real-time parking spot locator, hourly rate calculator, and availability streaming platform.",
+    title="ParkFind Locator API",
+    description="Real-time Parking Spot Locator and Dynamic Hourly Rates API",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# Mandatory CORS Middleware
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173",
-).split(",")
-
+# CORS configuration
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers
-app.include_router(
-    parking_spots.router,
-    prefix="/api/v1/parking-spots",
-    tags=["parking-spots"],
-)
-
-app.include_router(
-    realtime.router,
-    prefix="/api/v1/parking-spots",
-    tags=["realtime"],
-)
+# Mount API Routers
+app.include_router(parking_router, prefix="/api/v1")
+app.include_router(realtime_router)
 
 
-@app.get("/api/v1/health", tags=["system"])
+@app.get("/health", response_model=dict)
 def health_check():
-    return {
-        "status": "healthy",
-        "service": "parking-locator-api",
-        "version": "1.0.0",
-    }
+    return {"status": "healthy", "service": "parking-locator-api"}
 
 
-@app.get("/", tags=["system"])
+@app.get("/", response_model=dict)
 def root():
-    return {
-        "message": "Welcome to the ParkFind Locator API",
-        "docs_url": "/docs",
-        "health_url": "/api/v1/health",
-    }
+    return {"message": "Welcome to ParkFind Locator API", "docs": "/docs"}

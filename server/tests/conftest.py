@@ -1,53 +1,52 @@
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
-
-from server.models.parking import Base
-from server.database import get_db, seed_data
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+from server.database import Base, get_db, seed_data
 from server.main import app
 
-# In-memory SQLite with StaticPool for test suite
 TEST_DATABASE_URL = "sqlite:///:memory:"
-
-test_engine = create_engine(
+engine = create_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_db():
-    Base.metadata.create_all(bind=test_engine)
+def _create_schema_once():
+    import server.models.parking  # noqa: F401
+    Base.metadata.create_all(bind=engine)
+    yield
+    Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(autouse=True)
+def _setup_and_clean_tables():
+    """Function-scoped: seed initial data and clean tables between tests."""
     db = TestingSessionLocal()
     seed_data(db)
     db.close()
     yield
-    Base.metadata.drop_all(bind=test_engine)
+    with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            conn.execute(table.delete())
 
 
-@pytest.fixture
-def db_session():
-    session = TestingSessionLocal()
+def _override_get_db():
+    db = TestingSessionLocal()
     try:
-        yield session
+        yield db
     finally:
-        session.close()
+        db.close()
+
+
+app.dependency_overrides[get_db] = _override_get_db
 
 
 @pytest.fixture
-def client(db_session):
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-
-    app.dependency_overrides[get_db] = override_get_db
+def client():
     with TestClient(app) as c:
         yield c
-    app.dependency_overrides.clear()
