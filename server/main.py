@@ -1,35 +1,26 @@
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
 import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.middleware.cors import CORSMiddleware
+from server.database import init_db
+from server.routers.passwords import router as passwords_router
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
 
-# Initialize database tables
-init_db()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="KeyCraft Password Generator API",
+    description="Cryptographically secure password and key generation service",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
 ).split(",")
@@ -42,19 +33,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    msg = errors[0].get("msg") if errors else "Validation error"
+    if "At least one character set" in msg:
+        detail = "At least one character set (uppercase, lowercase, digits, or symbols) must be selected."
+    else:
+        detail = msg
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": detail},
+    )
 
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+app.include_router(passwords_router)
