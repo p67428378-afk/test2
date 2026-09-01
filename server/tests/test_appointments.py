@@ -1,125 +1,175 @@
 from datetime import date, timedelta
 
 
-def test_create_and_approve_appointment(client):
-    # 1. Get eligible inmate and verified visitor
-    inmates_res = client.get("/api/v1/inmates?status=ACTIVE")
-    assert inmates_res.status_code == 200
-    inmates = inmates_res.json()
-    assert len(inmates) > 0
+def test_create_standard_appointment(client):
+    # Register visitor and get inmate
+    v_resp = client.post(
+        "/api/v1/visitors/register",
+        json={
+            "full_name": "Bob Smith",
+            "national_id": "NAT-BOB-01",
+            "email": "bob@example.com",
+            "visitor_type": "STANDARD",
+        },
+    )
+    visitor_id = v_resp.json()["id"]
+
+    inmates = client.get("/api/v1/inmates").json()
     inmate_id = inmates[0]["id"]
 
-    visitor_res = client.get("/api/v1/visitors/profile?email=test@example.com")
-    assert visitor_res.status_code == 200
-    visitor_id = visitor_res.json()["id"]
-
-    # 2. Schedule appointment
-    target_date = (date.today() + timedelta(days=2)).isoformat()
-    payload = {
-        "visitor_id": visitor_id,
-        "inmate_id": inmate_id,
-        "visit_date": target_date,
-        "start_time": "14:00",
-        "relationship": "Spouse",
-    }
-    create_res = client.post("/api/v1/appointments", json=payload)
-    assert create_res.status_code == 201
-    appointment = create_res.json()
-    assert appointment["status"] == "PENDING"
-    appointment_id = appointment["id"]
-
-    # 3. Approve appointment
-    patch_res = client.patch(
-        f"/api/v1/appointments/{appointment_id}/status",
-        json={"status": "APPROVED"},
-    )
-    assert patch_res.status_code == 200
-    assert patch_res.json()["status"] == "APPROVED"
-
-
-def test_appointment_approval_blocked_for_unverified_visitor(client):
-    # 1. Get pending visitor
-    visitor_res = client.get("/api/v1/visitors/profile?email=pending@example.com")
-    assert visitor_res.status_code == 200
-    visitor_id = visitor_res.json()["id"]
-
-    inmates_res = client.get("/api/v1/inmates?status=ACTIVE")
-    inmate_id = inmates_res.json()[0]["id"]
-
-    # 2. Create appointment
-    target_date = (date.today() + timedelta(days=3)).isoformat()
-    create_res = client.post(
+    visit_date = str(date.today() + timedelta(days=2))
+    resp = client.post(
         "/api/v1/appointments",
         json={
             "visitor_id": visitor_id,
             "inmate_id": inmate_id,
+            "visit_date": visit_date,
+            "start_time": "10:00:00",
+            "slot_duration_minutes": 30,
+            "relationship": "Brother",
+        },
+    )
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["visitor_id"] == visitor_id
+    assert data["inmate_id"] == inmate_id
+    assert data["slot_duration_minutes"] == 30
+    assert data["status"] == "PENDING"
+    assert data["security_flag_status"] == "CLEARED"
+
+
+def test_create_legal_counsel_appointment_with_60m_slot(client):
+    v_resp = client.post(
+        "/api/v1/visitors/register",
+        json={
+            "full_name": "Counsel Sarah Connor",
+            "national_id": "BAR-LEGAL-01",
+            "email": "sarah@legalfirm.com",
+            "visitor_type": "LEGAL",
+        },
+    )
+    visitor_id = v_resp.json()["id"]
+
+    inmates = client.get("/api/v1/inmates").json()
+    inmate_id = inmates[0]["id"]
+
+    visit_date = str(date.today() + timedelta(days=3))
+    resp = client.post(
+        "/api/v1/appointments",
+        json={
+            "visitor_id": visitor_id,
+            "inmate_id": inmate_id,
+            "visit_date": visit_date,
+            "start_time": "14:00:00",
+            "slot_duration_minutes": 60,
+            "relationship": "Attorney",
+        },
+    )
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["slot_duration_minutes"] == 60
+
+
+def test_inmate_weekly_quota_enforcement(client):
+    # Inmate INV-602 has weekly_visit_limit = 1
+    inmates = client.get("/api/v1/inmates").json()
+    inv602 = [i for i in inmates if i["inmate_number"] == "INV-602"][0]
+
+    v1_resp = client.post(
+        "/api/v1/visitors/register",
+        json={
+            "full_name": "Visitor One",
+            "national_id": "NAT-V1",
+            "email": "v1@example.com",
+            "visitor_type": "STANDARD",
+        },
+    )
+    v1_id = v1_resp.json()["id"]
+
+    v2_resp = client.post(
+        "/api/v1/visitors/register",
+        json={
+            "full_name": "Visitor Two",
+            "national_id": "NAT-V2",
+            "email": "v2@example.com",
+            "visitor_type": "STANDARD",
+        },
+    )
+    v2_id = v2_resp.json()["id"]
+
+    target_date = str(date.today() + timedelta(days=4))
+
+    # First appointment (should succeed)
+    r1 = client.post(
+        "/api/v1/appointments",
+        json={
+            "visitor_id": v1_id,
+            "inmate_id": inv602["id"],
             "visit_date": target_date,
-            "start_time": "10:30",
-            "relationship": "Sibling",
+            "start_time": "09:00:00",
+            "slot_duration_minutes": 30,
+            "relationship": "Friend",
         },
     )
-    assert create_res.status_code == 201
-    appointment_id = create_res.json()["id"]
+    assert r1.status_code == 201
 
-    # 3. Try to approve - must fail with 403 because verification_status is PENDING
-    approve_res = client.patch(
-        f"/api/v1/appointments/{appointment_id}/status",
+    # Second appointment in the same week for standard visitor on INV-602 (limit=1) -> should be rejected
+    r2 = client.post(
+        "/api/v1/appointments",
+        json={
+            "visitor_id": v2_id,
+            "inmate_id": inv602["id"],
+            "visit_date": target_date,
+            "start_time": "11:00:00",
+            "slot_duration_minutes": 30,
+            "relationship": "Cousin",
+        },
+    )
+    assert r2.status_code == 400
+    assert "weekly visit limit reached" in r2.json()["detail"].lower()
+
+
+def test_appointment_approval_triggers_digital_pass(client):
+    v_resp = client.post(
+        "/api/v1/visitors/register",
+        json={
+            "full_name": "David Miller",
+            "national_id": "NAT-DM-99",
+            "email": "david@example.com",
+            "visitor_type": "STANDARD",
+        },
+    )
+    visitor_id = v_resp.json()["id"]
+
+    inmates = client.get("/api/v1/inmates").json()
+    inmate_id = inmates[1]["id"]
+
+    appt_resp = client.post(
+        "/api/v1/appointments",
+        json={
+            "visitor_id": visitor_id,
+            "inmate_id": inmate_id,
+            "visit_date": str(date.today() + timedelta(days=1)),
+            "start_time": "15:00:00",
+            "slot_duration_minutes": 30,
+            "relationship": "Son",
+        },
+    )
+    appt_id = appt_resp.json()["id"]
+
+    # Approve appointment
+    patch_resp = client.patch(
+        f"/api/v1/appointments/{appt_id}/status",
         json={"status": "APPROVED"},
     )
-    assert approve_res.status_code in [400, 403]
-    assert "unverified" in approve_res.json()["detail"].lower()
+    assert patch_resp.status_code == 200
+    appt_data = patch_resp.json()
+    assert appt_data["status"] == "APPROVED"
+    assert appt_data["digital_pass"] is not None
+    assert "data:image/png;base64" in appt_data["digital_pass"]["qr_code_data_url"]
 
-
-def test_weekly_quota_enforcement(client):
-    # Inmate has max 2 visits per calendar week
-    inmates_res = client.get("/api/v1/inmates?status=ACTIVE")
-    inmate_id = inmates_res.json()[1]["id"]  # use second inmate
-
-    visitor_res = client.get("/api/v1/visitors/profile?email=test@example.com")
-    visitor_id = visitor_res.json()["id"]
-
-    base_date = date.today() + timedelta(days=10)
-
-    # 1st appointment
-    appt1 = client.post(
-        "/api/v1/appointments",
-        json={
-            "visitor_id": visitor_id,
-            "inmate_id": inmate_id,
-            "visit_date": base_date.isoformat(),
-            "start_time": "09:00",
-            "relationship": "Friend",
-        },
-    ).json()
-    client.patch(
-        f"/api/v1/appointments/{appt1['id']}/status", json={"status": "APPROVED"}
-    )
-
-    # 2nd appointment in same week
-    appt2 = client.post(
-        "/api/v1/appointments",
-        json={
-            "visitor_id": visitor_id,
-            "inmate_id": inmate_id,
-            "visit_date": (base_date + timedelta(days=1)).isoformat(),
-            "start_time": "11:00",
-            "relationship": "Friend",
-        },
-    ).json()
-    client.patch(
-        f"/api/v1/appointments/{appt2['id']}/status", json={"status": "APPROVED"}
-    )
-
-    # 3rd appointment in same week should be rejected by quota check
-    appt3_res = client.post(
-        "/api/v1/appointments",
-        json={
-            "visitor_id": visitor_id,
-            "inmate_id": inmate_id,
-            "visit_date": (base_date + timedelta(days=2)).isoformat(),
-            "start_time": "15:00",
-            "relationship": "Friend",
-        },
-    )
-    assert appt3_res.status_code == 400
-    assert "maximum 2 visits per week" in appt3_res.json()["detail"].lower()
+    # Test PDF download endpoint
+    pdf_resp = client.get(f"/api/v1/appointments/{appt_id}/digital-pass/pdf")
+    assert pdf_resp.status_code == 200
+    assert pdf_resp.headers["content-type"] == "application/pdf"
+    assert len(pdf_resp.content) > 100

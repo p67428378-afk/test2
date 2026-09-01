@@ -1,17 +1,167 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Prison Visitor Management System",
-    "version": "1.0.0"
+    "title": "Prison Visitor Management System API",
+    "description": "Automated Gate Control, Express QR Passes, Dynamic Quotas, and Real-Time Watchlist Screening",
+    "version": "2.0.0"
   },
   "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login For Access Token",
+        "operationId": "login_for_access_token_api_v1_auth_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_for_access_token_api_v1_auth_token_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get Me",
+        "operationId": "get_me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/visitors/register": {
       "post": {
         "tags": [
           "Visitors"
         ],
-        "summary": "Register",
-        "operationId": "register_api_v1_visitors_register_post",
+        "summary": "Register Visitor",
+        "operationId": "register_visitor_api_v1_visitors_register_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -28,7 +178,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VisitorOut"
+                  "$ref": "#/components/schemas/VisitorResponse"
                 }
               }
             }
@@ -51,24 +201,28 @@
         "tags": [
           "Visitors"
         ],
-        "summary": "Get Profile",
-        "operationId": "get_profile_api_v1_visitors_profile_get",
+        "summary": "Get Visitor Profile",
+        "operationId": "get_visitor_profile_api_v1_visitors_profile_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
-            "name": "visitor_id",
+            "name": "email",
             "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "format": "uuid"
+                  "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Visitor Id"
+              "title": "Email"
             }
           },
           {
@@ -86,22 +240,6 @@
               ],
               "title": "National Id"
             }
-          },
-          {
-            "name": "email",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Email"
-            }
           }
         ],
         "responses": {
@@ -110,7 +248,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VisitorOut"
+                  "$ref": "#/components/schemas/VisitorResponse"
                 }
               }
             }
@@ -133,41 +271,9 @@
         "tags": [
           "Visitors"
         ],
-        "summary": "List All Visitors",
-        "operationId": "list_all_visitors_api_v1_visitors_get",
+        "summary": "List Visitors",
+        "operationId": "list_visitors_api_v1_visitors_get",
         "parameters": [
-          {
-            "name": "verification_status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Verification Status"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          },
           {
             "name": "skip",
             "in": "query",
@@ -187,8 +293,40 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "default": 50,
+              "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "is_flagged",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Flagged"
             }
           }
         ],
@@ -200,9 +338,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/VisitorOut"
+                    "$ref": "#/components/schemas/VisitorResponse"
                   },
-                  "title": "Response List All Visitors Api V1 Visitors Get"
+                  "title": "Response List Visitors Api V1 Visitors Get"
                 }
               }
             }
@@ -220,22 +358,21 @@
         }
       }
     },
-    "/api/v1/visitors/{id}": {
+    "/api/v1/visitors/{visitor_id}": {
       "get": {
         "tags": [
           "Visitors"
         ],
         "summary": "Get Visitor",
-        "operationId": "get_visitor_api_v1_visitors__id__get",
+        "operationId": "get_visitor_api_v1_visitors__visitor_id__get",
         "parameters": [
           {
-            "name": "id",
+            "name": "visitor_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "title": "Visitor Id"
             }
           }
         ],
@@ -245,7 +382,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VisitorOut"
+                  "$ref": "#/components/schemas/VisitorResponse"
                 }
               }
             }
@@ -263,22 +400,21 @@
         }
       }
     },
-    "/api/v1/visitors/{id}/history": {
+    "/api/v1/visitors/{visitor_id}/history": {
       "get": {
         "tags": [
           "Visitors"
         ],
-        "summary": "Get History",
-        "operationId": "get_history_api_v1_visitors__id__history_get",
+        "summary": "Get Visitor History",
+        "operationId": "get_visitor_history_api_v1_visitors__visitor_id__history_get",
         "parameters": [
           {
-            "name": "id",
+            "name": "visitor_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "title": "Visitor Id"
             }
           }
         ],
@@ -287,7 +423,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/VisitorHistoryResponse"
+                }
               }
             }
           },
@@ -313,19 +451,26 @@
         "operationId": "list_inmates_api_v1_inmates_get",
         "parameters": [
           {
-            "name": "status",
+            "name": "skip",
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
             }
           },
           {
@@ -345,26 +490,19 @@
             }
           },
           {
-            "name": "skip",
+            "name": "status_filter",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
             }
           }
         ],
@@ -376,7 +514,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/InmateOut"
+                    "$ref": "#/components/schemas/InmateResponse"
                   },
                   "title": "Response List Inmates Api V1 Inmates Get"
                 }
@@ -417,7 +555,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InmateOut"
+                  "$ref": "#/components/schemas/InmateResponse"
                 }
               }
             }
@@ -435,22 +573,21 @@
         }
       }
     },
-    "/api/v1/inmates/{id}": {
+    "/api/v1/inmates/{inmate_id}": {
       "get": {
         "tags": [
           "Inmates"
         ],
         "summary": "Get Inmate",
-        "operationId": "get_inmate_api_v1_inmates__id__get",
+        "operationId": "get_inmate_api_v1_inmates__inmate_id__get",
         "parameters": [
           {
-            "name": "id",
+            "name": "inmate_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "title": "Inmate Id"
             }
           }
         ],
@@ -460,58 +597,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InmateOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Inmates"
-        ],
-        "summary": "Update Inmate",
-        "operationId": "update_inmate_api_v1_inmates__id__patch",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InmateUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InmateOut"
+                  "$ref": "#/components/schemas/InmateResponse"
                 }
               }
             }
@@ -552,7 +638,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppointmentOut"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -577,73 +663,6 @@
         "operationId": "list_appointments_api_v1_appointments_get",
         "parameters": [
           {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
-            }
-          },
-          {
-            "name": "visit_date",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Visit Date"
-            }
-          },
-          {
-            "name": "inmate_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Inmate Id"
-            }
-          },
-          {
-            "name": "visitor_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Visitor Id"
-            }
-          },
-          {
             "name": "skip",
             "in": "query",
             "required": false,
@@ -662,8 +681,56 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "default": 50,
+              "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "visitor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Visitor Id"
+            }
+          },
+          {
+            "name": "inmate_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inmate Id"
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
             }
           }
         ],
@@ -675,7 +742,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AppointmentOut"
+                    "$ref": "#/components/schemas/AppointmentResponse"
                   },
                   "title": "Response List Appointments Api V1 Appointments Get"
                 }
@@ -695,22 +762,21 @@
         }
       }
     },
-    "/api/v1/appointments/{id}": {
+    "/api/v1/appointments/{appointment_id}": {
       "get": {
         "tags": [
           "Appointments"
         ],
         "summary": "Get Appointment",
-        "operationId": "get_appointment_api_v1_appointments__id__get",
+        "operationId": "get_appointment_api_v1_appointments__appointment_id__get",
         "parameters": [
           {
-            "name": "id",
+            "name": "appointment_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "title": "Appointment Id"
             }
           }
         ],
@@ -720,7 +786,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppointmentOut"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -738,22 +804,21 @@
         }
       }
     },
-    "/api/v1/appointments/{id}/status": {
+    "/api/v1/appointments/{appointment_id}/status": {
       "patch": {
         "tags": [
           "Appointments"
         ],
-        "summary": "Update Status",
-        "operationId": "update_status_api_v1_appointments__id__status_patch",
+        "summary": "Update Appointment Status",
+        "operationId": "update_appointment_status_api_v1_appointments__appointment_id__status_patch",
         "parameters": [
           {
-            "name": "id",
+            "name": "appointment_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "title": "Appointment Id"
             }
           }
         ],
@@ -773,7 +838,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppointmentOut"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -791,30 +856,31 @@
         }
       }
     },
-    "/api/v1/verifications": {
+    "/api/v1/appointments/{appointment_id}/digital-pass": {
       "post": {
         "tags": [
-          "Verifications"
+          "Appointments"
         ],
-        "summary": "Create Verification",
-        "operationId": "create_verification_api_v1_verifications_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerificationCreate"
-              }
+        "summary": "Generate Digital Pass For Appointment",
+        "operationId": "generate_digital_pass_for_appointment_api_v1_appointments__appointment_id__digital_pass_post",
+        "parameters": [
+          {
+            "name": "appointment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Appointment Id"
             }
           }
-        },
+        ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VerificationOut"
+                  "$ref": "#/components/schemas/DigitalPassResponse"
                 }
               }
             }
@@ -830,31 +896,97 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/v1/appointments/{appointment_id}/digital-pass/pdf": {
       "get": {
         "tags": [
-          "Verifications"
+          "Appointments"
         ],
-        "summary": "List Verifications",
-        "operationId": "list_verifications_api_v1_verifications_get",
+        "summary": "Download Digital Pass Pdf",
+        "operationId": "download_digital_pass_pdf_api_v1_appointments__appointment_id__digital_pass_pdf_get",
         "parameters": [
           {
-            "name": "visitor_id",
-            "in": "query",
-            "required": false,
+            "name": "appointment_id",
+            "in": "path",
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Visitor Id"
+              "type": "string",
+              "title": "Appointment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
             }
           },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gate/scan-qr": {
+      "post": {
+        "tags": [
+          "Security Gate Express Scanner"
+        ],
+        "summary": "Scan Qr Pass",
+        "operationId": "scan_qr_pass_api_v1_gate_scan_qr_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QRScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QRScanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/watchlist": {
+      "get": {
+        "tags": [
+          "Security Watchlist"
+        ],
+        "summary": "List Watchlist Entries",
+        "operationId": "list_watchlist_entries_api_v1_watchlist_get",
+        "parameters": [
           {
             "name": "skip",
             "in": "query",
@@ -877,6 +1009,39 @@
               "default": 50,
               "title": "Limit"
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": true,
+              "title": "Is Active"
+            }
           }
         ],
         "responses": {
@@ -887,7 +1052,237 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/VerificationOut"
+                    "$ref": "#/components/schemas/WatchlistResponse"
+                  },
+                  "title": "Response List Watchlist Entries Api V1 Watchlist Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Security Watchlist"
+        ],
+        "summary": "Add To Watchlist",
+        "operationId": "add_to_watchlist_api_v1_watchlist_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchlistCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/watchlist/screen": {
+      "post": {
+        "tags": [
+          "Security Watchlist"
+        ],
+        "summary": "Screen Visitor",
+        "operationId": "screen_visitor_api_v1_watchlist_screen_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchlistScreenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistScreenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/watchlist/{entry_id}": {
+      "delete": {
+        "tags": [
+          "Security Watchlist"
+        ],
+        "summary": "Remove From Watchlist",
+        "operationId": "remove_from_watchlist_api_v1_watchlist__entry_id__delete",
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/verifications": {
+      "post": {
+        "tags": [
+          "Identity Verifications"
+        ],
+        "summary": "Create Verification",
+        "operationId": "create_verification_api_v1_verifications_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Identity Verifications"
+        ],
+        "summary": "List Verifications",
+        "operationId": "list_verifications_api_v1_verifications_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "visitor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Visitor Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VerificationResponse"
                   },
                   "title": "Response List Verifications Api V1 Verifications Get"
                 }
@@ -910,15 +1305,15 @@
     "/api/v1/entry-exit-logs/check-in": {
       "post": {
         "tags": [
-          "EntryExitLogs"
+          "Gate Entry & Exit Logs"
         ],
-        "summary": "Check In",
-        "operationId": "check_in_api_v1_entry_exit_logs_check_in_post",
+        "summary": "Manual Check In",
+        "operationId": "manual_check_in_api_v1_entry_exit_logs_check_in_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CheckInRequest"
+                "$ref": "#/components/schemas/ManualCheckInCreate"
               }
             }
           },
@@ -930,7 +1325,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EntryExitLogOut"
+                  "$ref": "#/components/schemas/EntryExitLogResponse"
                 }
               }
             }
@@ -951,7 +1346,7 @@
     "/api/v1/entry-exit-logs/check-out": {
       "post": {
         "tags": [
-          "EntryExitLogs"
+          "Gate Entry & Exit Logs"
         ],
         "summary": "Check Out",
         "operationId": "check_out_api_v1_entry_exit_logs_check_out_post",
@@ -959,7 +1354,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CheckOutRequest"
+                "$ref": "#/components/schemas/CheckOutCreate"
               }
             }
           },
@@ -971,7 +1366,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EntryExitLogOut"
+                  "$ref": "#/components/schemas/EntryExitLogResponse"
                 }
               }
             }
@@ -992,38 +1387,11 @@
     "/api/v1/entry-exit-logs": {
       "get": {
         "tags": [
-          "EntryExitLogs"
+          "Gate Entry & Exit Logs"
         ],
         "summary": "List Logs",
         "operationId": "list_logs_api_v1_entry_exit_logs_get",
         "parameters": [
-          {
-            "name": "appointment_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Appointment Id"
-            }
-          },
-          {
-            "name": "active_only",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Active Only"
-            }
-          },
           {
             "name": "skip",
             "in": "query",
@@ -1046,6 +1414,22 @@
               "default": 50,
               "title": "Limit"
             }
+          },
+          {
+            "name": "appointment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Appointment Id"
+            }
           }
         ],
         "responses": {
@@ -1056,7 +1440,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/EntryExitLogOut"
+                    "$ref": "#/components/schemas/EntryExitLogResponse"
                   },
                   "title": "Response List Logs Api V1 Entry Exit Logs Get"
                 }
@@ -1070,22 +1454,6 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/health": {
-      "get": {
-        "summary": "Health Check",
-        "operationId": "health_check_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           }
@@ -1107,6 +1475,22 @@
           }
         }
       }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1115,12 +1499,10 @@
         "properties": {
           "visitor_id": {
             "type": "string",
-            "format": "uuid",
             "title": "Visitor Id"
           },
           "inmate_id": {
             "type": "string",
-            "format": "uuid",
             "title": "Inmate Id"
           },
           "visit_date": {
@@ -1130,7 +1512,13 @@
           },
           "start_time": {
             "type": "string",
+            "format": "time",
             "title": "Start Time"
+          },
+          "slot_duration_minutes": {
+            "type": "integer",
+            "title": "Slot Duration Minutes",
+            "default": 30
           },
           "relationship": {
             "type": "string",
@@ -1147,16 +1535,18 @@
         ],
         "title": "AppointmentCreate"
       },
-      "AppointmentOut": {
+      "AppointmentResponse": {
         "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "visitor_id": {
             "type": "string",
-            "format": "uuid",
             "title": "Visitor Id"
           },
           "inmate_id": {
             "type": "string",
-            "format": "uuid",
             "title": "Inmate Id"
           },
           "visit_date": {
@@ -1166,20 +1556,24 @@
           },
           "start_time": {
             "type": "string",
+            "format": "time",
             "title": "Start Time"
+          },
+          "slot_duration_minutes": {
+            "type": "integer",
+            "title": "Slot Duration Minutes"
           },
           "relationship": {
             "type": "string",
             "title": "Relationship"
           },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "security_flag_status": {
+            "type": "string",
+            "title": "Security Flag Status"
           },
           "rejection_reason": {
             "anyOf": [
@@ -1205,7 +1599,7 @@
           "visitor": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/VisitorOut"
+                "$ref": "#/components/schemas/VisitorResponse"
               },
               {
                 "type": "null"
@@ -1215,7 +1609,17 @@
           "inmate": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/InmateOut"
+                "$ref": "#/components/schemas/InmateResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "digital_pass": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DigitalPassResponse"
               },
               {
                 "type": "null"
@@ -1225,17 +1629,19 @@
         },
         "type": "object",
         "required": [
+          "id",
           "visitor_id",
           "inmate_id",
           "visit_date",
           "start_time",
+          "slot_duration_minutes",
           "relationship",
-          "id",
           "status",
+          "security_flag_status",
           "created_at",
           "updated_at"
         ],
-        "title": "AppointmentOut"
+        "title": "AppointmentResponse"
       },
       "AppointmentStatusUpdate": {
         "properties": {
@@ -1261,96 +1667,151 @@
         ],
         "title": "AppointmentStatusUpdate"
       },
-      "CheckInRequest": {
+      "Body_login_for_access_token_api_v1_auth_token_post": {
         "properties": {
-          "appointment_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Appointment Id"
-          },
-          "officer_id": {
+          "grant_type": {
             "anyOf": [
               {
                 "type": "string",
-                "format": "uuid"
+                "pattern": "^password$"
               },
               {
                 "type": "null"
               }
             ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "format": "password",
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_for_access_token_api_v1_auth_token_post"
+      },
+      "CheckOutCreate": {
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "title": "Appointment Id"
+          },
+          "officer_id": {
+            "type": "string",
             "title": "Officer Id"
           }
         },
         "type": "object",
         "required": [
-          "appointment_id"
+          "appointment_id",
+          "officer_id"
         ],
-        "title": "CheckInRequest"
+        "title": "CheckOutCreate"
       },
-      "CheckOutRequest": {
-        "properties": {
-          "appointment_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Appointment Id"
-          },
-          "log_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Log Id"
-          },
-          "officer_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Officer Id"
-          }
-        },
-        "type": "object",
-        "title": "CheckOutRequest"
-      },
-      "EntryExitLogOut": {
+      "DigitalPassResponse": {
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
           "appointment_id": {
             "type": "string",
-            "format": "uuid",
             "title": "Appointment Id"
           },
-          "officer_id": {
+          "pass_token": {
+            "type": "string",
+            "title": "Pass Token"
+          },
+          "qr_code_data_url": {
+            "type": "string",
+            "title": "Qr Code Data Url"
+          },
+          "pdf_download_url": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "uuid"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "title": "Pdf Download Url"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "is_used": {
+            "type": "boolean",
+            "title": "Is Used"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "appointment_id",
+          "pass_token",
+          "qr_code_data_url",
+          "expires_at",
+          "is_used",
+          "created_at"
+        ],
+        "title": "DigitalPassResponse"
+      },
+      "EntryExitLogResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "appointment_id": {
+            "type": "string",
+            "title": "Appointment Id"
+          },
+          "officer_id": {
+            "type": "string",
             "title": "Officer Id"
           },
           "check_in_time": {
@@ -1377,29 +1838,25 @@
             ],
             "title": "Check Out Time"
           },
+          "entry_method": {
+            "type": "string",
+            "title": "Entry Method"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "appointment": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AppointmentOut"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "type": "object",
         "required": [
           "id",
           "appointment_id",
+          "officer_id",
+          "entry_method",
           "created_at"
         ],
-        "title": "EntryExitLogOut"
+        "title": "EntryExitLogResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1428,6 +1885,16 @@
             "type": "string",
             "title": "Cell Location"
           },
+          "security_level": {
+            "type": "string",
+            "title": "Security Level",
+            "default": "MEDIUM"
+          },
+          "weekly_visit_limit": {
+            "type": "integer",
+            "title": "Weekly Visit Limit",
+            "default": 2
+          },
           "status": {
             "type": "string",
             "title": "Status",
@@ -1442,8 +1909,12 @@
         ],
         "title": "InmateCreate"
       },
-      "InmateOut": {
+      "InmateResponse": {
         "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "inmate_number": {
             "type": "string",
             "title": "Inmate Number"
@@ -1456,15 +1927,17 @@
             "type": "string",
             "title": "Cell Location"
           },
+          "security_level": {
+            "type": "string",
+            "title": "Security Level"
+          },
+          "weekly_visit_limit": {
+            "type": "integer",
+            "title": "Weekly Visit Limit"
+          },
           "status": {
             "type": "string",
-            "title": "Status",
-            "default": "ACTIVE"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
+            "title": "Status"
           },
           "created_at": {
             "type": "string",
@@ -1479,53 +1952,228 @@
         },
         "type": "object",
         "required": [
+          "id",
           "inmate_number",
           "full_name",
           "cell_location",
-          "id",
+          "security_level",
+          "weekly_visit_limit",
+          "status",
           "created_at",
           "updated_at"
         ],
-        "title": "InmateOut"
+        "title": "InmateResponse"
       },
-      "InmateUpdate": {
+      "ManualCheckInCreate": {
         "properties": {
-          "full_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Full Name"
+          "appointment_id": {
+            "type": "string",
+            "title": "Appointment Id"
           },
-          "cell_location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cell Location"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status"
+          "officer_id": {
+            "type": "string",
+            "title": "Officer Id"
           }
         },
         "type": "object",
-        "title": "InmateUpdate"
+        "required": [
+          "appointment_id",
+          "officer_id"
+        ],
+        "title": "ManualCheckInCreate"
+      },
+      "QRScanRequest": {
+        "properties": {
+          "qr_pass_token": {
+            "type": "string",
+            "title": "Qr Pass Token"
+          },
+          "officer_id": {
+            "type": "string",
+            "title": "Officer Id"
+          },
+          "gate_id": {
+            "type": "string",
+            "title": "Gate Id",
+            "default": "GATE-01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "qr_pass_token",
+          "officer_id"
+        ],
+        "title": "QRScanRequest"
+      },
+      "QRScanResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "check_in_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Check In Timestamp"
+          },
+          "appointment_id": {
+            "type": "string",
+            "title": "Appointment Id"
+          },
+          "visitor_name": {
+            "type": "string",
+            "title": "Visitor Name"
+          },
+          "inmate_name": {
+            "type": "string",
+            "title": "Inmate Name"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "title": "Duration Minutes"
+          },
+          "security_status": {
+            "type": "string",
+            "title": "Security Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message",
+          "check_in_timestamp",
+          "appointment_id",
+          "visitor_name",
+          "inmate_name",
+          "duration_minutes",
+          "security_status"
+        ],
+        "title": "QRScanResponse"
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "user"
+        ],
+        "title": "Token"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "default": "visitor"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "full_name",
+          "password"
+        ],
+        "title": "UserCreate"
+      },
+      "UserLogin": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserLogin"
+      },
+      "UserResponse": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "default": "visitor"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_verified": {
+            "type": "boolean",
+            "title": "Is Verified"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "full_name",
+          "id",
+          "is_active",
+          "is_verified",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UserResponse"
       },
       "ValidationError": {
         "properties": {
@@ -1571,19 +2219,10 @@
         "properties": {
           "visitor_id": {
             "type": "string",
-            "format": "uuid",
             "title": "Visitor Id"
           },
           "officer_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Officer Id"
           },
           "verification_status": {
@@ -1605,27 +2244,23 @@
         "type": "object",
         "required": [
           "visitor_id",
+          "officer_id",
           "verification_status"
         ],
         "title": "VerificationCreate"
       },
-      "VerificationOut": {
+      "VerificationResponse": {
         "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "visitor_id": {
             "type": "string",
-            "format": "uuid",
             "title": "Visitor Id"
           },
           "officer_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Officer Id"
           },
           "verification_status": {
@@ -1642,36 +2277,22 @@
               }
             ],
             "title": "Notes"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "visitor": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VisitorOut"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "type": "object",
         "required": [
-          "visitor_id",
-          "verification_status",
           "id",
+          "visitor_id",
+          "officer_id",
+          "verification_status",
           "created_at"
         ],
-        "title": "VerificationOut"
+        "title": "VerificationResponse"
       },
       "VisitorCreate": {
         "properties": {
@@ -1720,6 +2341,11 @@
               }
             ],
             "title": "Photo Id Url"
+          },
+          "visitor_type": {
+            "type": "string",
+            "title": "Visitor Type",
+            "default": "STANDARD"
           }
         },
         "type": "object",
@@ -1730,8 +2356,48 @@
         ],
         "title": "VisitorCreate"
       },
-      "VisitorOut": {
+      "VisitorHistoryResponse": {
         "properties": {
+          "visitor": {
+            "$ref": "#/components/schemas/VisitorResponse"
+          },
+          "appointments": {
+            "items": {
+              "$ref": "#/components/schemas/AppointmentResponse"
+            },
+            "type": "array",
+            "title": "Appointments"
+          },
+          "verifications": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationResponse"
+            },
+            "type": "array",
+            "title": "Verifications"
+          },
+          "entry_exit_logs": {
+            "items": {
+              "$ref": "#/components/schemas/EntryExitLogResponse"
+            },
+            "type": "array",
+            "title": "Entry Exit Logs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visitor",
+          "appointments",
+          "verifications",
+          "entry_exit_logs"
+        ],
+        "title": "VisitorHistoryResponse"
+      },
+      "VisitorResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "full_name": {
             "type": "string",
             "title": "Full Name"
@@ -1742,7 +2408,6 @@
           },
           "email": {
             "type": "string",
-            "format": "email",
             "title": "Email"
           },
           "phone": {
@@ -1778,14 +2443,17 @@
             ],
             "title": "Photo Id Url"
           },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
           "verification_status": {
             "type": "string",
             "title": "Verification Status"
+          },
+          "visitor_type": {
+            "type": "string",
+            "title": "Visitor Type"
+          },
+          "is_watchlist_flagged": {
+            "type": "boolean",
+            "title": "Is Watchlist Flagged"
           },
           "created_at": {
             "type": "string",
@@ -1800,15 +2468,185 @@
         },
         "type": "object",
         "required": [
+          "id",
           "full_name",
           "national_id",
           "email",
-          "id",
           "verification_status",
+          "visitor_type",
+          "is_watchlist_flagged",
           "created_at",
           "updated_at"
         ],
-        "title": "VisitorOut"
+        "title": "VisitorResponse"
+      },
+      "WatchlistCreate": {
+        "properties": {
+          "national_id": {
+            "type": "string",
+            "title": "National Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "severity_level": {
+            "type": "string",
+            "title": "Severity Level",
+            "default": "HIGH"
+          },
+          "flagged_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flagged By",
+            "default": "SYSTEM"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "national_id",
+          "full_name",
+          "reason"
+        ],
+        "title": "WatchlistCreate"
+      },
+      "WatchlistResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "national_id": {
+            "type": "string",
+            "title": "National Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "severity_level": {
+            "type": "string",
+            "title": "Severity Level"
+          },
+          "flagged_by": {
+            "type": "string",
+            "title": "Flagged By"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "national_id",
+          "full_name",
+          "reason",
+          "severity_level",
+          "flagged_by",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WatchlistResponse"
+      },
+      "WatchlistScreenRequest": {
+        "properties": {
+          "national_id": {
+            "type": "string",
+            "title": "National Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "national_id"
+        ],
+        "title": "WatchlistScreenRequest"
+      },
+      "WatchlistScreenResponse": {
+        "properties": {
+          "is_flagged": {
+            "type": "boolean",
+            "title": "Is Flagged"
+          },
+          "national_id": {
+            "type": "string",
+            "title": "National Id"
+          },
+          "match_details": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WatchlistResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_flagged",
+          "national_id",
+          "message"
+        ],
+        "title": "WatchlistScreenResponse"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/auth/login"
+          }
+        }
       }
     }
   }

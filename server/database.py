@@ -1,16 +1,25 @@
+import os
 import uuid
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
-from server.config import settings
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import StaticPool
 
-connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./prison_visitor.db")
 
-engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool if ":memory:" in DATABASE_URL else None,
+    )
+else:
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 def get_db():
@@ -22,94 +31,139 @@ def get_db():
 
 
 def init_db():
-    # Import all models so they are registered with Base.metadata
-    from server.models.visitor import Visitor  # noqa: F401
-    from server.models.inmate import Inmate  # noqa: F401
-    from server.models.appointment import Appointment  # noqa: F401
-    from server.models.verification import Verification  # noqa: F401
-    from server.models.entry_exit_log import EntryExitLog  # noqa: F401
+    from server import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server.models.inmate import Inmate
-    from server.models.visitor import Visitor
+def seed_data(db):
+    from server import models
+    from server.auth import get_password_hash
 
-    # Seed Inmates if none exist
-    inmate_count = db.query(Inmate).count()
-    if inmate_count == 0:
-        inmates = [
-            Inmate(
-                id=uuid.uuid4(),
-                inmate_number="INM-1001",
-                full_name="John Doe",
-                cell_location="Block A, Cell 12",
-                status="ACTIVE",
-            ),
-            Inmate(
-                id=uuid.uuid4(),
-                inmate_number="INM-1002",
-                full_name="Robert Smith",
-                cell_location="Block B, Cell 04",
-                status="ACTIVE",
-            ),
-            Inmate(
-                id=uuid.uuid4(),
-                inmate_number="INM-1003",
-                full_name="Jane Miller",
-                cell_location="Block C, Cell 08",
-                status="ACTIVE",
-            ),
-            Inmate(
-                id=uuid.uuid4(),
-                inmate_number="INM-1004",
-                full_name="Michael Brown",
-                cell_location="Block A, Cell 01",
-                status="INACTIVE",
-            ),
-        ]
-        db.add_all(inmates)
-        try:
-            db.commit()
-        except Exception:
-            db.rollback()
+    # 1. Seed Users (idempotent)
+    users_to_seed = [
+        {
+            "email": "test@example.com",
+            "password": "testpassword",
+            "role": "visitor",
+            "full_name": "Test Visitor",
+        },
+        {
+            "email": "admin@example.com",
+            "password": "adminpassword",
+            "role": "admin",
+            "full_name": "Security Admin",
+        },
+        {
+            "email": "officer@example.com",
+            "password": "officerpassword",
+            "role": "officer",
+            "full_name": "Officer Johnson",
+        },
+    ]
 
-    # Seed test visitors
-    visitor_test = db.query(Visitor).filter(Visitor.email == "test@example.com").first()
-    if not visitor_test:
-        visitor_test = Visitor(
-            id=uuid.uuid4(),
-            full_name="Test Visitor",
-            national_id="NAT-99887766",
-            email="test@example.com",
-            phone="555-0199",
-            address="123 Main St, Springfield",
-            photo_id_url="https://example.com/photos/id_test.jpg",
-            verification_status="VERIFIED",
+    for user_data in users_to_seed:
+        existing = (
+            db.query(models.User)
+            .filter(models.User.email == user_data["email"])
+            .first()
         )
-        db.add(visitor_test)
-        try:
-            db.commit()
-        except Exception:
-            db.rollback()
+        if not existing:
+            new_user = models.User(
+                id=str(uuid.uuid4()),
+                email=user_data["email"],
+                hashed_password=get_password_hash(user_data["password"]),
+                full_name=user_data["full_name"],
+                role=user_data["role"],
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(new_user)
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
 
-    visitor_pending = (
-        db.query(Visitor).filter(Visitor.email == "pending@example.com").first()
-    )
-    if not visitor_pending:
-        visitor_pending = Visitor(
-            id=uuid.uuid4(),
-            full_name="Pending Visitor",
-            national_id="NAT-11223344",
-            email="pending@example.com",
-            phone="555-0188",
-            address="456 Elm St, Springfield",
-            photo_id_url="https://example.com/photos/id_pending.jpg",
-            verification_status="PENDING",
+    # 2. Seed Sample Inmates (idempotent)
+    sample_inmates = [
+        {
+            "inmate_number": "INV-404",
+            "full_name": "John Smith",
+            "cell_location": "Block C - Cell 102",
+            "security_level": "MEDIUM",
+            "weekly_visit_limit": 2,
+            "status": "ACTIVE",
+        },
+        {
+            "inmate_number": "INV-501",
+            "full_name": "Robert Davis",
+            "cell_location": "Block A - Cell 204",
+            "security_level": "HIGH",
+            "weekly_visit_limit": 2,
+            "status": "ACTIVE",
+        },
+        {
+            "inmate_number": "INV-602",
+            "full_name": "Michael Brown",
+            "cell_location": "Block B - Cell 301",
+            "security_level": "MAXIMUM",
+            "weekly_visit_limit": 1,
+            "status": "ACTIVE",
+        },
+    ]
+
+    for inmate_data in sample_inmates:
+        existing = (
+            db.query(models.Inmate)
+            .filter(models.Inmate.inmate_number == inmate_data["inmate_number"])
+            .first()
         )
-        db.add(visitor_pending)
-        try:
-            db.commit()
-        except Exception:
-            db.rollback()
+        if not existing:
+            new_inmate = models.Inmate(
+                id=str(uuid.uuid4()),
+                inmate_number=inmate_data["inmate_number"],
+                full_name=inmate_data["full_name"],
+                cell_location=inmate_data["cell_location"],
+                security_level=inmate_data["security_level"],
+                weekly_visit_limit=inmate_data["weekly_visit_limit"],
+                status=inmate_data["status"],
+            )
+            db.add(new_inmate)
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+
+    # 3. Seed Sample Watchlist Entry (idempotent)
+    sample_watchlist = [
+        {
+            "national_id": "BANNED-9999",
+            "full_name": "Mark Criminal",
+            "reason": "Previous contraband smuggling attempt",
+            "severity_level": "CRITICAL",
+            "flagged_by": str(uuid.uuid4()),
+            "is_active": True,
+        }
+    ]
+
+    for wl_data in sample_watchlist:
+        existing = (
+            db.query(models.WatchlistEntry)
+            .filter(models.WatchlistEntry.national_id == wl_data["national_id"])
+            .first()
+        )
+        if not existing:
+            new_wl = models.WatchlistEntry(
+                id=str(uuid.uuid4()),
+                national_id=wl_data["national_id"],
+                full_name=wl_data["full_name"],
+                reason=wl_data["reason"],
+                severity_level=wl_data["severity_level"],
+                flagged_by=wl_data["flagged_by"],
+                is_active=wl_data["is_active"],
+            )
+            db.add(new_wl)
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
