@@ -1,191 +1,412 @@
 import math
-from datetime import datetime, time, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, time
+from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy.orm import Session
-from server.models.parking import HourlyRate, ParkingLocation, ParkingSpot
-from server.services.realtime_service import manager
+from server.models.parking import ParkingLocation, ParkingSpot, HourlyRate, SensorEvent
+from server.schemas.parking import (
+    ParkingLocationCreate,
+    ParkingSpotResponse,
+    HourlyRateResponse,
+    CostCalculationResponse,
+    SpotStatusUpdateResponse,
+    SensorEventResponse,
+)
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Calculate distance between two coordinates in kilometers using Haversine formula."""
-    r = 6371.0  # Earth's radius in km
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
-    delta_phi = math.radians(lat2 - lat1)
-    delta_lambda = math.radians(lon2 - lon1)
-
-    a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0) ** 2
+    """Calculate the great circle distance between two points in kilometers."""
+    R = 6371.0  # Earth's radius in kilometers
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (
+        math.sin(dlat / 2.0) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlon / 2.0) ** 2
+    )
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
-    return round(r * c, 2)
+    return round(R * c, 3)
 
 
-def geocode_address(address: str) -> Tuple[float, float]:
-    """Resolve address to latitude and longitude with fallback mapping."""
-    clean_addr = (address or "").lower()
-    if "market" in clean_addr:
-        return 37.7910, -122.4010
-    if "mission" in clean_addr:
-        return 37.7840, -122.4070
-    if "folsom" in clean_addr:
-        return 37.7880, -122.3950
-    if "post" in clean_addr or "union" in clean_addr:
-        return 37.7885, -122.4075
-    # Default San Francisco City Center coordinate
-    return 37.7749, -122.4194
+def is_peak_hour(rate: Optional[HourlyRate], dt: Optional[datetime] = None) -> bool:
+    """Check if the given datetime is within peak hours."""
+    current_dt = dt or datetime.utcnow()
+    # Check weekday (Monday=0 ... Friday=4)
+    is_weekday = current_dt.weekday() < 5
+    if not is_weekday:
+        return False
 
+    current_time = current_dt.time()
+    start_time = (
+        rate.peak_start_time if rate and rate.peak_start_time else time(7, 0, 0)
+    )
+    end_time = rate.peak_end_time if rate and rate.peak_end_time else time(19, 0, 0)
 
-def is_time_between(check_time: time, start_time: time, end_time: time) -> bool:
-    """Check if a given time is between start_time and end_time."""
     if start_time <= end_time:
-        return start_time <= check_time <= end_time
-    else:  # Over midnight
-        return check_time >= start_time or check_time <= end_time
+        return start_time <= current_time <= end_time
+    else:
+        # Crosses midnight
+        return current_time >= start_time or current_time <= end_time
 
 
-def evaluate_spot_rate(rate: Optional[HourlyRate], dt: Optional[datetime] = None) -> Tuple[float, bool]:
-    """Determine the active rate per hour and whether peak pricing applies."""
-    if not rate:
-        return 5.00, False
-
-    target_dt = dt or datetime.now(timezone.utc)
-    weekday = target_dt.weekday()  # 0: Monday, 6: Sunday
-    current_time = target_dt.time()
-
-    base_rate = float(rate.base_rate_per_hour)
-    peak_rate = float(rate.peak_rate_per_hour)
-    weekend_rate = float(rate.weekend_rate_per_hour) if rate.weekend_rate_per_hour is not None else base_rate
-
-    # Weekend check (Saturday = 5, Sunday = 6)
-    if weekday in (5, 6):
-        return weekend_rate, False
-
-    # Peak hours check on weekdays
-    try:
-        start_t = datetime.strptime(rate.peak_start_time or "07:00:00", "%H:%M:%S").time()
-        end_t = datetime.strptime(rate.peak_end_time or "19:00:00", "%H:%M:%S").time()
-        if is_time_between(current_time, start_t, end_t):
-            return peak_rate, True
-    except Exception:
-        pass
-
-    return base_rate, False
-
-
-def get_rate_breakdown_dict(location: ParkingLocation, rate: Optional[HourlyRate], dt: Optional[datetime] = None) -> Dict[str, Any]:
-    base_rate = float(rate.base_rate_per_hour) if rate else 5.00
-    peak_rate = float(rate.peak_rate_per_hour) if rate else 8.00
-    weekend_rate = float(rate.weekend_rate_per_hour) if rate and rate.weekend_rate_per_hour is not None else base_rate
-    max_daily = float(rate.max_daily_rate) if rate and rate.max_daily_rate is not None else 35.00
-    currency = rate.currency if rate else "USD"
-
-    active_rate, is_peak = evaluate_spot_rate(rate, dt)
-
-    start_str = rate.peak_start_time if rate and rate.peak_start_time else "07:00:00"
-    end_str = rate.peak_end_time if rate and rate.peak_end_time else "19:00:00"
-
-    breakdown = {
-        "standard_rate": f"${base_rate:.2f}/hr (Off-Peak: {end_str} - {start_str})",
-        "peak_rate": f"${peak_rate:.2f}/hr (Peak: {start_str} - {end_str})",
-        "weekend_rate": f"${weekend_rate:.2f}/hr",
-    }
-
-    return {
-        "spot_id": location.id,
-        "base_hourly_rate": base_rate,
-        "currency": currency,
-        "rate_breakdown": breakdown,
-        "current_active_rate": active_rate,
-        "is_peak": is_peak,
-        "max_daily_cap": max_daily,
-    }
-
-
-def search_parking_locations(
+def search_parking_spots(
     db: Session,
     lat: Optional[float] = None,
     lng: Optional[float] = None,
     address: Optional[str] = None,
-    radius_km: Optional[float] = None,
+    radius_km: float = 10.0,
     max_rate: Optional[float] = None,
     spot_type: Optional[str] = None,
     has_ev_charging: Optional[bool] = None,
-    status_filter: Optional[str] = None,
-    sort_by: Optional[str] = "distance",
+    sort_by: str = "distance",
     skip: int = 0,
     limit: int = 50,
-) -> Tuple[List[Dict[str, Any]], int]:
-    # Determine center coordinate
-    if lat is None or lng is None:
-        center_lat, center_lng = geocode_address(address or "")
+) -> Tuple[int, List[ParkingSpotResponse]]:
+    """Search and filter parking locations based on coordinates or address, filters and sort preferences."""
+    locations = db.query(ParkingLocation).all()
+    if not locations:
+        return 0, []
+
+    # Determine reference coordinates
+    if lat is not None and lng is not None:
+        ref_lat, ref_lng = float(lat), float(lng)
+    elif address and address.strip():
+        # Match address or default to SF downtown
+        search_term = address.strip().lower()
+        matched = None
+        for loc in locations:
+            if search_term in loc.address.lower() or search_term in loc.name.lower():
+                matched = loc
+                break
+        if matched:
+            ref_lat, ref_lng = matched.latitude, matched.longitude
+        else:
+            ref_lat, ref_lng = 37.7749, -122.4194
     else:
-        center_lat, center_lng = lat, lng
+        ref_lat, ref_lng = 37.7749, -122.4194
 
-    query = db.query(ParkingLocation)
-
-    if spot_type:
-        query = query.filter(ParkingLocation.spot_type == spot_type)
-    if has_ev_charging is not None:
-        query = query.filter(ParkingLocation.has_ev_charging == has_ev_charging)
-
-    locations = query.order_by(ParkingLocation.created_at.asc()).all()
-
-    now_utc = datetime.now(timezone.utc)
-    results = []
+    filtered_spots = []
 
     for loc in locations:
-        dist = haversine_distance(center_lat, center_lng, loc.latitude, loc.longitude)
+        dist = haversine_distance(ref_lat, ref_lng, loc.latitude, loc.longitude)
 
         # Radius filter
-        if radius_km is not None and dist > radius_km:
+        if radius_km is not None and dist > float(radius_km):
             continue
 
-        active_rate, is_peak = evaluate_spot_rate(loc.rates, now_utc)
+        rate = loc.rates
+        base_rate = float(rate.base_rate_per_hour) if rate else 5.0
+        peak_rate = float(rate.peak_rate_per_hour) if rate else 8.0
+        max_daily = float(rate.max_daily_rate) if rate and rate.max_daily_rate else 35.0
 
-        # Max rate filter
-        if max_rate is not None and active_rate > max_rate:
+        is_peak = is_peak_hour(rate)
+        current_rate = peak_rate if is_peak else base_rate
+
+        # Price filter
+        if (
+            max_rate is not None
+            and current_rate > float(max_rate)
+            and base_rate > float(max_rate)
+        ):
             continue
 
-        available_count = sum(1 for s in loc.spots if s.status.upper() == "AVAILABLE")
-        loc_status = "AVAILABLE" if available_count > 0 else "OCCUPIED"
+        # Spot type filter
+        if spot_type and spot_type.strip() and spot_type.lower() != "all":
+            if loc.spot_type.lower() != spot_type.strip().lower():
+                continue
 
-        if status_filter and loc_status.upper() != status_filter.upper():
+        # EV charging filter
+        if has_ev_charging is not None and loc.has_ev_charging != has_ev_charging:
             continue
 
-        base_rate = float(loc.rates.base_rate_per_hour) if loc.rates else 5.00
+        status_str = "AVAILABLE" if loc.available_spots > 0 else "OCCUPIED"
 
-        item = {
-            "spot_id": loc.id,
-            "id": loc.id,
-            "name": loc.name,
-            "address": loc.address,
-            "latitude": loc.latitude,
-            "longitude": loc.longitude,
-            "distance_km": dist,
-            "hourly_rate": active_rate,
-            "base_hourly_rate": base_rate,
-            "current_active_rate": active_rate,
-            "currency": loc.rates.currency if loc.rates else "USD",
-            "status": loc_status,
-            "total_capacity": loc.total_capacity,
-            "available_spots": available_count,
-            "spot_type": loc.spot_type,
-            "has_ev_charging": loc.has_ev_charging,
-            "is_peak_hours": is_peak,
-            "is_peak": is_peak,
-            "updated_at": loc.updated_at,
-        }
-        results.append(item)
+        spot_response = ParkingSpotResponse(
+            spot_id=loc.id,
+            id=loc.id,
+            name=loc.name,
+            address=loc.address,
+            latitude=loc.latitude,
+            longitude=loc.longitude,
+            distance_km=dist,
+            hourly_rate=current_rate,
+            currency="USD",
+            status=status_str,
+            total_capacity=loc.total_capacity,
+            available_spots=loc.available_spots,
+            spot_type=loc.spot_type,
+            has_ev_charging=loc.has_ev_charging,
+            is_peak_hours=is_peak,
+            base_hourly_rate=base_rate,
+            peak_rate_per_hour=peak_rate,
+            max_daily_cap=max_daily,
+            created_at=loc.created_at,
+            updated_at=loc.updated_at,
+        )
+        filtered_spots.append(spot_response)
 
     # Sorting
     if sort_by == "price" or sort_by == "rate":
-        results.sort(key=lambda x: x["hourly_rate"])
-    elif sort_by == "available_spots":
-        results.sort(key=lambda x: x["available_spots"], reverse=True)
-    elif sort_by == "capacity":
-        results.sort(key=lambda x: x["total_capacity"], reverse=True)
-    else:  # default distance
-        results.sort(key=lambda x: x["distance_km"])
+        filtered_spots.sort(key=lambda s: s.hourly_rate)
+    elif sort_by == "availability":
+        filtered_spots.sort(key=lambda s: s.available_spots, reverse=True)
+    else:  # default "distance"
+        filtered_spots.sort(
+            key=lambda s: s.distance_km if s.distance_km is not None else 999999
+        )
 
-    total = len(results)
-    paged = results[skip : skip + limit]
-    return paged, total
+    total = len(filtered_spots)
+    paginated = filtered_spots[skip : skip + limit]
+    return total, paginated
+
+
+def get_spot_details(db: Session, spot_id: str) -> Optional[ParkingSpotResponse]:
+    """Retrieve detailed information for a specific parking location/spot."""
+    loc = db.query(ParkingLocation).filter(ParkingLocation.id == spot_id).first()
+    if not loc:
+        # Check by individual spot
+        spot = db.query(ParkingSpot).filter(ParkingSpot.id == spot_id).first()
+        if spot and spot.location:
+            loc = spot.location
+        else:
+            return None
+
+    rate = loc.rates
+    base_rate = float(rate.base_rate_per_hour) if rate else 5.0
+    peak_rate = float(rate.peak_rate_per_hour) if rate else 8.0
+    max_daily = float(rate.max_daily_rate) if rate and rate.max_daily_rate else 35.0
+    is_peak = is_peak_hour(rate)
+    current_rate = peak_rate if is_peak else base_rate
+    status_str = "AVAILABLE" if loc.available_spots > 0 else "OCCUPIED"
+
+    return ParkingSpotResponse(
+        spot_id=loc.id,
+        id=loc.id,
+        name=loc.name,
+        address=loc.address,
+        latitude=loc.latitude,
+        longitude=loc.longitude,
+        distance_km=0.0,
+        hourly_rate=current_rate,
+        currency="USD",
+        status=status_str,
+        total_capacity=loc.total_capacity,
+        available_spots=loc.available_spots,
+        spot_type=loc.spot_type,
+        has_ev_charging=loc.has_ev_charging,
+        is_peak_hours=is_peak,
+        base_hourly_rate=base_rate,
+        peak_rate_per_hour=peak_rate,
+        max_daily_cap=max_daily,
+        created_at=loc.created_at,
+        updated_at=loc.updated_at,
+    )
+
+
+def get_spot_rates(
+    db: Session, spot_id: str, target_date: Optional[str] = None
+) -> Optional[HourlyRateResponse]:
+    """Get the rate breakdown and active rate for a parking location."""
+    loc = db.query(ParkingLocation).filter(ParkingLocation.id == spot_id).first()
+    if not loc:
+        spot = db.query(ParkingSpot).filter(ParkingSpot.id == spot_id).first()
+        if spot and spot.location:
+            loc = spot.location
+        else:
+            return None
+
+    rate = loc.rates
+    base_rate = float(rate.base_rate_per_hour) if rate else 5.0
+    peak_rate = float(rate.peak_rate_per_hour) if rate else 8.0
+    max_daily = float(rate.max_daily_rate) if rate and rate.max_daily_rate else 35.0
+
+    eval_dt = None
+    if target_date:
+        try:
+            eval_dt = datetime.fromisoformat(target_date.replace("Z", "+00:00"))
+        except Exception:
+            eval_dt = None
+
+    is_peak = is_peak_hour(rate, eval_dt)
+    current_active_rate = peak_rate if is_peak else base_rate
+
+    breakdown = {
+        "standard_rate": f"${base_rate:.2f}/hr (Off-Peak: 7:00 PM - 7:00 AM)",
+        "peak_rate": f"${peak_rate:.2f}/hr (Peak: 7:00 AM - 7:00 PM)",
+        "weekend_rate": f"${(base_rate * 1.2):.2f}/hr",
+    }
+
+    return HourlyRateResponse(
+        spot_id=loc.id,
+        base_hourly_rate=base_rate,
+        currency="USD",
+        rate_breakdown=breakdown,
+        current_active_rate=current_active_rate,
+        is_peak=is_peak,
+        max_daily_cap=max_daily,
+    )
+
+
+def calculate_cost(
+    db: Session, spot_id: str, hours: float, start_time: Optional[str] = None
+) -> Optional[CostCalculationResponse]:
+    """Estimate total parking cost based on hours, time of arrival, and daily cap."""
+    loc = db.query(ParkingLocation).filter(ParkingLocation.id == spot_id).first()
+    if not loc:
+        spot = db.query(ParkingSpot).filter(ParkingSpot.id == spot_id).first()
+        if spot and spot.location:
+            loc = spot.location
+        else:
+            return None
+
+    rate = loc.rates
+    base_rate = float(rate.base_rate_per_hour) if rate else 5.0
+    peak_rate = float(rate.peak_rate_per_hour) if rate else 8.0
+    max_daily = float(rate.max_daily_rate) if rate and rate.max_daily_rate else 35.0
+
+    applied_rate = base_rate
+    if start_time:
+        try:
+            parts = start_time.split(":")
+            h, m = int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
+            if 7 <= h < 19:
+                applied_rate = peak_rate
+        except Exception:
+            applied_rate = base_rate
+    else:
+        if is_peak_hour(rate):
+            applied_rate = peak_rate
+
+    raw_cost = round(hours * applied_rate, 2)
+    capped = False
+    if max_daily and raw_cost > max_daily:
+        num_days = max(1, math.ceil(hours / 24.0))
+        estimated_cost = min(raw_cost, max_daily * num_days)
+        capped = True
+    else:
+        estimated_cost = raw_cost
+
+    return CostCalculationResponse(
+        spot_id=loc.id,
+        hours=hours,
+        estimated_cost=estimated_cost,
+        applied_rate_per_hour=applied_rate,
+        capped_at_daily_max=capped,
+        currency="USD",
+    )
+
+
+def update_spot_status(
+    db: Session,
+    spot_id: str,
+    status: Optional[str] = None,
+    available_spots: Optional[int] = None,
+) -> Optional[Tuple[SpotStatusUpdateResponse, Dict[str, Any]]]:
+    """Update parking spot availability and record a telemetry event."""
+    loc = db.query(ParkingLocation).filter(ParkingLocation.id == spot_id).first()
+    if not loc:
+        spot = db.query(ParkingSpot).filter(ParkingSpot.id == spot_id).first()
+        if spot and spot.location:
+            loc = spot.location
+        else:
+            return None
+
+    if available_spots is not None:
+        loc.available_spots = max(0, min(loc.total_capacity, int(available_spots)))
+        new_status = "AVAILABLE" if loc.available_spots > 0 else "OCCUPIED"
+    elif status is not None:
+        new_status = status.upper()
+        if new_status == "OCCUPIED":
+            loc.available_spots = 0
+        elif new_status == "AVAILABLE" and loc.available_spots == 0:
+            loc.available_spots = max(1, loc.total_capacity // 4)
+    else:
+        new_status = "AVAILABLE" if loc.available_spots > 0 else "OCCUPIED"
+
+    loc.updated_at = datetime.utcnow()
+
+    # Record Sensor Event
+    event = SensorEvent(
+        spot_id=loc.id,
+        facility_name=loc.name,
+        status=new_status,
+        available_spots=loc.available_spots,
+        event_type="SPOT_STATUS_CHANGED",
+        timestamp=loc.updated_at,
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(loc)
+
+    update_resp = SpotStatusUpdateResponse(
+        spot_id=loc.id,
+        status=new_status,
+        available_spots=loc.available_spots,
+        updated_at=loc.updated_at,
+    )
+
+    broadcast_payload = {
+        "event": "SPOT_STATUS_CHANGED",
+        "spot_id": loc.id,
+        "name": loc.name,
+        "status": new_status,
+        "available_spots": loc.available_spots,
+        "timestamp": loc.updated_at.isoformat() + "Z",
+    }
+
+    return update_resp, broadcast_payload
+
+
+def get_recent_events(db: Session, limit: int = 20) -> List[SensorEventResponse]:
+    """Retrieve recent sensor transition events."""
+    events = (
+        db.query(SensorEvent).order_by(SensorEvent.timestamp.desc()).limit(limit).all()
+    )
+    return [
+        SensorEventResponse(
+            event=evt.event_type,
+            spot_id=evt.spot_id,
+            name=evt.facility_name,
+            status=evt.status,
+            available_spots=evt.available_spots,
+            timestamp=evt.timestamp,
+        )
+        for evt in events
+    ]
+
+
+def create_parking_location(
+    db: Session, data: ParkingLocationCreate
+) -> ParkingSpotResponse:
+    """Create a new parking location."""
+    avail = (
+        data.available_spots
+        if data.available_spots is not None
+        else data.total_capacity
+    )
+    loc = ParkingLocation(
+        name=data.name,
+        address=data.address,
+        latitude=data.latitude,
+        longitude=data.longitude,
+        spot_type=data.spot_type,
+        has_ev_charging=data.has_ev_charging,
+        total_capacity=data.total_capacity,
+        available_spots=avail,
+    )
+    db.add(loc)
+    db.flush()
+
+    rate = HourlyRate(
+        location_id=loc.id,
+        base_rate_per_hour=data.base_rate_per_hour,
+        peak_rate_per_hour=data.peak_rate_per_hour,
+        peak_start_time=time(7, 0, 0),
+        peak_end_time=time(19, 0, 0),
+        max_daily_rate=data.max_daily_rate,
+    )
+    db.add(rate)
+    db.commit()
+    db.refresh(loc)
+
+    return get_spot_details(db, loc.id)

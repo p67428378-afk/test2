@@ -1,15 +1,10 @@
-import asyncio
-import json
-from collections import deque
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import List, Dict, Any
 from fastapi import WebSocket
 
 
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
-        self._events: deque = deque(maxlen=100)
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -20,25 +15,15 @@ class ConnectionManager:
             self.active_connections.remove(websocket)
 
     async def broadcast(self, message: Dict[str, Any]):
-        message_json = json.dumps(message)
-        dead_connections = []
+        disconnected = []
         for connection in self.active_connections:
             try:
-                await connection.send_text(message_json)
+                await connection.send_json(message)
             except Exception:
-                dead_connections.append(connection)
-        for dead in dead_connections:
-            self.disconnect(dead)
+                disconnected.append(connection)
 
-    def record_event(self, event_data: Dict[str, Any]):
-        if "timestamp" not in event_data:
-            event_data["timestamp"] = datetime.now(timezone.utc).isoformat()
-        if "event" not in event_data:
-            event_data["event"] = "SPOT_STATUS_CHANGED"
-        self._events.appendleft(event_data)
-
-    def get_recent_events(self, limit: int = 20) -> List[Dict[str, Any]]:
-        return list(self._events)[:limit]
+        for conn in disconnected:
+            self.disconnect(conn)
 
 
 manager = ConnectionManager()
