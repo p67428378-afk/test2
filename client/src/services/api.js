@@ -20,96 +20,69 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-    }
+export const parkingService = {
+  searchSpots: async (params = {}) => {
+    const response = await api.get("/api/v1/parking-spots/search", { params });
     return response.data;
   },
-  logout: () => {
-    localStorage.removeItem("token");
-  },
-};
 
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
-    return response.data;
-  },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
-    return response.data;
-  },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
-    return response.data;
-  },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
-    return response.data;
-  },
-};
-
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
-    return response.data;
-  },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
-    );
-    return response.data;
-  },
-};
-
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
-    return response.data;
-  },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
-  },
-};
-
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
+  listSpots: async (skip = 0, limit = 20) => {
+    const response = await api.get("/api/v1/parking-spots", {
+      params: { skip, limit },
     });
     return response.data;
   },
-};
 
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
+  getSpotDetails: async (spot_id) => {
+    const response = await api.get(`/api/v1/parking-spots/${spot_id}`);
+    return response.data;
+  },
+
+  getSpotRates: async (spot_id, target_date = null) => {
+    const params = {};
+    if (target_date) params.target_date = target_date;
+    const response = await api.get(`/api/v1/parking-spots/${spot_id}/rates`, {
+      params,
+    });
+    return response.data;
+  },
+
+  calculateCost: async (spot_id, hours, start_time = null) => {
+    const response = await api.post(
+      `/api/v1/parking-spots/${spot_id}/calculate-cost`,
+      { hours, start_time },
     );
     return response.data;
   },
-};
 
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
+  updateSpotStatus: async (spot_id, status = null, available_spots = null) => {
+    const payload = {};
+    if (status !== null) payload.status = status;
+    if (available_spots !== null) payload.available_spots = available_spots;
+    const response = await api.post(
+      `/api/v1/parking-spots/${spot_id}/status`,
+      payload,
+    );
     return response.data;
   },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
+
+  getRecentEvents: async (limit = 20) => {
+    const response = await api.get("/api/v1/parking-spots/events/recent", {
+      params: { limit },
+    });
+    return response.data;
   },
+
+  createParkingLocation: async (data) => {
+    const response = await api.post("/api/v1/parking-spots", data);
+    return response.data;
+  },
+};
+
+export const getWebSocketUrl = () => {
+  const cleanBase = BASE_URL.replace(/^https?:\/\//, "");
+  const protocol = BASE_URL.startsWith("https") ? "wss:" : "ws:";
+  return `${protocol}//${cleanBase}/api/v1/parking-spots/live-updates`;
 };
 
 export default api;
