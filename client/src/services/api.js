@@ -184,4 +184,67 @@ export const linkPublicationToArtifact = async (linkData) => {
   return response.data;
 };
 
+// 3D Stratigraphy API
+export const getSiteStratigraphy = async (siteId) => {
+  const response = await api.get(`/api/v1/sites/${siteId}/stratigraphy`);
+  return response.data;
+};
+
+export const addSiteStratigraphicLayer = async (siteId, layerData) => {
+  const response = await api.post(
+    `/api/v1/sites/${siteId}/stratigraphy`,
+    layerData,
+  );
+  return response.data;
+};
+
+// Offline Synchronization API
+export const syncBatchOfflineLogs = async (batchData) => {
+  const response = await api.post("/api/v1/sync/batch", batchData);
+  return response.data;
+};
+
+export const getOfflineSyncStatus = async () => {
+  const response = await api.get("/api/v1/sync/status");
+  return response.data;
+};
+
+// Custody & Storage API
+export const registerStorageContainer = async (containerData) => {
+  const response = await api.post(
+    "/api/v1/custody/storage-containers",
+    containerData,
+  );
+  return response.data;
+};
+
+export const getStorageContainers = async (params = {}) => {
+  const response = await api.get("/api/v1/custody/storage-containers", {
+    params,
+  });
+  return response.data;
+};
+
+export const recordCustodyTransfer = async (transferData) => {
+  const response = await api.post("/api/v1/custody/transfer", transferData);
+  return response.data;
+};
+
+export const getArtifactCustodyHistory = async (artifactId) => {
+  const response = await api.get(`/api/v1/custody/history/${artifactId}`);
+  return response.data;
+};
+
+// QR / Barcode API
+export const getQRCode = async (entityType, id) => {
+  const response = await api.get(`/api/v1/qr/generate/${entityType}/${id}`);
+  return response.data;
+};
+
+// ML Material Classification API
+export const classifyMaterial = async (mlData) => {
+  const response = await api.post("/api/v1/ml/classify-material", mlData);
+  return response.data;
+};
+
 export default api;
