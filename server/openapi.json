@@ -2,14 +2,125 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Archaeological Excavation Management System API",
-    "description": "REST API for recording excavation sites, artifacts, teams, GPS coordinates, media, lab analyses, and publication citations.",
-    "version": "1.0.0"
+    "description": "Backend API for 3D stratigraphy, offline PWA sync, QR chain-of-custody, and ML material classification.",
+    "version": "2.0.0"
   },
   "paths": {
+    "/api/v1/dashboard/metrics": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get Dashboard Metrics",
+        "operationId": "get_dashboard_metrics_api_v1_dashboard_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardMetrics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites": {
+      "get": {
+        "tags": [
+          "Sites"
+        ],
+        "summary": "Get Sites",
+        "operationId": "get_sites_api_v1_sites_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Region"
+            }
+          },
+          {
+            "name": "historical_period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Historical Period"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SiteResponse"
+                  },
+                  "title": "Response Get Sites Api V1 Sites Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
-          "Excavation Sites"
+          "Sites"
         ],
         "summary": "Create Site",
         "operationId": "create_site_api_v1_sites_post",
@@ -45,114 +156,12 @@
             }
           }
         }
-      },
-      "get": {
-        "tags": [
-          "Excavation Sites"
-        ],
-        "summary": "List Sites",
-        "operationId": "list_sites_api_v1_sites_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "region",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Region"
-            }
-          },
-          {
-            "name": "period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Period"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SiteListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/v1/sites/{site_id}": {
       "get": {
         "tags": [
-          "Excavation Sites"
+          "Sites"
         ],
         "summary": "Get Site",
         "operationId": "get_site_api_v1_sites__site_id__get",
@@ -192,7 +201,7 @@
       },
       "patch": {
         "tags": [
-          "Excavation Sites"
+          "Sites"
         ],
         "summary": "Update Site",
         "operationId": "update_site_api_v1_sites__site_id__patch",
@@ -242,7 +251,7 @@
       },
       "delete": {
         "tags": [
-          "Excavation Sites"
+          "Sites"
         ],
         "summary": "Delete Site",
         "operationId": "delete_site_api_v1_sites__site_id__delete",
@@ -275,51 +284,12 @@
       }
     },
     "/api/v1/artifacts": {
-      "post": {
-        "tags": [
-          "Discovered Artifacts"
-        ],
-        "summary": "Create Artifact",
-        "operationId": "create_artifact_api_v1_artifacts_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ArtifactCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
       "get": {
         "tags": [
-          "Discovered Artifacts"
+          "Artifacts"
         ],
-        "summary": "List Artifacts",
-        "operationId": "list_artifacts_api_v1_artifacts_get",
+        "summary": "Get Artifacts",
+        "operationId": "get_artifacts_api_v1_artifacts_get",
         "parameters": [
           {
             "name": "skip",
@@ -340,7 +310,7 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "default": 20,
+              "default": 50,
               "title": "Limit"
             }
           },
@@ -415,7 +385,50 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ArtifactListResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArtifactResponse"
+                  },
+                  "title": "Response Get Artifacts Api V1 Artifacts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Artifacts"
+        ],
+        "summary": "Create Artifact",
+        "operationId": "create_artifact_api_v1_artifacts_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArtifactCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponse"
                 }
               }
             }
@@ -436,7 +449,7 @@
     "/api/v1/artifacts/{artifact_id}": {
       "get": {
         "tags": [
-          "Discovered Artifacts"
+          "Artifacts"
         ],
         "summary": "Get Artifact",
         "operationId": "get_artifact_api_v1_artifacts__artifact_id__get",
@@ -457,7 +470,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ArtifactDetailResponse"
+                  "$ref": "#/components/schemas/ArtifactResponse"
                 }
               }
             }
@@ -476,7 +489,7 @@
       },
       "patch": {
         "tags": [
-          "Discovered Artifacts"
+          "Artifacts"
         ],
         "summary": "Update Artifact",
         "operationId": "update_artifact_api_v1_artifacts__artifact_id__patch",
@@ -526,7 +539,7 @@
       },
       "delete": {
         "tags": [
-          "Discovered Artifacts"
+          "Artifacts"
         ],
         "summary": "Delete Artifact",
         "operationId": "delete_artifact_api_v1_artifacts__artifact_id__delete",
@@ -559,9 +572,66 @@
       }
     },
     "/api/v1/teams": {
+      "get": {
+        "tags": [
+          "Teams"
+        ],
+        "summary": "Get Teams",
+        "operationId": "get_teams_api_v1_teams_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponse"
+                  },
+                  "title": "Response Get Teams Api V1 Teams Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
-          "Excavation Teams"
+          "Teams"
         ],
         "summary": "Create Team",
         "operationId": "create_team_api_v1_teams_post",
@@ -597,86 +667,15 @@
             }
           }
         }
-      },
-      "get": {
-        "tags": [
-          "Excavation Teams"
-        ],
-        "summary": "List Teams",
-        "operationId": "list_teams_api_v1_teams_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "site_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Site Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TeamListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/v1/teams/members/all": {
       "get": {
         "tags": [
-          "Excavation Teams"
+          "Teams"
         ],
-        "summary": "List All Members",
-        "description": "List all team members across all teams.",
-        "operationId": "list_all_members_api_v1_teams_members_all_get",
+        "summary": "Get All Members",
+        "operationId": "get_all_members_api_v1_teams_members_all_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -684,10 +683,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/TeamMemberResponse"
+                    "$ref": "#/components/schemas/MemberResponse"
                   },
                   "type": "array",
-                  "title": "Response List All Members Api V1 Teams Members All Get"
+                  "title": "Response Get All Members Api V1 Teams Members All Get"
                 }
               }
             }
@@ -698,7 +697,7 @@
     "/api/v1/teams/{team_id}": {
       "get": {
         "tags": [
-          "Excavation Teams"
+          "Teams"
         ],
         "summary": "Get Team",
         "operationId": "get_team_api_v1_teams__team_id__get",
@@ -738,7 +737,7 @@
       },
       "delete": {
         "tags": [
-          "Excavation Teams"
+          "Teams"
         ],
         "summary": "Delete Team",
         "operationId": "delete_team_api_v1_teams__team_id__delete",
@@ -773,10 +772,10 @@
     "/api/v1/teams/{team_id}/members": {
       "post": {
         "tags": [
-          "Excavation Teams"
+          "Teams"
         ],
-        "summary": "Assign Member To Team",
-        "operationId": "assign_member_to_team_api_v1_teams__team_id__members_post",
+        "summary": "Add Member To Team",
+        "operationId": "add_member_to_team_api_v1_teams__team_id__members_post",
         "parameters": [
           {
             "name": "team_id",
@@ -793,7 +792,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TeamMemberCreate"
+                "$ref": "#/components/schemas/MemberCreate"
               }
             }
           }
@@ -804,7 +803,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TeamMemberResponse"
+                  "$ref": "#/components/schemas/MemberResponse"
                 }
               }
             }
@@ -823,7 +822,7 @@
       },
       "get": {
         "tags": [
-          "Excavation Teams"
+          "Teams"
         ],
         "summary": "Get Team Members",
         "operationId": "get_team_members_api_v1_teams__team_id__members_get",
@@ -846,7 +845,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TeamMemberResponse"
+                    "$ref": "#/components/schemas/MemberResponse"
                   },
                   "title": "Response Get Team Members Api V1 Teams  Team Id  Members Get"
                 }
@@ -869,16 +868,15 @@
     "/api/v1/media/upload": {
       "post": {
         "tags": [
-          "Media & Photographs"
+          "Media"
         ],
         "summary": "Upload Media Record",
-        "description": "Create a media asset record with metadata.",
         "operationId": "upload_media_record_api_v1_media_upload_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MediaAssetCreate"
+                "$ref": "#/components/schemas/MediaCreate"
               }
             }
           },
@@ -890,7 +888,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MediaAssetResponse"
+                  "$ref": "#/components/schemas/MediaResponse"
                 }
               }
             }
@@ -911,11 +909,43 @@
     "/api/v1/media": {
       "get": {
         "tags": [
-          "Media & Photographs"
+          "Media"
         ],
         "summary": "List Media",
         "operationId": "list_media_api_v1_media_get",
         "parameters": [
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Type"
+            }
+          },
+          {
+            "name": "entity_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
           {
             "name": "skip",
             "in": "query",
@@ -933,58 +963,9 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 100,
               "minimum": 1,
-              "default": 20,
+              "default": 50,
               "title": "Limit"
-            }
-          },
-          {
-            "name": "site_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Site Id"
-            }
-          },
-          {
-            "name": "artifact_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Artifact Id"
-            }
-          },
-          {
-            "name": "lab_analysis_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Lab Analysis Id"
             }
           }
         ],
@@ -994,7 +975,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MediaAssetListResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaResponse"
+                  },
+                  "title": "Response List Media Api V1 Media Get"
                 }
               }
             }
@@ -1015,7 +1000,7 @@
     "/api/v1/media/{media_id}": {
       "get": {
         "tags": [
-          "Media & Photographs"
+          "Media"
         ],
         "summary": "Get Media Asset",
         "operationId": "get_media_asset_api_v1_media__media_id__get",
@@ -1036,7 +1021,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MediaAssetResponse"
+                  "$ref": "#/components/schemas/MediaResponse"
                 }
               }
             }
@@ -1055,7 +1040,7 @@
       },
       "delete": {
         "tags": [
-          "Media & Photographs"
+          "Media"
         ],
         "summary": "Delete Media Asset",
         "operationId": "delete_media_asset_api_v1_media__media_id__delete",
@@ -1088,12 +1073,117 @@
       }
     },
     "/api/v1/lab-analyses": {
+      "get": {
+        "tags": [
+          "Lab Analyses"
+        ],
+        "summary": "Get Lab Analyses",
+        "operationId": "get_lab_analyses_api_v1_lab_analyses_get",
+        "parameters": [
+          {
+            "name": "artifact_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Artifact Id"
+            }
+          },
+          {
+            "name": "test_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Test Type"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LabAnalysisResponse"
+                  },
+                  "title": "Response Get Lab Analyses Api V1 Lab Analyses Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
-          "Laboratory Analysis"
+          "Lab Analyses"
         ],
-        "summary": "Request Lab Analysis",
-        "operationId": "request_lab_analysis_api_v1_lab_analyses_post",
+        "summary": "Create Lab Analysis",
+        "operationId": "create_lab_analysis_api_v1_lab_analyses_post",
         "requestBody": {
           "required": true,
           "content": {
@@ -1126,114 +1216,12 @@
             }
           }
         }
-      },
-      "get": {
-        "tags": [
-          "Laboratory Analysis"
-        ],
-        "summary": "List Lab Analyses",
-        "operationId": "list_lab_analyses_api_v1_lab_analyses_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "artifact_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Artifact Id"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
-            }
-          },
-          {
-            "name": "test_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Test Type"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LabAnalysisListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/v1/lab-analyses/{analysis_id}": {
       "get": {
         "tags": [
-          "Laboratory Analysis"
+          "Lab Analyses"
         ],
         "summary": "Get Lab Analysis",
         "operationId": "get_lab_analysis_api_v1_lab_analyses__analysis_id__get",
@@ -1273,7 +1261,7 @@
       },
       "patch": {
         "tags": [
-          "Laboratory Analysis"
+          "Lab Analyses"
         ],
         "summary": "Update Lab Analysis",
         "operationId": "update_lab_analysis_api_v1_lab_analyses__analysis_id__patch",
@@ -1323,7 +1311,7 @@
       },
       "delete": {
         "tags": [
-          "Laboratory Analysis"
+          "Lab Analyses"
         ],
         "summary": "Delete Lab Analysis",
         "operationId": "delete_lab_analysis_api_v1_lab_analyses__analysis_id__delete",
@@ -1356,9 +1344,66 @@
       }
     },
     "/api/v1/publications": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "summary": "Get Publications",
+        "operationId": "get_publications_api_v1_publications_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicationResponse"
+                  },
+                  "title": "Response Get Publications Api V1 Publications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
-          "Publications & Citations"
+          "Publications"
         ],
         "summary": "Create Publication",
         "operationId": "create_publication_api_v1_publications_post",
@@ -1394,98 +1439,12 @@
             }
           }
         }
-      },
-      "get": {
-        "tags": [
-          "Publications & Citations"
-        ],
-        "summary": "List Publications",
-        "operationId": "list_publications_api_v1_publications_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          },
-          {
-            "name": "doi",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Doi"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PublicationListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/v1/publications/{pub_id}": {
       "get": {
         "tags": [
-          "Publications & Citations"
+          "Publications"
         ],
         "summary": "Get Publication",
         "operationId": "get_publication_api_v1_publications__pub_id__get",
@@ -1525,7 +1484,7 @@
       },
       "delete": {
         "tags": [
-          "Publications & Citations"
+          "Publications"
         ],
         "summary": "Delete Publication",
         "operationId": "delete_publication_api_v1_publications__pub_id__delete",
@@ -1560,27 +1519,117 @@
     "/api/v1/publications/link": {
       "post": {
         "tags": [
-          "Publications & Citations"
+          "Publications"
         ],
-        "summary": "Link Publication To Artifact",
-        "operationId": "link_publication_to_artifact_api_v1_publications_link_post",
+        "summary": "Link Artifact Publication",
+        "operationId": "link_artifact_publication_api_v1_publications_link_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PublicationLinkRequest"
+                "$ref": "#/components/schemas/ArtifactPublicationLink"
               }
             }
           },
           "required": true
         },
         "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{site_id}/stratigraphy": {
+      "get": {
+        "tags": [
+          "3D Stratigraphy"
+        ],
+        "summary": "Get Site Stratigraphy",
+        "operationId": "get_site_stratigraphy_api_v1_sites__site_id__stratigraphy_get",
+        "parameters": [
+          {
+            "name": "site_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Site Id"
+            }
+          }
+        ],
+        "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicationResponse"
+                  "$ref": "#/components/schemas/TrenchStratigraphyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "3D Stratigraphy"
+        ],
+        "summary": "Add Site Stratigraphic Layer",
+        "operationId": "add_site_stratigraphic_layer_api_v1_sites__site_id__stratigraphy_post",
+        "parameters": [
+          {
+            "name": "site_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Site Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StratigraphicLayerCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StratigraphicLayerResponse"
                 }
               }
             }
@@ -1598,20 +1647,97 @@
         }
       }
     },
-    "/api/v1/dashboard/metrics": {
+    "/api/v1/custody/storage-containers": {
+      "post": {
+        "tags": [
+          "Chain of Custody & Storage"
+        ],
+        "summary": "Register Storage Container",
+        "operationId": "register_storage_container_api_v1_custody_storage_containers_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageContainerCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageContainerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
-          "Dashboard & Metrics"
+          "Chain of Custody & Storage"
         ],
-        "summary": "Get Dashboard Metrics",
-        "operationId": "get_dashboard_metrics_api_v1_dashboard_metrics_get",
+        "summary": "Get Storage Containers",
+        "operationId": "get_storage_containers_api_v1_custody_storage_containers_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DashboardMetricsResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StorageContainerResponse"
+                  },
+                  "title": "Response Get Storage Containers Api V1 Custody Storage Containers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1619,13 +1745,249 @@
         }
       }
     },
-    "/api/v1/health": {
+    "/api/v1/custody/transfer": {
+      "post": {
+        "tags": [
+          "Chain of Custody & Storage"
+        ],
+        "summary": "Record Custody Transfer",
+        "operationId": "record_custody_transfer_api_v1_custody_transfer_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustodyTransferCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustodyTransferResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custody/history/{artifact_id}": {
       "get": {
         "tags": [
-          "Health"
+          "Chain of Custody & Storage"
         ],
-        "summary": "Health Check",
-        "operationId": "health_check_api_v1_health_get",
+        "summary": "Get Artifact Custody History",
+        "operationId": "get_artifact_custody_history_api_v1_custody_history__artifact_id__get",
+        "parameters": [
+          {
+            "name": "artifact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Artifact Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustodyTransferResponse"
+                  },
+                  "title": "Response Get Artifact Custody History Api V1 Custody History  Artifact Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qr/generate/{entity_type}/{id}": {
+      "get": {
+        "tags": [
+          "QR / Barcode"
+        ],
+        "summary": "Get Qr Code",
+        "operationId": "get_qr_code_api_v1_qr_generate__entity_type___id__get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Type"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ml/classify-material": {
+      "post": {
+        "tags": [
+          "ML Material Inference"
+        ],
+        "summary": "Classify Material",
+        "operationId": "classify_material_api_v1_ml_classify_material_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MLClassificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MLClassificationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/batch": {
+      "post": {
+        "tags": [
+          "Offline Synchronization"
+        ],
+        "summary": "Sync Batch Offline Logs",
+        "operationId": "sync_batch_offline_logs_api_v1_sync_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchSyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/status": {
+      "get": {
+        "tags": [
+          "Offline Synchronization"
+        ],
+        "summary": "Get Offline Sync Status",
+        "operationId": "get_offline_sync_status_api_v1_sync_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1640,11 +2002,8 @@
     },
     "/health": {
       "get": {
-        "tags": [
-          "Health"
-        ],
-        "summary": "Health Check",
-        "operationId": "health_check_health_get",
+        "summary": "Health",
+        "operationId": "health_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1662,347 +2021,20 @@
     "schemas": {
       "ArtifactCreate": {
         "properties": {
-          "site_id": {
-            "type": "string",
-            "title": "Site Id",
-            "description": "UUID of the parent excavation site"
-          },
           "artifact_code": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
-            "title": "Artifact Code",
-            "description": "Unique artifact catalog code"
-          },
-          "material": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Material",
-            "description": "Material: Ceramic, Bronze, Lithic, Bone, Organic, etc."
-          },
-          "context_layer": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Context Layer",
-            "description": "Archaeological stratum layer"
-          },
-          "depth_meters": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Depth Meters",
-            "description": "Depth from surface datum in meters"
-          },
-          "excavation_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Excavation Date",
-            "description": "Discovery date"
-          },
-          "finder_member_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finder Member Id",
-            "description": "UUID of discoverer team member"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          }
-        },
-        "type": "object",
-        "required": [
-          "site_id",
-          "artifact_code",
-          "material",
-          "context_layer",
-          "depth_meters",
-          "excavation_date"
-        ],
-        "title": "ArtifactCreate"
-      },
-      "ArtifactDetailResponse": {
-        "properties": {
-          "site_id": {
-            "type": "string",
-            "title": "Site Id",
-            "description": "UUID of the parent excavation site"
-          },
-          "artifact_code": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Artifact Code",
-            "description": "Unique artifact catalog code"
-          },
-          "material": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Material",
-            "description": "Material: Ceramic, Bronze, Lithic, Bone, Organic, etc."
-          },
-          "context_layer": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Context Layer",
-            "description": "Archaeological stratum layer"
-          },
-          "depth_meters": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Depth Meters",
-            "description": "Depth from surface datum in meters"
-          },
-          "excavation_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Excavation Date",
-            "description": "Discovery date"
-          },
-          "finder_member_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finder Member Id",
-            "description": "UUID of discoverer team member"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "site": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/SiteResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "finder": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TeamMemberResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "site_id",
-          "artifact_code",
-          "material",
-          "context_layer",
-          "depth_meters",
-          "excavation_date",
-          "id",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "ArtifactDetailResponse"
-      },
-      "ArtifactListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/ArtifactResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "skip",
-          "limit"
-        ],
-        "title": "ArtifactListResponse"
-      },
-      "ArtifactResponse": {
-        "properties": {
-          "site_id": {
-            "type": "string",
-            "title": "Site Id",
-            "description": "UUID of the parent excavation site"
-          },
-          "artifact_code": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Artifact Code",
-            "description": "Unique artifact catalog code"
-          },
-          "material": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Material",
-            "description": "Material: Ceramic, Bronze, Lithic, Bone, Organic, etc."
-          },
-          "context_layer": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Context Layer",
-            "description": "Archaeological stratum layer"
-          },
-          "depth_meters": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Depth Meters",
-            "description": "Depth from surface datum in meters"
-          },
-          "excavation_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Excavation Date",
-            "description": "Discovery date"
-          },
-          "finder_member_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finder Member Id",
-            "description": "UUID of discoverer team member"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "site_id",
-          "artifact_code",
-          "material",
-          "context_layer",
-          "depth_meters",
-          "excavation_date",
-          "id",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "ArtifactResponse"
-      },
-      "ArtifactUpdate": {
-        "properties": {
-          "site_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Site Id"
-          },
-          "artifact_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
             "title": "Artifact Code"
           },
+          "site_id": {
+            "type": "string",
+            "title": "Site Id"
+          },
           "material": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
             "title": "Material"
           },
           "context_layer": {
@@ -2019,8 +2051,7 @@
           "depth_meters": {
             "anyOf": [
               {
-                "type": "number",
-                "minimum": 0.0
+                "type": "number"
               },
               {
                 "type": "null"
@@ -2031,8 +2062,7 @@
           "excavation_date": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2061,12 +2091,603 @@
               }
             ],
             "title": "Description"
+          },
+          "x_offset_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X Offset Meters"
+          },
+          "y_offset_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Y Offset Meters"
+          },
+          "z_depth_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Depth Meters"
+          },
+          "qr_code_identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr Code Identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artifact_code",
+          "site_id",
+          "material"
+        ],
+        "title": "ArtifactCreate"
+      },
+      "ArtifactPublicationLink": {
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "publication_id": {
+            "type": "string",
+            "title": "Publication Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "publication_id"
+        ],
+        "title": "ArtifactPublicationLink"
+      },
+      "ArtifactResponse": {
+        "properties": {
+          "artifact_code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Artifact Code"
+          },
+          "site_id": {
+            "type": "string",
+            "title": "Site Id"
+          },
+          "material": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Material"
+          },
+          "context_layer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Layer"
+          },
+          "depth_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depth Meters"
+          },
+          "excavation_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excavation Date"
+          },
+          "finder_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finder Member Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "x_offset_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X Offset Meters"
+          },
+          "y_offset_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Y Offset Meters"
+          },
+          "z_depth_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Depth Meters"
+          },
+          "qr_code_identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr Code Identifier"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artifact_code",
+          "site_id",
+          "material",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ArtifactResponse"
+      },
+      "ArtifactUpdate": {
+        "properties": {
+          "artifact_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Code"
+          },
+          "site_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Id"
+          },
+          "material": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material"
+          },
+          "context_layer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Layer"
+          },
+          "depth_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depth Meters"
+          },
+          "excavation_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excavation Date"
+          },
+          "finder_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finder Member Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "x_offset_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X Offset Meters"
+          },
+          "y_offset_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Y Offset Meters"
+          },
+          "z_depth_meters": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Depth Meters"
+          },
+          "qr_code_identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr Code Identifier"
           }
         },
         "type": "object",
         "title": "ArtifactUpdate"
       },
-      "DashboardMetricsResponse": {
+      "BatchSyncRequest": {
+        "properties": {
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/SyncTransactionItem"
+            },
+            "type": "array",
+            "title": "Transactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transactions"
+        ],
+        "title": "BatchSyncRequest"
+      },
+      "BatchSyncResponse": {
+        "properties": {
+          "total_received": {
+            "type": "integer",
+            "title": "Total Received"
+          },
+          "synced_count": {
+            "type": "integer",
+            "title": "Synced Count"
+          },
+          "failed_count": {
+            "type": "integer",
+            "title": "Failed Count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SyncResultItem"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_received",
+          "synced_count",
+          "failed_count",
+          "results"
+        ],
+        "title": "BatchSyncResponse"
+      },
+      "CustodyTransferCreate": {
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "container_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Id"
+          },
+          "releasing_custodian_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Releasing Custodian Id"
+          },
+          "receiving_custodian_id": {
+            "type": "string",
+            "title": "Receiving Custodian Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "receiving_custodian_id"
+        ],
+        "title": "CustodyTransferCreate"
+      },
+      "CustodyTransferResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "artifact_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Code"
+          },
+          "container_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Id"
+          },
+          "container_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Code"
+          },
+          "room_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Name"
+          },
+          "rack_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rack Number"
+          },
+          "bin_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bin Number"
+          },
+          "releasing_custodian_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Releasing Custodian Id"
+          },
+          "releasing_custodian_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Releasing Custodian Name"
+          },
+          "receiving_custodian_id": {
+            "type": "string",
+            "title": "Receiving Custodian Id"
+          },
+          "receiving_custodian_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receiving Custodian Name"
+          },
+          "transfer_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Transfer Timestamp"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "artifact_id",
+          "receiving_custodian_id",
+          "transfer_timestamp",
+          "created_at"
+        ],
+        "title": "CustodyTransferResponse"
+      },
+      "DashboardMetrics": {
         "properties": {
           "active_sites_count": {
             "type": "integer",
@@ -2088,21 +2709,17 @@
             "type": "integer",
             "title": "Pending Lab Tests Count"
           },
-          "in_progress_lab_tests_count": {
-            "type": "integer",
-            "title": "In Progress Lab Tests Count"
-          },
           "completed_lab_tests_count": {
             "type": "integer",
             "title": "Completed Lab Tests Count"
           },
-          "total_publications_count": {
+          "queued_sync_count": {
             "type": "integer",
-            "title": "Total Publications Count"
+            "title": "Queued Sync Count"
           },
-          "total_photos_count": {
+          "ml_anomalies_count": {
             "type": "integer",
-            "title": "Total Photos Count"
+            "title": "Ml Anomalies Count"
           }
         },
         "type": "object",
@@ -2112,12 +2729,11 @@
           "excavation_teams_count",
           "team_members_count",
           "pending_lab_tests_count",
-          "in_progress_lab_tests_count",
           "completed_lab_tests_count",
-          "total_publications_count",
-          "total_photos_count"
+          "queued_sync_count",
+          "ml_anomalies_count"
         ],
-        "title": "DashboardMetricsResponse"
+        "title": "DashboardMetrics"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2136,48 +2752,36 @@
         "properties": {
           "artifact_id": {
             "type": "string",
-            "title": "Artifact Id",
-            "description": "UUID of artifact under testing"
+            "title": "Artifact Id"
           },
           "test_type": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
-            "title": "Test Type",
-            "description": "Test: Radiocarbon C-14, XRF Spectrometry, Petrographic Analysis"
+            "title": "Test Type"
           },
           "lab_name": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 150,
             "minLength": 1,
-            "title": "Lab Name",
-            "description": "Performing laboratory name"
+            "title": "Lab Name"
           },
           "status": {
             "type": "string",
+            "maxLength": 50,
             "title": "Status",
-            "description": "Workflow status: Pending, In-Progress, Completed",
             "default": "Pending"
           },
-          "request_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Request Date",
-            "description": "Date analysis was requested"
-          },
-          "completion_date": {
+          "results": {
             "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
+              {},
               {
                 "type": "null"
               }
             ],
-            "title": "Completion Date"
+            "title": "Results"
           },
-          "result_summary": {
+          "notes": {
             "anyOf": [
               {
                 "type": "string"
@@ -2186,95 +2790,51 @@
                 "type": "null"
               }
             ],
-            "title": "Result Summary"
+            "title": "Notes"
           }
         },
         "type": "object",
         "required": [
           "artifact_id",
           "test_type",
-          "lab_name",
-          "request_date"
+          "lab_name"
         ],
         "title": "LabAnalysisCreate"
-      },
-      "LabAnalysisListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/LabAnalysisResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "skip",
-          "limit"
-        ],
-        "title": "LabAnalysisListResponse"
       },
       "LabAnalysisResponse": {
         "properties": {
           "artifact_id": {
             "type": "string",
-            "title": "Artifact Id",
-            "description": "UUID of artifact under testing"
+            "title": "Artifact Id"
           },
           "test_type": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
-            "title": "Test Type",
-            "description": "Test: Radiocarbon C-14, XRF Spectrometry, Petrographic Analysis"
+            "title": "Test Type"
           },
           "lab_name": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 150,
             "minLength": 1,
-            "title": "Lab Name",
-            "description": "Performing laboratory name"
+            "title": "Lab Name"
           },
           "status": {
             "type": "string",
+            "maxLength": 50,
             "title": "Status",
-            "description": "Workflow status: Pending, In-Progress, Completed",
             "default": "Pending"
           },
-          "request_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Request Date",
-            "description": "Date analysis was requested"
-          },
-          "completion_date": {
+          "results": {
             "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
+              {},
               {
                 "type": "null"
               }
             ],
-            "title": "Completion Date"
+            "title": "Results"
           },
-          "result_summary": {
+          "notes": {
             "anyOf": [
               {
                 "type": "string"
@@ -2283,7 +2843,7 @@
                 "type": "null"
               }
             ],
-            "title": "Result Summary"
+            "title": "Notes"
           },
           "id": {
             "type": "string",
@@ -2305,7 +2865,6 @@
           "artifact_id",
           "test_type",
           "lab_name",
-          "request_date",
           "id",
           "created_at",
           "updated_at"
@@ -2347,31 +2906,16 @@
             ],
             "title": "Status"
           },
-          "request_date": {
+          "results": {
             "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
+              {},
               {
                 "type": "null"
               }
             ],
-            "title": "Request Date"
+            "title": "Results"
           },
-          "completion_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Completion Date"
-          },
-          "result_summary": {
+          "notes": {
             "anyOf": [
               {
                 "type": "string"
@@ -2380,37 +2924,42 @@
                 "type": "null"
               }
             ],
-            "title": "Result Summary"
+            "title": "Notes"
           }
         },
         "type": "object",
         "title": "LabAnalysisUpdate"
       },
-      "MediaAssetCreate": {
+      "MLAnomalyItem": {
         "properties": {
-          "site_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Site Id"
+          "type": {
+            "type": "string",
+            "title": "Type"
           },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "severity",
+          "description"
+        ],
+        "title": "MLAnomalyItem"
+      },
+      "MLClassificationRequest": {
+        "properties": {
           "artifact_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Artifact Id"
           },
-          "lab_analysis_id": {
+          "media_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -2419,30 +2968,121 @@
                 "type": "null"
               }
             ],
-            "title": "Lab Analysis Id"
+            "title": "Media Id"
           },
-          "file_name": {
+          "image_base64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Base64"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artifact_id"
+        ],
+        "title": "MLClassificationRequest"
+      },
+      "MLClassificationResponse": {
+        "properties": {
+          "id": {
             "type": "string",
-            "maxLength": 255,
+            "title": "Id"
+          },
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "media_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Id"
+          },
+          "predicted_material": {
+            "type": "string",
+            "title": "Predicted Material"
+          },
+          "confidence_score": {
+            "type": "number",
+            "title": "Confidence Score"
+          },
+          "anomalies_detected": {
+            "items": {
+              "$ref": "#/components/schemas/MLAnomalyItem"
+            },
+            "type": "array",
+            "title": "Anomalies Detected",
+            "default": []
+          },
+          "requires_manual_override": {
+            "type": "boolean",
+            "title": "Requires Manual Override"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "artifact_id",
+          "predicted_material",
+          "confidence_score",
+          "requires_manual_override",
+          "created_at"
+        ],
+        "title": "MLClassificationResponse"
+      },
+      "MediaCreate": {
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "maxLength": 50,
             "minLength": 1,
-            "title": "File Name"
+            "title": "Entity Type"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           },
           "file_url": {
             "type": "string",
-            "maxLength": 1000,
-            "minLength": 1,
             "title": "File Url"
           },
-          "media_type": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Media Type"
-          },
-          "file_size_bytes": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "File Size Bytes"
+          "file_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Type"
           },
           "caption": {
             "anyOf": [
@@ -2457,10 +3097,7 @@
           },
           "camera_metadata": {
             "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
+              {},
               {
                 "type": "null"
               }
@@ -2470,101 +3107,49 @@
         },
         "type": "object",
         "required": [
-          "file_name",
-          "file_url",
-          "media_type",
-          "file_size_bytes"
+          "entity_type",
+          "entity_id",
+          "file_url"
         ],
-        "title": "MediaAssetCreate"
+        "title": "MediaCreate"
       },
-      "MediaAssetListResponse": {
+      "MediaResponse": {
         "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/MediaAssetResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "skip",
-          "limit"
-        ],
-        "title": "MediaAssetListResponse"
-      },
-      "MediaAssetResponse": {
-        "properties": {
-          "site_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Site Id"
-          },
-          "artifact_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Artifact Id"
-          },
-          "lab_analysis_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lab Analysis Id"
-          },
-          "file_name": {
+          "entity_type": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 50,
             "minLength": 1,
-            "title": "File Name"
+            "title": "Entity Type"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           },
           "file_url": {
             "type": "string",
-            "maxLength": 1000,
-            "minLength": 1,
             "title": "File Url"
           },
-          "media_type": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Media Type"
-          },
-          "file_size_bytes": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "File Size Bytes"
+          "file_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Type"
           },
           "caption": {
             "anyOf": [
@@ -2579,10 +3164,7 @@
           },
           "camera_metadata": {
             "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
+              {},
               {
                 "type": "null"
               }
@@ -2606,46 +3188,143 @@
         },
         "type": "object",
         "required": [
-          "file_name",
+          "entity_type",
+          "entity_id",
           "file_url",
-          "media_type",
-          "file_size_bytes",
           "id",
           "created_at",
           "updated_at"
         ],
-        "title": "MediaAssetResponse"
+        "title": "MediaResponse"
+      },
+      "MemberCreate": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Full Name"
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Role"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "role"
+        ],
+        "title": "MemberCreate"
+      },
+      "MemberResponse": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Full Name"
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Role"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "role",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "MemberResponse"
       },
       "PublicationCreate": {
         "properties": {
           "title": {
             "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Title"
-          },
-          "authors": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Authors"
-          },
-          "journal_publisher": {
-            "type": "string",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Journal Publisher"
-          },
-          "publication_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Publication Date"
+            "title": "Title"
           },
           "doi": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2653,119 +3332,97 @@
             ],
             "title": "Doi"
           },
-          "artifact_ids": {
+          "authors": {
             "anyOf": [
               {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Artifact Ids",
-            "description": "List of artifact UUIDs to link",
-            "default": []
+            "title": "Authors"
+          },
+          "journal_publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journal Publisher"
+          },
+          "publication_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Date"
           }
         },
         "type": "object",
         "required": [
-          "title",
-          "authors",
-          "journal_publisher",
-          "publication_date"
+          "title"
         ],
         "title": "PublicationCreate"
-      },
-      "PublicationLinkRequest": {
-        "properties": {
-          "publication_id": {
-            "type": "string",
-            "title": "Publication Id",
-            "description": "UUID of publication"
-          },
-          "artifact_id": {
-            "type": "string",
-            "title": "Artifact Id",
-            "description": "UUID of artifact"
-          }
-        },
-        "type": "object",
-        "required": [
-          "publication_id",
-          "artifact_id"
-        ],
-        "title": "PublicationLinkRequest"
-      },
-      "PublicationListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/PublicationResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "skip",
-          "limit"
-        ],
-        "title": "PublicationListResponse"
       },
       "PublicationResponse": {
         "properties": {
           "title": {
             "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Title"
-          },
-          "authors": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Authors"
-          },
-          "journal_publisher": {
-            "type": "string",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Journal Publisher"
-          },
-          "publication_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Publication Date"
+            "title": "Title"
           },
           "doi": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Doi"
+          },
+          "authors": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authors"
+          },
+          "journal_publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journal Publisher"
+          },
+          "publication_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Date"
           },
           "id": {
             "type": "string",
@@ -2780,22 +3437,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
-          },
-          "linked_artifact_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Linked Artifact Ids",
-            "default": []
           }
         },
         "type": "object",
         "required": [
           "title",
-          "authors",
-          "journal_publisher",
-          "publication_date",
           "id",
           "created_at",
           "updated_at"
@@ -2806,41 +3452,39 @@
         "properties": {
           "name": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 150,
             "minLength": 1,
-            "title": "Name",
-            "description": "Unique excavation site name"
+            "title": "Name"
           },
           "site_code": {
             "type": "string",
-            "maxLength": 100,
+            "maxLength": 50,
             "minLength": 1,
-            "title": "Site Code",
-            "description": "Unique alphanumeric site code"
+            "title": "Site Code"
           },
           "region": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 100,
             "minLength": 1,
-            "title": "Region",
-            "description": "Geographical or administrative region"
+            "title": "Region"
           },
           "historical_period": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 100,
             "minLength": 1,
-            "title": "Historical Period",
-            "description": "Historical or archaeological era"
+            "title": "Historical Period"
           },
           "latitude": {
             "type": "number",
-            "title": "Latitude",
-            "description": "GPS latitude in decimal degrees [-90, 90]"
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
           },
           "longitude": {
             "type": "number",
-            "title": "Longitude",
-            "description": "GPS longitude in decimal degrees [-180, 180]"
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
           },
           "altitude_meters": {
             "anyOf": [
@@ -2851,8 +3495,7 @@
                 "type": "null"
               }
             ],
-            "title": "Altitude Meters",
-            "description": "Altitude in meters above sea level"
+            "title": "Altitude Meters"
           },
           "description": {
             "anyOf": [
@@ -2863,8 +3506,7 @@
                 "type": "null"
               }
             ],
-            "title": "Description",
-            "description": "Detailed site notes and landscape description"
+            "title": "Description"
           }
         },
         "type": "object",
@@ -2878,76 +3520,43 @@
         ],
         "title": "SiteCreate"
       },
-      "SiteListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/SiteResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "skip",
-          "limit"
-        ],
-        "title": "SiteListResponse"
-      },
       "SiteResponse": {
         "properties": {
           "name": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 150,
             "minLength": 1,
-            "title": "Name",
-            "description": "Unique excavation site name"
+            "title": "Name"
           },
           "site_code": {
             "type": "string",
-            "maxLength": 100,
+            "maxLength": 50,
             "minLength": 1,
-            "title": "Site Code",
-            "description": "Unique alphanumeric site code"
+            "title": "Site Code"
           },
           "region": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 100,
             "minLength": 1,
-            "title": "Region",
-            "description": "Geographical or administrative region"
+            "title": "Region"
           },
           "historical_period": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 100,
             "minLength": 1,
-            "title": "Historical Period",
-            "description": "Historical or archaeological era"
+            "title": "Historical Period"
           },
           "latitude": {
             "type": "number",
-            "title": "Latitude",
-            "description": "GPS latitude in decimal degrees [-90, 90]"
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
           },
           "longitude": {
             "type": "number",
-            "title": "Longitude",
-            "description": "GPS longitude in decimal degrees [-180, 180]"
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
           },
           "altitude_meters": {
             "anyOf": [
@@ -2958,8 +3567,7 @@
                 "type": "null"
               }
             ],
-            "title": "Altitude Meters",
-            "description": "Altitude in meters above sea level"
+            "title": "Altitude Meters"
           },
           "description": {
             "anyOf": [
@@ -2970,8 +3578,7 @@
                 "type": "null"
               }
             ],
-            "title": "Description",
-            "description": "Detailed site notes and landscape description"
+            "title": "Description"
           },
           "id": {
             "type": "string",
@@ -3007,9 +3614,7 @@
           "name": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 1
+                "type": "string"
               },
               {
                 "type": "null"
@@ -3020,9 +3625,7 @@
           "site_code": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 100,
-                "minLength": 1
+                "type": "string"
               },
               {
                 "type": "null"
@@ -3033,9 +3636,7 @@
           "region": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 1
+                "type": "string"
               },
               {
                 "type": "null"
@@ -3046,9 +3647,7 @@
           "historical_period": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 1
+                "type": "string"
               },
               {
                 "type": "null"
@@ -3059,7 +3658,9 @@
           "latitude": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
               },
               {
                 "type": "null"
@@ -3070,7 +3671,9 @@
           "longitude": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": -180.0
               },
               {
                 "type": "null"
@@ -3104,148 +3707,33 @@
         "type": "object",
         "title": "SiteUpdate"
       },
-      "TeamCreate": {
+      "SpatialArtifactNode": {
         "properties": {
-          "team_name": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Team Name"
-          },
-          "site_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Site Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "team_name"
-        ],
-        "title": "TeamCreate"
-      },
-      "TeamListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/TeamResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "skip",
-          "limit"
-        ],
-        "title": "TeamListResponse"
-      },
-      "TeamMemberCreate": {
-        "properties": {
-          "full_name": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Full Name"
-          },
-          "role": {
-            "type": "string",
-            "title": "Role",
-            "description": "Role: Director, Archaeologist, Field Assistant, Lab Specialist"
-          },
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 3,
-            "title": "Email"
-          },
-          "phone": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Phone"
-          },
-          "team_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Team Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "full_name",
-          "role",
-          "email"
-        ],
-        "title": "TeamMemberCreate"
-      },
-      "TeamMemberResponse": {
-        "properties": {
-          "full_name": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Full Name"
-          },
-          "role": {
-            "type": "string",
-            "title": "Role",
-            "description": "Role: Director, Archaeologist, Field Assistant, Lab Specialist"
-          },
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 3,
-            "title": "Email"
-          },
-          "phone": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Phone"
-          },
           "id": {
             "type": "string",
             "title": "Id"
           },
-          "team_id": {
+          "artifact_code": {
+            "type": "string",
+            "title": "Artifact Code"
+          },
+          "material": {
+            "type": "string",
+            "title": "Material"
+          },
+          "x_offset_meters": {
+            "type": "number",
+            "title": "X Offset Meters"
+          },
+          "y_offset_meters": {
+            "type": "number",
+            "title": "Y Offset Meters"
+          },
+          "z_depth_meters": {
+            "type": "number",
+            "title": "Z Depth Meters"
+          },
+          "context_layer": {
             "anyOf": [
               {
                 "type": "string"
@@ -3254,7 +3742,112 @@
                 "type": "null"
               }
             ],
-            "title": "Team Id"
+            "title": "Context Layer"
+          },
+          "interpolated_depth": {
+            "type": "boolean",
+            "title": "Interpolated Depth",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "artifact_code",
+          "material",
+          "x_offset_meters",
+          "y_offset_meters",
+          "z_depth_meters"
+        ],
+        "title": "SpatialArtifactNode"
+      },
+      "StorageContainerCreate": {
+        "properties": {
+          "container_code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Container Code"
+          },
+          "room_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Room Name"
+          },
+          "rack_number": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Rack Number"
+          },
+          "bin_number": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Bin Number"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "container_code",
+          "room_name",
+          "rack_number",
+          "bin_number"
+        ],
+        "title": "StorageContainerCreate"
+      },
+      "StorageContainerResponse": {
+        "properties": {
+          "container_code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Container Code"
+          },
+          "room_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Room Name"
+          },
+          "rack_number": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Rack Number"
+          },
+          "bin_number": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Bin Number"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
           },
           "created_at": {
             "type": "string",
@@ -3269,22 +3862,267 @@
         },
         "type": "object",
         "required": [
-          "full_name",
-          "role",
-          "email",
+          "container_code",
+          "room_name",
+          "rack_number",
+          "bin_number",
           "id",
           "created_at",
           "updated_at"
         ],
-        "title": "TeamMemberResponse"
+        "title": "StorageContainerResponse"
+      },
+      "StratigraphicLayerCreate": {
+        "properties": {
+          "layer_code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Layer Code"
+          },
+          "historical_period": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Historical Period"
+          },
+          "depth_top_meters": {
+            "type": "number",
+            "title": "Depth Top Meters"
+          },
+          "depth_bottom_meters": {
+            "type": "number",
+            "title": "Depth Bottom Meters"
+          },
+          "color_hex": {
+            "type": "string",
+            "maxLength": 7,
+            "title": "Color Hex",
+            "default": "#8B4513"
+          }
+        },
+        "type": "object",
+        "required": [
+          "layer_code",
+          "historical_period",
+          "depth_top_meters",
+          "depth_bottom_meters"
+        ],
+        "title": "StratigraphicLayerCreate"
+      },
+      "StratigraphicLayerResponse": {
+        "properties": {
+          "layer_code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Layer Code"
+          },
+          "historical_period": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Historical Period"
+          },
+          "depth_top_meters": {
+            "type": "number",
+            "title": "Depth Top Meters"
+          },
+          "depth_bottom_meters": {
+            "type": "number",
+            "title": "Depth Bottom Meters"
+          },
+          "color_hex": {
+            "type": "string",
+            "maxLength": 7,
+            "title": "Color Hex",
+            "default": "#8B4513"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "site_id": {
+            "type": "string",
+            "title": "Site Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "layer_code",
+          "historical_period",
+          "depth_top_meters",
+          "depth_bottom_meters",
+          "id",
+          "site_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "StratigraphicLayerResponse"
+      },
+      "SyncResultItem": {
+        "properties": {
+          "client_tx_id": {
+            "type": "string",
+            "title": "Client Tx Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_tx_id",
+          "status"
+        ],
+        "title": "SyncResultItem"
+      },
+      "SyncStatusResponse": {
+        "properties": {
+          "server_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Server Time"
+          },
+          "server_version": {
+            "type": "string",
+            "title": "Server Version",
+            "default": "v2.0.0"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "online"
+          },
+          "total_synced_transactions": {
+            "type": "integer",
+            "title": "Total Synced Transactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "server_time",
+          "total_synced_transactions"
+        ],
+        "title": "SyncStatusResponse"
+      },
+      "SyncTransactionItem": {
+        "properties": {
+          "client_tx_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Client Tx Id"
+          },
+          "payload_type": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Payload Type"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "client_timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_tx_id",
+          "payload_type",
+          "payload"
+        ],
+        "title": "SyncTransactionItem"
+      },
+      "TeamCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "unit_code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Unit Code"
+          },
+          "site_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "unit_code"
+        ],
+        "title": "TeamCreate"
       },
       "TeamResponse": {
         "properties": {
-          "team_name": {
+          "name": {
             "type": "string",
-            "maxLength": 255,
+            "maxLength": 150,
             "minLength": 1,
-            "title": "Team Name"
+            "title": "Name"
+          },
+          "unit_code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Unit Code"
           },
           "site_id": {
             "anyOf": [
@@ -3301,6 +4139,14 @@
             "type": "string",
             "title": "Id"
           },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberResponse"
+            },
+            "type": "array",
+            "title": "Members",
+            "default": []
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -3310,24 +4156,93 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
-          },
-          "members": {
-            "items": {
-              "$ref": "#/components/schemas/TeamMemberResponse"
-            },
-            "type": "array",
-            "title": "Members",
-            "default": []
           }
         },
         "type": "object",
         "required": [
-          "team_name",
+          "name",
+          "unit_code",
           "id",
           "created_at",
           "updated_at"
         ],
         "title": "TeamResponse"
+      },
+      "TrenchBounds": {
+        "properties": {
+          "min_x": {
+            "type": "number",
+            "title": "Min X"
+          },
+          "max_x": {
+            "type": "number",
+            "title": "Max X"
+          },
+          "min_y": {
+            "type": "number",
+            "title": "Min Y"
+          },
+          "max_y": {
+            "type": "number",
+            "title": "Max Y"
+          },
+          "min_depth": {
+            "type": "number",
+            "title": "Min Depth"
+          },
+          "max_depth": {
+            "type": "number",
+            "title": "Max Depth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min_x",
+          "max_x",
+          "min_y",
+          "max_y",
+          "min_depth",
+          "max_depth"
+        ],
+        "title": "TrenchBounds"
+      },
+      "TrenchStratigraphyResponse": {
+        "properties": {
+          "site_id": {
+            "type": "string",
+            "title": "Site Id"
+          },
+          "site_name": {
+            "type": "string",
+            "title": "Site Name"
+          },
+          "bounds": {
+            "$ref": "#/components/schemas/TrenchBounds"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/StratigraphicLayerResponse"
+            },
+            "type": "array",
+            "title": "Layers"
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/SpatialArtifactNode"
+            },
+            "type": "array",
+            "title": "Artifacts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "site_id",
+          "site_name",
+          "bounds",
+          "layers",
+          "artifacts"
+        ],
+        "title": "TrenchStratigraphyResponse"
       },
       "ValidationError": {
         "properties": {

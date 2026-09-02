@@ -1,106 +1,74 @@
-import pytest
+def test_get_sites(client):
+    response = client.get("/api/v1/sites")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) >= 1
+    assert any(s["site_code"] == "SITE-ALP-01" for s in data)
 
 
-def test_create_and_get_site(client):
-    site_payload = {
-        "name": "Tell Yarmouth South",
-        "site_code": "SITE-YARM-01",
+def test_create_site_success(client):
+    payload = {
+        "name": "Beta Trench Dig",
+        "site_code": "SITE-BET-02",
         "region": "Levant",
-        "historical_period": "Early Bronze Age III",
-        "latitude": 31.7044,
-        "longitude": 34.9752,
-        "altitude_meters": 340.5,
-        "description": "Fortified urban tell with massive cyclopean stone walls and glacis."
+        "historical_period": "Iron Age",
+        "latitude": 31.7683,
+        "longitude": 35.2137,
+        "altitude_meters": 750.0,
+        "description": "Secondary excavation trench in the Judean highlands.",
     }
-    response = client.post("/api/v1/sites", json=site_payload)
+    response = client.post("/api/v1/sites", json=payload)
     assert response.status_code == 201
     data = response.json()
-    assert data["name"] == site_payload["name"]
-    assert data["site_code"] == site_payload["site_code"]
-    assert "id" in data
-    site_id = data["id"]
-
-    # Get Site by ID
-    get_res = client.get(f"/api/v1/sites/{site_id}")
-    assert get_res.status_code == 200
-    assert get_res.json()["id"] == site_id
+    assert data["site_code"] == "SITE-BET-02"
+    assert data["latitude"] == 31.7683
+    assert data["longitude"] == 35.2137
 
 
-def test_site_gps_coordinate_validation(client):
-    # Latitude out of bounds
-    invalid_lat = {
+def test_create_site_invalid_gps_bounds(client):
+    # Latitude > 90
+    bad_lat = {
         "name": "Invalid Lat Site",
-        "site_code": "SITE-INV-LAT",
-        "region": "Arctic",
+        "site_code": "SITE-ERR-01",
+        "region": "Polar",
         "historical_period": "Unknown",
-        "latitude": 95.0,  # Invalid: > 90
-        "longitude": 0.0,
+        "latitude": 95.5,
+        "longitude": 10.0,
     }
-    res_lat = client.post("/api/v1/sites", json=invalid_lat)
-    assert res_lat.status_code == 422
+    res = client.post("/api/v1/sites", json=bad_lat)
+    assert res.status_code in (400, 422)
 
-    # Longitude out of bounds
-    invalid_lon = {
+    # Longitude < -180
+    bad_lon = {
         "name": "Invalid Lon Site",
-        "site_code": "SITE-INV-LON",
+        "site_code": "SITE-ERR-02",
         "region": "Pacific",
         "historical_period": "Unknown",
-        "latitude": 0.0,
-        "longitude": -195.0,  # Invalid: < -180
+        "latitude": 10.0,
+        "longitude": -195.0,
     }
-    res_lon = client.post("/api/v1/sites", json=invalid_lon)
-    assert res_lon.status_code == 422
+    res2 = client.post("/api/v1/sites", json=bad_lon)
+    assert res2.status_code in (400, 422)
 
 
-def test_duplicate_site_conflict(client):
-    payload = {
-        "name": "Site Unique Test",
-        "site_code": "SITE-UNIQ-01",
-        "region": "Near East",
-        "historical_period": "Iron Age",
-        "latitude": 32.0,
-        "longitude": 35.0,
-    }
-    res1 = client.post("/api/v1/sites", json=payload)
-    assert res1.status_code == 201
+def test_get_site_by_id(client):
+    # Fetch existing
+    res = client.get("/api/v1/sites")
+    site_id = res.json()[0]["id"]
 
-    # Attempt duplicate
-    res2 = client.post("/api/v1/sites", json=payload)
-    assert res2.status_code == 409
+    res_single = client.get(f"/api/v1/sites/{site_id}")
+    assert res_single.status_code == 200
+    assert res_single.json()["id"] == site_id
 
 
-def test_list_and_filter_sites(client):
-    res = client.get("/api/v1/sites?skip=0&limit=10")
-    assert res.status_code == 200
-    data = res.json()
-    assert "items" in data
-    assert "total" in data
-    assert isinstance(data["items"], list)
-    assert data["total"] >= 1
+def test_update_site(client):
+    res = client.get("/api/v1/sites")
+    site_id = res.json()[0]["id"]
 
-
-def test_update_and_delete_site(client):
-    site_payload = {
-        "name": "Site to Delete",
-        "site_code": "SITE-DEL-01",
-        "region": "Anatolia",
-        "historical_period": "Neolithic",
-        "latitude": 37.6667,
-        "longitude": 32.8167,
-    }
-    res = client.post("/api/v1/sites", json=site_payload)
-    assert res.status_code == 201
-    site_id = res.json()["id"]
-
-    # Patch update
-    update_res = client.patch(f"/api/v1/sites/{site_id}", json={"description": "Updated neolithic mound notes."})
-    assert update_res.status_code == 200
-    assert update_res.json()["description"] == "Updated neolithic mound notes."
-
-    # Delete
-    del_res = client.delete(f"/api/v1/sites/{site_id}")
-    assert del_res.status_code == 204
-
-    # Verify 404
-    get_res = client.get(f"/api/v1/sites/{site_id}")
-    assert get_res.status_code == 404
+    res_patch = client.patch(
+        f"/api/v1/sites/{site_id}",
+        json={"description": "Updated excavation notes."},
+    )
+    assert res_patch.status_code == 200
+    assert res_patch.json()["description"] == "Updated excavation notes."

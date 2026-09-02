@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-211** - Archaeological Excavation Management System
+- **SCRUM-211** - Archaeological Excavation Management System (v2)

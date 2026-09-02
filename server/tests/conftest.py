@@ -4,37 +4,34 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
-from server.database import get_db, init_db, seed_data
-from server.models import Base
+from server.database import Base, get_db, init_db, seed_data
 from server.main import app
 
-# Shared in-memory SQLite engine for tests
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
+# Shared in-memory SQLite database for testing
+TEST_DATABASE_URL = "sqlite:///:memory:"
 
 test_engine = create_engine(
-    SQLALCHEMY_TEST_DATABASE_URL,
+    TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_db():
-    # Create all tables on the test engine
+def setup_test_database():
+    # Create all tables once for session
     init_db(target_engine=test_engine)
     db = TestingSessionLocal()
-    try:
-        seed_data(db)
-    finally:
-        db.close()
+    seed_data(db)
+    db.close()
     yield
     Base.metadata.drop_all(bind=test_engine)
 
 
 @pytest.fixture
 def db_session():
-    """Provides a transactional database session for a test."""
     db = TestingSessionLocal()
     try:
         yield db
@@ -44,7 +41,6 @@ def db_session():
 
 @pytest.fixture
 def client(db_session):
-    """FastAPI TestClient with overridden get_db dependency."""
     def override_get_db():
         try:
             yield db_session

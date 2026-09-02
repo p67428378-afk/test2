@@ -2,70 +2,78 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-
 from server.database import init_db, seed_data, SessionLocal
-from server.routers import (
+from server.api.v1.endpoints import (
+    dashboard,
     sites,
     artifacts,
     teams,
     media,
-    lab_analyses,
+    lab,
     publications,
-    dashboard,
+    stratigraphy,
+    custody,
+    qr,
+    ml,
+    sync,
 )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize database schema & seed initial accounts/data
+    # Initialize DB tables
     init_db()
+    # Seed initial test data idempotently
     db = SessionLocal()
     try:
         seed_data(db)
     finally:
         db.close()
     yield
-    # Shutdown logic if needed
 
 
 app = FastAPI(
     title="Archaeological Excavation Management System API",
-    description="REST API for recording excavation sites, artifacts, teams, GPS coordinates, media, lab analyses, and publication citations.",
-    version="1.0.0",
+    version="2.0.0",
+    description="Backend API for 3D stratigraphy, offline PWA sync, QR chain-of-custody, and ML material classification.",
     lifespan=lifespan,
 )
 
-# CORS Configuration
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173").split(",")
-
+# CORS middleware configuration
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(sites.router)
-app.include_router(artifacts.router)
-app.include_router(teams.router)
-app.include_router(media.router)
-app.include_router(lab_analyses.router)
-app.include_router(publications.router)
-app.include_router(dashboard.router)
+# Register v1 routers
+api_v1_prefix = "/api/v1"
+app.include_router(dashboard.router, prefix=api_v1_prefix)
+app.include_router(sites.router, prefix=api_v1_prefix)
+app.include_router(artifacts.router, prefix=api_v1_prefix)
+app.include_router(teams.router, prefix=api_v1_prefix)
+app.include_router(media.router, prefix=api_v1_prefix)
+app.include_router(lab.router, prefix=api_v1_prefix)
+app.include_router(publications.router, prefix=api_v1_prefix)
+app.include_router(stratigraphy.router, prefix=api_v1_prefix)
+app.include_router(custody.router, prefix=api_v1_prefix)
+app.include_router(qr.router, prefix=api_v1_prefix)
+app.include_router(ml.router, prefix=api_v1_prefix)
+app.include_router(sync.router, prefix=api_v1_prefix)
 
 
-@app.get("/health", tags=["Health"])
-@app.get("/api/v1/health", tags=["Health"])
-def health_check():
+@app.get("/")
+def root():
     return {
+        "system": "Archaeological Excavation Management System",
+        "version": "2.0.0",
         "status": "healthy",
-        "service": "ArchExcav API",
-        "version": "1.0.0",
     }
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)
+@app.get("/health")
+def health():
+    return {"status": "ok"}
