@@ -29,12 +29,12 @@ describe("Login Component (Unified AuthCard)", () => {
       </BrowserRouter>,
     );
 
-    expect(screen.getByText("Welcome to KeyCraft")).toBeInDocument();
-    expect(screen.getByDisplayValue("test@example.com")).toBeInDocument();
-    expect(screen.getByDisplayValue("testpassword")).toBeInDocument();
+    expect(screen.getByText("Welcome to KeyCraft")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("test@example.com")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("testpassword")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Sign In to Account/i }),
-    ).toBeInDocument();
+    ).toBeInTheDocument();
   });
 
   it("switches to Sign Up tab when clicking Sign Up tab button", () => {
@@ -49,12 +49,14 @@ describe("Login Component (Unified AuthCard)", () => {
     });
     fireEvent.click(signUpTabButtons[0]);
 
-    expect(screen.getByText("Create an Account")).toBeInDocument();
-    expect(screen.getByPlaceholderText("John Doe")).toBeInDocument();
-    expect(screen.getByPlaceholderText("newuser@example.com")).toBeInDocument();
+    expect(screen.getByText("Create an Account")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("John Doe")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("newuser@example.com"),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Create Account/i }),
-    ).toBeInDocument();
+    ).toBeInTheDocument();
   });
 
   it("submits login form and invokes authService.login", async () => {
@@ -99,7 +101,7 @@ describe("Login Component (Unified AuthCard)", () => {
 
     expect(
       screen.getByText(/Password must be at least 8 characters long/i),
-    ).toBeInDocument();
+    ).toBeInTheDocument();
     expect(authService.signup).not.toHaveBeenCalled();
   });
 
@@ -131,7 +133,7 @@ describe("Login Component (Unified AuthCard)", () => {
       );
       expect(
         screen.getByText(/Account created successfully!/i),
-      ).toBeInDocument();
+      ).toBeInTheDocument();
     });
   });
 });

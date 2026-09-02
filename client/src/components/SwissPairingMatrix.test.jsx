@@ -31,10 +31,10 @@ describe("SwissPairingMatrix Component", () => {
       />,
     );
 
-    expect(screen.getByText("Swiss Pairing Matrix")).toBeInView();
-    expect(screen.getByText("Player A")).toBeInView();
-    expect(screen.getByText("Player B")).toBeInView();
-    expect(screen.getByText("Auto-Pair Next Round")).toBeInView();
+    expect(screen.getByText("Swiss Pairing Matrix")).toBeInTheDocument();
+    expect(screen.getByText("Player A")).toBeInTheDocument();
+    expect(screen.getByText("Player B")).toBeInTheDocument();
+    expect(screen.getByText("Auto-Pair Next Round")).toBeInTheDocument();
   });
 
   it("renders empty round message when no matches exist", () => {
@@ -42,6 +42,8 @@ describe("SwissPairingMatrix Component", () => {
       <SwissPairingMatrix activeTournament={sampleTournament} rounds={[]} />,
     );
 
-    expect(screen.getByText("No pairings for this round yet.")).toBeInView();
+    expect(
+      screen.getByText("No pairings for this round yet."),
+    ).toBeInTheDocument();
   });
 });

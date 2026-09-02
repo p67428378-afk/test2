@@ -45,6 +45,7 @@ describe("API Service Exports", () => {
 
   it("exports authService methods", () => {
     expect(typeof authService.login).toBe("function");
+    expect(typeof authService.signup).toBe("function");
     expect(typeof authService.logout).toBe("function");
   });
 });

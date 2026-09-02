@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { authService } from "../services/api";
 
-export default function Login({ initialTab = "signin", onLoginSuccess }) {
+export function AuthCard({ initialTab = "signin", onLoginSuccess }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const navigate = useNavigate();
 
@@ -28,8 +28,6 @@ export default function Login({ initialTab = "signin", onLoginSuccess }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const isMinLength = signUpPassword.length >= 8;
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -70,7 +68,7 @@ export default function Login({ initialTab = "signin", onLoginSuccess }) {
     setError("");
     setSuccess("");
 
-    if (!isMinLength) {
+    if (signUpPassword.length < 8) {
       setError("Password must be at least 8 characters long.");
       return;
     }
@@ -98,9 +96,14 @@ export default function Login({ initialTab = "signin", onLoginSuccess }) {
     }
   };
 
+  const isMinLength = signUpPassword.length >= 8;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-8">
-      <div className="max-w-md w-full space-y-6 bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl">
+      <div
+        className="max-w-md w-full space-y-6 bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl"
+        data-testid="auth-card"
+      >
         {/* Header Section */}
         <div className="flex flex-col items-center text-center">
           <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4">
@@ -333,4 +336,8 @@ export default function Login({ initialTab = "signin", onLoginSuccess }) {
       </div>
     </div>
   );
+}
+
+export default function Login(props) {
+  return <AuthCard {...props} />;
 }
