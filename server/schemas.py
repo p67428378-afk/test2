@@ -1,130 +1,145 @@
-import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# ---------------- Group Member Schemas ----------------
+
+class GroupMemberBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    email: Optional[str] = Field(None, max_length=255)
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
+class GroupMemberCreate(GroupMemberBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class GroupMemberResponse(GroupMemberBase):
+    id: str
+    group_id: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# ---------------- Group Schemas ----------------
+
+class GroupBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class GroupCreate(GroupBase):
+    pass
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
+class GroupResponse(GroupBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    members: List[GroupMemberResponse] = []
 
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+# ---------------- Expense Split Schemas ----------------
 
-    class Config:
-        from_attributes = True
+class ExpenseSplitInput(BaseModel):
+    member_id: str
+    share_amount: Optional[float] = None
+    percentage: Optional[float] = None
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class ExpenseSplitResponse(BaseModel):
+    id: str
+    expense_id: str
+    member_id: str
+    share_amount: float
+    percentage: Optional[float] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
+# ---------------- Expense Schemas ----------------
 
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+class ExpenseCreate(BaseModel):
+    group_id: str
+    title: str = Field(..., min_length=1, max_length=255)
+    total_amount: float = Field(..., gt=0)
+    payer_id: str
+    split_type: str = Field(..., pattern="^(EQUAL|EXACT|PERCENTAGE)$")
+    date: date
+    category: Optional[str] = Field(None, max_length=100)
+    description: Optional[str] = None
+    splits: List[ExpenseSplitInput] = Field(..., min_length=1)
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class ExpenseResponse(BaseModel):
+    id: str
+    group_id: str
+    title: str
+    total_amount: float
+    payer_id: str
+    split_type: str
+    date: date
+    category: Optional[str] = None
+    description: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    splits: List[ExpenseSplitResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---------------- Settlement Schemas ----------------
+
+class SettlementCreate(BaseModel):
+    group_id: str
+    payer_id: str
+    payee_id: str
+    amount: float = Field(..., gt=0)
+    date: date
+    notes: Optional[str] = None
+
+
+class SettlementResponse(BaseModel):
+    id: str
+    group_id: str
+    payer_id: str
+    payee_id: str
+    amount: float
+    date: date
+    notes: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---------------- Balances & Debt Matrix Schemas ----------------
+
+class NetBalanceResponse(BaseModel):
+    member_id: str
+    member_name: str
+    net_balance: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SimplifiedSettlementResponse(BaseModel):
+    from_member_id: str
+    from_member_name: str
+    to_member_id: str
+    to_member_name: str
+    amount: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GroupBalancesResponse(BaseModel):
+    group_id: str
+    net_balances: List[NetBalanceResponse]
+    simplified_settlements: List[SimplifiedSettlementResponse]
+
+    model_config = ConfigDict(from_attributes=True)

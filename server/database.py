@@ -1,20 +1,22 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+# For SQLite, ensure thread safety for multi-threaded server environments
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
 
 def get_db():
+    """Dependency for obtaining database sessions."""
     db = SessionLocal()
     try:
         yield db
@@ -23,47 +25,33 @@ def get_db():
 
 
 def init_db():
+    """Idempotently initialize database schema."""
+    import server.models  # noqa: F401 Ensure models are imported for metadata registration
     Base.metadata.create_all(bind=engine)
 
 
 def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+    """Seed initial sample group and members idempotently for test and development."""
+    from server.models import Group, GroupMember
+    from datetime import datetime
 
-    # Ensure tables exist
-    init_db()
+    # Check if sample group already exists
+    existing_group = db.query(Group).filter(Group.name == "Summer Vacation 2026").first()
+    if not existing_group:
+        try:
+            group = Group(
+                name="Summer Vacation 2026",
+                description="Group expenses for Summer Vacation trip with friends.",
+            )
+            db.add(group)
+            db.flush()
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+            members = [
+                GroupMember(group_id=group.id, name="User A", email="usera@example.com"),
+                GroupMember(group_id=group.id, name="User B", email="userb@example.com"),
+                GroupMember(group_id=group.id, name="User C", email="userc@example.com"),
+            ]
+            db.add_all(members)
+            db.commit()
+        except Exception:
+            db.rollback()
