@@ -4,19 +4,25 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from server.database import init_db
+from server.api.v1.endpoints.auth import router as auth_router
+from server.database import SessionLocal, init_db, seed_data
 from server.routers.passwords import router as passwords_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
     yield
 
 
 app = FastAPI(
     title="KeyCraft Password Generator API",
-    description="Cryptographically secure password and key generation service",
+    description="Cryptographically secure password and key generation service with authentication",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -48,4 +54,5 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+app.include_router(auth_router)
 app.include_router(passwords_router)

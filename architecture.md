@@ -8,23 +8,29 @@ graph TD
   User([User])
   UI["React 18 / Vite / Tailwind CSS<br/>client/"]
   API["FastAPI Backend<br/>server/"]
-  DB[("None (Stateless In-Memory)")]
+  DB[("PostgreSQL / SQLite")]
   User --> UI
   UI -->|HTTP / JSON| API
   API --> DB
+  DB --- tbl_users__EXISTING___EXTENDED_["users [EXISTING / EXTENDED]"]
 ```
 
 ## Tech Stack
 - **language**: Python 3.11
 - **backend_framework**: FastAPI
-- **orm**: None (Stateless)
-- **database**: None (Stateless In-Memory)
+- **orm**: SQLAlchemy 2.x
+- **database**: PostgreSQL / SQLite
 - **frontend**: React 18 / Vite / Tailwind CSS
-- **cloud_provider**: Google Cloud Platform (Cloud Run)
+- **cloud_provider**: GCP Cloud Run
 - **constitution_section_4_followed**: True
 
 ## Backend Modules (server/)
 - server/__init__.py
+- server/api/__init__.py
+- server/api/v1/__init__.py
+- server/api/v1/endpoints/__init__.py
+- server/api/v1/endpoints/auth.py
+- server/crud.py
 - server/database.py
 - server/main.py
 - server/models.py
@@ -32,10 +38,12 @@ graph TD
 - server/routers/passwords.py
 - server/schemas/__init__.py
 - server/schemas/passwords.py
+- server/schemas/users.py
 - server/services/__init__.py
 - server/services/password_service.py
 - server/tests/__init__.py
 - server/tests/conftest.py
+- server/tests/test_auth.py
 - server/tests/test_passwords.py
 
 ## Frontend Modules (client/)
@@ -43,18 +51,22 @@ graph TD
 - client/postcss.config.js
 - client/src/App.jsx
 - client/src/App.test.jsx
+- client/src/components/ApiDocs.jsx
+- client/src/components/BatchGenerator.jsx
 - client/src/components/CertificateVerificationCard.jsx
 - client/src/components/CertificateVerificationCard.test.jsx
 - client/src/components/Header.jsx
 - client/src/components/LiveLeaderboardTable.jsx
 - client/src/components/LiveLeaderboardTable.test.jsx
 - client/src/components/Modal.jsx
+- client/src/components/PasswordGenerator.jsx
 - client/src/components/PlayerRegistrationForm.jsx
 - client/src/components/PlayerRegistrationForm.test.jsx
 - client/src/components/PlayerRosterTable.jsx
 - client/src/components/PlayerRosterTable.test.jsx
 - client/src/components/Sidebar.jsx
 - client/src/components/StatCard.jsx
+- client/src/components/StrengthMeter.jsx
 - client/src/components/SwissPairingMatrix.jsx
 - client/src/components/SwissPairingMatrix.test.jsx
 - client/src/components/TournamentHeader.jsx
@@ -71,18 +83,15 @@ graph TD
 - client/src/components/dashboard/StatCard.jsx
 - client/src/components/inventory/InventoryForm.jsx
 - client/src/components/inventory/InventoryTable.jsx
-- client/src/components/layout/Header.jsx
-- client/src/components/layout/Sidebar.jsx
-- client/src/components/member/BookCard.jsx
-- client/src/components/member/MyFinesPanel.jsx
 - client/src/main.jsx
 - client/src/setup.js
 - client/tailwind.config.js
 - client/vite.config.js
 
 ## API Endpoints
+- POST /api/v1/auth/signup
+- POST /api/v1/auth/login
 - POST /api/v1/passwords/generate
-- GET /api/v1/health
 
 ## Data Model
-- None
+- users [EXISTING / EXTENDED]

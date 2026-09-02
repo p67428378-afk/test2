@@ -7,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 
 os.environ["TESTING"] = "true"
 
-from server.database import Base, get_db
+from server.database import Base, get_db, seed_data
 from server.main import app
 import server.models  # noqa: F401
 
@@ -25,6 +25,11 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     Base.metadata.create_all(bind=test_engine)
+    db = TestingSessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
     yield
     Base.metadata.drop_all(bind=test_engine)
 
