@@ -1,250 +1,178 @@
 import uuid
+from datetime import datetime, date
+from typing import Optional, List, Dict, Any
 from sqlalchemy import (
     Column,
     String,
+    Float,
+    Integer,
+    BigInteger,
+    Text,
+    Date,
     DateTime,
     Boolean,
     ForeignKey,
-    Integer,
-    Float,
-    UniqueConstraint,
-    TypeDecorator,
-    CHAR,
+    Table,
+    CheckConstraint,
+    JSON,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from server.database import Base
+from sqlalchemy.orm import relationship, declarative_base
 
+Base = declarative_base()
 
-class GUID(TypeDecorator):
-    """Platform-independent GUID type.
-    Uses PostgreSQL's UUID type, otherwise uses CHAR(36).
-    """
-
-    impl = CHAR
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
-            from sqlalchemy.dialects.postgresql import UUID
-
-            return dialect.type_descriptor(UUID(as_uuid=True))
-        else:
-            return dialect.type_descriptor(CHAR(36))
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        elif dialect.name == "postgresql":
-            return str(value)
-        else:
-            if not isinstance(value, uuid.UUID):
-                return str(uuid.UUID(value))
-            else:
-                return str(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            if not isinstance(value, uuid.UUID):
-                return uuid.UUID(value)
-            else:
-                return value
+# Association table for Many-to-Many between DiscoveredArtifact and Publication
+artifact_publications = Table(
+    "artifact_publications",
+    Base.metadata,
+    Column("artifact_id", String(36), ForeignKey("discovered_artifacts.id", ondelete="CASCADE"), primary_key=True),
+    Column("publication_id", String(36), ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True),
+)
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String(255), unique=True, nullable=False, index=True)
     full_name = Column(String(255), nullable=True)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(
-        String(50), default="member", nullable=False
-    )  # 'admin', 'organizer', 'member'
+    role = Column(String(50), default="user", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ExcavationSite(Base):
+    __tablename__ = "excavation_sites"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(255), unique=True, nullable=False, index=True)
+    site_code = Column(String(100), unique=True, nullable=False, index=True)
+    region = Column(String(255), nullable=False, index=True)
+    historical_period = Column(String(255), nullable=False, index=True)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    altitude_meters = Column(Float, nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("latitude >= -90.0 AND latitude <= 90.0", name="chk_site_latitude"),
+        CheckConstraint("longitude >= -180.0 AND longitude <= 180.0", name="chk_site_longitude"),
     )
 
-
-class Tournament(Base):
-    __tablename__ = "tournaments"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    status = Column(
-        String(50), default="DRAFT", nullable=False
-    )  # 'DRAFT', 'ACTIVE', 'COMPLETED'
-    total_rounds = Column(Integer, default=5, nullable=False)
-    current_round = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    registrations = relationship(
-        "Registration", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    rounds = relationship(
-        "Round", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="tournament", cascade="all, delete-orphan"
-    )
+    # Relationships
+    artifacts = relationship("DiscoveredArtifact", back_populates="site", cascade="all, delete-orphan")
+    teams = relationship("ExcavationTeam", back_populates="site")
+    media_assets = relationship("MediaAsset", back_populates="site", cascade="all, delete-orphan")
 
 
-class Player(Base):
-    __tablename__ = "players"
+class ExcavationTeam(Base):
+    __tablename__ = "excavation_teams"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    full_name = Column(String(255), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    team_name = Column(String(255), nullable=False, index=True)
+    site_id = Column(String(36), ForeignKey("excavation_sites.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    site = relationship("ExcavationSite", back_populates="teams")
+    members = relationship("TeamMember", back_populates="team", cascade="all, delete-orphan")
+
+
+class TeamMember(Base):
+    __tablename__ = "team_members"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    team_id = Column(String(36), ForeignKey("excavation_teams.id", ondelete="SET NULL"), nullable=True)
+    full_name = Column(String(255), nullable=False, index=True)
+    role = Column(String(100), nullable=False)  # Director, Archaeologist, Field Assistant, Lab Specialist
     email = Column(String(255), nullable=False, index=True)
-    rating = Column(Integer, default=1200, nullable=False)
-    fide_id = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
+    phone = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    registrations = relationship(
-        "Registration", back_populates="player", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="player", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="player", cascade="all, delete-orphan"
-    )
+    # Relationships
+    team = relationship("ExcavationTeam", back_populates="members")
+    discovered_artifacts = relationship("DiscoveredArtifact", back_populates="finder")
 
 
-class Registration(Base):
-    __tablename__ = "registrations"
-    __table_args__ = (
-        UniqueConstraint("tournament_id", "player_id", name="uq_tournament_player"),
-    )
+class DiscoveredArtifact(Base):
+    __tablename__ = "discovered_artifacts"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    status = Column(
-        String(50), default="ACTIVE", nullable=False
-    )  # 'ACTIVE', 'WITHDRAWN'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    site_id = Column(String(36), ForeignKey("excavation_sites.id", ondelete="CASCADE"), nullable=False, index=True)
+    artifact_code = Column(String(100), unique=True, nullable=False, index=True)
+    material = Column(String(100), nullable=False, index=True)
+    context_layer = Column(String(100), nullable=False)
+    depth_meters = Column(Float, nullable=False)
+    excavation_date = Column(Date, nullable=False, default=date.today)
+    finder_member_id = Column(String(36), ForeignKey("team_members.id", ondelete="SET NULL"), nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    tournament = relationship("Tournament", back_populates="registrations")
-    player = relationship("Player", back_populates="registrations")
-
-
-class Round(Base):
-    __tablename__ = "rounds"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    round_number = Column(Integer, nullable=False)
-    is_closed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="rounds")
-    matches = relationship(
-        "Match", back_populates="round", cascade="all, delete-orphan"
-    )
+    # Relationships
+    site = relationship("ExcavationSite", back_populates="artifacts")
+    finder = relationship("TeamMember", back_populates="discovered_artifacts")
+    media_assets = relationship("MediaAsset", back_populates="artifact", cascade="all, delete-orphan")
+    lab_analyses = relationship("LabAnalysis", back_populates="artifact", cascade="all, delete-orphan")
+    publications = relationship("Publication", secondary=artifact_publications, back_populates="artifacts")
 
 
-class Match(Base):
-    __tablename__ = "matches"
+class Publication(Base):
+    __tablename__ = "publications"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    round_id = Column(
-        GUID(), ForeignKey("rounds.id", ondelete="CASCADE"), nullable=False
-    )
-    board_number = Column(Integer, nullable=True)
-    white_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    black_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    result = Column(
-        String(50), default="PENDING", nullable=False
-    )  # 'PENDING', '1-0', '0-1', '0.5-0.5', 'BYE'
-    is_bye = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    title = Column(String(500), nullable=False, index=True)
+    authors = Column(String(500), nullable=False)
+    journal_publisher = Column(String(255), nullable=False)
+    publication_date = Column(Date, nullable=False)
+    doi = Column(String(255), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    round = relationship("Round", back_populates="matches")
-    white_player = relationship("Player", foreign_keys=[white_player_id])
-    black_player = relationship("Player", foreign_keys=[black_player_id])
+    # Relationships
+    artifacts = relationship("DiscoveredArtifact", secondary=artifact_publications, back_populates="publications")
 
 
-class Standing(Base):
-    __tablename__ = "standings"
-    __table_args__ = (
-        UniqueConstraint(
-            "tournament_id", "player_id", name="uq_tournament_player_standing"
-        ),
-    )
+class LabAnalysis(Base):
+    __tablename__ = "lab_analyses"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    total_points = Column(Float, default=0.0, nullable=False)
-    buchholz = Column(Float, default=0.0, nullable=False)
-    sonneborn_berger = Column(Float, default=0.0, nullable=False)
-    rank = Column(Integer, nullable=True)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    artifact_id = Column(String(36), ForeignKey("discovered_artifacts.id", ondelete="CASCADE"), nullable=False, index=True)
+    test_type = Column(String(100), nullable=False, index=True)  # Radiocarbon C-14, XRF Spectrometry, Petrographic Analysis
+    lab_name = Column(String(255), nullable=False)
+    status = Column(String(50), default="Pending", nullable=False, index=True)  # Pending, In-Progress, Completed
+    request_date = Column(Date, nullable=False, default=date.today)
+    completion_date = Column(Date, nullable=True)
+    result_summary = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    tournament = relationship("Tournament", back_populates="standings")
-    player = relationship("Player", back_populates="standings")
+    # Relationships
+    artifact = relationship("DiscoveredArtifact", back_populates="lab_analyses")
+    media_assets = relationship("MediaAsset", back_populates="lab_analysis", cascade="all, delete-orphan")
 
 
-class Certificate(Base):
-    __tablename__ = "certificates"
+class MediaAsset(Base):
+    __tablename__ = "media_assets"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    verification_uuid = Column(
-        GUID(), default=uuid.uuid4, unique=True, index=True, nullable=False
-    )
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    rank = Column(Integer, nullable=False)
-    total_points = Column(Float, default=0.0, nullable=False)
-    issued_at = Column(DateTime, default=func.now(), nullable=False)
-    qr_code_url = Column(String(512), nullable=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    site_id = Column(String(36), ForeignKey("excavation_sites.id", ondelete="SET NULL"), nullable=True, index=True)
+    artifact_id = Column(String(36), ForeignKey("discovered_artifacts.id", ondelete="SET NULL"), nullable=True, index=True)
+    lab_analysis_id = Column(String(36), ForeignKey("lab_analyses.id", ondelete="SET NULL"), nullable=True, index=True)
+    file_name = Column(String(255), nullable=False)
+    file_url = Column(String(1000), nullable=False)
+    media_type = Column(String(100), nullable=False)
+    file_size_bytes = Column(BigInteger, nullable=False, default=0)
+    caption = Column(Text, nullable=True)
+    camera_metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    tournament = relationship("Tournament", back_populates="certificates")
-    player = relationship("Player", back_populates="certificates")
-
-
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    admin_id = Column(String(255), nullable=True)
-    match_id = Column(
-        GUID(), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True
-    )
-    original_score = Column(String(50), nullable=True)
-    new_score = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=func.now(), nullable=False)
+    # Relationships
+    site = relationship("ExcavationSite", back_populates="media_assets")
+    artifact = relationship("DiscoveredArtifact", back_populates="media_assets")
+    lab_analysis = relationship("LabAnalysis", back_populates="media_assets")
