@@ -37,7 +37,7 @@ def list_watchlist_entries(
     "", response_model=schemas.WatchlistResponse, status_code=status.HTTP_201_CREATED
 )
 def add_to_watchlist(entry_in: schemas.WatchlistCreate, db: Session = Depends(get_db)):
-    clean_id = entry_in.national_id.strip().upper()
+    clean_id = entry_in.national_id.strip()
     existing = (
         db.query(models.WatchlistEntry)
         .filter(
@@ -83,7 +83,7 @@ def add_to_watchlist(entry_in: schemas.WatchlistCreate, db: Session = Depends(ge
 def screen_visitor(
     screen_req: schemas.WatchlistScreenRequest, db: Session = Depends(get_db)
 ):
-    clean_id = screen_req.national_id.strip().upper()
+    clean_id = screen_req.national_id.strip()
     is_flagged, entry = screen_national_id(db, clean_id, screen_req.full_name)
 
     if is_flagged and entry:
@@ -117,7 +117,7 @@ def remove_from_watchlist(entry_id: str, db: Session = Depends(get_db)):
     entry.is_active = False
 
     # Check if any other active watchlist entry exists for this national_id
-    clean_id = entry.national_id.strip().upper()
+    clean_id = entry.national_id.strip()
     other_active = (
         db.query(models.WatchlistEntry)
         .filter(

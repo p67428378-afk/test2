@@ -56,6 +56,7 @@ graph TD
 - server/tests/test_auth.py
 - server/tests/test_digital_pass_and_gate.py
 - server/tests/test_inmates.py
+- server/tests/test_qa_generated.py
 - server/tests/test_visitors.py
 - server/tests/test_watchlist.py
 

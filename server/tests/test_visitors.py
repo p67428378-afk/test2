@@ -19,6 +19,22 @@ def test_register_standard_visitor(client):
     assert data["verification_status"] == "PENDING"
 
 
+def test_register_standard_visitor_lowercase_national_id(client):
+    resp = client.post(
+        "/api/v1/visitors/register",
+        json={
+            "full_name": "Case Visitor",
+            "national_id": "NAT-fc26292e",
+            "email": "casevis@example.com",
+            "phone": "+1-555-0199",
+            "visitor_type": "STANDARD",
+        },
+    )
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["national_id"] == "NAT-fc26292e"
+
+
 def test_register_legal_visitor(client):
     resp = client.post(
         "/api/v1/visitors/register",
@@ -47,12 +63,12 @@ def test_duplicate_national_id_rejected(client):
             "phone": "+1-555-0101",
         },
     )
-    # Try registering again with the same national_id
+    # Try registering again with the same national_id (different case)
     resp = client.post(
         "/api/v1/visitors/register",
         json={
             "full_name": "Alice Clone",
-            "national_id": "NAT-DUP-01",
+            "national_id": "nat-dup-01",
             "email": "alice.clone@example.com",
             "phone": "+1-555-0101",
         },

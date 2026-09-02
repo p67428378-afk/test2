@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/v1/visitors", tags=["Visitors"])
 )
 def register_visitor(visitor_in: schemas.VisitorCreate, db: Session = Depends(get_db)):
     # 1. Check duplicate national_id
-    clean_id = visitor_in.national_id.strip().upper()
+    clean_id = visitor_in.national_id.strip()
     existing = (
         db.query(models.Visitor)
         .filter(models.Visitor.national_id.ilike(clean_id))
@@ -69,7 +69,7 @@ def get_visitor_profile(
             return visitor
     if national_id:
         visitor = query.filter(
-            models.Visitor.national_id.ilike(national_id.strip().upper())
+            models.Visitor.national_id.ilike(national_id.strip())
         ).first()
         if visitor:
             return visitor

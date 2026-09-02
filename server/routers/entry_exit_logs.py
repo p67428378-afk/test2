@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -24,10 +24,11 @@ def manual_check_in(log_in: schemas.ManualCheckInCreate, db: Session = Depends(g
             status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found"
         )
 
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     log_entry = models.EntryExitLog(
         appointment_id=log_in.appointment_id,
         officer_id=log_in.officer_id,
-        check_in_time=datetime.utcnow(),
+        check_in_time=now,
         entry_method="MANUAL",
     )
     db.add(log_entry)
@@ -38,6 +39,7 @@ def manual_check_in(log_in: schemas.ManualCheckInCreate, db: Session = Depends(g
 
 @router.post("/check-out", response_model=schemas.EntryExitLogResponse)
 def check_out(log_in: schemas.CheckOutCreate, db: Session = Depends(get_db)):
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     log_entry = (
         db.query(models.EntryExitLog)
         .filter(
@@ -53,12 +55,12 @@ def check_out(log_in: schemas.CheckOutCreate, db: Session = Depends(get_db)):
         log_entry = models.EntryExitLog(
             appointment_id=log_in.appointment_id,
             officer_id=log_in.officer_id,
-            check_out_time=datetime.utcnow(),
+            check_out_time=now,
             entry_method="MANUAL",
         )
         db.add(log_entry)
     else:
-        log_entry.check_out_time = datetime.utcnow()
+        log_entry.check_out_time = now
 
     db.commit()
     db.refresh(log_entry)

@@ -10,7 +10,7 @@ def screen_national_id(
     Screens a national_id and optional full_name against active watchlist entries.
     Returns (is_flagged, matching_entry).
     """
-    clean_id = national_id.strip().upper()
+    clean_id = national_id.strip()
 
     # 1. Exact or case-insensitive match on national_id
     entry = (
