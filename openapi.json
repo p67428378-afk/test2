@@ -1,198 +1,35 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Library Management System API",
+    "title": "Photography Studio Management System API",
+    "description": "Backend API for customer booking, photographer availability, packages, payments, and photoshoot tracking.",
     "version": "1.0.0"
   },
   "paths": {
-    "/api/v1/password-reset/initiate": {
+    "/api/v1/auth/signup": {
       "post": {
         "tags": [
-          "password-reset"
+          "Authentication"
         ],
-        "summary": "Initiate Password Reset",
-        "operationId": "initiate_password_reset_api_v1_password_reset_initiate_post",
+        "summary": "Signup",
+        "operationId": "signup_api_v1_auth_signup_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PasswordResetInitiateRequest"
+                "$ref": "#/components/schemas/UserCreate"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PasswordResetInitiateResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/verify-otp": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Verify Otp",
-        "operationId": "verify_otp_api_v1_password_reset_verify_otp_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OTPVerifyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OTPVerifyResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/verify-security-question": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Verify Security Question",
-        "operationId": "verify_security_question_api_v1_password_reset_verify_security_question_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SecurityQuestionVerifyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SecurityQuestionVerifyResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/set-new-password": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Set New Password",
-        "operationId": "set_new_password_api_v1_password_reset_set_new_password_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetNewPasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetNewPasswordResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/token": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Login For Access Token",
-        "operationId": "login_for_access_token_api_v1_auth_token_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_login_for_access_token_api_v1_auth_token_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
+                  "$ref": "#/components/schemas/UserOut"
                 }
               }
             }
@@ -213,15 +50,15 @@
     "/api/v1/auth/login": {
       "post": {
         "tags": [
-          "auth"
+          "Authentication"
         ],
-        "summary": "Login Json",
-        "operationId": "login_json_api_v1_auth_login_post",
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
+                "$ref": "#/components/schemas/UserLogin"
               }
             }
           },
@@ -251,20 +88,20 @@
         }
       }
     },
-    "/api/v1/users/me": {
+    "/api/v1/auth/me": {
       "get": {
         "tags": [
-          "auth"
+          "Authentication"
         ],
-        "summary": "Read Users Me",
-        "operationId": "read_users_me_api_v1_users_me_get",
+        "summary": "Read Current User",
+        "operationId": "read_current_user_api_v1_auth_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/UserOut"
                 }
               }
             }
@@ -277,73 +114,132 @@
         ]
       }
     },
-    "/api/v1/books": {
+    "/api/v1/photographers": {
       "get": {
         "tags": [
-          "books"
+          "Photographers & Availability"
         ],
-        "summary": "Read Books",
-        "operationId": "read_books_api_v1_books_get",
+        "summary": "List Photographers",
+        "operationId": "list_photographers_api_v1_photographers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PhotographerOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Photographers Api V1 Photographers Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Photographers & Availability"
+        ],
+        "summary": "Create Photographer",
+        "operationId": "create_photographer_api_v1_photographers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotographerCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotographerOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "OAuth2PasswordBearer": []
           }
+        ]
+      }
+    },
+    "/api/v1/photographers/{photographer_id}": {
+      "get": {
+        "tags": [
+          "Photographers & Availability"
         ],
+        "summary": "Get Photographer",
+        "operationId": "get_photographer_api_v1_photographers__photographer_id__get",
         "parameters": [
           {
-            "name": "search",
-            "in": "query",
-            "required": false,
+            "name": "photographer_id",
+            "in": "path",
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
+              "type": "string",
+              "title": "Photographer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotographerOut"
                 }
-              ],
-              "description": "Search by title, author, or ISBN",
-              "title": "Search"
-            },
-            "description": "Search by title, author, or ISBN"
-          },
-          {
-            "name": "genre",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by genre",
-              "title": "Genre"
-            },
-            "description": "Filter by genre"
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
+              }
             }
           },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/photographers/{photographer_id}/availability": {
+      "get": {
+        "tags": [
+          "Photographers & Availability"
+        ],
+        "summary": "Get Photographer Availability",
+        "operationId": "get_photographer_availability_api_v1_photographers__photographer_id__availability_get",
+        "parameters": [
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
+            "name": "photographer_id",
+            "in": "path",
+            "required": true,
             "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
+              "type": "string",
+              "title": "Photographer Id"
             }
           }
         ],
@@ -355,9 +251,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BookResponse"
+                    "$ref": "#/components/schemas/AvailabilityOut"
                   },
-                  "title": "Response Read Books Api V1 Books Get"
+                  "title": "Response Get Photographer Availability Api V1 Photographers  Photographer Id  Availability Get"
                 }
               }
             }
@@ -376,13 +272,24 @@
       },
       "post": {
         "tags": [
-          "books"
+          "Photographers & Availability"
         ],
-        "summary": "Create Book",
-        "operationId": "create_book_api_v1_books_post",
+        "summary": "Set Photographer Availability",
+        "operationId": "set_photographer_availability_api_v1_photographers__photographer_id__availability_post",
         "security": [
           {
             "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "photographer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Photographer Id"
+            }
           }
         ],
         "requestBody": {
@@ -390,18 +297,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BookCreate"
+                "$ref": "#/components/schemas/AvailabilityCreate"
               }
             }
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
+                  "$ref": "#/components/schemas/AvailabilitySetResponse"
                 }
               }
             }
@@ -419,27 +326,31 @@
         }
       }
     },
-    "/api/v1/books/{book_id}": {
+    "/api/v1/photographers/{photographer_id}/slots": {
       "get": {
         "tags": [
-          "books"
+          "Photographers & Availability"
         ],
-        "summary": "Read Book",
-        "operationId": "read_book_api_v1_books__book_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Get Photographer Slots",
+        "operationId": "get_photographer_slots_api_v1_photographers__photographer_id__slots_get",
         "parameters": [
           {
-            "name": "book_id",
+            "name": "photographer_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
+              "title": "Photographer Id"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
             }
           }
         ],
@@ -449,7 +360,147 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotOut"
+                  },
+                  "title": "Response Get Photographer Slots Api V1 Photographers  Photographer Id  Slots Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/packages/addons": {
+      "get": {
+        "tags": [
+          "Packages & Add-ons"
+        ],
+        "summary": "List Addons",
+        "operationId": "list_addons_api_v1_packages_addons_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AddOnOption"
+                  },
+                  "type": "array",
+                  "title": "Response List Addons Api V1 Packages Addons Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/packages": {
+      "get": {
+        "tags": [
+          "Packages & Add-ons"
+        ],
+        "summary": "List Packages",
+        "operationId": "list_packages_api_v1_packages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PackageOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Packages Api V1 Packages Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Packages & Add-ons"
+        ],
+        "summary": "Create Package",
+        "operationId": "create_package_api_v1_packages_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackageCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packages/{package_id}": {
+      "get": {
+        "tags": [
+          "Packages & Add-ons"
+        ],
+        "summary": "Get Package",
+        "operationId": "get_package_api_v1_packages__package_id__get",
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Package Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageOut"
                 }
               }
             }
@@ -468,10 +519,10 @@
       },
       "put": {
         "tags": [
-          "books"
+          "Packages & Add-ons"
         ],
-        "summary": "Update Book",
-        "operationId": "update_book_api_v1_books__book_id__put",
+        "summary": "Update Package",
+        "operationId": "update_package_api_v1_packages__package_id__put",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -479,13 +530,12 @@
         ],
         "parameters": [
           {
-            "name": "book_id",
+            "name": "package_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
+              "title": "Package Id"
             }
           }
         ],
@@ -494,7 +544,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BookUpdate"
+                "$ref": "#/components/schemas/PackageUpdate"
               }
             }
           }
@@ -505,7 +555,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
+                  "$ref": "#/components/schemas/PackageOut"
                 }
               }
             }
@@ -524,10 +574,10 @@
       },
       "delete": {
         "tags": [
-          "books"
+          "Packages & Add-ons"
         ],
-        "summary": "Delete Book",
-        "operationId": "delete_book_api_v1_books__book_id__delete",
+        "summary": "Delete Package",
+        "operationId": "delete_package_api_v1_packages__package_id__delete",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -535,13 +585,12 @@
         ],
         "parameters": [
           {
-            "name": "book_id",
+            "name": "package_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
+              "title": "Package Id"
             }
           }
         ],
@@ -562,13 +611,13 @@
         }
       }
     },
-    "/api/v1/members": {
+    "/api/v1/sessions": {
       "get": {
         "tags": [
-          "members"
+          "Session Booking & Management"
         ],
-        "summary": "Read Members",
-        "operationId": "read_members_api_v1_members_get",
+        "summary": "List Sessions",
+        "operationId": "list_sessions_api_v1_sessions_get",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -576,23 +625,19 @@
         ],
         "parameters": [
           {
-            "name": "skip",
+            "name": "status",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
             }
           }
         ],
@@ -604,9 +649,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UserResponse"
+                    "$ref": "#/components/schemas/SessionDetailOut"
                   },
-                  "title": "Response Read Members Api V1 Members Get"
+                  "title": "Response List Sessions Api V1 Sessions Get"
                 }
               }
             }
@@ -625,10 +670,10 @@
       },
       "post": {
         "tags": [
-          "members"
+          "Session Booking & Management"
         ],
-        "summary": "Create Member",
-        "operationId": "create_member_api_v1_members_post",
+        "summary": "Book Session",
+        "operationId": "book_session_api_v1_sessions_post",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -639,7 +684,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UserCreate"
+                "$ref": "#/components/schemas/SessionCreate"
               }
             }
           }
@@ -650,7 +695,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/SessionOut"
                 }
               }
             }
@@ -668,13 +713,13 @@
         }
       }
     },
-    "/api/v1/members/{member_id}": {
+    "/api/v1/sessions/{session_id}": {
       "get": {
         "tags": [
-          "members"
+          "Session Booking & Management"
         ],
-        "summary": "Read Member",
-        "operationId": "read_member_api_v1_members__member_id__get",
+        "summary": "Get Session",
+        "operationId": "get_session_api_v1_sessions__session_id__get",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -682,13 +727,12 @@
         ],
         "parameters": [
           {
-            "name": "member_id",
+            "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
+              "title": "Session Id"
             }
           }
         ],
@@ -698,7 +742,122 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/SessionDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/status": {
+      "patch": {
+        "tags": [
+          "Session Booking & Management"
+        ],
+        "summary": "Update Session Status",
+        "operationId": "update_session_status_api_v1_sessions__session_id__status_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionStatusUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments": {
+      "get": {
+        "tags": [
+          "Payment Tracking & Ledger"
+        ],
+        "summary": "List Payments",
+        "operationId": "list_payments_api_v1_payments_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentOut"
+                  },
+                  "title": "Response List Payments Api V1 Payments Get"
                 }
               }
             }
@@ -715,27 +874,15 @@
           }
         }
       },
-      "put": {
+      "post": {
         "tags": [
-          "members"
+          "Payment Tracking & Ledger"
         ],
-        "summary": "Update Member",
-        "operationId": "update_member_api_v1_members__member_id__put",
+        "summary": "Process Payment",
+        "operationId": "process_payment_api_v1_payments_post",
         "security": [
           {
             "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
           }
         ],
         "requestBody": {
@@ -743,123 +890,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UserUpdate"
+                "$ref": "#/components/schemas/PaymentCreate"
               }
             }
           }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members/{member_id}/loans": {
-      "get": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Read Member Loans",
-        "operationId": "read_member_loans_api_v1_members__member_id__loans_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoanResponse"
-                  },
-                  "title": "Response Read Member Loans Api V1 Members  Member Id  Loans Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans": {
-      "post": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Checkout Book",
-        "operationId": "checkout_book_api_v1_loans_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoanCreate"
-              }
-            }
-          },
-          "required": true
         },
         "responses": {
           "201": {
@@ -867,7 +901,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
+                  "$ref": "#/components/schemas/PaymentProcessResponse"
                 }
               }
             }
@@ -878,6 +912,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/{payment_id}": {
+      "get": {
+        "tags": [
+          "Payment Tracking & Ledger"
+        ],
+        "summary": "Get Payment",
+        "operationId": "get_payment_api_v1_payments__payment_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "payment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Payment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/photoshoots": {
+      "get": {
+        "tags": [
+          "Photoshoot Records & Completion"
+        ],
+        "summary": "List Photoshoot Records",
+        "operationId": "list_photoshoot_records_api_v1_photoshoots_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PhotoshootRecordOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Photoshoot Records Api V1 Photoshoots Get"
                 }
               }
             }
@@ -890,13 +996,13 @@
         ]
       }
     },
-    "/api/v1/loans/{loan_id}/return": {
-      "put": {
+    "/api/v1/sessions/{session_id}/photoshoot-record": {
+      "get": {
         "tags": [
-          "loans"
+          "Photoshoot Records & Completion"
         ],
-        "summary": "Return Book",
-        "operationId": "return_book_api_v1_loans__loan_id__return_put",
+        "summary": "Get Session Photoshoot Record",
+        "operationId": "get_session_photoshoot_record_api_v1_sessions__session_id__photoshoot_record_get",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -904,13 +1010,12 @@
         ],
         "parameters": [
           {
-            "name": "loan_id",
+            "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Loan Id"
+              "title": "Session Id"
             }
           }
         ],
@@ -920,239 +1025,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans/reminders": {
-      "post": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Send Due Reminders",
-        "operationId": "send_due_reminders_api_v1_loans_reminders_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/fines": {
-      "get": {
-        "tags": [
-          "fines"
-        ],
-        "summary": "Read Fines",
-        "operationId": "read_fines_api_v1_fines_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FineResponse"
-                  },
-                  "title": "Response Read Fines Api V1 Fines Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/fines/{fine_id}/pay": {
-      "post": {
-        "tags": [
-          "fines"
-        ],
-        "summary": "Pay Fine",
-        "operationId": "pay_fine_api_v1_fines__fine_id__pay_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "fine_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Fine Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FineResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/inventory": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Read Inventory Items",
-        "operationId": "read_inventory_items_api_v1_inventory_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Search by name, supplier, or category",
-              "title": "Search"
-            },
-            "description": "Search by name, supplier, or category"
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by category",
-              "title": "Category"
-            },
-            "description": "Filter by category"
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryItemResponse"
-                  },
-                  "title": "Response Read Inventory Items Api V1 Inventory Get"
+                  "$ref": "#/components/schemas/PhotoshootRecordOut"
                 }
               }
             }
@@ -1171,56 +1044,10 @@
       },
       "post": {
         "tags": [
-          "inventory"
+          "Photoshoot Records & Completion"
         ],
-        "summary": "Create Inventory Item",
-        "operationId": "create_inventory_item_api_v1_inventory_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InventoryItemCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/inventory/{item_id}": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Read Inventory Item",
-        "operationId": "read_inventory_item_api_v1_inventory__item_id__get",
+        "summary": "Create Or Update Photoshoot Record",
+        "operationId": "create_or_update_photoshoot_record_api_v1_sessions__session_id__photoshoot_record_post",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -1228,59 +1055,12 @@
         ],
         "parameters": [
           {
-            "name": "item_id",
+            "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Update Inventory Item",
-        "operationId": "update_inventory_item_api_v1_inventory__item_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
+              "title": "Session Id"
             }
           }
         ],
@@ -1289,7 +1069,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InventoryItemUpdate"
+                "$ref": "#/components/schemas/PhotoshootRecordCreate"
               }
             }
           }
@@ -1300,7 +1080,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+                  "$ref": "#/components/schemas/PhotoshootRecordOut"
                 }
               }
             }
@@ -1316,46 +1096,21 @@
             }
           }
         }
-      },
-      "delete": {
+      }
+    },
+    "/health": {
+      "get": {
         "tags": [
-          "inventory"
+          "Health"
         ],
-        "summary": "Delete Inventory Item",
-        "operationId": "delete_inventory_item_api_v1_inventory__item_id__delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
               }
             }
           }
@@ -1364,8 +1119,11 @@
     },
     "/": {
       "get": {
-        "summary": "Read Root",
-        "operationId": "read_root__get",
+        "tags": [
+          "Root"
+        ],
+        "summary": "Root",
+        "operationId": "root__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1381,91 +1139,67 @@
   },
   "components": {
     "schemas": {
-      "Body_login_for_access_token_api_v1_auth_token_post": {
+      "AddOnOption": {
         "properties": {
-          "grant_type": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "price"
+        ],
+        "title": "AddOnOption"
+      },
+      "AvailabilityCreate": {
+        "properties": {
+          "date": {
             "anyOf": [
               {
                 "type": "string",
-                "pattern": "^password$"
+                "format": "date"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Grant Type"
+            "title": "Date"
           },
-          "username": {
-            "type": "string",
-            "title": "Username"
-          },
-          "password": {
-            "type": "string",
-            "format": "password",
-            "title": "Password"
-          },
-          "scope": {
-            "type": "string",
-            "title": "Scope",
-            "default": ""
-          },
-          "client_id": {
+          "blocked_date": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Client Id"
+            "title": "Blocked Date"
           },
-          "client_secret": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "format": "password",
-            "title": "Client Secret"
-          }
-        },
-        "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
-        "title": "Body_login_for_access_token_api_v1_auth_token_post"
-      },
-      "BookCreate": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "author": {
-            "type": "string",
-            "title": "Author"
-          },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
+          "day_of_week": {
             "anyOf": [
               {
                 "type": "integer"
@@ -1474,37 +1208,9 @@
                 "type": "null"
               }
             ],
-            "title": "Publication Year"
+            "title": "Day Of Week"
           },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "author",
-          "isbn"
-        ],
-        "title": "BookCreate"
-      },
-      "BookResponse": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "author": {
-            "type": "string",
-            "title": "Author"
-          },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
+          "start_time": {
             "anyOf": [
               {
                 "type": "string"
@@ -1513,32 +1219,97 @@
                 "type": "null"
               }
             ],
-            "title": "Genre"
+            "title": "Start Time",
+            "default": "09:00"
           },
-          "publication_year": {
+          "end_time": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Publication Year"
+            "title": "End Time",
+            "default": "17:00"
           },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
+          "is_blocked": {
+            "type": "boolean",
+            "title": "Is Blocked",
+            "default": false
           },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "AvailabilityCreate"
+      },
+      "AvailabilityOut": {
+        "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "available_copies": {
-            "type": "integer",
-            "title": "Available Copies"
+          "photographer_id": {
+            "type": "string",
+            "title": "Photographer Id"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "day_of_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Of Week"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          },
+          "is_blocked": {
+            "type": "boolean",
+            "title": "Is Blocked",
+            "default": false
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
           },
           "created_at": {
             "type": "string",
@@ -1553,150 +1324,88 @@
         },
         "type": "object",
         "required": [
-          "title",
-          "author",
-          "isbn",
           "id",
-          "available_copies",
+          "photographer_id",
+          "start_time",
+          "end_time",
           "created_at",
           "updated_at"
         ],
-        "title": "BookResponse"
+        "title": "AvailabilityOut"
       },
-      "BookUpdate": {
+      "AvailabilitySetResponse": {
         "properties": {
-          "title": {
+          "availability": {
             "anyOf": [
               {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author"
-          },
-          "isbn": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Copies"
-          },
-          "available_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Available Copies"
-          }
-        },
-        "type": "object",
-        "title": "BookUpdate"
-      },
-      "FineResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "loan_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Loan Id"
-          },
-          "amount": {
-            "type": "number",
-            "title": "Amount"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "loan": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LoanResponse"
+                "$ref": "#/components/schemas/AvailabilityOut"
               },
               {
                 "type": "null"
               }
             ]
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          },
+          "conflicting_sessions": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictingSessionSummary"
+            },
+            "type": "array",
+            "title": "Conflicting Sessions",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "AvailabilitySetResponse"
+      },
+      "ConflictingSessionSummary": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "loan_id",
-          "amount",
-          "status",
-          "created_at",
-          "updated_at"
+          "session_id",
+          "start_time",
+          "end_time",
+          "status"
         ],
-        "title": "FineResponse"
+        "title": "ConflictingSessionSummary"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1711,7 +1420,7 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "InventoryItemCreate": {
+      "PackageCreate": {
         "properties": {
           "name": {
             "type": "string",
@@ -1728,16 +1437,15 @@
             ],
             "title": "Description"
           },
-          "quantity": {
+          "duration_minutes": {
             "type": "integer",
-            "title": "Quantity",
-            "default": 0
+            "title": "Duration Minutes"
           },
-          "unit": {
-            "type": "string",
-            "title": "Unit"
+          "price": {
+            "type": "number",
+            "title": "Price"
           },
-          "supplier": {
+          "deliverables_summary": {
             "anyOf": [
               {
                 "type": "string"
@@ -1746,33 +1454,18 @@
                 "type": "null"
               }
             ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
+            "title": "Deliverables Summary"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "unit"
+          "duration_minutes",
+          "price"
         ],
-        "title": "InventoryItemCreate"
+        "title": "PackageCreate"
       },
-      "InventoryItemResponse": {
+      "PackageOut": {
         "properties": {
           "name": {
             "type": "string",
@@ -1789,16 +1482,15 @@
             ],
             "title": "Description"
           },
-          "quantity": {
+          "duration_minutes": {
             "type": "integer",
-            "title": "Quantity",
-            "default": 0
+            "title": "Duration Minutes"
           },
-          "unit": {
-            "type": "string",
-            "title": "Unit"
+          "price": {
+            "type": "number",
+            "title": "Price"
           },
-          "supplier": {
+          "deliverables_summary": {
             "anyOf": [
               {
                 "type": "string"
@@ -1807,28 +1499,15 @@
                 "type": "null"
               }
             ],
-            "title": "Supplier"
+            "title": "Deliverables Summary"
           },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
-          },
-          "item_id": {
+          "id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Item Id"
+            "title": "Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
           },
           "created_at": {
             "type": "string",
@@ -1839,24 +1518,21 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
-          },
-          "is_low_stock": {
-            "type": "boolean",
-            "title": "Is Low Stock",
-            "default": false
           }
         },
         "type": "object",
         "required": [
           "name",
-          "unit",
-          "item_id",
+          "duration_minutes",
+          "price",
+          "id",
+          "is_active",
           "created_at",
           "updated_at"
         ],
-        "title": "InventoryItemResponse"
+        "title": "PackageOut"
       },
-      "InventoryItemUpdate": {
+      "PackageUpdate": {
         "properties": {
           "name": {
             "anyOf": [
@@ -1880,7 +1556,7 @@
             ],
             "title": "Description"
           },
-          "quantity": {
+          "duration_minutes": {
             "anyOf": [
               {
                 "type": "integer"
@@ -1889,9 +1565,20 @@
                 "type": "null"
               }
             ],
-            "title": "Quantity"
+            "title": "Duration Minutes"
           },
-          "unit": {
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "deliverables_summary": {
             "anyOf": [
               {
                 "type": "string"
@@ -1900,93 +1587,455 @@
                 "type": "null"
               }
             ],
-            "title": "Unit"
+            "title": "Deliverables Summary"
           },
-          "supplier": {
+          "is_active": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "boolean"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Low Stock Threshold"
+            "title": "Is Active"
           }
         },
         "type": "object",
-        "title": "InventoryItemUpdate"
+        "title": "PackageUpdate"
       },
-      "LoanCreate": {
+      "PaymentCreate": {
         "properties": {
-          "book_id": {
+          "session_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
+            "title": "Session Id"
           },
-          "member_id": {
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "payment_method": {
             "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
+            "title": "Payment Method",
+            "default": "credit_card"
+          },
+          "transaction_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Reference"
           }
         },
         "type": "object",
         "required": [
-          "book_id",
-          "member_id"
+          "session_id",
+          "amount"
         ],
-        "title": "LoanCreate"
+        "title": "PaymentCreate"
       },
-      "LoanResponse": {
+      "PaymentOut": {
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "book_id": {
+          "session_id": {
             "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
+            "title": "Session Id"
           },
-          "member_id": {
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "payment_status": {
             "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
+            "title": "Payment Status"
           },
-          "checkout_date": {
+          "payment_method": {
+            "type": "string",
+            "title": "Payment Method"
+          },
+          "transaction_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Reference"
+          },
+          "created_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Checkout Date"
+            "title": "Created At"
           },
-          "due_date": {
+          "updated_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Due Date"
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "amount",
+          "payment_status",
+          "payment_method",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentOut"
+      },
+      "PaymentProcessResponse": {
+        "properties": {
+          "payment": {
+            "$ref": "#/components/schemas/PaymentOut"
           },
-          "return_date": {
+          "payment_status": {
+            "type": "string",
+            "title": "Payment Status"
+          },
+          "total_paid": {
+            "type": "number",
+            "title": "Total Paid"
+          },
+          "remaining_balance": {
+            "type": "number",
+            "title": "Remaining Balance"
+          },
+          "session_status": {
+            "type": "string",
+            "title": "Session Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment",
+          "payment_status",
+          "total_paid",
+          "remaining_balance",
+          "session_status"
+        ],
+        "title": "PaymentProcessResponse"
+      },
+      "PhotographerCreate": {
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "specialties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialties"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "title": "PhotographerCreate"
+      },
+      "PhotographerOut": {
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "specialties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialties"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PhotographerOut"
+      },
+      "PhotoshootRecordCreate": {
+        "properties": {
+          "gallery_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gallery Url"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "PhotoshootRecordCreate"
+      },
+      "PhotoshootRecordOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "gallery_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gallery Url"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed"
+          },
+          "unpaid_notice_flag": {
+            "type": "boolean",
+            "title": "Unpaid Notice Flag"
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "is_completed",
+          "unpaid_notice_flag",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PhotoshootRecordOut"
+      },
+      "SessionCreate": {
+        "properties": {
+          "photographer_id": {
+            "type": "string",
+            "title": "Photographer Id"
+          },
+          "package_id": {
+            "type": "string",
+            "title": "Package Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "event_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Notes"
+          },
+          "add_on_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Add On Ids",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "photographer_id",
+          "package_id",
+          "start_time"
+        ],
+        "title": "SessionCreate"
+      },
+      "SessionDetailOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "customer_id": {
+            "type": "string",
+            "title": "Customer Id"
+          },
+          "photographer_id": {
+            "type": "string",
+            "title": "Photographer Id"
+          },
+          "package_id": {
+            "type": "string",
+            "title": "Package Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "total_price": {
+            "type": "number",
+            "title": "Total Price"
+          },
+          "deposit_amount": {
+            "type": "number",
+            "title": "Deposit Amount"
+          },
+          "hold_expires_at": {
             "anyOf": [
               {
                 "type": "string",
@@ -1996,7 +2045,29 @@
                 "type": "null"
               }
             ],
-            "title": "Return Date"
+            "title": "Hold Expires At"
+          },
+          "event_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Notes"
+          },
+          "add_ons": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Add Ons"
           },
           "created_at": {
             "type": "string",
@@ -2008,20 +2079,64 @@
             "format": "date-time",
             "title": "Updated At"
           },
-          "book": {
+          "customer_name": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BookResponse"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Customer Name"
           },
-          "member": {
+          "customer_email": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/UserResponse"
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Email"
+          },
+          "photographer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photographer Name"
+          },
+          "package_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Name"
+          },
+          "paid_amount": {
+            "type": "number",
+            "title": "Paid Amount",
+            "default": 0.0
+          },
+          "remaining_balance": {
+            "type": "number",
+            "title": "Remaining Balance",
+            "default": 0.0
+          },
+          "photoshoot_record": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoshootRecordOut"
               },
               {
                 "type": "null"
@@ -2032,166 +2147,160 @@
         "type": "object",
         "required": [
           "id",
-          "book_id",
-          "member_id",
-          "checkout_date",
-          "due_date",
+          "customer_id",
+          "photographer_id",
+          "package_id",
+          "start_time",
+          "end_time",
+          "status",
+          "total_price",
+          "deposit_amount",
           "created_at",
           "updated_at"
         ],
-        "title": "LoanResponse"
+        "title": "SessionDetailOut"
       },
-      "LoginRequest": {
+      "SessionOut": {
         "properties": {
-          "email": {
+          "id": {
             "type": "string",
-            "title": "Email"
+            "title": "Id"
           },
-          "password": {
+          "customer_id": {
             "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "title": "LoginRequest"
-      },
-      "OTPVerifyRequest": {
-        "properties": {
-          "otp_code": {
-            "type": "string",
-            "title": "Otp Code"
+            "title": "Customer Id"
           },
-          "otp_session_id": {
+          "photographer_id": {
             "type": "string",
-            "title": "Otp Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_code",
-          "otp_session_id"
-        ],
-        "title": "OTPVerifyRequest"
-      },
-      "OTPVerifyResponse": {
-        "properties": {
-          "security_question_session_id": {
-            "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "security_question_session_id"
-        ],
-        "title": "OTPVerifyResponse"
-      },
-      "PasswordResetInitiateRequest": {
-        "properties": {
-          "login_id": {
-            "type": "string",
-            "title": "Login Id"
+            "title": "Photographer Id"
           },
-          "mobile_number": {
+          "package_id": {
             "type": "string",
-            "title": "Mobile Number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "login_id",
-          "mobile_number"
-        ],
-        "title": "PasswordResetInitiateRequest"
-      },
-      "PasswordResetInitiateResponse": {
-        "properties": {
-          "otp_session_id": {
-            "type": "string",
-            "title": "Otp Session Id"
+            "title": "Package Id"
           },
-          "security_question": {
+          "start_time": {
             "type": "string",
-            "title": "Security Question"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_session_id",
-          "security_question"
-        ],
-        "title": "PasswordResetInitiateResponse"
-      },
-      "SecurityQuestionVerifyRequest": {
-        "properties": {
-          "answer": {
-            "type": "string",
-            "title": "Answer"
+            "format": "date-time",
+            "title": "Start Time"
           },
-          "security_question_session_id": {
+          "end_time": {
             "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "answer",
-          "security_question_session_id"
-        ],
-        "title": "SecurityQuestionVerifyRequest"
-      },
-      "SecurityQuestionVerifyResponse": {
-        "properties": {
-          "password_reset_session_id": {
-            "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "password_reset_session_id"
-        ],
-        "title": "SecurityQuestionVerifyResponse"
-      },
-      "SetNewPasswordRequest": {
-        "properties": {
-          "new_password": {
-            "type": "string",
-            "title": "New Password"
+            "format": "date-time",
+            "title": "End Time"
           },
-          "password_reset_session_id": {
-            "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "new_password",
-          "password_reset_session_id"
-        ],
-        "title": "SetNewPasswordRequest"
-      },
-      "SetNewPasswordResponse": {
-        "properties": {
           "status": {
             "type": "string",
             "title": "Status"
           },
-          "login_link": {
+          "total_price": {
+            "type": "number",
+            "title": "Total Price"
+          },
+          "deposit_amount": {
+            "type": "number",
+            "title": "Deposit Amount"
+          },
+          "hold_expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Expires At"
+          },
+          "event_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Notes"
+          },
+          "add_ons": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Add Ons"
+          },
+          "created_at": {
             "type": "string",
-            "title": "Login Link"
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
+          "id",
+          "customer_id",
+          "photographer_id",
+          "package_id",
+          "start_time",
+          "end_time",
           "status",
-          "login_link"
+          "total_price",
+          "deposit_amount",
+          "created_at",
+          "updated_at"
         ],
-        "title": "SetNewPasswordResponse"
+        "title": "SessionOut"
+      },
+      "SessionStatusUpdate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "SessionStatusUpdate"
+      },
+      "SlotOut": {
+        "properties": {
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_time",
+          "end_time",
+          "is_available",
+          "date"
+        ],
+        "title": "SlotOut"
       },
       "Token": {
         "properties": {
@@ -2201,18 +2310,17 @@
           },
           "token_type": {
             "type": "string",
-            "title": "Token Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "access_token",
-          "token_type"
-        ],
-        "title": "Token"
-      },
-      "UserCreate": {
-        "properties": {
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
           "email": {
             "type": "string",
             "title": "Email"
@@ -2220,14 +2328,44 @@
           "full_name": {
             "type": "string",
             "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "role",
+          "user_id",
+          "email",
+          "full_name"
+        ],
+        "title": "Token"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
           },
           "role": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Role",
-            "default": "member"
+            "default": "customer"
           },
           "password": {
             "type": "string",
+            "minLength": 6,
             "title": "Password"
           }
         },
@@ -2239,10 +2377,47 @@
         ],
         "title": "UserCreate"
       },
-      "UserResponse": {
+      "UserLogin": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "UserLogin"
+      },
+      "UserOut": {
         "properties": {
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
           },
           "full_name": {
@@ -2250,14 +2425,24 @@
             "title": "Full Name"
           },
           "role": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Role",
-            "default": "member"
+            "default": "customer"
           },
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
           },
           "created_at": {
             "type": "string",
@@ -2275,60 +2460,11 @@
           "email",
           "full_name",
           "id",
+          "is_active",
           "created_at",
           "updated_at"
         ],
-        "title": "UserResponse"
-      },
-      "UserUpdate": {
-        "properties": {
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
-          "full_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Full Name"
-          },
-          "role": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Role"
-          },
-          "password": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "title": "UserUpdate"
+        "title": "UserOut"
       },
       "ValidationError": {
         "properties": {
@@ -2377,7 +2513,7 @@
         "flows": {
           "password": {
             "scopes": {},
-            "tokenUrl": "/api/v1/auth/token"
+            "tokenUrl": "/api/v1/auth/login"
           }
         }
       }
