@@ -20,6 +20,23 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+export const categoryService = {
+  getCategories: async () => {
+    const response = await api.get("/api/v1/categories");
+    return response.data;
+  },
+
+  getCategoryById: async (id) => {
+    const response = await api.get(`/api/v1/categories/${id}`);
+    return response.data;
+  },
+
+  createCategory: async (name) => {
+    const response = await api.post("/api/v1/categories", { name });
+    return response.data;
+  },
+};
+
 export const parkingService = {
   searchSpots: async (params = {}) => {
     const response = await api.get("/api/v1/parking-spots/search", { params });

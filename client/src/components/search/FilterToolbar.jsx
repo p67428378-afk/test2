@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Filter,
-  SlidersHorizontal,
-  Zap,
-  DollarSign,
-  MapPin,
-} from "lucide-react";
+import { Filter, Car, Zap } from "lucide-react";
 
 export default function FilterToolbar({ filters, onChange, onReset }) {
   const handleChange = (key, value) => {
@@ -13,7 +7,7 @@ export default function FilterToolbar({ filters, onChange, onReset }) {
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
+    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
       <div className="flex justify-between items-center pb-3 border-b border-slate-100">
         <div className="flex items-center gap-2 text-slate-800 font-semibold text-sm">
           <Filter className="w-4 h-4 text-blue-600" />
@@ -21,6 +15,7 @@ export default function FilterToolbar({ filters, onChange, onReset }) {
         </div>
         {onReset && (
           <button
+            type="button"
             onClick={onReset}
             className="text-xs text-blue-600 hover:text-blue-800 font-medium"
           >
@@ -29,13 +24,37 @@ export default function FilterToolbar({ filters, onChange, onReset }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        {/* Vehicle Category Filter */}
+        <div>
+          <label
+            htmlFor="filter-vehicle-category"
+            className="block text-xs font-semibold text-slate-600 mb-1"
+          >
+            Vehicle Category
+          </label>
+          <select
+            id="filter-vehicle-category"
+            value={filters.category || ""}
+            onChange={(e) => handleChange("category", e.target.value || null)}
+            className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+          >
+            <option value="">All Categories (Car, Bike)</option>
+            <option value="Car">🚘 Car</option>
+            <option value="Bike">🏍️ Bike</option>
+          </select>
+        </div>
+
         {/* Radius */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
+          <label
+            htmlFor="filter-search-radius"
+            className="block text-xs font-semibold text-slate-600 mb-1"
+          >
             Search Radius
           </label>
           <select
+            id="filter-search-radius"
             value={filters.radius_km || 5}
             onChange={(e) =>
               handleChange("radius_km", parseFloat(e.target.value))
@@ -52,10 +71,14 @@ export default function FilterToolbar({ filters, onChange, onReset }) {
 
         {/* Max Hourly Rate */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
+          <label
+            htmlFor="filter-max-rate"
+            className="block text-xs font-semibold text-slate-600 mb-1"
+          >
             Max Rate: {filters.max_rate ? `$${filters.max_rate}/hr` : "Any"}
           </label>
           <select
+            id="filter-max-rate"
             value={filters.max_rate || ""}
             onChange={(e) =>
               handleChange(
@@ -76,10 +99,14 @@ export default function FilterToolbar({ filters, onChange, onReset }) {
 
         {/* Spot Type */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
+          <label
+            htmlFor="filter-facility-type"
+            className="block text-xs font-semibold text-slate-600 mb-1"
+          >
             Spot Facility Type
           </label>
           <select
+            id="filter-facility-type"
             value={filters.spot_type || ""}
             onChange={(e) => handleChange("spot_type", e.target.value || null)}
             className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none"
@@ -113,10 +140,14 @@ export default function FilterToolbar({ filters, onChange, onReset }) {
 
         {/* Sort By */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
+          <label
+            htmlFor="filter-sort-by"
+            className="block text-xs font-semibold text-slate-600 mb-1"
+          >
             Sort Results By
           </label>
           <select
+            id="filter-sort-by"
             value={filters.sort_by || "distance"}
             onChange={(e) => handleChange("sort_by", e.target.value)}
             className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none"
