@@ -1,9 +1,15 @@
+from server.models.category import Category
 from server.models.parking import (
-    Base,
     ParkingLocation,
-    ParkingSpot,
     HourlyRate,
-    SensorEvent,
+    ParkingSpot,
+    StatusEvent,
 )
 
-__all__ = ["Base", "ParkingLocation", "ParkingSpot", "HourlyRate", "SensorEvent"]
+__all__ = [
+    "Category",
+    "ParkingLocation",
+    "HourlyRate",
+    "ParkingSpot",
+    "StatusEvent",
+]

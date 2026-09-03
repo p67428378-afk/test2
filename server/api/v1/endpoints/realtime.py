@@ -1,35 +1,21 @@
+from typing import List, Dict, Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from server.services.realtime_service import manager
+from server.services.realtime_service import realtime_manager
 
-router = APIRouter(tags=["Realtime Telemetry"])
-
-
-@router.websocket("/parking-spots/live-updates")
-async def websocket_parking_updates(websocket: WebSocket):
-    """WebSocket connection endpoint for streaming live parking telemetry and status events."""
-    await manager.connect(websocket)
-    try:
-        while True:
-            # Keep the connection open and receive potential client heartbeats/messages
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-    except Exception:
-        manager.disconnect(websocket)
+router = APIRouter(prefix="/realtime", tags=["Realtime"])
 
 
-@router.websocket("/realtime/live-updates")
-async def websocket_realtime_updates(websocket: WebSocket):
-    """Alias WebSocket connection endpoint."""
-    await manager.connect(websocket)
+@router.get("/history", summary="Get recent realtime events")
+def get_realtime_history(limit: int = 20) -> List[Dict[str, Any]]:
+    return realtime_manager.get_recent_history(limit=limit)
+
+
+@router.websocket("/updates")
+async def realtime_updates_ws(websocket: WebSocket):
+    await realtime_manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
+            await websocket.send_text(f'{{"received": "{data}"}}')
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
-    except Exception:
-        manager.disconnect(websocket)
+        realtime_manager.disconnect(websocket)

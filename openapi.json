@@ -1,18 +1,127 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Parking Locator & Hourly Rates API",
-    "description": "REST & Real-Time WebSocket API for locating open parking spots and checking rates",
+    "title": "Vehicle Category & Parking Management API",
+    "description": "RESTful API for Vehicle Categories (Car, Bike) and Parking Management.",
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/categories": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "List all vehicle categories",
+        "description": "Retrieve all available vehicle categories sorted alphabetically.",
+        "operationId": "list_categories_api_v1_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Categories Api V1 Categories Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Create a new vehicle category",
+        "description": "Create a new vehicle category with case-insensitive uniqueness check.",
+        "operationId": "create_category_api_v1_categories_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/{category_id}": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Get vehicle category by ID",
+        "description": "Retrieve a single category by its UUID identifier.",
+        "operationId": "get_category_api_v1_categories__category_id__get",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/parking-spots/search": {
       "get": {
         "tags": [
           "Parking Spots"
         ],
-        "summary": "Search Spots",
-        "description": "Search for available parking spots near coordinates or address with filtering.",
+        "summary": "Search parking spots",
+        "description": "Search nearby parking spots with distance calculation and category/amenity filters.",
         "operationId": "search_spots_api_v1_parking_spots_search_get",
         "parameters": [
           {
@@ -28,10 +137,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Search center latitude",
+              "description": "Latitude",
               "title": "Lat"
             },
-            "description": "Search center latitude"
+            "description": "Latitude"
           },
           {
             "name": "lng",
@@ -46,28 +155,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Search center longitude",
+              "description": "Longitude",
               "title": "Lng"
             },
-            "description": "Search center longitude"
-          },
-          {
-            "name": "address",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Search address / place name",
-              "title": "Address"
-            },
-            "description": "Search address / place name"
+            "description": "Longitude"
           },
           {
             "name": "radius_km",
@@ -83,7 +174,7 @@
                 }
               ],
               "description": "Search radius in kilometers",
-              "default": 10.0,
+              "default": 5.0,
               "title": "Radius Km"
             },
             "description": "Search radius in kilometers"
@@ -119,10 +210,28 @@
                   "type": "null"
                 }
               ],
-              "description": "Spot type filter (covered, open_lot, street, garage)",
+              "description": "Spot facility type filter",
               "title": "Spot Type"
             },
-            "description": "Spot type filter (covered, open_lot, street, garage)"
+            "description": "Spot facility type filter"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Vehicle category filter (e.g. Car, Bike)",
+              "title": "Category"
+            },
+            "description": "Vehicle category filter (e.g. Car, Bike)"
           },
           {
             "name": "has_ev_charging",
@@ -137,10 +246,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter for EV charging availability",
+              "description": "EV charging requirement",
               "title": "Has Ev Charging"
             },
-            "description": "Filter for EV charging availability"
+            "description": "EV charging requirement"
           },
           {
             "name": "sort_by",
@@ -155,86 +264,11 @@
                   "type": "null"
                 }
               ],
-              "description": "Sort by distance, price, or availability",
+              "description": "Sort order: distance, price, capacity, name",
               "default": "distance",
               "title": "Sort By"
             },
-            "description": "Sort by distance, price, or availability"
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "Pagination offset",
-              "default": 0,
-              "title": "Skip"
-            },
-            "description": "Pagination offset"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "description": "Pagination limit",
-              "default": 50,
-              "title": "Limit"
-            },
-            "description": "Pagination limit"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ParkingSearchResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/parking-spots/events/recent": {
-      "get": {
-        "tags": [
-          "Parking Spots"
-        ],
-        "summary": "Get Recent Sensor Events",
-        "description": "Get the recent real-time sensor events buffer.",
-        "operationId": "get_recent_sensor_events_api_v1_parking_spots_events_recent_get",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "description": "Max number of recent events to return",
-              "default": 20,
-              "title": "Limit"
-            },
-            "description": "Max number of recent events to return"
+            "description": "Sort order: distance, price, capacity, name"
           }
         ],
         "responses": {
@@ -245,9 +279,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SensorEventResponse"
+                    "$ref": "#/components/schemas/ParkingSpotSearchResult"
                   },
-                  "title": "Response Get Recent Sensor Events Api V1 Parking Spots Events Recent Get"
+                  "title": "Response Search Spots Api V1 Parking Spots Search Get"
                 }
               }
             }
@@ -270,8 +304,7 @@
         "tags": [
           "Parking Spots"
         ],
-        "summary": "List Spots",
-        "description": "List all registered parking locations.",
+        "summary": "List parking locations",
         "operationId": "list_spots_api_v1_parking_spots_get",
         "parameters": [
           {
@@ -293,7 +326,7 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "default": 50,
+              "default": 20,
               "title": "Limit"
             }
           }
@@ -306,7 +339,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ParkingSpotResponse"
+                    "$ref": "#/components/schemas/ParkingLocationResponse"
                   },
                   "title": "Response List Spots Api V1 Parking Spots Get"
                 }
@@ -329,9 +362,8 @@
         "tags": [
           "Parking Spots"
         ],
-        "summary": "Create Parking Location",
-        "description": "Create a new parking facility with rates.",
-        "operationId": "create_parking_location_api_v1_parking_spots_post",
+        "summary": "Create parking location",
+        "operationId": "create_location_api_v1_parking_spots_post",
         "requestBody": {
           "required": true,
           "content": {
@@ -348,7 +380,56 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ParkingSpotResponse"
+                  "$ref": "#/components/schemas/ParkingLocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/parking-spots/events/recent": {
+      "get": {
+        "tags": [
+          "Parking Spots"
+        ],
+        "summary": "Get recent status events",
+        "operationId": "get_recent_events_api_v1_parking_spots_events_recent_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  },
+                  "title": "Response Get Recent Events Api V1 Parking Spots Events Recent Get"
                 }
               }
             }
@@ -371,8 +452,7 @@
         "tags": [
           "Parking Spots"
         ],
-        "summary": "Get Spot Details",
-        "description": "Get detailed information for a specific parking spot/location.",
+        "summary": "Get parking spot details",
         "operationId": "get_spot_details_api_v1_parking_spots__spot_id__get",
         "parameters": [
           {
@@ -391,7 +471,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ParkingSpotResponse"
+                  "$ref": "#/components/schemas/ParkingLocationResponse"
                 }
               }
             }
@@ -414,8 +494,7 @@
         "tags": [
           "Parking Spots"
         ],
-        "summary": "Get Spot Rates",
-        "description": "Get the hourly rate structure and peak/off-peak breakdown for a parking location.",
+        "summary": "Get spot hourly rate breakdown",
         "operationId": "get_spot_rates_api_v1_parking_spots__spot_id__rates_get",
         "parameters": [
           {
@@ -440,10 +519,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Optional target date/time for rate evaluation (ISO 8601)",
               "title": "Target Date"
-            },
-            "description": "Optional target date/time for rate evaluation (ISO 8601)"
+            }
           }
         ],
         "responses": {
@@ -452,7 +529,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HourlyRateResponse"
+                  "$ref": "#/components/schemas/RatesBreakdownResponse"
                 }
               }
             }
@@ -475,9 +552,8 @@
         "tags": [
           "Parking Spots"
         ],
-        "summary": "Calculate Parking Cost",
-        "description": "Calculate estimated parking cost based on requested hours and arrival time.",
-        "operationId": "calculate_parking_cost_api_v1_parking_spots__spot_id__calculate_cost_post",
+        "summary": "Calculate estimated parking cost",
+        "operationId": "calculate_cost_api_v1_parking_spots__spot_id__calculate_cost_post",
         "parameters": [
           {
             "name": "spot_id",
@@ -528,8 +604,7 @@
         "tags": [
           "Parking Spots"
         ],
-        "summary": "Update Spot Status",
-        "description": "Ingest a sensor or manual status transition and broadcast via WebSocket.",
+        "summary": "Update spot availability status",
         "operationId": "update_spot_status_api_v1_parking_spots__spot_id__status_post",
         "parameters": [
           {
@@ -547,7 +622,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SpotStatusUpdateRequest"
+                "$ref": "#/components/schemas/StatusUpdateRequest"
               }
             }
           }
@@ -558,7 +633,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpotStatusUpdateResponse"
+                  "$ref": "#/components/schemas/ParkingLocationResponse"
                 }
               }
             }
@@ -570,6 +645,73 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/realtime/history": {
+      "get": {
+        "tags": [
+          "Realtime"
+        ],
+        "summary": "Get recent realtime events",
+        "operationId": "get_realtime_history_api_v1_realtime_history_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get Realtime History Api V1 Realtime History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -594,29 +736,59 @@
           }
         }
       }
-    },
-    "/": {
-      "get": {
-        "tags": [
-          "Root"
-        ],
-        "summary": "Root",
-        "operationId": "root__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
+      "CategoryCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the vehicle category (e.g. Car, Bike)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CategoryCreate"
+      },
+      "CategoryResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the vehicle category (e.g. Car, Bike)"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CategoryResponse"
+      },
       "CostCalculationRequest": {
         "properties": {
           "hours": {
@@ -652,33 +824,83 @@
             "type": "number",
             "title": "Hours"
           },
-          "estimated_cost": {
+          "total_cost": {
             "type": "number",
-            "title": "Estimated Cost"
+            "title": "Total Cost"
           },
-          "applied_rate_per_hour": {
+          "rate_applied": {
             "type": "number",
-            "title": "Applied Rate Per Hour"
+            "title": "Rate Applied"
           },
-          "capped_at_daily_max": {
+          "is_peak": {
             "type": "boolean",
-            "title": "Capped At Daily Max"
+            "title": "Is Peak"
           },
-          "currency": {
-            "type": "string",
-            "title": "Currency",
-            "default": "USD"
+          "max_daily_cap_applied": {
+            "type": "boolean",
+            "title": "Max Daily Cap Applied"
           }
         },
         "type": "object",
         "required": [
           "spot_id",
           "hours",
-          "estimated_cost",
-          "applied_rate_per_hour",
-          "capped_at_daily_max"
+          "total_cost",
+          "rate_applied",
+          "is_peak",
+          "max_daily_cap_applied"
         ],
         "title": "CostCalculationResponse"
+      },
+      "EventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "spot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spot Id"
+          },
+          "location_id": {
+            "type": "string",
+            "title": "Location Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "available_spots": {
+            "type": "integer",
+            "title": "Available Spots"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event",
+          "location_id",
+          "status",
+          "available_spots",
+          "timestamp"
+        ],
+        "title": "EventResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -693,55 +915,101 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "HourlyRateResponse": {
+      "HourlyRateBase": {
         "properties": {
-          "spot_id": {
-            "type": "string",
-            "title": "Spot Id"
-          },
-          "base_hourly_rate": {
+          "base_rate_per_hour": {
             "type": "number",
-            "title": "Base Hourly Rate"
+            "minimum": 0.0,
+            "title": "Base Rate Per Hour"
           },
-          "currency": {
-            "type": "string",
-            "title": "Currency",
-            "default": "USD"
-          },
-          "rate_breakdown": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Rate Breakdown"
-          },
-          "current_active_rate": {
+          "peak_rate_per_hour": {
             "type": "number",
-            "title": "Current Active Rate"
+            "minimum": 0.0,
+            "title": "Peak Rate Per Hour"
           },
-          "is_peak": {
-            "type": "boolean",
-            "title": "Is Peak"
+          "off_peak_rate_per_hour": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Off Peak Rate Per Hour"
           },
-          "max_daily_cap": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Daily Cap"
+          "weekend_rate_per_hour": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Weekend Rate Per Hour"
+          },
+          "max_daily_rate": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Max Daily Rate"
           }
         },
         "type": "object",
         "required": [
-          "spot_id",
-          "base_hourly_rate",
-          "rate_breakdown",
-          "current_active_rate",
-          "is_peak"
+          "base_rate_per_hour",
+          "peak_rate_per_hour",
+          "off_peak_rate_per_hour",
+          "weekend_rate_per_hour",
+          "max_daily_rate"
+        ],
+        "title": "HourlyRateBase"
+      },
+      "HourlyRateResponse": {
+        "properties": {
+          "base_rate_per_hour": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Base Rate Per Hour"
+          },
+          "peak_rate_per_hour": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Peak Rate Per Hour"
+          },
+          "off_peak_rate_per_hour": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Off Peak Rate Per Hour"
+          },
+          "weekend_rate_per_hour": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Weekend Rate Per Hour"
+          },
+          "max_daily_rate": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Max Daily Rate"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "location_id": {
+            "type": "string",
+            "title": "Location Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_rate_per_hour",
+          "peak_rate_per_hour",
+          "off_peak_rate_per_hour",
+          "weekend_rate_per_hour",
+          "max_daily_rate",
+          "id",
+          "location_id",
+          "created_at",
+          "updated_at"
         ],
         "title": "HourlyRateResponse"
       },
@@ -749,24 +1017,37 @@
         "properties": {
           "name": {
             "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
             "title": "Name"
           },
           "address": {
             "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
             "title": "Address"
           },
           "latitude": {
             "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
             "title": "Latitude"
           },
           "longitude": {
             "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
             "title": "Longitude"
           },
           "spot_type": {
             "type": "string",
             "title": "Spot Type",
             "default": "garage"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": "Car"
           },
           "has_ev_charging": {
             "type": "boolean",
@@ -775,41 +1056,30 @@
           },
           "total_capacity": {
             "type": "integer",
+            "minimum": 1.0,
             "title": "Total Capacity",
             "default": 50
           },
           "available_spots": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Available Spots",
+            "default": 10
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "available"
+          },
+          "rates": {
             "anyOf": [
               {
-                "type": "integer"
+                "$ref": "#/components/schemas/HourlyRateBase"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Available Spots"
-          },
-          "base_rate_per_hour": {
-            "type": "number",
-            "title": "Base Rate Per Hour",
-            "default": 5.0
-          },
-          "peak_rate_per_hour": {
-            "type": "number",
-            "title": "Peak Rate Per Hour",
-            "default": 8.0
-          },
-          "max_daily_rate": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Daily Rate",
-            "default": 35.0
+            ]
           }
         },
         "type": "object",
@@ -821,36 +1091,178 @@
         ],
         "title": "ParkingLocationCreate"
       },
-      "ParkingSearchResponse": {
+      "ParkingLocationResponse": {
         "properties": {
-          "total": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Address"
+          },
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
+          },
+          "spot_type": {
+            "type": "string",
+            "title": "Spot Type",
+            "default": "garage"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": "Car"
+          },
+          "has_ev_charging": {
+            "type": "boolean",
+            "title": "Has Ev Charging",
+            "default": false
+          },
+          "total_capacity": {
             "type": "integer",
-            "title": "Total"
+            "minimum": 1.0,
+            "title": "Total Capacity",
+            "default": 50
+          },
+          "available_spots": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Available Spots",
+            "default": 10
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "available"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "rates": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HourlyRateResponse"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rates"
           },
           "spots": {
-            "items": {
-              "$ref": "#/components/schemas/ParkingSpotResponse"
-            },
-            "type": "array",
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ParkingSpotResponse"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Spots"
           }
         },
         "type": "object",
         "required": [
-          "total",
-          "spots"
+          "name",
+          "address",
+          "latitude",
+          "longitude",
+          "id",
+          "created_at",
+          "updated_at"
         ],
-        "title": "ParkingSearchResponse"
+        "title": "ParkingLocationResponse"
       },
       "ParkingSpotResponse": {
         "properties": {
-          "spot_id": {
+          "spot_number": {
             "type": "string",
-            "title": "Spot Id"
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Spot Number"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "available"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "default": "Car"
           },
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "location_id": {
+            "type": "string",
+            "title": "Location Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "spot_number",
+          "id",
+          "location_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ParkingSpotResponse"
+      },
+      "ParkingSpotSearchResult": {
+        "properties": {
+          "spot_id": {
+            "type": "string",
+            "title": "Spot Id"
           },
           "name": {
             "type": "string",
@@ -869,178 +1281,96 @@
             "title": "Longitude"
           },
           "distance_km": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Distance Km",
-            "default": 0.0
+            "type": "number",
+            "title": "Distance Km"
           },
           "hourly_rate": {
             "type": "number",
             "title": "Hourly Rate"
           },
-          "currency": {
-            "type": "string",
-            "title": "Currency",
-            "default": "USD"
-          },
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "available_spots": {
+            "type": "integer",
+            "title": "Available Spots"
           },
           "total_capacity": {
             "type": "integer",
             "title": "Total Capacity"
           },
-          "available_spots": {
-            "type": "integer",
-            "title": "Available Spots"
+          "has_ev_charging": {
+            "type": "boolean",
+            "title": "Has Ev Charging"
           },
           "spot_type": {
             "type": "string",
             "title": "Spot Type"
           },
-          "has_ev_charging": {
-            "type": "boolean",
-            "title": "Has Ev Charging"
-          },
-          "is_peak_hours": {
-            "type": "boolean",
-            "title": "Is Peak Hours",
-            "default": false
-          },
-          "base_hourly_rate": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Base Hourly Rate"
-          },
-          "peak_rate_per_hour": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Peak Rate Per Hour"
-          },
-          "max_daily_cap": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Daily Cap"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "updated_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Updated At"
+          "category": {
+            "type": "string",
+            "title": "Category"
           }
         },
         "type": "object",
         "required": [
           "spot_id",
-          "id",
           "name",
           "address",
           "latitude",
           "longitude",
+          "distance_km",
           "hourly_rate",
           "status",
+          "available_spots",
           "total_capacity",
-          "available_spots",
+          "has_ev_charging",
           "spot_type",
-          "has_ev_charging"
+          "category"
         ],
-        "title": "ParkingSpotResponse"
+        "title": "ParkingSpotSearchResult"
       },
-      "SensorEventResponse": {
+      "RatesBreakdownResponse": {
         "properties": {
-          "event": {
-            "type": "string",
-            "title": "Event",
-            "default": "SPOT_STATUS_CHANGED"
-          },
           "spot_id": {
             "type": "string",
             "title": "Spot Id"
           },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
+          "base_hourly_rate": {
+            "type": "number",
+            "title": "Base Hourly Rate"
           },
-          "status": {
-            "type": "string",
-            "title": "Status"
+          "current_active_rate": {
+            "type": "number",
+            "title": "Current Active Rate"
           },
-          "available_spots": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Available Spots"
+          "is_peak": {
+            "type": "boolean",
+            "title": "Is Peak"
           },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp"
+          "max_daily_cap": {
+            "type": "number",
+            "title": "Max Daily Cap"
+          },
+          "rate_breakdown": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Rate Breakdown"
           }
         },
         "type": "object",
         "required": [
           "spot_id",
-          "status",
-          "timestamp"
+          "base_hourly_rate",
+          "current_active_rate",
+          "is_peak",
+          "max_daily_cap",
+          "rate_breakdown"
         ],
-        "title": "SensorEventResponse"
+        "title": "RatesBreakdownResponse"
       },
-      "SpotStatusUpdateRequest": {
+      "StatusUpdateRequest": {
         "properties": {
           "status": {
             "anyOf": [
@@ -1066,36 +1396,7 @@
           }
         },
         "type": "object",
-        "title": "SpotStatusUpdateRequest"
-      },
-      "SpotStatusUpdateResponse": {
-        "properties": {
-          "spot_id": {
-            "type": "string",
-            "title": "Spot Id"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "available_spots": {
-            "type": "integer",
-            "title": "Available Spots"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "spot_id",
-          "status",
-          "available_spots",
-          "updated_at"
-        ],
-        "title": "SpotStatusUpdateResponse"
+        "title": "StatusUpdateRequest"
       },
       "ValidationError": {
         "properties": {

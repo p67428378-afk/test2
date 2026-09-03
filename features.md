@@ -1,12 +1,12 @@
 # Project Features
 
-## SCRUM-204 - Parking Locator - Find Open Spots and Check Hourly Rates
+## SCRUM-204 - Add Vehicle Category Management ('Car', 'Bike')
 
 ### Feature Summary
-Allows drivers to search for available parking spots near their location or target destination, view hourly rates, apply filters, and see real-time spot availability updates.
+Enables users and administrators to view, select, filter, and manage vehicle categories (e.g., 'Car' and 'Bike') across the application with RESTful API support and database persistence.
 
 ### Key Features
-- Search open parking spots by address or geolocation
-- View hourly pricing details and rate breakdowns
-- Filter and sort spots by price, distance, and spot type
-- Real-time spot availability status tracking
+- Category Selection & Display in UI
+- Category Data Model & Persistence (UUID v4, UTC timestamps)
+- RESTful API endpoints GET and POST /api/v1/categories
+- Initial Category Seeding for default 'Car' and 'Bike' entries

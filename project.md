@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-204** - Parking Locator - Find Open Spots and Check Hourly Rates
+- **SCRUM-204** - Add Vehicle Category Management ('Car', 'Bike')
