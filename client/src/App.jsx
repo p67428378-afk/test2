@@ -5,6 +5,7 @@ import CustomerBookingPage from "./pages/CustomerBookingPage";
 import PhotographerAvailabilityPage from "./pages/PhotographerAvailabilityPage";
 import SessionTrackerPage from "./pages/SessionTrackerPage";
 import AdminPackageLedgerPage from "./pages/AdminPackageLedgerPage";
+import FeaturesDashboardPage from "./pages/FeaturesDashboardPage";
 import { authService } from "./services/api";
 import { User, Lock, X } from "lucide-react";
 
@@ -71,6 +72,7 @@ export default function App() {
             />
             <Route path="/sessions" element={<SessionTrackerPage />} />
             <Route path="/admin" element={<AdminPackageLedgerPage />} />
+            <Route path="/dashboard" element={<FeaturesDashboardPage />} />
           </Routes>
         </main>
 
@@ -83,7 +85,7 @@ export default function App() {
               </p>
               <p className="text-stone-400 mt-1">
                 Photography Studio Management System — Session Booking,
-                Schedule, & Ledger
+                Schedule, &amp; Ledger
               </p>
             </div>
             <div className="text-stone-400 text-right">

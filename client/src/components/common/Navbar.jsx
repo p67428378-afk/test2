@@ -5,6 +5,7 @@ import {
   Calendar,
   DollarSign,
   CheckCircle2,
+  Sliders,
   User,
   LogOut,
 } from "lucide-react";
@@ -17,6 +18,7 @@ export default function Navbar({ currentUser, onLogout, onLoginClick }) {
     { path: "/availability", label: "Photographer Schedule", icon: Calendar },
     { path: "/sessions", label: "Session Tracker", icon: CheckCircle2 },
     { path: "/admin", label: "Packages & Ledger", icon: DollarSign },
+    { path: "/dashboard", label: "Features & Widgets", icon: Sliders },
   ];
 
   return (

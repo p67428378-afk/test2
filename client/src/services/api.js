@@ -147,3 +147,39 @@ export const photoshootService = {
     return response.data;
   },
 };
+
+export const featureService = {
+  getFeatures: async (skip = 0, limit = 20) => {
+    const response = await api.get("/api/v1/features", {
+      params: { skip, limit },
+    });
+    return response.data;
+  },
+  getFeature: async (id) => {
+    const response = await api.get(`/api/v1/features/${id}`);
+    return response.data;
+  },
+  createFeature: async (featureData) => {
+    const response = await api.post("/api/v1/features", featureData);
+    return response.data;
+  },
+  updateFeature: async (id, featureData) => {
+    const response = await api.put(`/api/v1/features/${id}`, featureData);
+    return response.data;
+  },
+  deleteFeature: async (id) => {
+    const response = await api.delete(`/api/v1/features/${id}`);
+    return response.data;
+  },
+};
+
+export const dashboardService = {
+  getMetrics: async () => {
+    const response = await api.get("/api/v1/dashboard/metrics");
+    return response.data;
+  },
+  getStatusWidgets: async () => {
+    const response = await api.get("/api/v1/dashboard/status-widgets");
+    return response.data;
+  },
+};
