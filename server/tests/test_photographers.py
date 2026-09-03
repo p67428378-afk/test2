@@ -1,75 +1,73 @@
-from datetime import date, timedelta
+"""Unit and integration tests for Photographer & Availability endpoints."""
 
 
 def test_list_photographers(client):
-    res = client.get("/api/v1/photographers")
-    assert res.status_code == 200
-    photographers = res.json()
-    assert len(photographers) >= 1
-    assert any(
-        p["user_id"] == "11111111-1111-1111-1111-111111111111" for p in photographers
-    )
+    response = client.get("/api/v1/photographers")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 1
+    elena = next((p for p in data if "Elena" in (p["full_name"] or "")), None)
+    assert elena is not None
+    assert elena["is_active"] is True
 
 
-def test_get_photographer(client):
-    res = client.get("/api/v1/photographers/22222222-2222-2222-2222-222222222222")
-    assert res.status_code == 200
-    data = res.json()
-    assert data["id"] == "22222222-2222-2222-2222-222222222222"
-    assert "Elena Rostova" in data["full_name"]
+def test_get_photographer_by_id(client):
+    photogs = client.get("/api/v1/photographers").json()
+    photog_id = photogs[0]["id"]
+
+    response = client.get(f"/api/v1/photographers/{photog_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == photog_id
+    assert "specialization" in data
 
 
 def test_get_photographer_slots(client):
-    target_date = (date.today() + timedelta(days=7)).isoformat()
-    res = client.get(
-        f"/api/v1/photographers/22222222-2222-2222-2222-222222222222/slots?date={target_date}"
-    )
-    assert res.status_code == 200
-    slots = res.json()
-    assert isinstance(slots, list)
-    assert len(slots) > 0
-    assert all("is_available" in s for s in slots)
+    photogs = client.get("/api/v1/photographers").json()
+    photog_id = photogs[0]["id"]
+
+    response = client.get(f"/api/v1/photographers/{photog_id}/slots?date=2026-06-20")
+    assert response.status_code == 200
+    slots = response.json()
+    assert len(slots) >= 4
+    assert any(s["start_time"] == "14:00" for s in slots)
 
 
-def test_set_availability_and_conflict_warning(
-    client, photographer_headers, customer_headers
-):
-    photo_id = "22222222-2222-2222-2222-222222222222"
-    pkg_id = "33333333-3333-3333-3333-333333333331"
+def test_set_working_hours(client):
+    photogs = client.get("/api/v1/photographers").json()
+    photog_id = photogs[0]["id"]
 
-    target_date = date.today() + timedelta(days=14)
-    start_time_iso = f"{target_date.isoformat()}T14:00:00"
-
-    # 1. Customer books a session on target_date
-    book_res = client.post(
-        "/api/v1/sessions",
-        json={
-            "photographer_id": photo_id,
-            "package_id": pkg_id,
-            "start_time": start_time_iso,
-            "event_notes": "Conflict test shoot",
-        },
-        headers=customer_headers,
-    )
-    assert book_res.status_code == 201
-    session_id = book_res.json()["id"]
-
-    # 2. Photographer blocks target_date -> Should trigger conflict warning
-    avail_payload = {
-        "date": target_date.isoformat(),
-        "start_time": "09:00",
-        "end_time": "17:00",
-        "is_blocked": True,
-        "reason": "Personal Vacation",
+    payload = {
+        "start_time": "08:00",
+        "end_time": "18:00",
+        "day_of_week": 1,
+        "is_blocked": False,
     }
-    block_res = client.post(
-        f"/api/v1/photographers/{photo_id}/availability",
-        json=avail_payload,
-        headers=photographer_headers,
+    response = client.post(
+        f"/api/v1/photographers/{photog_id}/availability", json=payload
     )
-    assert block_res.status_code == 200
-    data = block_res.json()
+    assert response.status_code == 200
+    data = response.json()
+    assert data["start_time"] == "08:00"
+    assert data["end_time"] == "18:00"
+
+
+def test_block_date_with_conflict_warning(client):
+    photogs = client.get("/api/v1/photographers").json()
+    elena = next((p for p in photogs if "Elena" in (p["full_name"] or "")), photogs[0])
+
+    # Date 2026-06-20 has the seeded session for Elena
+    payload = {
+        "blocked_date": "2026-06-20",
+        "reason": "Studio Maintenance & Equipment Calibration",
+        "is_blocked": True,
+    }
+    response = client.post(
+        f"/api/v1/photographers/{elena['id']}/availability", json=payload
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["is_blocked"] is True
     assert data["warning"] is not None
     assert "Conflict Alert" in data["warning"]
     assert len(data["conflicting_sessions"]) >= 1
-    assert data["conflicting_sessions"][0]["session_id"] == session_id

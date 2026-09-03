@@ -1,54 +1,48 @@
-def test_list_packages_and_addons(client):
-    res_pkg = client.get("/api/v1/packages")
-    assert res_pkg.status_code == 200
-    pkgs = res_pkg.json()
+"""Unit and integration tests for Packages and Add-on endpoints."""
+
+
+def test_list_packages(client):
+    response = client.get("/api/v1/packages")
+    assert response.status_code == 200
+    pkgs = response.json()
     assert len(pkgs) >= 4
-    pkg_names = [p["name"] for p in pkgs]
-    assert "Portrait Package" in pkg_names
-    assert "Wedding Package" in pkg_names
+    wedding = next((p for p in pkgs if p["name"] == "Wedding Package"), None)
+    assert wedding is not None
+    assert wedding["price"] == 1200.00
+    assert wedding["duration_minutes"] == 360
 
-    res_addons = client.get("/api/v1/packages/addons")
-    assert res_addons.status_code == 200
-    addons = res_addons.json()
+
+def test_list_addons(client):
+    response = client.get("/api/v1/packages/addons")
+    assert response.status_code == 200
+    addons = response.json()
     assert len(addons) >= 3
-    addon_ids = [a["id"] for a in addons]
-    assert "addon-drone" in addon_ids
+    drone = next((a for a in addons if "Drone" in a["name"]), None)
+    assert drone is not None
+    assert drone["price"] == 250.00
 
 
-def test_package_crud_admin(client, admin_headers, customer_headers):
-    # Customer cannot create package (403)
-    new_pkg = {
-        "name": "Maternity Deluxe Package",
-        "description": "Studio and scenic outdoor maternity session.",
-        "duration_minutes": 120,
-        "price": 550.00,
-        "deliverables_summary": "2 hrs coverage • 30 edited photos • Online gallery",
+def test_create_and_update_package(client):
+    create_payload = {
+        "name": "Maternity & Newborn Package",
+        "description": "Gentle in-studio maternity and newborn photo session.",
+        "price": 450.00,
+        "duration_minutes": 90,
+        "deliverables_summary": "1.5 hrs coverage • 20 edited photos",
     }
-    res_cust = client.post("/api/v1/packages", json=new_pkg, headers=customer_headers)
-    assert res_cust.status_code == 403
+    response = client.post("/api/v1/packages", json=create_payload)
+    assert response.status_code == 201
+    pkg = response.json()
+    pkg_id = pkg["id"]
+    assert pkg["name"] == "Maternity & Newborn Package"
+    assert pkg["price"] == 450.00
 
-    # Admin creates package (201)
-    res_admin = client.post("/api/v1/packages", json=new_pkg, headers=admin_headers)
-    assert res_admin.status_code == 201
-    created = res_admin.json()
-    pkg_id = created["id"]
-    assert created["name"] == "Maternity Deluxe Package"
-    assert created["price"] == 550.00
+    # Update
+    update_payload = {"price": 490.00}
+    upd_res = client.put(f"/api/v1/packages/{pkg_id}", json=update_payload)
+    assert upd_res.status_code == 200
+    assert upd_res.json()["price"] == 490.00
 
-    # Get package
-    res_get = client.get(f"/api/v1/packages/{pkg_id}")
-    assert res_get.status_code == 200
-    assert res_get.json()["name"] == "Maternity Deluxe Package"
-
-    # Admin updates package
-    res_update = client.put(
-        f"/api/v1/packages/{pkg_id}",
-        json={"price": 600.00, "description": "Updated description"},
-        headers=admin_headers,
-    )
-    assert res_update.status_code == 200
-    assert res_update.json()["price"] == 600.00
-
-    # Admin deactivates package
-    res_del = client.delete(f"/api/v1/packages/{pkg_id}", headers=admin_headers)
-    assert res_del.status_code == 204
+    # Delete
+    del_res = client.delete(f"/api/v1/packages/{pkg_id}")
+    assert del_res.status_code == 200

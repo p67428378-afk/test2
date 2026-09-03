@@ -1,23 +1,26 @@
+"""Main FastAPI application entry point for Aura Photography Studio Management System."""
+
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from server.database import init_db, seed_data, get_db, SessionLocal
+
+from server.database import SessionLocal, init_db, seed_data
 from server.routers import (
     auth,
-    photographers,
+    dashboard,
+    features,
     packages,
-    sessions,
     payments,
+    photographers,
     photoshoots,
+    sessions,
 )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB tables and seed default accounts
+    # Initialize DB Schema and Seed initial studio records
     init_db()
     db = SessionLocal()
     try:
@@ -28,16 +31,21 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Photography Studio Management System API",
-    version="1.0.0",
-    description="Backend API for customer booking, photographer availability, packages, payments, and photoshoot tracking.",
+    title="Aura Photography Studio Management API",
+    description="Studio booking, photographer scheduling, package management, payment tracking, and v2 feature expansions.",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
-# Configure CORS Middleware
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
+# CORS Configuration
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -47,27 +55,32 @@ app.add_middleware(
 )
 
 # Register API Routers
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(photographers.router, prefix="/api/v1")
-app.include_router(packages.router, prefix="/api/v1")
-app.include_router(sessions.router, prefix="/api/v1")
-app.include_router(payments.router, prefix="/api/v1")
-app.include_router(photoshoots.router, prefix="/api/v1")
+app.include_router(auth.router)
+app.include_router(photographers.router)
+app.include_router(packages.router)
+app.include_router(sessions.router)
+app.include_router(payments.router)
+app.include_router(photoshoots.router)
+app.include_router(features.router)
+app.include_router(dashboard.router)
 
 
-@app.get("/health", tags=["Health"])
-def health_check(db: Session = Depends(get_db)):
-    try:
-        db.execute(text("SELECT 1"))
-        return {"status": "healthy", "database": "connected"}
-    except Exception as e:
-        return {"status": "unhealthy", "database": str(e)}
-
-
-@app.get("/", tags=["Root"])
+@app.get("/")
 def root():
     return {
-        "message": "Welcome to the Photography Studio Management System API",
-        "docs": "/docs",
-        "health": "/health",
+        "service": "Aura Photography Studio API",
+        "version": "2.0.0",
+        "status": "online",
+        "docs_url": "/docs",
     }
+
+
+@app.get("/api/v1/health")
+def health_check():
+    return {"status": "healthy", "service": "aura-photography-studio"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("server.main.py:app", host="0.0.0.0", port=8000, reload=True)
