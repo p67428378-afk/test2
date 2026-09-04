@@ -1,130 +1,181 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List, Literal
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# Topic Schemas
+class TopicBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+    estimated_minutes: int = Field(default=60, gt=0)
+    difficulty: Literal["Easy", "Medium", "Hard"] = "Medium"
+    status: Literal["Not Started", "In Progress", "Completed"] = "Not Started"
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class TopicCreate(BaseModel):
+    subject_id: str
+    title: str = Field(..., min_length=1, max_length=255)
+    estimated_minutes: int = Field(default=60, gt=0)
+    difficulty: Literal["Easy", "Medium", "Hard"] = "Medium"
+    status: Optional[Literal["Not Started", "In Progress", "Completed"]] = "Not Started"
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
+class TopicUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    estimated_minutes: Optional[int] = Field(None, gt=0)
+    difficulty: Optional[Literal["Easy", "Medium", "Hard"]] = None
+    status: Optional[Literal["Not Started", "In Progress", "Completed"]] = None
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+class TopicStatusUpdate(BaseModel):
+    status: Literal["Not Started", "In Progress", "Completed"]
 
 
-class TournamentCreate(TournamentBase):
-    pass
+class TopicResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
+    id: str
+    subject_id: str
+    title: str
+    estimated_minutes: int
+    difficulty: str
     status: str
-    current_round: int
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+
+# Subject Schemas
+class SubjectBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    target_exam_date: Optional[datetime] = None
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class SubjectCreate(SubjectBase):
+    pass
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class SubjectUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    target_exam_date: Optional[datetime] = None
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
+class SubjectResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+    id: str
+    title: str
+    description: Optional[str] = None
+    target_exam_date: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    total_topics: int = 0
+    completed_topics: int = 0
+    progress_percentage: float = 0.0
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class SubjectDetailResponse(SubjectResponse):
+    topics: List[TopicResponse] = []
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+class SubjectProgressResponse(BaseModel):
+    subject_id: str
+    title: str
+    total_topics: int
+    completed_topics: int
+    progress_percentage: float
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+# Study Schedule Schemas
+class StudyScheduleBase(BaseModel):
+    topic_id: str
+    scheduled_date: datetime
+    duration_minutes: int = Field(default=60, gt=0)
+    is_completed: bool = False
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class StudyScheduleCreate(BaseModel):
+    topic_id: str
+    scheduled_date: datetime
+    duration_minutes: int = Field(default=60, gt=0)
+    is_completed: Optional[bool] = False
+    subject_id: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+
+class StudyScheduleUpdate(BaseModel):
+    scheduled_date: Optional[datetime] = None
+    duration_minutes: Optional[int] = Field(None, gt=0)
+    is_completed: Optional[bool] = None
+
+
+class StudyScheduleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    topic_id: str
+    scheduled_date: datetime
+    duration_minutes: int
+    is_completed: bool
+    created_at: datetime
+    updated_at: datetime
+    topic: Optional[TopicResponse] = None
+
+
+# Daily Goal Schemas
+class DailyGoalBase(BaseModel):
+    target_date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
+    target_minutes: int = Field(default=120, gt=0)
+
+
+class DailyGoalCreate(DailyGoalBase):
+    pass
+
+
+class DailyGoalResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    target_date: str
+    target_minutes: int
+    scheduled_minutes: int = 0
+    completed_minutes: int = 0
+    goal_met: bool = False
+    created_at: datetime
+    updated_at: datetime
+
+
+# Study Log Schemas
+class StudyLogBase(BaseModel):
+    topic_id: str
+    session_minutes: int = Field(..., gt=0)
+    notes: Optional[str] = None
+
+
+class StudyLogCreate(StudyLogBase):
+    logged_at: Optional[datetime] = None
+
+
+class StudyLogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    topic_id: str
+    session_minutes: int
+    notes: Optional[str] = None
+    logged_at: datetime
+    created_at: datetime
+
+
+# Recommendation Schemas
+class TopicRecommendation(BaseModel):
+    topic_id: str
+    topic_title: str
+    subject_title: str
+    difficulty: str
+    estimated_minutes: int
+    priority_score: float
+    recommendation_reason: str
+
+
+class RecommendationsResponse(BaseModel):
+    recommendations: List[TopicRecommendation]
