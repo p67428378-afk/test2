@@ -1,130 +1,117 @@
-import uuid
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class UserBase(BaseModel):
+    email: str
+    role: Optional[str] = "user"
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6)
+
+
+class UserLogin(BaseModel):
+    email: str
     password: str
 
 
 class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
+    id: str
+    email: str
     role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
-    pass
-
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+    is_active: bool
     created_at: datetime
-    updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class TokenData(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
+class TopicResponse(BaseModel):
+    id: str
+    topic_name: str
+    confidence: float
 
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class SentimentResponse(BaseModel):
+    id: str
+    sentiment: str
+    score: float
+    processed_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class FeedbackCreate(BaseModel):
+    feedback_text: str = Field(..., min_length=1, max_length=1000)
+    rating: int = Field(..., ge=1, le=5)
+    customer_email: Optional[str] = None
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
+class FeedbackResponse(BaseModel):
+    id: str
+    feedback_text: str
+    rating: int
+    customer_email: Optional[str] = None
+    analysis_status: str
+    created_at: datetime
+    sentiment_analysis: Optional[SentimentResponse] = None
+    topics: List[TopicResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
+class FeedbackCreateResponse(BaseModel):
+    id: str
+    analysis_status: str
+    created_at: datetime
+    feedback_text: Optional[str] = None
     rating: Optional[int] = None
+    customer_email: Optional[str] = None
+    sentiment_analysis: Optional[SentimentResponse] = None
+    topics: List[TopicResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class SentimentDistribution(BaseModel):
+    positive: int = 0
+    neutral: int = 0
+    negative: int = 0
+    positive_percentage: float = 0.0
+    neutral_percentage: float = 0.0
+    negative_percentage: float = 0.0
 
-    class Config:
-        from_attributes = True
+
+class TopTopicItem(BaseModel):
+    name: str
+    count: int
+    percentage: float
+    sentiment: str
+
+
+class AdminInsightsResponse(BaseModel):
+    total_feedback: int
+    avg_rating: float
+    sentiment_distribution: SentimentDistribution
+    top_topics: List[TopTopicItem]
+
+
+class AdminFeedbackListResponse(BaseModel):
+    items: List[FeedbackResponse]
+    total: int
+    skip: int
+    limit: int

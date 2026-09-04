@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-642** — User Story: Inventory Management Module
+- **SCRUM-219** - Customer Feedback Analyzer - Ingestion, AI Sentiment & Admin Insights Dashboard
