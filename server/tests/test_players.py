@@ -1,80 +1,85 @@
 from fastapi.testclient import TestClient
 
 
-def test_register_player_and_default_rating(client: TestClient):
-    # Create tournament
-    t_res = client.post(
-        "/api/v1/tournaments",
-        json={"name": "City Championship", "total_rounds": 5},
+def test_add_player_success(client: TestClient):
+    # 1. Create a session
+    res_session = client.post("/api/v1/sessions", json={"game_name": "Catan"})
+    assert res_session.status_code == 201
+    session_id = res_session.json()["id"]
+
+    # 2. Add player
+    payload = {"name": "Alice"}
+    response = client.post(f"/api/v1/sessions/{session_id}/players", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Alice"
+    assert data["session_id"] == session_id
+    assert "id" in data
+    assert "created_at" in data
+    assert "updated_at" in data
+
+
+def test_add_multiple_players_and_list(client: TestClient):
+    """Verifies AC: Users can add multiple players by entering their names and view the player list before scoring begins."""
+    res_session = client.post("/api/v1/sessions", json={"game_name": "Ticket to Ride"})
+    session_id = res_session.json()["id"]
+
+    # Add Alice and Bob
+    res_alice = client.post(
+        f"/api/v1/sessions/{session_id}/players", json={"name": "Alice"}
     )
-    t_id = t_res.json()["id"]
+    assert res_alice.status_code == 201
 
-    # Register rated player
-    p1_res = client.post(
-        f"/api/v1/tournaments/{t_id}/players",
-        json={
-            "full_name": "Magnus Carlsen",
-            "email": "magnus@example.com",
-            "rating": 2850,
-            "fide_id": "1500015",
-        },
+    res_bob = client.post(
+        f"/api/v1/sessions/{session_id}/players", json={"name": "Bob"}
     )
-    assert p1_res.status_code == 201
-    assert p1_res.json()["rating"] == 2850
+    assert res_bob.status_code == 201
 
-    # Register unrated player (default 1200)
-    p2_res = client.post(
-        f"/api/v1/tournaments/{t_id}/players",
-        json={
-            "full_name": "New Player",
-            "email": "newbie@example.com",
-        },
+    # List players
+    res_list = client.get(f"/api/v1/sessions/{session_id}/players")
+    assert res_list.status_code == 200
+    players = res_list.json()
+    assert len(players) == 2
+    names = [p["name"] for p in players]
+    assert "Alice" in names
+    assert "Bob" in names
+
+
+def test_add_player_validation_error(client: TestClient):
+    res_session = client.post("/api/v1/sessions", json={"game_name": "Carcassonne"})
+    session_id = res_session.json()["id"]
+
+    # Empty name
+    res_empty = client.post(f"/api/v1/sessions/{session_id}/players", json={"name": ""})
+    assert res_empty.status_code == 422
+
+    # Whitespace only
+    res_ws = client.post(f"/api/v1/sessions/{session_id}/players", json={"name": "   "})
+    assert res_ws.status_code == 422
+
+
+def test_add_player_session_not_found(client: TestClient):
+    fake_session_id = "00000000-0000-0000-0000-000000000000"
+    response = client.post(
+        f"/api/v1/sessions/{fake_session_id}/players", json={"name": "Dave"}
     )
-    assert p2_res.status_code == 201
-    assert p2_res.json()["rating"] == 1200
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
 
 
-def test_register_duplicate_email_in_same_tournament(client: TestClient):
-    t_res = client.post(
-        "/api/v1/tournaments",
-        json={"name": "Regional Open", "total_rounds": 5},
+def test_delete_player(client: TestClient):
+    res_session = client.post("/api/v1/sessions", json={"game_name": "Pandemic"})
+    session_id = res_session.json()["id"]
+
+    res_player = client.post(
+        f"/api/v1/sessions/{session_id}/players", json={"name": "Eve"}
     )
-    t_id = t_res.json()["id"]
+    player_id = res_player.json()["id"]
 
-    p_data = {
-        "full_name": "Hikaru Nakamura",
-        "email": "hikaru@example.com",
-        "rating": 2780,
-    }
+    # Delete via session route
+    res_del = client.delete(f"/api/v1/sessions/{session_id}/players/{player_id}")
+    assert res_del.status_code == 204
 
-    res1 = client.post(f"/api/v1/tournaments/{t_id}/players", json=p_data)
-    assert res1.status_code == 201
-
-    res2 = client.post(f"/api/v1/tournaments/{t_id}/players", json=p_data)
-    assert res2.status_code == 400
-    assert "Player email already registered in this tournament" in res2.json()["detail"]
-
-
-def test_get_tournament_roster(client: TestClient):
-    t_res = client.post(
-        "/api/v1/tournaments",
-        json={"name": "Club League", "total_rounds": 3},
-    )
-    t_id = t_res.json()["id"]
-
-    client.post(
-        f"/api/v1/tournaments/{t_id}/players",
-        json={"full_name": "Player One", "email": "p1@example.com", "rating": 1500},
-    )
-    client.post(
-        f"/api/v1/tournaments/{t_id}/players",
-        json={"full_name": "Player Two", "email": "p2@example.com", "rating": 1600},
-    )
-
-    roster_res = client.get(f"/api/v1/tournaments/{t_id}/players")
-    assert roster_res.status_code == 200
-    roster = roster_res.json()
-    assert len(roster) == 2
-    emails = [p["email"] for p in roster]
-    assert "p1@example.com" in emails
-    assert "p2@example.com" in emails
+    # Verify deleted from player list
+    res_list = client.get(f"/api/v1/sessions/{session_id}/players")
+    assert len(res_list.json()) == 0

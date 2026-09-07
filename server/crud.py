@@ -1,151 +1,204 @@
-import uuid
-from typing import List, Optional
+from typing import List, Optional, Dict
 from sqlalchemy.orm import Session
-from server import models, schemas
+from server.models import GameSession, Player, ScoreEntry
+from server.schemas import (
+    GameSessionCreate,
+    GameSessionUpdate,
+    PlayerCreate,
+    ScoreEntryCreate,
+    LeaderboardResponse,
+    RankedPlayer,
+    Winner,
+)
 
 
-# User CRUD
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.email == email).first()
-
-
-# Tournament CRUD
-def create_tournament(
-    db: Session, tournament_in: schemas.TournamentCreate
-) -> models.Tournament:
-    tournament = models.Tournament(
-        name=tournament_in.name,
-        total_rounds=tournament_in.total_rounds,
-        status="DRAFT",
-        current_round=0,
-    )
-    db.add(tournament)
+# --- Game Session CRUD ---
+def create_session(db: Session, session_in: GameSessionCreate) -> GameSession:
+    db_session = GameSession(game_name=session_in.game_name, status="active")
+    db.add(db_session)
     db.commit()
-    db.refresh(tournament)
-    return tournament
+    db.refresh(db_session)
+    return db_session
 
 
-def get_tournament(
-    db: Session, tournament_id: uuid.UUID
-) -> Optional[models.Tournament]:
+def get_session(db: Session, session_id: str) -> Optional[GameSession]:
+    return db.query(GameSession).filter(GameSession.id == session_id).first()
+
+
+def list_sessions(db: Session, skip: int = 0, limit: int = 50) -> List[GameSession]:
     return (
-        db.query(models.Tournament)
-        .filter(models.Tournament.id == tournament_id)
-        .first()
-    )
-
-
-def list_tournaments(
-    db: Session, skip: int = 0, limit: int = 100
-) -> List[models.Tournament]:
-    return db.query(models.Tournament).offset(skip).limit(limit).all()
-
-
-# Player & Registration CRUD
-def register_player(
-    db: Session, player_in: schemas.PlayerCreate, tournament_id: uuid.UUID
-) -> models.Player:
-    # Check if email is already registered in this tournament
-    existing_reg = (
-        db.query(models.Registration)
-        .join(models.Player)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Player.email == player_in.email,
-        )
-        .first()
-    )
-    if existing_reg:
-        raise ValueError("Player email already registered in this tournament")
-
-    # Check if player exists globally, else create
-    player = (
-        db.query(models.Player).filter(models.Player.email == player_in.email).first()
-    )
-    if not player:
-        player = models.Player(
-            full_name=player_in.full_name,
-            email=player_in.email,
-            rating=player_in.rating if player_in.rating is not None else 1200,
-            fide_id=player_in.fide_id,
-        )
-        db.add(player)
-        db.flush()
-
-    # Create registration
-    reg = models.Registration(
-        tournament_id=tournament_id,
-        player_id=player.id,
-        status="ACTIVE",
-    )
-    db.add(reg)
-
-    # Initialize standing entry
-    existing_standing = (
-        db.query(models.Standing)
-        .filter(
-            models.Standing.tournament_id == tournament_id,
-            models.Standing.player_id == player.id,
-        )
-        .first()
-    )
-    if not existing_standing:
-        standing = models.Standing(
-            tournament_id=tournament_id,
-            player_id=player.id,
-            total_points=0.0,
-            buchholz=0.0,
-            sonneborn_berger=0.0,
-        )
-        db.add(standing)
-
-    db.commit()
-    db.refresh(player)
-    return player
-
-
-def get_tournament_players(
-    db: Session, tournament_id: uuid.UUID
-) -> List[models.Player]:
-    return (
-        db.query(models.Player)
-        .join(models.Registration, models.Registration.player_id == models.Player.id)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Registration.status == "ACTIVE",
-        )
+        db.query(GameSession)
+        .order_by(GameSession.created_at.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
 
 
-def get_player(db: Session, player_id: uuid.UUID) -> Optional[models.Player]:
-    return db.query(models.Player).filter(models.Player.id == player_id).first()
+def update_session(
+    db: Session, session_id: str, session_update: GameSessionUpdate
+) -> Optional[GameSession]:
+    db_session = get_session(db, session_id)
+    if not db_session:
+        return None
+
+    if session_update.game_name is not None:
+        db_session.game_name = session_update.game_name
+    if session_update.status is not None:
+        db_session.status = session_update.status
+
+    db.commit()
+    db.refresh(db_session)
+    return db_session
 
 
-# Round & Match CRUD
-def get_round(db: Session, round_id: uuid.UUID) -> Optional[models.Round]:
-    return db.query(models.Round).filter(models.Round.id == round_id).first()
+def delete_session(db: Session, session_id: str) -> bool:
+    db_session = get_session(db, session_id)
+    if not db_session:
+        return False
+    db.delete(db_session)
+    db.commit()
+    return True
 
 
-def get_match(db: Session, match_id: uuid.UUID) -> Optional[models.Match]:
-    return db.query(models.Match).filter(models.Match.id == match_id).first()
+# --- Player CRUD ---
+def create_player(db: Session, session_id: str, player_in: PlayerCreate) -> Player:
+    db_player = Player(session_id=session_id, name=player_in.name)
+    db.add(db_player)
+    db.commit()
+    db.refresh(db_player)
+    return db_player
 
 
-# Standing CRUD
-def get_standings(db: Session, tournament_id: uuid.UUID) -> List[models.Standing]:
+def get_player(db: Session, player_id: str) -> Optional[Player]:
+    return db.query(Player).filter(Player.id == player_id).first()
+
+
+def list_players_by_session(db: Session, session_id: str) -> List[Player]:
     return (
-        db.query(models.Standing)
-        .filter(models.Standing.tournament_id == tournament_id)
+        db.query(Player)
+        .filter(Player.session_id == session_id)
+        .order_by(Player.created_at.asc())
         .all()
     )
 
 
-# Certificate CRUD
-def get_certificate_by_uuid(
-    db: Session, verification_uuid: uuid.UUID
-) -> Optional[models.Certificate]:
+def delete_player(db: Session, player_id: str) -> bool:
+    db_player = get_player(db, player_id)
+    if not db_player:
+        return False
+    db.delete(db_player)
+    db.commit()
+    return True
+
+
+# --- Score Entry CRUD ---
+def create_score_entry(
+    db: Session, session_id: str, score_in: ScoreEntryCreate
+) -> ScoreEntry:
+    db_score = ScoreEntry(
+        session_id=session_id,
+        player_id=score_in.player_id,
+        round_or_category=score_in.round_or_category or "Round 1",
+        points=score_in.points,
+    )
+    db.add(db_score)
+    db.commit()
+    db.refresh(db_score)
+    return db_score
+
+
+def list_score_entries_by_session(db: Session, session_id: str) -> List[ScoreEntry]:
     return (
-        db.query(models.Certificate)
-        .filter(models.Certificate.verification_uuid == verification_uuid)
-        .first()
+        db.query(ScoreEntry)
+        .filter(ScoreEntry.session_id == session_id)
+        .order_by(ScoreEntry.created_at.asc())
+        .all()
+    )
+
+
+def delete_score_entry(db: Session, score_id: str) -> bool:
+    db_score = db.query(ScoreEntry).filter(ScoreEntry.id == score_id).first()
+    if not db_score:
+        return False
+    db.delete(db_score)
+    db.commit()
+    return True
+
+
+# --- Leaderboard Calculation ---
+def calculate_leaderboard(
+    db: Session, session_id: str
+) -> Optional[LeaderboardResponse]:
+    session = get_session(db, session_id)
+    if not session:
+        return None
+
+    players = list_players_by_session(db, session_id)
+    score_entries = list_score_entries_by_session(db, session_id)
+
+    # Aggregate scores per player
+    totals_by_player: Dict[str, float] = {p.id: 0.0 for p in players}
+    for entry in score_entries:
+        if entry.player_id in totals_by_player:
+            totals_by_player[entry.player_id] += float(entry.points)
+
+    # Build player score mapping
+    player_map = {p.id: p for p in players}
+
+    # Sort players by total score descending, then by creation date ascending
+    sorted_player_ids = sorted(
+        players,
+        key=lambda p: (
+            totals_by_player[p.id],
+            -p.created_at.timestamp() if p.created_at else 0,
+        ),
+        reverse=True,
+    )
+
+    if not sorted_player_ids:
+        return LeaderboardResponse(
+            session_id=session.id,
+            game_name=session.game_name,
+            status=session.status,
+            ranked_players=[],
+            winners=[],
+        )
+
+    max_score = max(totals_by_player.values()) if totals_by_player else 0.0
+
+    ranked_players: List[RankedPlayer] = []
+    current_rank = 1
+    for idx, p in enumerate(sorted_player_ids):
+        score = totals_by_player[p.id]
+        if idx > 0:
+            prev_p = sorted_player_ids[idx - 1]
+            prev_score = totals_by_player[prev_p.id]
+            if score < prev_score:
+                current_rank = idx + 1  # Standard competition rank (1224)
+
+        # A player is a winner if their score equals the maximum score
+        is_winner = (score == max_score) and (len(players) > 0)
+        ranked_players.append(
+            RankedPlayer(
+                player_id=p.id,
+                name=p.name,
+                total_score=score,
+                rank=current_rank,
+                is_winner=is_winner,
+            )
+        )
+
+    winners = [
+        Winner(player_id=rp.player_id, name=rp.name, total_score=rp.total_score)
+        for rp in ranked_players
+        if rp.is_winner
+    ]
+
+    return LeaderboardResponse(
+        session_id=session.id,
+        game_name=session.game_name,
+        status=session.status,
+        ranked_players=ranked_players,
+        winners=winners,
     )
