@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+import server.models as models  # noqa: F401
 from server.database import Base, get_db, seed_data
 from server.main import app
 
@@ -40,7 +41,17 @@ def override_get_db():
         db.close()
 
 
-app.dependency_overrides[get_db] = override_get_db
+@pytest.fixture(autouse=True)
+def _apply_test_db_override():
+    """Ensure app.dependency_overrides points to the test session for all tests in server/tests/."""
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        import database
+
+        app.dependency_overrides[database.get_db] = override_get_db
+    except ImportError:
+        pass
+    yield
 
 
 @pytest.fixture

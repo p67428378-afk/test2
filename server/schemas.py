@@ -1,16 +1,23 @@
+import sys
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
 
+# Aliasing sys.modules to prevent duplicate module loading ('schemas' vs 'server.schemas')
+if __name__ == "server.schemas":
+    sys.modules["schemas"] = sys.modules["server.schemas"]
+elif __name__ == "schemas":
+    sys.modules["server.schemas"] = sys.modules["schemas"]
+
 
 # Visitor Pre-Approval Schemas
 class VisitorPreApprovalCreate(BaseModel):
-    unit_number: str = Field(..., example="Unit 4B")
-    visitor_name: str = Field(..., example="Bob Smith")
-    contact_phone: str = Field(..., example="+15550192834")
-    vehicle_number: Optional[str] = Field(None, example="XYZ-9876")
-    valid_from: datetime = Field(..., example="2026-06-01T14:00:00Z")
-    valid_until: datetime = Field(..., example="2026-06-01T18:00:00Z")
+    unit_number: str = Field(...)
+    visitor_name: str = Field(...)
+    contact_phone: str = Field(...)
+    vehicle_number: Optional[str] = Field(None)
+    valid_from: datetime = Field(...)
+    valid_until: datetime = Field(...)
 
 
 class VisitorPreApprovalResponse(BaseModel):
@@ -31,11 +38,9 @@ class VisitorPreApprovalResponse(BaseModel):
 
 # QR Entry Validation Schemas
 class QRValidateRequest(BaseModel):
-    qr_token: str = Field(..., example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-    gate_id: str = Field("Main Gate", example="Main Gate")
-    guard_id: Optional[str] = Field(
-        None, example="b4cc290f-9cf0-4999-aa23-432123456789"
-    )
+    qr_token: str = Field(...)
+    gate_id: str = Field("Main Gate")
+    guard_id: Optional[str] = Field(None)
 
 
 class QRValidateResponse(BaseModel):
@@ -51,10 +56,10 @@ class QRValidateResponse(BaseModel):
 
 # Delivery Schemas
 class DeliveryCreate(BaseModel):
-    unit_number: str = Field(..., example="Unit 4B")
-    courier_name: str = Field(..., example="FedEx")
-    tracking_number: Optional[str] = Field(None, example="FX-99201123")
-    package_description: Optional[str] = Field(None, example="Small box")
+    unit_number: str = Field(...)
+    courier_name: str = Field(...)
+    tracking_number: Optional[str] = Field(None)
+    package_description: Optional[str] = Field(None)
 
 
 class DeliveryCollectRequest(BaseModel):
@@ -80,18 +85,14 @@ class DeliveryResponse(BaseModel):
 
 # Security Alert Schemas
 class SecurityAlertCreate(BaseModel):
-    alert_type: str = Field(..., example="UNAUTHORIZED_ENTRY")
-    severity: str = Field("HIGH", example="HIGH")
-    location: str = Field(..., example="North Gate")
-    description: str = Field(
-        ..., example="Vehicle bypassed barrier without valid QR code"
-    )
+    alert_type: str = Field(...)
+    severity: str = Field("HIGH")
+    location: str = Field(...)
+    description: str = Field(...)
 
 
 class SecurityAlertCancel(BaseModel):
-    cancellation_reason: str = Field(
-        ..., example="Accidental trigger during guard shift handoff"
-    )
+    cancellation_reason: str = Field(...)
 
 
 class SecurityAlertResponse(BaseModel):

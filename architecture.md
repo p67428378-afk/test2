@@ -44,7 +44,31 @@ graph TD
 - server/tests/test_visitors.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/App.test.jsx
+- client/src/components/ActiveQRCodeCard.jsx
+- client/src/components/DeliveryTable.jsx
+- client/src/components/DeliveryTable.test.jsx
+- client/src/components/FalseAlarmCancelBanner.jsx
+- client/src/components/GateValidationBanner.jsx
+- client/src/components/GuardQRScanner.jsx
+- client/src/components/GuardQRScanner.test.jsx
+- client/src/components/PackageLogForm.jsx
+- client/src/components/ResidentVisitorForm.jsx
+- client/src/components/ResidentVisitorForm.test.jsx
+- client/src/components/SecurityAlertTrigger.jsx
+- client/src/components/SecurityAlertTrigger.test.jsx
+- client/src/main.jsx
+- client/src/pages/DeliveryManagementPage.jsx
+- client/src/pages/GuardTerminalPage.jsx
+- client/src/pages/ResidentDashboardPage.jsx
+- client/src/pages/SecurityBroadcastPage.jsx
+- client/src/services/api.js
+- client/src/setup.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - POST /api/v1/visitors/pre-approval

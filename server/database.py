@@ -1,16 +1,22 @@
 import os
+from typing import Any
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session
+from sqlalchemy.pool import StaticPool
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
 
-# SQLite needs connect_args for multithreading in dev/tests
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine_kwargs: dict[str, Any] = {"connect_args": connect_args}
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["poolclass"] = StaticPool
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 def get_db():
@@ -23,8 +29,8 @@ def get_db():
 
 def init_db():
     """Create database tables."""
-    # Import models so they are registered on Base.metadata
     import server.models  # noqa: F401
+    from server.routers import visitors, deliveries, alerts  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
@@ -35,10 +41,7 @@ def seed_data(db: Session):
     from datetime import datetime, timezone, timedelta
     import uuid
 
-    # 1. Seed test user records if users table exists/is used
-    # Here we seed initial visitor pre-approval, package, and security alert if empty
     try:
-        # Seed initial Visitor if none exist
         if db.query(models.VisitorPreApproval).count() == 0:
             now = datetime.now(timezone.utc)
             visitor = models.VisitorPreApproval(
@@ -63,7 +66,6 @@ def seed_data(db: Session):
             )
             db.add(token)
 
-        # Seed initial Delivery if none exist
         if db.query(models.Delivery).count() == 0:
             delivery = models.Delivery(
                 id=str(uuid.uuid4()),
@@ -76,7 +78,6 @@ def seed_data(db: Session):
             )
             db.add(delivery)
 
-        # Seed initial Security Alert if none exist
         if db.query(models.SecurityAlert).count() == 0:
             now = datetime.now(timezone.utc)
             alert = models.SecurityAlert(
