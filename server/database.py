@@ -1,18 +1,53 @@
 import os
-from typing import Any
-from sqlalchemy import create_engine
+import sys
+import tempfile
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session
-from sqlalchemy.pool import StaticPool
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+# Aliasing sys.modules to prevent duplicate module loading ('database' vs 'server.database')
+if __name__ == "server.database":
+    sys.modules["database"] = sys.modules["server.database"]
+elif __name__ == "database":
+    sys.modules["server.database"] = sys.modules["database"]
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine_kwargs: dict[str, Any] = {"connect_args": connect_args}
-if DATABASE_URL.startswith("sqlite"):
-    engine_kwargs["poolclass"] = StaticPool
+IS_TESTING = (
+    os.getenv("TESTING", "false").lower() == "true"
+    or "pytest" in sys.modules
+    or (len(sys.argv) > 0 and "pytest" in sys.argv[0])
+)
 
-engine = create_engine(DATABASE_URL, **engine_kwargs)
+if IS_TESTING:
+    default_db_file = os.path.join(
+        tempfile.gettempdir(), "app_test_scrum228.db"
+    ).replace("\\", "/")
+    env_db = os.getenv("DATABASE_URL")
+    if not env_db or env_db == "sqlite:///:memory:":
+        DATABASE_URL = f"sqlite:///{default_db_file}"
+    else:
+        DATABASE_URL = env_db
+else:
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+
+connect_args = (
+    {"check_same_thread": False, "timeout": 30}
+    if DATABASE_URL.startswith("sqlite")
+    else {}
+)
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+if DATABASE_URL.startswith("sqlite"):
+
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA busy_timeout=5000")
+        except Exception:
+            pass
+        finally:
+            cursor.close()
 
 
 class Base(DeclarativeBase):
@@ -27,12 +62,12 @@ def get_db():
         db.close()
 
 
-def init_db():
+def init_db(target_engine=None):
     """Create database tables."""
     import server.models  # noqa: F401
-    from server.routers import visitors, deliveries, alerts  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
+    eng = target_engine or engine
+    Base.metadata.create_all(bind=eng)
 
 
 def seed_data(db: Session):

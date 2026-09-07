@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import server.models as models  # noqa: F401
-from server.database import Base, get_db, seed_data
+from server.database import Base, get_db, seed_data, engine
 from server.main import app
 
 # Shared SQLite in-memory engine for testing
@@ -23,6 +23,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
     """Create all tables and seed initial data for the test session."""
+    Base.metadata.create_all(bind=engine)
     Base.metadata.create_all(bind=test_engine)
     db = TestingSessionLocal()
     try:
