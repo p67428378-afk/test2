@@ -1,39 +1,55 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
+from server.config import ALLOWED_ORIGINS
+from server.database import init_db
+from server.api.v1.genres import router as genres_router
+from server.api.v1.names import router as names_router
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB tables and seed data idempotently on startup
+    init_db()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Character Name Generator API",
+    description="RESTful API for generating genre-based unique character names",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
+# Custom validation exception handler to ensure standard 400 response format on validation issues
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    errors = exc.errors()
+    # If quantity error or genre error in body
+    for err in errors:
+        loc = err.get("loc", [])
+        if "quantity" in loc:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "Quantity must be between 1 and 10."},
+            )
+        if "genre" in loc:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "detail": "Invalid genre selected. Allowed values: Fantasy, Sci-Fi, Cyberpunk, Mystery, Historical, General"
+                },
+            )
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(errors[0].get("msg", "Invalid request body"))},
+    )
 
+
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -42,19 +58,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Root and Health Probes
+@app.get("/health", tags=["health"])
+def health_check():
+    return {"status": "ok"}
 
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+# API Routers
+app.include_router(genres_router, prefix="/api/v1/genres", tags=["genres"])
+app.include_router(names_router, prefix="/api/v1/names", tags=["names"])
