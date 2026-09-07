@@ -1,106 +1,150 @@
-# Loan Eligibility Decision System
+# Customer Feedback Analyzer
 
-This project is a loan eligibility decision system that determines if a user is eligible for a loan and at what interest rate based on their financial details.
+An intelligent Customer Feedback Ingestion, AI Sentiment Analysis, Admin Insights Dashboard, Real-Time Alerting, and Export system.
 
-## Application Architecture
+## Features
+- **Public Feedback Ingestion**: Allows end users to submit ratings (1-5 stars), text feedback, customer email, and category.
+- **AI Sentiment & Topic Extraction**: Classifies sentiment (Positive, Neutral, Negative) and categorizes issues with confidence scoring.
+- **Real-Time Automated Alerting**: Automatically triggers notifications (email/webhook) for low ratings (1-2 stars) or negative feedback with retry mechanism.
+- **Admin Insights Dashboard**: Provides aggregated sentiment distribution, average ratings, top issue categories, and historical sentiment trends (7d, 30d, 90d).
+- **Export Capabilities**: Download filtered feedback records and insights in CSV format.
+- **Role-Based Access Control (RBAC)**: JWT-secured endpoints for administrative functions.
 
-The application follows a full-stack architecture with a React frontend and a FastAPI backend.
+---
 
-- **Frontend**: React (Vite), Tailwind CSS
-- **Backend**: FastAPI, Python
-- **Database**: PostgreSQL (production), SQLite (testing)
+### Prerequisites
+- Python 3.11+
+- Virtualenv (`python3 -m venv venv`)
 
-### High-Level Diagram
+### Setup Instructions
+1. Navigate to the server folder or project root:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r server/requirements.txt
+   ```
 
-```mermaid
-graph TD
-    A[Frontend] --> B{Backend API}
-    B --> C[Loan Eligibility Service]
-    B --> D[Interest Rate Service]
-    C --> E{Database}
-    D --> E
-```
+2. Configure environment variables (optional for local SQLite development):
+   ```bash
+   cp .env.example .env
+   ```
 
-## Project Structure
+3. Run the development server:
+   ```bash
+   uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
 
-```
-.
-├── backend
-│   ├── app
-│   │   ├── api
-│   │   ├── core
-│   │   ├── db
-│   │   ├── models
-│   │   ├── schemas
-│   │   └── services
-│   ├── tests
-│   └── requirements.txt
-└── frontend
-    ├── public
-    ├── src
-    │   ├── components
-    │   └── services
-    ├── package.json
-    └── vite.config.js
-```
+4. Run the automated test suite:
+   ```bash
+   pytest server/tests -v
+   ```
 
-## Prerequisites
+---
 
-- Python 3.10+
-- Node.js 18+
-- npm
-- git
+## Full-Stack Local Development
 
-## Setup Instructions
+To run the complete application (Frontend + Backend):
 
-### Backend
+1. **Backend Server** (Port 8000):
+   ```bash
+   source venv/bin/activate
+   uvicorn server.main:app --host 0.0.0.0 --port 8000
+   ```
 
-1.  Navigate to the `backend` directory.
-2.  Create a virtual environment: `python -m venv venv`
-3.  Activate the virtual environment: `source venv/bin/activate`
-4.  Install dependencies: `pip install -r requirements.txt`
-5.  Create a `.env` file with the `DATABASE_URL`.
-6.  Run the application: `uvicorn app.main:app --reload`
+2. **Frontend Client** (Port 5173):
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
 
-### Frontend
+3. **Pre-Seeded Test Credentials**:
+   - **Regular User**: `test@example.com` / `testpassword`
+   - **Admin User**: `admin@example.com` / `adminpassword`
 
-1.  Navigate to the `frontend` directory.
-2.  Install dependencies: `npm install`
-3.  Run the development server: `npm run dev`
+## Server
 
-## API Documentation
+### Prerequisites
+- Python 3.9+
+- pip and venv
 
-### POST /api/v1/loan/check-eligibility
+### Setup
 
-Checks the loan eligibility for a user.
-
-**Request Body:**
-
-```json
-{
-  "credit_score": 750,
-  "annual_income": 100000,
-  "monthly_debts": 1000
-}
-```
-
-**Response:**
-
-```json
-{
-  "applicant_id": "some-uuid",
-  "eligibility_status": true,
-  "interest_rate": 4.25,
-  "ineligibility_reasons": null
-}
-```
-
-## Running Tests
-
-### Backend
-
-Navigate to the `backend` directory and run:
-
+1. Create and activate virtual environment:
 ```bash
-pytest
+python -m venv server/.venv
+# On Windows:
+server\.venv\Scripts\activate
+# On macOS/Linux:
+source server/.venv/bin/activate
 ```
+
+2. Install dependencies:
+```bash
+cd server
+pip install -r requirements.txt
+cd ..
+```
+
+### Running Tests
+```bash
+cd server
+python -m pytest -v
+cd ..
+```
+
+### Starting the Development Server
+```bash
+# Run from the repo root so that `from server.X` imports resolve correctly
+python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The API will be available at `http://localhost:8000`
+API documentation: `http://localhost:8000/docs`
+
+## Full-Stack Local Development
+
+To run both backend and frontend together locally:
+
+### 1. Environment Setup
+```bash
+# Copy the example environment file
+cp .env.example .env
+```
+
+### 2. Start the Backend (Terminal 1)
+```bash
+python -m venv server/.venv
+source server/.venv/bin/activate  # On Windows: server\.venv\Scripts\activate
+pip install -r server/requirements.txt
+python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
+```
+Backend API: `http://localhost:8000` | API Docs: `http://localhost:8000/docs`
+
+### 3. Start the Frontend (Terminal 2)
+```bash
+cd client
+npm install
+npm run dev
+```
+Frontend: `http://localhost:5173`
+
+The frontend connects to the backend API at `http://localhost:8000` by default via the `VITE_API_BASE_URL` environment variable.
+
+### 4. Test Credentials
+If the app has authentication, the backend seeds ready-to-use accounts on startup
+(idempotent). These are guaranteed logged-in-able — every activation/verification
+gate (`is_active`, `is_verified`, `email_verified`, `disabled`) is set to the
+permissive value, so no manual DB step is needed:
+- **Regular user** — Email: `test@example.com`, Password: `testpassword`
+- **Admin user** (only when the app has roles/RBAC) — Email: `admin@example.com`, Password: `adminpassword`, role: `admin`
+
+Passwords are stored hashed with the app's own hashing utility (never in plaintext).
+
+### Port Reference
+| Service  | Port | URL                        |
+|----------|------|----------------------------|
+| Backend  | 8000 | http://localhost:8000      |
+| Frontend | 5173 | http://localhost:5173      |
+| API Docs | 8000 | http://localhost:8000/docs |
+
