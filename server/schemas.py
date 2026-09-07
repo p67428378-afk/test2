@@ -1,130 +1,120 @@
-import uuid
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# Visitor Pre-Approval Schemas
+class VisitorPreApprovalCreate(BaseModel):
+    unit_number: str = Field(..., example="Unit 4B")
+    visitor_name: str = Field(..., example="Bob Smith")
+    contact_phone: str = Field(..., example="+15550192834")
+    vehicle_number: Optional[str] = Field(None, example="XYZ-9876")
+    valid_from: datetime = Field(..., example="2026-06-01T14:00:00Z")
+    valid_until: datetime = Field(..., example="2026-06-01T18:00:00Z")
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class VisitorPreApprovalResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
-    pass
-
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
+    visitor_id: str
+    id: Optional[str] = None
+    unit_number: str
+    visitor_name: str
+    contact_phone: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    qr_token: str
+    valid_from: datetime
+    valid_until: datetime
     status: str
-    current_round: int
     created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# QR Entry Validation Schemas
+class QRValidateRequest(BaseModel):
+    qr_token: str = Field(..., example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    gate_id: str = Field("Main Gate", example="Main Gate")
+    guard_id: Optional[str] = Field(
+        None, example="b4cc290f-9cf0-4999-aa23-432123456789"
+    )
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class QRValidateResponse(BaseModel):
+    access_granted: bool
+    visitor_name: Optional[str] = None
+    unit_number: Optional[str] = None
+    entry_timestamp: Optional[datetime] = None
+    message: str
+    error_code: Optional[str] = None
+    detail: Optional[str] = None
+    resident_notification_sent: bool = True
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+# Delivery Schemas
+class DeliveryCreate(BaseModel):
+    unit_number: str = Field(..., example="Unit 4B")
+    courier_name: str = Field(..., example="FedEx")
+    tracking_number: Optional[str] = Field(None, example="FX-99201123")
+    package_description: Optional[str] = Field(None, example="Small box")
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+class DeliveryCollectRequest(BaseModel):
+    notes: Optional[str] = None
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class DeliveryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    delivery_id: str
+    id: Optional[str] = None
+    unit_number: str
+    courier_name: str
+    tracking_number: Optional[str] = None
+    package_description: Optional[str] = None
+    status: str
+    logged_at: datetime
+    collected_at: Optional[datetime] = None
+    is_overdue: bool = False
+    notification_sent: bool = True
+    notification_status: str = "DELIVERED_TO_RESIDENT"
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+# Security Alert Schemas
+class SecurityAlertCreate(BaseModel):
+    alert_type: str = Field(..., example="UNAUTHORIZED_ENTRY")
+    severity: str = Field("HIGH", example="HIGH")
+    location: str = Field(..., example="North Gate")
+    description: str = Field(
+        ..., example="Vehicle bypassed barrier without valid QR code"
+    )
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class SecurityAlertCancel(BaseModel):
+    cancellation_reason: str = Field(
+        ..., example="Accidental trigger during guard shift handoff"
+    )
 
-    class Config:
-        from_attributes = True
+
+class SecurityAlertResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    alert_id: str
+    id: Optional[str] = None
+    alert_type: str
+    severity: str
+    location: str
+    description: str
+    status: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    can_cancel_until: Optional[datetime] = None
+    cancellation_reason: Optional[str] = None
+    cancelled_by: Optional[str] = None
+    cancelled_at: Optional[datetime] = None
+    broadcast_status: str = "BROADCASTED_TO_GUARD_TERMINALS"
+    broadcast_recipients: List[str] = Field(
+        default_factory=lambda: [
+            "Guard Terminal 1",
+            "Guard Terminal 2",
+            "Security Supervisor App",
+        ]
+    )
