@@ -1,60 +1,65 @@
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
 import os
-
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from starlette.middleware.cors import CORSMiddleware
 from server.database import init_db, seed_data, SessionLocal
+from server.routers import auth, categories, boxes, reviews
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema
+    init_db()
+    # Seed initial users, categories, boxes, curations, and reviews
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Subscription Box Finder API",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    description="Discover monthly subscription box curations, read authentic subscriber reviews, and submit ratings.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
+# Configure CORS Middleware
 ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000",
 ).split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Register Routers
+app.include_router(auth.router)
+app.include_router(categories.router)
+app.include_router(boxes.router)
+app.include_router(reviews.router)
 
 
-@app.get("/")
-def read_root():
+@app.get("/health", tags=["health"])
+def health_check():
     return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
+        "status": "ok",
+        "service": "Subscription Box Finder API",
+        "database": "connected",
     }
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An unexpected internal server error occurred."},
+    )

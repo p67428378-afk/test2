@@ -1,130 +1,123 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional, Any, Dict
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str
 
 
-class LoginRequest(BaseModel):
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6)
+
+
+class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
+class UserResponse(UserBase):
+    id: str
     role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
-    pass
-
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+    is_active: bool
     created_at: datetime
-    updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class CategorySchema(BaseModel):
+    id: str
+    name: str
+    slug: str
+    description: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+class CurationItem(BaseModel):
+    name: str
+    description: str
+    value: str
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class CurationSchema(BaseModel):
+    id: str
+    month_year: str
+    theme_title: str
+    highlights: str
+    item_list: List[Dict[str, Any]] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class ReviewCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5, description="Rating between 1 and 5 stars")
+    comment: str = Field(..., min_length=1, description="Written review feedback")
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
+class ReviewSchema(BaseModel):
+    id: str
+    box_id: str
+    user_id: str
+    user_name: Optional[str] = None
+    rating: int
+    comment: str
+    created_at: datetime
 
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class ReviewListResponse(BaseModel):
+    reviews: List[ReviewSchema]
+    total: int
+    skip: int = 0
+    limit: int = 20
 
-    class Config:
-        from_attributes = True
+
+class BoxSummary(BaseModel):
+    id: str
+    title: str
+    slug: str
+    category_id: str
+    category_name: Optional[str] = None
+    price: float
+    billing_frequency: str
+    image_url: Optional[str] = None
+    average_rating: float = 0.0
+    total_reviews: int = 0
+    is_active: bool = True
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BoxDetail(BaseModel):
+    id: str
+    category_id: str
+    category_name: Optional[str] = None
+    title: str
+    slug: str
+    description: str
+    price: float
+    billing_frequency: str
+    image_url: Optional[str] = None
+    average_rating: float = 0.0
+    total_reviews: int = 0
+    is_active: bool = True
+    curations: List[CurationSchema] = []
+    reviews: List[ReviewSchema] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BoxListResponse(BaseModel):
+    items: List[BoxSummary]
+    total: int
+    skip: int = 0
+    limit: int = 20
