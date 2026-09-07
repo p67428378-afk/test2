@@ -1,4 +1,5 @@
 import os
+import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -60,3 +61,25 @@ def root():
 @app.get("/api/v1/health")
 def health_check():
     return {"status": "healthy"}
+
+
+def generate_openapi_json():
+    """Generates openapi.json at the repository root and server/ directory."""
+    try:
+        schema = app.openapi()
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        server_dir = os.path.dirname(os.path.abspath(__file__))
+
+        root_openapi = os.path.join(base_dir, "openapi.json")
+        server_openapi = os.path.join(server_dir, "openapi.json")
+
+        with open(root_openapi, "w", encoding="utf-8") as f:
+            json.dump(schema, f, indent=2)
+
+        with open(server_openapi, "w", encoding="utf-8") as f:
+            json.dump(schema, f, indent=2)
+    except Exception as e:
+        print(f"Warning: Failed to generate openapi.json: {e}")
+
+
+generate_openapi_json()
