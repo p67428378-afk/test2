@@ -9,8 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY server/ ./server/
 
-# Cloud Run requires the container to listen on port 8080
+# Ensure python can import server package
+ENV PYTHONPATH=/app
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["sh", "-c", "python -m uvicorn server.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8080"]
