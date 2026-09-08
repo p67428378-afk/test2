@@ -112,4 +112,49 @@ export const certificateService = {
   },
 };
 
+export const expenseService = {
+  getExpenses: async (params = {}) => {
+    const queryParams = {};
+    if (params.month && params.month !== "all") {
+      queryParams.month = params.month;
+    }
+    if (params.start_date) queryParams.start_date = params.start_date;
+    if (params.end_date) queryParams.end_date = params.end_date;
+    if (params.skip !== undefined) queryParams.skip = params.skip;
+    if (params.limit !== undefined) queryParams.limit = params.limit;
+
+    const response = await api.get("/api/v1/expenses", { params: queryParams });
+    return response.data;
+  },
+  getExpense: async (expenseId) => {
+    const response = await api.get(`/api/v1/expenses/${expenseId}`);
+    return response.data;
+  },
+  createExpense: async (expenseData) => {
+    const response = await api.post("/api/v1/expenses", expenseData);
+    return response.data;
+  },
+  updateExpense: async (expenseId, expenseData) => {
+    const response = await api.put(
+      `/api/v1/expenses/${expenseId}`,
+      expenseData,
+    );
+    return response.data;
+  },
+  deleteExpense: async (expenseId) => {
+    const response = await api.delete(`/api/v1/expenses/${expenseId}`);
+    return response.data;
+  },
+  getDashboardSummary: async (month = null) => {
+    const queryParams = {};
+    if (month && month !== "all") {
+      queryParams.month = month;
+    }
+    const response = await api.get("/api/v1/dashboard/summary", {
+      params: queryParams,
+    });
+    return response.data;
+  },
+};
+
 export default api;

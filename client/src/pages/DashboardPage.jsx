@@ -6,11 +6,23 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
+  Receipt,
+  ArrowRight,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import TournamentHeader from "../components/TournamentHeader";
 import PlayerRegistrationForm from "../components/PlayerRegistrationForm";
 import PlayerRosterTable from "../components/PlayerRosterTable";
-import { tournamentService, playerService } from "../services/api";
+import MonthlySummaryStatCard from "../components/dashboard/MonthlySummaryStatCard";
+import CategoryBreakdownCard from "../components/dashboard/CategoryBreakdownCard";
+import MonthFilter from "../components/expenses/MonthFilter";
+import ExpenseTable from "../components/expenses/ExpenseTable";
+import ExpenseFormModal from "../components/expenses/ExpenseFormModal";
+import {
+  tournamentService,
+  playerService,
+  expenseService,
+} from "../services/api";
 
 export default function DashboardPage() {
   const [tournaments, setTournaments] = useState([]);
@@ -25,6 +37,20 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Expense tracker state
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [dashboardSummary, setDashboardSummary] = useState({
+    active_month: null,
+    monthly_total: 0,
+    total_expenses: 0,
+    category_breakdown: [],
+  });
+  const [recentExpenses, setRecentExpenses] = useState([]);
+  const [expensesLoading, setExpensesLoading] = useState(false);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [isExpenseSubmitting, setIsExpenseSubmitting] = useState(false);
 
   const loadTournaments = async () => {
     setLoading(true);
@@ -57,6 +83,33 @@ export default function DashboardPage() {
     }
   };
 
+  const loadExpensesData = async () => {
+    setExpensesLoading(true);
+    try {
+      const summary = await expenseService.getDashboardSummary(selectedMonth);
+      setDashboardSummary(
+        summary || {
+          active_month: selectedMonth || null,
+          monthly_total: 0,
+          total_expenses: 0,
+          category_breakdown: [],
+        },
+      );
+
+      const params = {};
+      if (selectedMonth && selectedMonth !== "all") {
+        params.month = selectedMonth;
+      }
+      params.limit = 10;
+      const exList = await expenseService.getExpenses(params);
+      setRecentExpenses(exList || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setExpensesLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadTournaments();
   }, []);
@@ -66,6 +119,10 @@ export default function DashboardPage() {
       loadRoster(activeTournament.id);
     }
   }, [activeTournament]);
+
+  useEffect(() => {
+    loadExpensesData();
+  }, [selectedMonth]);
 
   const handleCreateTournament = async (e) => {
     e.preventDefault();
@@ -113,6 +170,43 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSaveExpense = async (formData) => {
+    setIsExpenseSubmitting(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      if (editingExpense) {
+        await expenseService.updateExpense(editingExpense.id, formData);
+        setSuccessMsg("Expense updated successfully!");
+      } else {
+        await expenseService.createExpense(formData);
+        setSuccessMsg("Expense added successfully!");
+      }
+      setIsExpenseModalOpen(false);
+      setEditingExpense(null);
+      loadExpensesData();
+    } catch (err) {
+      console.error(err);
+      const detail = err.response?.data?.detail || "Failed to save expense.";
+      setErrorMsg(typeof detail === "string" ? detail : JSON.stringify(detail));
+    } finally {
+      setIsExpenseSubmitting(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id) => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      await expenseService.deleteExpense(id);
+      setSuccessMsg("Expense deleted successfully!");
+      loadExpensesData();
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Failed to delete expense.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <TournamentHeader
@@ -123,68 +217,7 @@ export default function DashboardPage() {
         onFinishTournament={handleFinishTournament}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Top Summary Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Active Tournament
-              </span>
-              <span className="text-xl font-bold text-white mt-1 block truncate max-w-[180px]">
-                {activeTournament ? activeTournament.name : "None"}
-              </span>
-            </div>
-            <div className="p-3 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
-              <Trophy className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Registered Roster
-              </span>
-              <span className="text-2xl font-bold text-emerald-400 mt-1 block">
-                {roster.length} Players
-              </span>
-            </div>
-            <div className="p-3 bg-emerald-600/20 text-emerald-400 rounded-xl border border-emerald-500/30">
-              <Users className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Current Round
-              </span>
-              <span className="text-2xl font-bold text-amber-400 mt-1 block">
-                {activeTournament
-                  ? `Round ${activeTournament.current_round}`
-                  : "N/A"}
-              </span>
-            </div>
-            <div className="p-3 bg-amber-600/20 text-amber-400 rounded-xl border border-amber-500/30">
-              <RefreshCw className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Tournament Status
-              </span>
-              <span className="text-xl font-bold text-indigo-300 mt-1 block">
-                {activeTournament ? activeTournament.status : "Inactive"}
-              </span>
-            </div>
-            <div className="p-3 bg-indigo-600/20 text-indigo-300 rounded-xl border border-indigo-500/30">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Global Banners */}
         {errorMsg && (
           <div
@@ -203,60 +236,254 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Action Header Banner */}
-        <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-indigo-900/60 to-slate-900 border border-indigo-500/30 p-6 rounded-xl shadow-xl gap-4">
-          <div>
-            <h1 className="text-2xl font-extrabold text-white">
-              {activeTournament
-                ? activeTournament.name
-                : "Tournament Dashboard"}
-            </h1>
-            <p className="text-sm text-slate-300 mt-1">
-              Manage player registrations, compute FIDE Swiss pairings, record
-              match scores, and issue digital certificates.
-            </p>
+        {/* Section 1: Expense Tracker Summary & Month Filter Controls */}
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-indigo-400" />
+                Monthly Expense Summary & Analytics
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Filter spending by month (YYYY-MM) and monitor aggregate monthly
+                totals and category breakdowns.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+              <MonthFilter
+                selectedMonth={selectedMonth}
+                onChange={(m) => setSelectedMonth(m)}
+              />
+              <button
+                onClick={() => {
+                  setEditingExpense(null);
+                  setIsExpenseModalOpen(true);
+                }}
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add Expense</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-3 shrink-0">
-            <button
-              onClick={() => setShowCreateTournamentModal(true)}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold rounded-lg shadow transition-colors flex items-center space-x-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Tournament</span>
-            </button>
-
-            <button
-              onClick={() => setShowRegisterModal(true)}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow transition-colors flex items-center space-x-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Register Player</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Roster Table (2 cols) */}
-          <div className="lg:col-span-2">
-            <PlayerRosterTable
-              players={roster}
-              loading={loading}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MonthlySummaryStatCard
+              monthlyTotal={dashboardSummary.monthly_total}
+              selectedMonth={selectedMonth}
+              totalExpenses={dashboardSummary.total_expenses}
             />
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Total Cumulative Expenses
+                </span>
+                <span className="text-2xl font-bold text-slate-100 mt-1 block">
+                  ${Number(dashboardSummary.total_expenses || 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="p-3 bg-emerald-600/20 text-emerald-400 rounded-xl border border-emerald-500/30">
+                <Receipt className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Filtered Items
+                </span>
+                <span className="text-2xl font-bold text-amber-400 mt-1 block">
+                  {recentExpenses.length} transactions
+                </span>
+              </div>
+              <div className="p-3 bg-amber-600/20 text-amber-400 rounded-xl border border-amber-500/30">
+                <RefreshCw className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Top Category
+                </span>
+                <span className="text-lg font-bold text-indigo-300 mt-1 block truncate max-w-[160px]">
+                  {dashboardSummary.category_breakdown?.[0]?.category || "None"}
+                </span>
+              </div>
+              <div className="p-3 bg-indigo-600/20 text-indigo-300 rounded-xl border border-indigo-500/30">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+            </div>
           </div>
 
-          {/* Quick Registration Sidebar (1 col) */}
-          <div className="lg:col-span-1">
-            <PlayerRegistrationForm
-              activeTournamentId={activeTournament?.id}
-              onPlayerRegistered={() => loadRoster(activeTournament?.id)}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <CategoryBreakdownCard
+                categoryBreakdown={dashboardSummary.category_breakdown}
+                selectedMonth={selectedMonth}
+              />
+            </div>
+
+            <div className="lg:col-span-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  Recent Expenses
+                  {selectedMonth && selectedMonth !== "all" && (
+                    <span className="text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                      {selectedMonth}
+                    </span>
+                  )}
+                </h3>
+                <Link
+                  to="/expenses"
+                  className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                >
+                  <span>View All Expenses</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <ExpenseTable
+                expenses={recentExpenses}
+                onEdit={(e) => {
+                  setEditingExpense(e);
+                  setIsExpenseModalOpen(true);
+                }}
+                onDelete={handleDeleteExpense}
+                isLoading={expensesLoading}
+                selectedMonth={selectedMonth}
+              />
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Divider */}
+        <hr className="border-slate-800" />
+
+        {/* Section 2: Chess Master System Overview */}
+        <section className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Active Tournament
+                </span>
+                <span className="text-xl font-bold text-white mt-1 block truncate max-w-[180px]">
+                  {activeTournament ? activeTournament.name : "None"}
+                </span>
+              </div>
+              <div className="p-3 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
+                <Trophy className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Registered Roster
+                </span>
+                <span className="text-2xl font-bold text-emerald-400 mt-1 block">
+                  {roster.length} Players
+                </span>
+              </div>
+              <div className="p-3 bg-emerald-600/20 text-emerald-400 rounded-xl border border-emerald-500/30">
+                <Users className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Current Round
+                </span>
+                <span className="text-2xl font-bold text-amber-400 mt-1 block">
+                  {activeTournament
+                    ? `Round ${activeTournament.current_round}`
+                    : "N/A"}
+                </span>
+              </div>
+              <div className="p-3 bg-amber-600/20 text-amber-400 rounded-xl border border-amber-500/30">
+                <RefreshCw className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Tournament Status
+                </span>
+                <span className="text-xl font-bold text-indigo-300 mt-1 block">
+                  {activeTournament ? activeTournament.status : "Inactive"}
+                </span>
+              </div>
+              <div className="p-3 bg-indigo-600/20 text-indigo-300 rounded-xl border border-indigo-500/30">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-indigo-900/60 to-slate-900 border border-indigo-500/30 p-6 rounded-xl shadow-xl gap-4">
+            <div>
+              <h1 className="text-2xl font-extrabold text-white">
+                {activeTournament
+                  ? activeTournament.name
+                  : "Tournament Dashboard"}
+              </h1>
+              <p className="text-sm text-slate-300 mt-1">
+                Manage player registrations, compute FIDE Swiss pairings, record
+                match scores, and issue digital certificates.
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3 shrink-0">
+              <button
+                onClick={() => setShowCreateTournamentModal(true)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold rounded-lg shadow transition-colors flex items-center space-x-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Tournament</span>
+              </button>
+
+              <button
+                onClick={() => setShowRegisterModal(true)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow transition-colors flex items-center space-x-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Register Player</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <PlayerRosterTable
+                players={roster}
+                loading={loading}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+              />
+            </div>
+
+            <div className="lg:col-span-1">
+              <PlayerRegistrationForm
+                activeTournamentId={activeTournament?.id}
+                onPlayerRegistered={() => loadRoster(activeTournament?.id)}
+              />
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* Expense Modal */}
+      <ExpenseFormModal
+        isOpen={isExpenseModalOpen}
+        onClose={() => setIsExpenseModalOpen(false)}
+        onSave={handleSaveExpense}
+        initialData={editingExpense}
+        isSubmitting={isExpenseSubmitting}
+      />
 
       {/* Register Player Modal */}
       {showRegisterModal && (

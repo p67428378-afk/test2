@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage";
+import ExpensesPage from "./pages/ExpensesPage";
 import PairingsPage from "./pages/PairingsPage";
 import StandingsPage from "./pages/StandingsPage";
 import CertificateVerifyPage from "./pages/CertificateVerifyPage";
@@ -10,6 +11,7 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/expenses" element={<ExpensesPage />} />
         <Route path="/pairings" element={<PairingsPage />} />
         <Route path="/standings" element={<StandingsPage />} />
         <Route path="/verify" element={<CertificateVerifyPage />} />

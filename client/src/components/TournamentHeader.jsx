@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Plus,
   CheckCircle2,
+  Receipt,
 } from "lucide-react";
 
 export default function TournamentHeader({
@@ -30,10 +31,10 @@ export default function TournamentHeader({
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight text-white block">
-                ChessMaster
+                ExpenseTracker & Master
               </span>
               <span className="text-xs text-indigo-400 font-medium">
-                Swiss Tournament System
+                Expense Summary & Tournament System
               </span>
             </div>
           </div>
@@ -124,7 +125,19 @@ export default function TournamentHeader({
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>Dashboard & Roster</span>
+            <span>Dashboard</span>
+          </Link>
+
+          <Link
+            to="/expenses"
+            className={`inline-flex items-center space-x-2 py-1.5 border-b-2 transition-colors ${
+              location.pathname === "/expenses"
+                ? "border-indigo-500 text-indigo-400 font-semibold"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            <span>Expenses</span>
           </Link>
 
           <Link
