@@ -30,40 +30,41 @@ def seed_data(db: Session):
     from server import models
     from server.core.security import get_password_hash
 
-    # Ensure tables exist
-    init_db()
-
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
     try:
+        # Ensure tables exist
+        init_db()
+
+        # Seed regular user
+        test_user = (
+            db.query(models.User).filter(models.User.email == "test@example.com").first()
+        )
+        if not test_user:
+            test_user = models.User(
+                email="test@example.com",
+                full_name="Test Member",
+                role="member",
+                hashed_password=get_password_hash("testpassword"),
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(test_user)
+
+        # Seed admin user
+        admin_user = (
+            db.query(models.User).filter(models.User.email == "admin@example.com").first()
+        )
+        if not admin_user:
+            admin_user = models.User(
+                email="admin@example.com",
+                full_name="Admin Organizer",
+                role="admin",
+                hashed_password=get_password_hash("adminpassword"),
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(admin_user)
+
         db.commit()
-    except Exception:
+    except Exception as e:
+        print(f"Seed data error: {e}")
         db.rollback()
