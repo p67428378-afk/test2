@@ -1,44 +1,55 @@
-import uuid
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
+# ---------------- Auth Schemas ----------------
+class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: "UserOut"
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
+
+
+class UserOut(BaseModel):
+    id: str
     email: EmailStr
-    full_name: Optional[str] = None
+    full_name: str
     role: str
+    is_active: bool
+    is_verified: bool
 
     class Config:
         from_attributes = True
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+# ---------------- Room Schemas ----------------
+class RoomBase(BaseModel):
+    room_number: str
+    room_type: str
+    daily_rate: float
+    status: Optional[str] = "Available"
 
 
-class TournamentCreate(TournamentBase):
+class RoomCreate(RoomBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class RoomUpdateStatus(BaseModel):
+    status: str = Field(..., description="Available, Occupied, Cleaning, Maintenance")
+
+
+class RoomOut(RoomBase):
+    id: str
     created_at: datetime
     updated_at: datetime
 
@@ -46,85 +57,113 @@ class TournamentResponse(TournamentBase):
         from_attributes = True
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
+# ---------------- Guest Schemas ----------------
+class GuestBase(BaseModel):
     full_name: str
     email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+    phone: str
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class GuestCreate(GuestBase):
+    pass
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class GuestOut(GuestBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
-
-
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
+# ---------------- Reservation Schemas ----------------
+class GuestInfo(BaseModel):
     full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
+    email: EmailStr
+    phone: str
+
+
+class ReservationCreate(BaseModel):
+    guest: GuestInfo
+    room_type: str
+    start_date: date
+    end_date: date
+    room_id: Optional[str] = None
+
+
+class ReservationUpdate(BaseModel):
+    room_type: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    room_id: Optional[str] = None
+    status: Optional[str] = None
+    guest: Optional[GuestInfo] = None
+
+
+class ReservationOut(BaseModel):
+    id: str
+    guest_id: str
+    room_id: Optional[str] = None
+    room_type: str
+    start_date: date
+    end_date: date
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    guest: Optional[GuestOut] = None
+    room: Optional[RoomOut] = None
 
     class Config:
         from_attributes = True
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# ---------------- Check-In & Check-Out Schemas ----------------
+class CheckInRequest(BaseModel):
+    reservation_id: str
+    room_id: Optional[str] = None
+
+
+class CheckOutRequest(BaseModel):
+    reservation_id: str
+    service_fees: Optional[float] = 0.0
+    discount_amount: Optional[float] = 0.0
+    promo_code: Optional[str] = None
+
+
+# ---------------- Invoice Schemas ----------------
+class InvoiceItemOut(BaseModel):
+    id: str
+    invoice_id: str
+    description: str
+    amount: float
+    created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class InvoiceOut(BaseModel):
+    id: str
+    reservation_id: str
+    room_charges: float
+    tax_amount: float
+    service_fees: float
+    discount_amount: float
+    total_amount: float
+    payment_status: str
+    created_at: datetime
+    updated_at: datetime
+    items: List[InvoiceItemOut] = []
+    reservation: Optional[ReservationOut] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PaymentRequest(BaseModel):
+    amount: Optional[float] = None
+    discount_amount: Optional[float] = 0.0
+    promo_code: Optional[str] = None
+    payment_method: Optional[str] = "card"
+    card_last4: Optional[str] = "4242"
