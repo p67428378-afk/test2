@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../components/common/Header";
 import CurationDetailHero from "../components/boxes/CurationDetailHero";
 import CurationItemBreakdown from "../components/boxes/CurationItemBreakdown";
+import GiftSubscriptionCard from "../components/boxes/GiftSubscriptionCard";
+import CustomizationModal from "../components/boxes/CustomizationModal";
 import ReviewListAndSummary from "../components/reviews/ReviewListAndSummary";
 import WriteReviewModal from "../components/reviews/WriteReviewModal";
 import { getBoxDetail, getBoxReviews } from "../services/api";
@@ -16,6 +18,9 @@ export default function BoxDetailPage() {
   const [error, setError] = useState(null);
 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isCustomizationModalOpen, setIsCustomizationModalOpen] =
+    useState(false);
+  const [isGiftCardOpen, setIsGiftCardOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -100,7 +105,19 @@ export default function BoxDetailPage() {
         <CurationDetailHero
           box={box}
           onOpenReviewModal={() => setIsReviewModalOpen(true)}
+          onOpenCustomizationModal={() => setIsCustomizationModalOpen(true)}
+          onToggleGiftCard={() => setIsGiftCardOpen(!isGiftCardOpen)}
         />
+
+        {/* Gift Subscription Section */}
+        {isGiftCardOpen && (
+          <GiftSubscriptionCard
+            boxId={box.id}
+            boxTitle={box.title}
+            isOpen={isGiftCardOpen}
+            onClose={() => setIsGiftCardOpen(false)}
+          />
+        )}
 
         {/* Curation Breakdown */}
         <CurationItemBreakdown curations={box.curations || []} />
@@ -113,6 +130,17 @@ export default function BoxDetailPage() {
           onOpenReviewModal={() => setIsReviewModalOpen(true)}
         />
       </main>
+
+      {/* Item Customization Modal */}
+      <CustomizationModal
+        boxId={box.id}
+        boxTitle={box.title}
+        isOpen={isCustomizationModalOpen}
+        onClose={() => setIsCustomizationModalOpen(false)}
+        onCustomizationConfirmed={() => {
+          fetchData();
+        }}
+      />
 
       {/* Review Modal */}
       <WriteReviewModal

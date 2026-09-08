@@ -4,11 +4,16 @@ import {
   ShieldCheck,
   Truck,
   RefreshCw,
-  Calendar,
+  Gift,
   Sparkles,
 } from "lucide-react";
 
-export default function CurationDetailHero({ box, onOpenReviewModal }) {
+export default function CurationDetailHero({
+  box,
+  onOpenReviewModal,
+  onOpenCustomizationModal,
+  onToggleGiftCard,
+}) {
   if (!box) return null;
 
   return (
@@ -77,7 +82,7 @@ export default function CurationDetailHero({ box, onOpenReviewModal }) {
             </p>
           </div>
 
-          {/* Pricing & CTA */}
+          {/* Pricing & CTA Buttons */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
             <div>
               <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider block">
@@ -93,20 +98,42 @@ export default function CurationDetailHero({ box, onOpenReviewModal }) {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={onOpenReviewModal}
-                className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors"
-              >
-                Write Review
-              </button>
+            <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() =>
                   alert(`Subscribed to ${box.title}! (Demo Action)`)
                 }
-                className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-primary font-bold text-sm shadow-md transition-all flex items-center gap-2"
+                className="px-5 py-2.5 bg-indigo-950 text-white font-medium rounded-xl text-xs shadow-sm hover:bg-indigo-900 transition-colors"
               >
-                <span>Subscribe Now</span>
+                Subscribe Now (${Number(box.price).toFixed(2)}/
+                {box.billing_frequency || "mo"})
+              </button>
+
+              {onOpenCustomizationModal && (
+                <button
+                  onClick={onOpenCustomizationModal}
+                  className="px-5 py-2.5 bg-emerald-700 text-white font-medium rounded-xl text-xs shadow-sm hover:bg-emerald-800 transition-colors flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Customize Box (1 Swap Allowed)</span>
+                </button>
+              )}
+
+              {onToggleGiftCard && (
+                <button
+                  onClick={onToggleGiftCard}
+                  className="px-5 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl text-xs hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                >
+                  <Gift className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Gift This Box</span>
+                </button>
+              )}
+
+              <button
+                onClick={onOpenReviewModal}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition-colors"
+              >
+                Write Review
               </button>
             </div>
           </div>

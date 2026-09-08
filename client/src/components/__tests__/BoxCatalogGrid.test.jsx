@@ -15,6 +15,7 @@ describe("BoxCatalogGrid Component", () => {
       average_rating: 4.8,
       total_reviews: 12,
       description: "Artisanal snacks and delicacies.",
+      image_url: "https://example.com/box1.jpg",
     },
     {
       id: "box-2",
@@ -25,6 +26,7 @@ describe("BoxCatalogGrid Component", () => {
       average_rating: 4.5,
       total_reviews: 8,
       description: "Organic skincare and cosmetics.",
+      image_url: "https://example.com/box2.jpg",
     },
   ];
 

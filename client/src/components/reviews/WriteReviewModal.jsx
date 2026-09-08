@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star, X, Sparkles, MessageSquare, AlertCircle } from "lucide-react";
+import { Star, X, Sparkles, AlertCircle } from "lucide-react";
 import { submitBoxReview, loginUser } from "../../services/api";
 
 export default function WriteReviewModal({
@@ -43,7 +43,7 @@ export default function WriteReviewModal({
         // Automatically attempt login with test account if token absent
         try {
           await loginUser(loginEmail, loginPassword);
-        } catch (authErr) {
+        } catch {
           setShowLoginPrompt(true);
           setErrorMessage(
             "You must be signed in to submit a review. Please sign in below.",

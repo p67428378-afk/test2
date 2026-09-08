@@ -110,4 +110,25 @@ export const submitBoxReview = async (id, reviewData) => {
   return response.data;
 };
 
+export const createGiftSubscription = async (id, giftData) => {
+  const response = await api.post(`/api/v1/boxes/${id}/gift`, {
+    recipient_email: giftData.recipient_email,
+    message: giftData.message || undefined,
+  });
+  return response.data;
+};
+
+export const getBoxCustomizations = async (id) => {
+  const response = await api.get(`/api/v1/boxes/${id}/customizations`);
+  return response.data;
+};
+
+export const submitBoxCustomization = async (id, customizationData) => {
+  const response = await api.post(`/api/v1/boxes/${id}/customizations`, {
+    original_item_id: customizationData.original_item_id,
+    replacement_item_id: customizationData.replacement_item_id,
+  });
+  return response.data;
+};
+
 export default api;

@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  Star,
-  MessageSquare,
-  ThumbsUp,
-  CheckCircle,
-  User,
-  Filter,
-} from "lucide-react";
+import { Star, MessageSquare, CheckCircle, User, Filter } from "lucide-react";
 
 export default function ReviewListAndSummary({
   reviews = [],

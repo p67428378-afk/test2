@@ -4,7 +4,7 @@ import Navbar from "../components/common/Navbar";
 import FilterSidebar from "../components/boxes/FilterSidebar";
 import BoxCatalogGrid from "../components/boxes/BoxCatalogGrid";
 import { getCategories, getBoxes } from "../services/api";
-import { Sparkles, Package, Layers } from "lucide-react";
+import { Sparkles, Layers } from "lucide-react";
 
 export default function BoxCatalogPage() {
   const [categories, setCategories] = useState([]);

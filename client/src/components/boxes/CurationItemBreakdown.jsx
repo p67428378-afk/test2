@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, Gift, CheckCircle2, Calendar, Tag } from "lucide-react";
+import { Sparkles, Gift, CheckCircle2, Calendar } from "lucide-react";
 
 export default function CurationItemBreakdown({ curations = [] }) {
   const [selectedCurationIndex, setSelectedCurationIndex] = useState(0);

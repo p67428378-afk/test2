@@ -1,20 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  Package,
-  User,
-  LogOut,
-  Search,
-  Star,
-  LogIn,
-  Sparkles,
-} from "lucide-react";
-import {
-  loginUser,
-  registerUser,
-  logoutUser,
-  getCurrentUser,
-} from "../../services/api";
+import { Link } from "react-router-dom";
+import { Package, User, LogOut, Search, LogIn, Sparkles } from "lucide-react";
+import { loginUser, registerUser, logoutUser } from "../../services/api";
 
 export default function Header({ searchQuery, setSearchQuery }) {
   const [user, setUser] = useState(null);
@@ -26,14 +13,12 @@ export default function Header({ searchQuery, setSearchQuery }) {
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     const savedUser = localStorage.getItem("user_info");
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
-      } catch (e) {
+      } catch {
         // ignore
       }
     }

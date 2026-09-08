@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Grid, SlidersHorizontal, Tag } from "lucide-react";
+import { Grid, Tag } from "lucide-react";
 
 export default function Navbar({
   categories = [],
