@@ -51,7 +51,27 @@ graph TD
 - server/tests/test_reports.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/components/BudgetAlertBanner.jsx
+- client/src/components/BudgetTable.jsx
+- client/src/components/FilterToolbar.jsx
+- client/src/components/LogTransactionModal.jsx
+- client/src/components/ReportExportPanel.jsx
+- client/src/components/SetBudgetModal.jsx
+- client/src/components/StatCard.jsx
+- client/src/components/TopNavbar.jsx
+- client/src/components/TransactionTable.jsx
+- client/src/main.jsx
+- client/src/pages/BudgetsPage.jsx
+- client/src/pages/DashboardPage.jsx
+- client/src/pages/ReportsPage.jsx
+- client/src/pages/TransactionsPage.jsx
+- client/src/services/api.js
+- client/src/setup.js
+- client/src/tests/App.test.jsx
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - POST /api/v1/auth/login
