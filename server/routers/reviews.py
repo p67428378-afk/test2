@@ -1,73 +1,76 @@
-import uuid
-from datetime import datetime, timezone
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, func
 from server.database import get_db
-from server.models import Box, Review, User
-from server.schemas import ReviewCreate, ReviewSchema, ReviewListResponse
+from server.models import Box, Review, User, generate_uuid, get_utc_now
+from server.schemas import ReviewCreate, ReviewResponse, ReviewListResponse
 from server.auth import get_current_user
 
-router = APIRouter(prefix="/api/v1/boxes/{id}/reviews", tags=["reviews"])
+router = APIRouter(prefix="/api/v1/boxes", tags=["reviews"])
 
 
-@router.get("", response_model=ReviewListResponse)
+@router.get("/{id}/reviews", response_model=ReviewListResponse)
 def get_box_reviews(
     id: str,
-    skip: int = Query(0, ge=0, description="Skip pagination offset"),
-    limit: int = Query(20, ge=1, le=100, description="Limit pagination count"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     box = db.query(Box).filter(or_(Box.id == id, Box.slug == id)).first()
     if not box:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription box not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Subscription box '{id}' not found",
         )
 
-    query = (
-        db.query(Review)
-        .filter(Review.box_id == box.id)
-        .order_by(Review.created_at.desc())
-    )
+    query = db.query(Review).filter(Review.box_id == box.id)
     total = query.count()
-    reviews = query.offset(skip).limit(limit).all()
+    reviews = query.order_by(Review.created_at.desc()).offset(skip).limit(limit).all()
 
-    items: List[ReviewSchema] = []
+    result = []
     for r in reviews:
-        user_name = r.user.full_name if r.user else "Verified Subscriber"
-        items.append(
-            ReviewSchema(
-                id=r.id,
-                box_id=r.box_id,
-                user_id=r.user_id,
-                user_name=user_name,
-                rating=r.rating,
-                comment=r.comment,
+        result.append(
+            ReviewResponse(
+                id=str(r.id),
+                box_id=str(r.box_id),
+                user_id=str(r.user_id),
+                rating=int(r.rating),
+                comment=str(r.comment),
                 created_at=r.created_at,
+                user_email=str(r.user.email) if r.user else None,
+                user_name=str(r.user.full_name) if r.user else None,
             )
         )
 
-    return ReviewListResponse(reviews=items, total=total, skip=skip, limit=limit)
+    return ReviewListResponse(reviews=result, total=total, skip=skip, limit=limit)
 
 
-@router.post("", response_model=ReviewSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{id}/reviews", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED
+)
 def submit_box_review(
     id: str,
     review_in: ReviewCreate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    if review_in.rating < 1 or review_in.rating > 5:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Rating must be between 1 and 5 stars",
-        )
-
     box = db.query(Box).filter(or_(Box.id == id, Box.slug == id)).first()
     if not box:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription box not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Subscription box '{id}' not found",
+        )
+
+    if not 1 <= review_in.rating <= 5:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Rating must be an integer between 1 and 5",
+        )
+
+    if not review_in.comment.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Review comment cannot be empty",
         )
 
     # Check if user already reviewed this box
@@ -79,44 +82,47 @@ def submit_box_review(
 
     if existing_review:
         existing_review.rating = review_in.rating
-        existing_review.comment = review_in.comment
-        existing_review.updated_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(existing_review)
+        existing_review.comment = review_in.comment.strip()
+        existing_review.updated_at = get_utc_now()
         review = existing_review
     else:
         review = Review(
-            id=str(uuid.uuid4()),
-            box_id=box.id,
-            user_id=current_user.id,
+            id=generate_uuid(),
+            box_id=str(box.id),
+            user_id=str(current_user.id),
             rating=review_in.rating,
-            comment=review_in.comment,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            comment=review_in.comment.strip(),
+            created_at=get_utc_now(),
+            updated_at=get_utc_now(),
         )
         db.add(review)
-        db.commit()
-        db.refresh(review)
 
-    # Recalculate average_rating and total_reviews for the box
-    all_reviews = db.query(Review).filter(Review.box_id == box.id).all()
-    if all_reviews:
-        box.total_reviews = len(all_reviews)
-        box.average_rating = round(
-            sum(r.rating for r in all_reviews) / len(all_reviews), 2
-        )
-    else:
-        box.total_reviews = 0
-        box.average_rating = 0.0
     db.commit()
-    db.refresh(box)
+    db.refresh(review)
 
-    return ReviewSchema(
-        id=review.id,
-        box_id=review.box_id,
-        user_id=review.user_id,
-        user_name=current_user.full_name,
-        rating=review.rating,
-        comment=review.comment,
+    # Recalculate average rating & total reviews for the box
+    stats = (
+        db.query(
+            func.avg(Review.rating).label("avg_rating"),
+            func.count(Review.id).label("total_revs"),
+        )
+        .filter(Review.box_id == box.id)
+        .first()
+    )
+
+    if stats and stats.total_revs:
+        box.average_rating = round(float(stats.avg_rating), 1)
+        box.total_reviews = int(stats.total_revs)
+        db.commit()
+        db.refresh(box)
+
+    return ReviewResponse(
+        id=str(review.id),
+        box_id=str(review.box_id),
+        user_id=str(review.user_id),
+        rating=int(review.rating),
+        comment=str(review.comment),
         created_at=review.created_at,
+        user_email=str(current_user.email),
+        user_name=str(current_user.full_name) if current_user.full_name else None,
     )

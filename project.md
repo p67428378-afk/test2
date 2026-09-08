@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-223** - Build Subscription Box Finder
+- **SCRUM-223** - Build Subscription Box Finder & Gift / Customization Extension

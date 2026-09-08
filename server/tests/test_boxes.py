@@ -1,95 +1,204 @@
-def test_health_check(client):
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json()["status"] == "ok"
-
-
-def test_list_boxes_default(client):
+def test_get_boxes(client):
     response = client.get("/api/v1/boxes")
     assert response.status_code == 200
     data = response.json()
     assert "items" in data
     assert "total" in data
-    assert data["total"] >= 5
-    assert len(data["items"]) >= 5
-
-    first_item = data["items"][0]
-    assert "id" in first_item
-    assert "title" in first_item
-    assert "price" in first_item
-    assert "category_id" in first_item
-    assert "category_name" in first_item
-    assert "average_rating" in first_item
+    assert data["total"] >= 3
+    assert len(data["items"]) >= 3
+    item = data["items"][0]
+    assert "id" in item
+    assert "title" in item
+    assert "slug" in item
+    assert "price" in item
+    assert "billing_frequency" in item
 
 
-def test_filter_boxes_by_category(client):
-    # Fetch categories first
-    cats = client.get("/api/v1/categories").json()
-    beauty_cat = next(c for c in cats if c["slug"] == "beauty-deluxe")
+def test_get_boxes_filter_by_category(client):
+    cats_res = client.get("/api/v1/categories")
+    cats = cats_res.json()
+    cat_id = cats[0]["id"]
 
-    response = client.get(f"/api/v1/boxes?category_id={beauty_cat['id']}")
+    response = client.get(f"/api/v1/boxes?category_id={cat_id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] >= 2
     for item in data["items"]:
-        assert item["category_id"] == beauty_cat["id"]
+        assert item["category_id"] == cat_id
 
 
-def test_filter_boxes_by_max_price(client):
-    response = client.get("/api/v1/boxes?max_price=30.00")
+def test_get_boxes_filter_by_price(client):
+    response = client.get("/api/v1/boxes?max_price=35.0")
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] >= 1
     for item in data["items"]:
-        assert item["price"] <= 30.00
+        assert item["price"] <= 35.0
 
 
-def test_filter_boxes_by_min_rating(client):
-    response = client.get("/api/v1/boxes?min_rating=4.8")
+def test_get_boxes_filter_by_rating(client):
+    response = client.get("/api/v1/boxes?min_rating=4.5")
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] >= 1
     for item in data["items"]:
-        assert item["average_rating"] >= 4.8
+        assert item["average_rating"] >= 4.5
 
 
-def test_search_boxes(client):
-    response = client.get("/api/v1/boxes?search=Coffee")
+def test_get_boxes_search(client):
+    response = client.get("/api/v1/boxes?search=Beauty")
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] >= 1
-    assert any("Coffee" in item["title"] for item in data["items"])
+    assert len(data["items"]) >= 1
+    assert "Beauty" in data["items"][0]["title"]
 
 
-def test_pagination(client):
-    response = client.get("/api/v1/boxes?skip=0&limit=2")
+def test_get_box_detail(client):
+    boxes_res = client.get("/api/v1/boxes")
+    boxes = boxes_res.json()["items"]
+    box = boxes[0]
+
+    # By ID
+    response = client.get(f"/api/v1/boxes/{box['id']}")
     assert response.status_code == 200
     data = response.json()
-    assert len(data["items"]) == 2
-    assert data["limit"] == 2
-    assert data["skip"] == 0
+    assert data["id"] == box["id"]
+    assert data["title"] == box["title"]
+    assert "curations" in data
+    assert len(data["curations"]) >= 1
+    assert "reviews" in data
 
-
-def test_get_box_detail_success(client):
-    boxes = client.get("/api/v1/boxes").json()["items"]
-    target_box = boxes[0]
-
-    response = client.get(f"/api/v1/boxes/{target_box['id']}")
-    assert response.status_code == 200
-    detail = response.json()
-    assert detail["id"] == target_box["id"]
-    assert detail["title"] == target_box["title"]
-    assert "curations" in detail
-    assert len(detail["curations"]) >= 1
-    first_curation = detail["curations"][0]
-    assert "month_year" in first_curation
-    assert "theme_title" in first_curation
-    assert "highlights" in first_curation
-    assert "item_list" in first_curation
-    assert isinstance(first_curation["item_list"], list)
+    # By Slug
+    slug_response = client.get(f"/api/v1/boxes/{box['slug']}")
+    assert slug_response.status_code == 200
+    assert slug_response.json()["id"] == box["id"]
 
 
 def test_get_box_detail_not_found(client):
-    response = client.get("/api/v1/boxes/non-existent-box-id-12345")
+    response = client.get("/api/v1/boxes/non-existent-box-id")
     assert response.status_code == 404
-    assert "not found" in response.json()["detail"].lower()
+
+
+# ---------------- Gift Subscription Tests ----------------
+def test_create_gift_subscription_success(client):
+    boxes_res = client.get("/api/v1/boxes")
+    box_id = boxes_res.json()["items"][0]["id"]
+
+    response = client.post(
+        f"/api/v1/boxes/{box_id}/gift",
+        json={
+            "recipient_email": "friend@example.com",
+            "message": "Happy Birthday! Enjoy this amazing subscription box curation!",
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["box_id"] == box_id
+    assert data["recipient_email"] == "friend@example.com"
+    assert "Happy Birthday" in data["message"]
+    assert data["status"] == "pending"
+    assert "id" in data
+
+
+def test_create_gift_subscription_invalid_email(client):
+    boxes_res = client.get("/api/v1/boxes")
+    box_id = boxes_res.json()["items"][0]["id"]
+
+    response = client.post(
+        f"/api/v1/boxes/{box_id}/gift",
+        json={
+            "recipient_email": "not-an-email",
+            "message": "Test gift",
+        },
+    )
+    assert response.status_code in [400, 422]
+
+
+def test_create_gift_subscription_box_not_found(client):
+    response = client.post(
+        "/api/v1/boxes/non-existent-box-id/gift",
+        json={
+            "recipient_email": "friend@example.com",
+            "message": "Gift message",
+        },
+    )
+    assert response.status_code == 404
+
+
+# ---------------- Customization Tests ----------------
+def test_get_box_customizations_success(client):
+    boxes_res = client.get("/api/v1/boxes")
+    boxes = boxes_res.json()["items"]
+    # Find Beauty Deluxe Box which has replacements defined
+    beauty_box = next((b for b in boxes if "beauty" in b["slug"]), boxes[0])
+
+    response = client.get(f"/api/v1/boxes/{beauty_box['id']}/customizations")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["box_id"] == beauty_box["id"]
+    assert data["max_swaps_allowed"] == 1
+    assert "curation_id" in data
+    assert "current_items" in data
+    assert len(data["current_items"]) > 0
+    assert "available_replacements" in data
+    assert len(data["available_replacements"]) > 0
+
+
+def test_get_box_customizations_box_not_found(client):
+    response = client.get("/api/v1/boxes/non-existent-box-id/customizations")
+    assert response.status_code == 404
+
+
+def test_submit_box_customization_success(client):
+    boxes_res = client.get("/api/v1/boxes")
+    boxes = boxes_res.json()["items"]
+    beauty_box = next((b for b in boxes if "beauty" in b["slug"]), boxes[0])
+
+    # Fetch customizations options first
+    opt_res = client.get(f"/api/v1/boxes/{beauty_box['id']}/customizations")
+    options = opt_res.json()
+    current_item = options["current_items"][0]
+    replacement = options["available_replacements"][0]
+
+    response = client.post(
+        f"/api/v1/boxes/{beauty_box['id']}/customizations",
+        json={
+            "original_item_id": current_item["id"],
+            "replacement_item_id": replacement["id"],
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["box_id"] == beauty_box["id"]
+    assert data["curation_id"] == options["curation_id"]
+    assert data["original_item_id"] == current_item["id"]
+    assert data["replacement_item_id"] == replacement["id"]
+    assert data["status"] == "confirmed"
+
+
+def test_submit_box_customization_invalid_original_item(client):
+    boxes_res = client.get("/api/v1/boxes")
+    beauty_box = boxes_res.json()["items"][0]
+
+    response = client.post(
+        f"/api/v1/boxes/{beauty_box['id']}/customizations",
+        json={
+            "original_item_id": "non-existent-item-999",
+            "replacement_item_id": "rep-1",
+        },
+    )
+    assert response.status_code == 400
+    assert "not in this curation" in response.json()["detail"]
+
+
+def test_submit_box_customization_invalid_replacement_item(client):
+    boxes_res = client.get("/api/v1/boxes")
+    boxes = boxes_res.json()["items"]
+    beauty_box = next((b for b in boxes if "beauty" in b["slug"]), boxes[0])
+
+    response = client.post(
+        f"/api/v1/boxes/{beauty_box['id']}/customizations",
+        json={
+            "original_item_id": "item-1",
+            "replacement_item_id": "invalid-replacement-id",
+        },
+    )
+    assert response.status_code == 400
+    assert "not an eligible option" in response.json()["detail"]

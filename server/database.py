@@ -1,19 +1,30 @@
 import os
-import uuid
-from datetime import datetime, timezone
-import bcrypt
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session
+from server.models import (
+    Base,
+    User,
+    Category,
+    Box,
+    Curation,
+    Review,
+    generate_uuid,
+)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
+# Handle SQLite vs PostgreSQL arguments
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    echo=False,
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
 
 def get_db():
@@ -24,426 +35,420 @@ def get_db():
         db.close()
 
 
-def get_password_hash(password: str) -> str:
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode("utf-8")[:72], salt).decode("utf-8")
-
-
 def init_db():
+    """Create all tables in the database."""
     Base.metadata.create_all(bind=engine)
 
 
 def seed_data(db: Session):
-    from server.models import User, Category, Box, Curation, Review
+    """Seed initial data idempotently."""
+    from server.auth import get_password_hash
 
-    # 1. Seed Users (idempotent)
+    # 1. Seed Test Users
     test_user = db.query(User).filter(User.email == "test@example.com").first()
     if not test_user:
         test_user = User(
-            id=str(uuid.uuid4()),
+            id=generate_uuid(),
             email="test@example.com",
-            full_name="Test Subscriber",
+            full_name="Standard Test User",
             hashed_password=get_password_hash("testpassword"),
             role="user",
             is_active=True,
             is_verified=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
         )
         db.add(test_user)
-        db.commit()
-        db.refresh(test_user)
+        try:
+            db.commit()
+            db.refresh(test_user)
+        except Exception:
+            db.rollback()
+            test_user = db.query(User).filter(User.email == "test@example.com").first()
 
     admin_user = db.query(User).filter(User.email == "admin@example.com").first()
     if not admin_user:
         admin_user = User(
-            id=str(uuid.uuid4()),
+            id=generate_uuid(),
             email="admin@example.com",
-            full_name="Admin Manager",
+            full_name="Administrator",
             hashed_password=get_password_hash("adminpassword"),
             role="admin",
             is_active=True,
             is_verified=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
         )
         db.add(admin_user)
-        db.commit()
-        db.refresh(admin_user)
+        try:
+            db.commit()
+            db.refresh(admin_user)
+        except Exception:
+            db.rollback()
+            admin_user = (
+                db.query(User).filter(User.email == "admin@example.com").first()
+            )
 
-    # 2. Seed Categories (idempotent)
+    # 2. Seed Categories
     categories_data = [
         {
-            "name": "Gourmet Food",
+            "name": "Beauty & Wellness",
+            "slug": "beauty-wellness",
+            "description": "Premium skincare, makeup, and self-care curations.",
+        },
+        {
+            "name": "Gourmet Food & Snacks",
             "slug": "gourmet-food",
-            "description": "Artisanal snacks, cheeses, coffees, and culinary delights from around the world.",
+            "description": "Artisan treats, international delicacies, and gourmet pantry items.",
         },
         {
-            "name": "Beauty Deluxe",
-            "slug": "beauty-deluxe",
-            "description": "Premium skincare, clean beauty cosmetics, and luxury wellness treats.",
+            "name": "Books & Literature",
+            "slug": "books-literature",
+            "description": "Bestselling novels, bookish goodies, and author collectibles.",
         },
         {
-            "name": "Tech & Gadgets",
-            "slug": "tech-gadgets",
-            "description": "Innovative smart home gear, EDC tools, and cutting-edge electronic accessories.",
+            "name": "Tech & Gaming",
+            "slug": "tech-gaming",
+            "description": "Geek apparel, gadgets, gaming accessories, and retro gear.",
         },
         {
-            "name": "Book Lover",
-            "slug": "book-lover",
-            "description": "Bestselling hardcovers, author exclusives, bookish goodies, and tea pairings.",
-        },
-        {
-            "name": "Fitness & Wellness",
-            "slug": "fitness-wellness",
-            "description": "High-performance supplements, recovery tools, and active lifestyle apparel.",
+            "name": "Home & Lifestyle",
+            "slug": "home-lifestyle",
+            "description": "Curated decor, eco-friendly essentials, and cozy living items.",
         },
     ]
 
-    category_map = {}
-    for cat in categories_data:
-        existing_cat = db.query(Category).filter(Category.slug == cat["slug"]).first()
+    cat_map = {}
+    for cat_item in categories_data:
+        existing_cat = (
+            db.query(Category).filter(Category.slug == cat_item["slug"]).first()
+        )
         if not existing_cat:
             new_cat = Category(
-                id=str(uuid.uuid4()),
-                name=cat["name"],
-                slug=cat["slug"],
-                description=cat["description"],
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                id=generate_uuid(),
+                name=cat_item["name"],
+                slug=cat_item["slug"],
+                description=cat_item["description"],
             )
             db.add(new_cat)
-            db.commit()
-            db.refresh(new_cat)
-            category_map[cat["slug"]] = new_cat
+            try:
+                db.commit()
+                db.refresh(new_cat)
+                cat_map[cat_item["slug"]] = new_cat
+            except Exception:
+                db.rollback()
+                existing_cat = (
+                    db.query(Category).filter(Category.slug == cat_item["slug"]).first()
+                )
+                if existing_cat:
+                    cat_map[cat_item["slug"]] = existing_cat
         else:
-            category_map[cat["slug"]] = existing_cat
+            cat_map[cat_item["slug"]] = existing_cat
 
-    # 3. Seed Subscription Boxes (idempotent)
+    # 3. Seed Boxes & Curations
     boxes_data = [
-        {
-            "title": "Gourmet Foodies Club",
-            "slug": "gourmet-foodies-club",
-            "category_slug": "gourmet-food",
-            "description": "Indulge in monthly selections of award-winning farmstead cheeses, single-origin dark chocolates, and handcrafted charcuterie accompaniments.",
-            "price": 45.00,
-            "billing_frequency": "Monthly",
-            "image_url": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80",
-            "curation": {
-                "month_year": "September 2026",
-                "theme_title": "Tuscan Harvest & Aged Truffles",
-                "highlights": "Handpicked culinary selections from artisanal producers across northern Italy.",
-                "item_list": [
-                    {
-                        "name": "Black Truffle Infused Olive Oil (250ml)",
-                        "description": "Cold-pressed extra virgin olive oil with real Umbrian black truffles.",
-                        "value": "$18.00",
-                    },
-                    {
-                        "name": "24-Month Aged Parmigiano Reggiano (200g)",
-                        "description": "Authentic DOP certified Italian hard cheese.",
-                        "value": "$14.50",
-                    },
-                    {
-                        "name": "Rosemary & Sea Salt Sourdough Flatbreads",
-                        "description": "Slow-fermented crispbreads made with stoneground wheat.",
-                        "value": "$7.00",
-                    },
-                    {
-                        "name": "Wild Fig & Balsamic Glaze (150ml)",
-                        "description": "Sweet and tangy balsamic reduction with ripe Mediterranean figs.",
-                        "value": "$9.50",
-                    },
-                    {
-                        "name": "Artisanal Cantucci Biscotti (120g)",
-                        "description": "Double-baked almond cookies perfect for dipping.",
-                        "value": "$6.00",
-                    },
-                ],
-            },
-        },
-        {
-            "title": "Artisan Coffee Explorer",
-            "slug": "artisan-coffee-explorer",
-            "category_slug": "gourmet-food",
-            "description": "Discover exceptional micro-lot specialty coffees sourced directly from ethical smallholder farms across Ethiopia, Colombia, and Costa Rica.",
-            "price": 32.00,
-            "billing_frequency": "Monthly",
-            "image_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
-            "curation": {
-                "month_year": "September 2026",
-                "theme_title": "Highland Elevation Washed & Natural",
-                "highlights": "Two 12oz bags of fresh whole-bean single origin roasts with brewing recipe cards.",
-                "item_list": [
-                    {
-                        "name": "Yirgacheffe Floral Washed (12oz)",
-                        "description": "Notes of jasmine, bergamot, and ripe peach.",
-                        "value": "$19.00",
-                    },
-                    {
-                        "name": "Huila Pink Bourbon Natural (12oz)",
-                        "description": "Notes of wild strawberry, caramel, and cacao nibs.",
-                        "value": "$21.00",
-                    },
-                    {
-                        "name": "Precision Pour-Over Filter Pack (40ct)",
-                        "description": "Unbleached oxygen-cleansed cone paper filters.",
-                        "value": "$6.00",
-                    },
-                ],
-            },
-        },
         {
             "title": "Beauty Deluxe Box",
             "slug": "beauty-deluxe-box",
-            "category_slug": "beauty-deluxe",
-            "description": "Curated clean beauty, anti-aging serums, nourishing hair oils, and cruelty-free makeup essentials from boutique laboratories.",
+            "category_slug": "beauty-wellness",
+            "description": "Indulge in award-winning skincare, clean beauty essentials, and restorative facial treatments delivered monthly.",
             "price": 29.99,
             "billing_frequency": "Monthly",
-            "image_url": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80",
-            "curation": {
-                "month_year": "September 2026",
-                "theme_title": "Botanical Radiance & Hydration Revival",
-                "highlights": "5 full-size and deluxe travel beauty essentials formulated with cold-pressed botanical extracts.",
-                "item_list": [
-                    {
-                        "name": "Hyaluronic Cloud Hydrating Serum (30ml)",
-                        "description": "Multi-molecular weight hyaluronic acid for deep hydration.",
-                        "value": "$38.00",
-                    },
-                    {
-                        "name": "Rosehip & Squalane Facial Oil (20ml)",
-                        "description": "Rich in vitamins A & C to replenish moisture barriers.",
-                        "value": "$28.00",
-                    },
-                    {
-                        "name": "Velvet Peptide Lip Treatment (15ml)",
-                        "description": "Plumping antioxidant lip balm with peptides.",
-                        "value": "$16.00",
-                    },
-                    {
-                        "name": "Bamboo Silk Exfoliating Polisher (50g)",
-                        "description": "Ultra-fine physical and enzyme exfoliating scrub.",
-                        "value": "$22.00",
-                    },
-                    {
-                        "name": "Silk Satin Sleep Eye Mask",
-                        "description": "100% mulberry silk cooling eye mask.",
-                        "value": "$15.00",
-                    },
-                ],
-            },
+            "image_url": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=80",
+            "average_rating": 4.8,
+            "total_reviews": 128,
+            "curations": [
+                {
+                    "month_year": "October 2026",
+                    "theme_title": "Autumn Glow Essentials",
+                    "highlights": "Formulated to protect and hydrate your skin against cooler weather with deep botanical essences and peptides.",
+                    "item_list": [
+                        {
+                            "id": "item-1",
+                            "name": "Hydrate & Glow Toner",
+                            "description": "Refreshing botanical facial mist infused with rosewater and chamomile",
+                            "value": "$24",
+                        },
+                        {
+                            "id": "item-2",
+                            "name": "Silk Peptide Night Serum",
+                            "description": "Restorative anti-aging serum for overnight cellular recovery",
+                            "value": "$45",
+                        },
+                        {
+                            "id": "item-3",
+                            "name": "Velvet Lip Treatment",
+                            "description": "Nourishing lip balm with organic shea butter and honey",
+                            "value": "$16",
+                        },
+                        {
+                            "id": "item-4",
+                            "name": "Gentle Exfoliating Cleanser",
+                            "description": "Enzyme-based micro-cleanser for soft daily radiance",
+                            "value": "$22",
+                        },
+                        {
+                            "id": "item-5",
+                            "name": "Bamboo Facial Cleansing Cloth",
+                            "description": "Ultra-soft antimicrobial reusable cleansing towel",
+                            "value": "$12",
+                        },
+                    ],
+                    "available_replacements": [
+                        {
+                            "id": "rep-1",
+                            "name": "Charcoal Detox Clay Mask",
+                            "description": "Deep purifying volcanic clay mask for pores",
+                            "value": "$28",
+                            "in_stock": True,
+                            "for_item_id": "item-1",
+                        },
+                        {
+                            "id": "rep-2",
+                            "name": "Vitamin C Brightening Drops",
+                            "description": "Targeted antioxidant dark spot treatment",
+                            "value": "$38",
+                            "in_stock": True,
+                            "for_item_id": "item-2",
+                        },
+                        {
+                            "id": "rep-3",
+                            "name": "Rose Quartz Facial Roller",
+                            "description": "Cooling crystal lymphatic drainage massage tool",
+                            "value": "$20",
+                            "in_stock": True,
+                            "for_item_id": "item-3",
+                        },
+                    ],
+                }
+            ],
         },
         {
-            "title": "Radiance Skincare Vault",
-            "slug": "radiance-skincare-vault",
-            "category_slug": "beauty-deluxe",
-            "description": "Luxury quarterly skincare collection featuring dermatologist-backed peptides, retinol alternatives, and marine collagen concentrates.",
-            "price": 55.00,
-            "billing_frequency": "Quarterly",
-            "image_url": "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80",
-            "curation": {
-                "month_year": "Autumn 2026",
-                "theme_title": "Cellular Renewal & Barrier Defense",
-                "highlights": "Comprehensive clinical barrier restoration system for changing seasons.",
-                "item_list": [
-                    {
-                        "name": "Marine Collagen Night Renewal Creme (50ml)",
-                        "description": "Deeply restorative night cream with Antarctic peptides.",
-                        "value": "$64.00",
-                    },
-                    {
-                        "name": "Stabilized Vitamin C 20% Glow Drops (30ml)",
-                        "description": "Brightens dull skin and shields against pollution.",
-                        "value": "$48.00",
-                    },
-                    {
-                        "name": "Ceramide Shield Daily Moisture Lotion (100ml)",
-                        "description": "Triple-ceramide complex with colloidal oatmeal.",
-                        "value": "$32.00",
-                    },
-                ],
-            },
-        },
-        {
-            "title": "Gadget Vault Monthly",
-            "slug": "gadget-vault-monthly",
-            "category_slug": "tech-gadgets",
-            "description": "Handpicked tech innovations, smart desk accessories, multi-tools, audio gear, and compact EDC gadgets for modern enthusiasts.",
-            "price": 65.00,
+            "title": "Gourmet Artisan Pantry",
+            "slug": "gourmet-artisan-pantry",
+            "category_slug": "gourmet-food",
+            "description": "Discover small-batch spices, artisanal snacks, cold-pressed oils, and farm-to-table gourmet treats from around the globe.",
+            "price": 44.99,
             "billing_frequency": "Monthly",
-            "image_url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
-            "curation": {
-                "month_year": "September 2026",
-                "theme_title": "Minimalist Desktop & Smart EDC",
-                "highlights": "Elevate your workspace efficiency with sleek aluminum accessories and modular power.",
-                "item_list": [
-                    {
-                        "name": "65W GaN Ultra-Compact Fast Charger",
-                        "description": "Dual USB-C and USB-A high efficiency wall adapter.",
-                        "value": "$39.00",
-                    },
-                    {
-                        "name": "Magnetic Aluminum Cable Management Hub",
-                        "description": "Weighted desk organizer with 4 magnetic wire collars.",
-                        "value": "$24.00",
-                    },
-                    {
-                        "name": "Precision Titanium EDC Pocket Screwdriver Set",
-                        "description": "12 interchangeable hardened steel magnetic bits.",
-                        "value": "$28.00",
-                    },
-                    {
-                        "name": "Braided Kevlar USB-C 240W Cable (2m)",
-                        "description": "High-durability fast-charging and 40Gbps data sync cable.",
-                        "value": "$22.00",
-                    },
-                ],
-            },
+            "image_url": "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=800&q=80",
+            "average_rating": 4.9,
+            "total_reviews": 94,
+            "curations": [
+                {
+                    "month_year": "October 2026",
+                    "theme_title": "Mediterranean Harvest Curation",
+                    "highlights": "Handpicked culinary selections celebrating the vibrant flavors of the Aegean coast.",
+                    "item_list": [
+                        {
+                            "id": "food-1",
+                            "name": "Black Truffle Infused Olive Oil",
+                            "description": "Cold-pressed extra virgin olive oil with real black truffle shavings",
+                            "value": "$26",
+                        },
+                        {
+                            "id": "food-2",
+                            "name": "Artisan Rosemary Flatbread Crisps",
+                            "description": "Oven-baked sourdough crisps with wild mountain rosemary",
+                            "value": "$9",
+                        },
+                        {
+                            "id": "food-3",
+                            "name": "Sun-Dried Tomato & Basil Tapenade",
+                            "description": "Savory Mediterranean spread perfect for charcuterie boards",
+                            "value": "$14",
+                        },
+                        {
+                            "id": "food-4",
+                            "name": "Greek Thyme Raw Honey",
+                            "description": "Unpasteurized aromatic floral honey from Crete",
+                            "value": "$18",
+                        },
+                    ],
+                    "available_replacements": [
+                        {
+                            "id": "food-rep-1",
+                            "name": "Aged Fig Balsamic Glaze",
+                            "description": "Slow-aged Modena balsamic reduction with ripe figs",
+                            "value": "$22",
+                            "in_stock": True,
+                            "for_item_id": "food-1",
+                        },
+                        {
+                            "id": "food-rep-2",
+                            "name": "Smoked Spanish Paprika Almonds",
+                            "description": "Crunchy roasted almonds dusted with sweet Pimentón",
+                            "value": "$11",
+                            "in_stock": True,
+                            "for_item_id": "food-2",
+                        },
+                    ],
+                }
+            ],
         },
         {
-            "title": "Bookworm Page Turner",
-            "slug": "bookworm-page-turner",
-            "category_slug": "book-lover",
-            "description": "A monthly literary journey featuring brand-new fiction releases, author signed bookplates, custom bookmarks, and thematic loose-leaf teas.",
-            "price": 24.99,
+            "title": "Bibliophile Fiction Crate",
+            "slug": "bibliophile-fiction-crate",
+            "category_slug": "books-literature",
+            "description": "Monthly curated hardcover new releases paired with tea blends, custom bookmarks, and book lover collectibles.",
+            "price": 34.99,
             "billing_frequency": "Monthly",
-            "image_url": "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=800&q=80",
-            "curation": {
-                "month_year": "September 2026",
-                "theme_title": "Mysteries in Fog & Secret Libraries",
-                "highlights": "Hardcover psychological thriller release accompanied by warm spiced Earl Grey tea.",
-                "item_list": [
-                    {
-                        "name": "The Clockmaker's Secret (Hardcover Debut)",
-                        "description": "First edition novel with exclusive foil-stamped dust jacket.",
-                        "value": "$28.00",
-                    },
-                    {
-                        "name": "Vintage Brass Filigree Bookmark",
-                        "description": "Engraved metal tassel bookmark.",
-                        "value": "$12.00",
-                    },
-                    {
-                        "name": "Bergamot & Cinnamon Black Loose-Leaf Tea (50g)",
-                        "description": "Organic custom blend crafted for cozy reading sessions.",
-                        "value": "$10.00",
-                    },
-                ],
-            },
+            "image_url": "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80",
+            "average_rating": 4.7,
+            "total_reviews": 62,
+            "curations": [
+                {
+                    "month_year": "October 2026",
+                    "theme_title": "Mysteries & Midnight Tales",
+                    "highlights": "Chilling gothic mysteries, atmospheric bookish teas, and embossed leather accessories.",
+                    "item_list": [
+                        {
+                            "id": "book-1",
+                            "name": "Exclusive Signed Hardcover Novel",
+                            "description": "First edition mystery fiction with author note",
+                            "value": "$30",
+                        },
+                        {
+                            "id": "book-2",
+                            "name": "Earl Grey & Lavender Tea Tin",
+                            "description": "Loose leaf aromatic tea blend for late-night reading",
+                            "value": "$14",
+                        },
+                        {
+                            "id": "book-3",
+                            "name": "Brass Literary Bookmark",
+                            "description": "Laser-engraved botanical book accessory",
+                            "value": "$12",
+                        },
+                    ],
+                    "available_replacements": [
+                        {
+                            "id": "book-rep-1",
+                            "name": "Soy Wax Reading Candle",
+                            "description": "Cedarwood and old paper scented candle in amber glass",
+                            "value": "$16",
+                            "in_stock": True,
+                            "for_item_id": "book-2",
+                        },
+                    ],
+                }
+            ],
+        },
+        {
+            "title": "Zen Mind & Yoga Box",
+            "slug": "zen-mind-yoga-box",
+            "category_slug": "beauty-wellness",
+            "description": "Mindfulness rituals, essential oil roll-ons, organic herbal teas, and meditative lifestyle items.",
+            "price": 39.99,
+            "billing_frequency": "Monthly",
+            "image_url": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80",
+            "average_rating": 4.6,
+            "total_reviews": 45,
+            "curations": [
+                {
+                    "month_year": "October 2026",
+                    "theme_title": "Inner Sanctuary & Stillness",
+                    "highlights": "Grounding tools designed to bring peace to your daily routine.",
+                    "item_list": [
+                        {
+                            "id": "zen-1",
+                            "name": "Lavender & Frankincense Mist",
+                            "description": "Calming pillow spray with pure essential oils",
+                            "value": "$22",
+                        },
+                        {
+                            "id": "zen-2",
+                            "name": "Handmade Brass Singing Bowl",
+                            "description": "Traditional Tibetan singing bowl for meditation",
+                            "value": "$35",
+                        },
+                        {
+                            "id": "zen-3",
+                            "name": "Organic Chamomile Loose Tea",
+                            "description": "Whole Egyptian chamomile flowers for restful sleep",
+                            "value": "$12",
+                        },
+                    ],
+                    "available_replacements": [
+                        {
+                            "id": "zen-rep-1",
+                            "name": "Eucalyptus Shower Steamer Pack",
+                            "description": "Aromatherapy steam tablets for revitalizing baths",
+                            "value": "$18",
+                            "in_stock": True,
+                            "for_item_id": "zen-1",
+                        },
+                    ],
+                }
+            ],
         },
     ]
 
     for bdata in boxes_data:
+        cat = cat_map.get(bdata["category_slug"])
+        if not cat:
+            continue
         box = db.query(Box).filter(Box.slug == bdata["slug"]).first()
-        category = category_map[bdata["category_slug"]]
         if not box:
             box = Box(
-                id=str(uuid.uuid4()),
-                category_id=category.id,
+                id=generate_uuid(),
+                category_id=cat.id,
                 title=bdata["title"],
                 slug=bdata["slug"],
                 description=bdata["description"],
                 price=bdata["price"],
                 billing_frequency=bdata["billing_frequency"],
                 image_url=bdata["image_url"],
-                average_rating=0.0,
-                total_reviews=0,
+                average_rating=bdata["average_rating"],
+                total_reviews=bdata["total_reviews"],
                 is_active=True,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
             )
             db.add(box)
-            db.commit()
-            db.refresh(box)
-
-            # Add curation
-            cdata = bdata["curation"]
-            curation = Curation(
-                id=str(uuid.uuid4()),
-                box_id=box.id,
-                month_year=cdata["month_year"],
-                theme_title=cdata["theme_title"],
-                highlights=cdata["highlights"],
-                item_list=cdata["item_list"],
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
-            )
-            db.add(curation)
-            db.commit()
-
-    # 4. Seed Reviews (idempotent)
-    reviews_seed = [
-        {
-            "box_slug": "gourmet-foodies-club",
-            "user_email": "test@example.com",
-            "rating": 5,
-            "comment": "The truffle oil and 24-month aged parmesan were restaurant quality! Best food subscription I have tried.",
-        },
-        {
-            "box_slug": "gourmet-foodies-club",
-            "user_email": "admin@example.com",
-            "rating": 5,
-            "comment": "Incredible packaging with temperature insulation. Every item felt premium and delicious.",
-        },
-        {
-            "box_slug": "beauty-deluxe-box",
-            "user_email": "test@example.com",
-            "rating": 5,
-            "comment": "The cloud hyaluronic serum transformed my skin overnight! The silk sleep mask is super soft.",
-        },
-        {
-            "box_slug": "beauty-deluxe-box",
-            "user_email": "admin@example.com",
-            "rating": 4,
-            "comment": "Great value for the retail price of the items. Looking forward to next month's box.",
-        },
-        {
-            "box_slug": "gadget-vault-monthly",
-            "user_email": "test@example.com",
-            "rating": 5,
-            "comment": "The GaN fast charger and magnetic cable holder are permanently on my work desk now.",
-        },
-        {
-            "box_slug": "bookworm-page-turner",
-            "user_email": "test@example.com",
-            "rating": 5,
-            "comment": "The book selection was captivating and the tea pairing was wonderful.",
-        },
-    ]
-
-    for rdata in reviews_seed:
-        box = db.query(Box).filter(Box.slug == rdata["box_slug"]).first()
-        user = db.query(User).filter(User.email == rdata["user_email"]).first()
-        if box and user:
-            existing_review = (
-                db.query(Review)
-                .filter(Review.box_id == box.id, Review.user_id == user.id)
-                .first()
-            )
-            if not existing_review:
-                new_review = Review(
-                    id=str(uuid.uuid4()),
-                    box_id=box.id,
-                    user_id=user.id,
-                    rating=rdata["rating"],
-                    comment=rdata["comment"],
-                    created_at=datetime.now(timezone.utc),
-                    updated_at=datetime.now(timezone.utc),
-                )
-                db.add(new_review)
+            try:
                 db.commit()
+                db.refresh(box)
+            except Exception:
+                db.rollback()
+                box = db.query(Box).filter(Box.slug == bdata["slug"]).first()
 
-    # Recalculate ratings for all boxes
-    all_boxes = db.query(Box).all()
-    for b in all_boxes:
-        box_reviews = db.query(Review).filter(Review.box_id == b.id).all()
-        if box_reviews:
-            b.total_reviews = len(box_reviews)
-            b.average_rating = round(
-                sum(r.rating for r in box_reviews) / len(box_reviews), 2
-            )
-        else:
-            b.total_reviews = 0
-            b.average_rating = 0.0
-    db.commit()
+        if box:
+            for cur_data in bdata["curations"]:
+                existing_cur = (
+                    db.query(Curation)
+                    .filter(
+                        Curation.box_id == box.id,
+                        Curation.month_year == cur_data["month_year"],
+                    )
+                    .first()
+                )
+                if not existing_cur:
+                    new_cur = Curation(
+                        id=generate_uuid(),
+                        box_id=box.id,
+                        month_year=cur_data["month_year"],
+                        theme_title=cur_data["theme_title"],
+                        highlights=cur_data["highlights"],
+                        item_list=cur_data["item_list"],
+                        available_replacements=cur_data["available_replacements"],
+                    )
+                    db.add(new_cur)
+                    try:
+                        db.commit()
+                    except Exception:
+                        db.rollback()
+
+            # Seed a review for this box from test_user
+            if test_user:
+                existing_rev = (
+                    db.query(Review)
+                    .filter(Review.box_id == box.id, Review.user_id == test_user.id)
+                    .first()
+                )
+                if not existing_rev:
+                    rev = Review(
+                        id=generate_uuid(),
+                        box_id=box.id,
+                        user_id=test_user.id,
+                        rating=5,
+                        comment="Loved the curation this month! High quality items and great value.",
+                    )
+                    db.add(rev)
+                    try:
+                        db.commit()
+                    except Exception:
+                        db.rollback()

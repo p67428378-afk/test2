@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Subscription Box Finder API",
-    "description": "Discover monthly subscription box curations, read authentic subscriber reviews, and submit ratings.",
+    "description": "Discover monthly box curations, gift box subscriptions, customize curations, and review subscription boxes.",
     "version": "1.0.0"
   },
   "paths": {
@@ -11,8 +11,8 @@
         "tags": [
           "auth"
         ],
-        "summary": "Register User",
-        "operationId": "register_user_api_v1_auth_register_post",
+        "summary": "Register",
+        "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -52,8 +52,8 @@
         "tags": [
           "auth"
         ],
-        "summary": "Login User",
-        "operationId": "login_user_api_v1_auth_login_post",
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -93,8 +93,8 @@
         "tags": [
           "auth"
         ],
-        "summary": "Get Current User Profile",
-        "operationId": "get_current_user_profile_api_v1_auth_me_get",
+        "summary": "Get Me",
+        "operationId": "get_me_api_v1_auth_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -109,7 +109,7 @@
         },
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ]
       }
@@ -119,8 +119,8 @@
         "tags": [
           "categories"
         ],
-        "summary": "List Categories",
-        "operationId": "list_categories_api_v1_categories_get",
+        "summary": "Get Categories",
+        "operationId": "get_categories_api_v1_categories_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -128,10 +128,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/CategorySchema"
+                    "$ref": "#/components/schemas/CategoryResponse"
                   },
                   "type": "array",
-                  "title": "Response List Categories Api V1 Categories Get"
+                  "title": "Response Get Categories Api V1 Categories Get"
                 }
               }
             }
@@ -160,10 +160,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by Category UUID",
               "title": "Category Id"
-            },
-            "description": "Filter by Category UUID"
+            }
           },
           {
             "name": "min_price",
@@ -172,17 +170,14 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "number",
-                  "minimum": 0
+                  "type": "number"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Minimum box price",
               "title": "Min Price"
-            },
-            "description": "Minimum box price"
+            }
           },
           {
             "name": "max_price",
@@ -191,17 +186,14 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "number",
-                  "minimum": 0
+                  "type": "number"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Maximum box price",
               "title": "Max Price"
-            },
-            "description": "Maximum box price"
+            }
           },
           {
             "name": "min_rating",
@@ -210,18 +202,14 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "number",
-                  "maximum": 5,
-                  "minimum": 0
+                  "type": "number"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Minimum average rating (1-5)",
               "title": "Min Rating"
-            },
-            "description": "Minimum average rating (1-5)"
+            }
           },
           {
             "name": "search",
@@ -236,10 +224,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Full-text search in title and description",
               "title": "Search"
-            },
-            "description": "Full-text search in title and description"
+            }
           },
           {
             "name": "billing_frequency",
@@ -254,10 +240,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by billing frequency (e.g. Monthly)",
               "title": "Billing Frequency"
-            },
-            "description": "Filter by billing frequency (e.g. Monthly)"
+            }
           },
           {
             "name": "skip",
@@ -266,11 +250,9 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "Pagination skip offset",
               "default": 0,
               "title": "Skip"
-            },
-            "description": "Pagination skip offset"
+            }
           },
           {
             "name": "limit",
@@ -280,11 +262,9 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "description": "Pagination limit",
               "default": 20,
               "title": "Limit"
-            },
-            "description": "Pagination limit"
+            }
           }
         ],
         "responses": {
@@ -353,6 +333,160 @@
         }
       }
     },
+    "/api/v1/boxes/{id}/gift": {
+      "post": {
+        "tags": [
+          "boxes"
+        ],
+        "summary": "Create Gift Subscription",
+        "operationId": "create_gift_subscription_api_v1_boxes__id__gift_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiftSubscriptionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GiftSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boxes/{id}/customizations": {
+      "get": {
+        "tags": [
+          "boxes"
+        ],
+        "summary": "Get Box Customizations",
+        "operationId": "get_box_customizations_api_v1_boxes__id__customizations_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomizationOption"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "boxes"
+        ],
+        "summary": "Submit Box Customization",
+        "operationId": "submit_box_customization_api_v1_boxes__id__customizations_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomizationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomizationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/boxes/{id}/reviews": {
       "get": {
         "tags": [
@@ -377,11 +511,9 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "Skip pagination offset",
               "default": 0,
               "title": "Skip"
-            },
-            "description": "Skip pagination offset"
+            }
           },
           {
             "name": "limit",
@@ -391,11 +523,9 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "description": "Limit pagination count",
               "default": 20,
               "title": "Limit"
-            },
-            "description": "Limit pagination count"
+            }
           }
         ],
         "responses": {
@@ -429,7 +559,7 @@
         "operationId": "submit_box_review_api_v1_boxes__id__reviews_post",
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ],
         "parameters": [
@@ -459,7 +589,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReviewSchema"
+                  "$ref": "#/components/schemas/ReviewResponse"
                 }
               }
             }
@@ -495,6 +625,25 @@
           }
         }
       }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -504,6 +653,14 @@
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
           },
           "category_id": {
             "type": "string",
@@ -520,16 +677,15 @@
             ],
             "title": "Category Name"
           },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
           "description": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Description"
           },
           "price": {
@@ -553,80 +709,58 @@
           },
           "average_rating": {
             "type": "number",
-            "title": "Average Rating",
-            "default": 0.0
+            "title": "Average Rating"
           },
           "total_reviews": {
             "type": "integer",
-            "title": "Total Reviews",
-            "default": 0
+            "title": "Total Reviews"
           },
           "is_active": {
             "type": "boolean",
-            "title": "Is Active",
-            "default": true
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           },
           "curations": {
             "items": {
-              "$ref": "#/components/schemas/CurationSchema"
+              "$ref": "#/components/schemas/CurationResponse"
             },
             "type": "array",
-            "title": "Curations",
-            "default": []
+            "title": "Curations"
           },
           "reviews": {
             "items": {
-              "$ref": "#/components/schemas/ReviewSchema"
+              "$ref": "#/components/schemas/ReviewResponse"
             },
             "type": "array",
-            "title": "Reviews",
-            "default": []
+            "title": "Reviews"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "category_id",
           "title",
           "slug",
-          "description",
+          "category_id",
           "price",
-          "billing_frequency"
+          "billing_frequency",
+          "average_rating",
+          "total_reviews",
+          "is_active",
+          "created_at",
+          "updated_at"
         ],
         "title": "BoxDetail"
       },
-      "BoxListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/BoxSummary"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip",
-            "default": 0
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit",
-            "default": 20
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total"
-        ],
-        "title": "BoxListResponse"
-      },
-      "BoxSummary": {
+      "BoxListItem": {
         "properties": {
           "id": {
             "type": "string",
@@ -655,6 +789,17 @@
             ],
             "title": "Category Name"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "price": {
             "type": "number",
             "title": "Price"
@@ -676,18 +821,25 @@
           },
           "average_rating": {
             "type": "number",
-            "title": "Average Rating",
-            "default": 0.0
+            "title": "Average Rating"
           },
           "total_reviews": {
             "type": "integer",
-            "title": "Total Reviews",
-            "default": 0
+            "title": "Total Reviews"
           },
           "is_active": {
             "type": "boolean",
-            "title": "Is Active",
-            "default": true
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           }
         },
         "type": "object",
@@ -697,16 +849,48 @@
           "slug",
           "category_id",
           "price",
-          "billing_frequency"
+          "billing_frequency",
+          "average_rating",
+          "total_reviews",
+          "is_active",
+          "created_at",
+          "updated_at"
         ],
-        "title": "BoxSummary"
+        "title": "BoxListItem"
       },
-      "CategorySchema": {
+      "BoxListResponse": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BoxListItem"
+            },
+            "type": "array",
+            "title": "Items"
           },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "BoxListResponse"
+      },
+      "CategoryResponse": {
+        "properties": {
           "name": {
             "type": "string",
             "title": "Name"
@@ -725,21 +909,35 @@
               }
             ],
             "title": "Description"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
-          "id",
           "name",
-          "slug"
+          "slug",
+          "id",
+          "created_at"
         ],
-        "title": "CategorySchema"
+        "title": "CategoryResponse"
       },
-      "CurationSchema": {
+      "CurationResponse": {
         "properties": {
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "box_id": {
+            "type": "string",
+            "title": "Box Id"
           },
           "month_year": {
             "type": "string",
@@ -750,7 +948,14 @@
             "title": "Theme Title"
           },
           "highlights": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Highlights"
           },
           "item_list": {
@@ -759,18 +964,237 @@
               "type": "object"
             },
             "type": "array",
-            "title": "Item List",
-            "default": []
+            "title": "Item List"
+          },
+          "available_replacements": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Replacements"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
           "id",
+          "box_id",
           "month_year",
           "theme_title",
-          "highlights"
+          "created_at"
         ],
-        "title": "CurationSchema"
+        "title": "CurationResponse"
+      },
+      "CustomizationOption": {
+        "properties": {
+          "box_id": {
+            "type": "string",
+            "title": "Box Id"
+          },
+          "curation_id": {
+            "type": "string",
+            "title": "Curation Id"
+          },
+          "curation_theme": {
+            "type": "string",
+            "title": "Curation Theme"
+          },
+          "max_swaps_allowed": {
+            "type": "integer",
+            "title": "Max Swaps Allowed",
+            "default": 1
+          },
+          "current_items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Current Items"
+          },
+          "available_replacements": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Available Replacements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "box_id",
+          "curation_id",
+          "curation_theme"
+        ],
+        "title": "CustomizationOption"
+      },
+      "CustomizationRequest": {
+        "properties": {
+          "original_item_id": {
+            "type": "string",
+            "title": "Original Item Id"
+          },
+          "replacement_item_id": {
+            "type": "string",
+            "title": "Replacement Item Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "original_item_id",
+          "replacement_item_id"
+        ],
+        "title": "CustomizationRequest"
+      },
+      "CustomizationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "box_id": {
+            "type": "string",
+            "title": "Box Id"
+          },
+          "curation_id": {
+            "type": "string",
+            "title": "Curation Id"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "original_item_id": {
+            "type": "string",
+            "title": "Original Item Id"
+          },
+          "replacement_item_id": {
+            "type": "string",
+            "title": "Replacement Item Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "box_id",
+          "curation_id",
+          "original_item_id",
+          "replacement_item_id",
+          "status",
+          "created_at"
+        ],
+        "title": "CustomizationResponse"
+      },
+      "GiftSubscriptionCreate": {
+        "properties": {
+          "recipient_email": {
+            "type": "string",
+            "format": "email",
+            "title": "Recipient Email"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recipient_email"
+        ],
+        "title": "GiftSubscriptionCreate"
+      },
+      "GiftSubscriptionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "box_id": {
+            "type": "string",
+            "title": "Box Id"
+          },
+          "sender_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Id"
+          },
+          "recipient_email": {
+            "type": "string",
+            "title": "Recipient Email"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "box_id",
+          "recipient_email",
+          "status",
+          "created_at"
+        ],
+        "title": "GiftSubscriptionResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -791,14 +1215,12 @@
             "type": "integer",
             "maximum": 5.0,
             "minimum": 1.0,
-            "title": "Rating",
-            "description": "Rating between 1 and 5 stars"
+            "title": "Rating"
           },
           "comment": {
             "type": "string",
             "minLength": 1,
-            "title": "Comment",
-            "description": "Written review feedback"
+            "title": "Comment"
           }
         },
         "type": "object",
@@ -812,7 +1234,7 @@
         "properties": {
           "reviews": {
             "items": {
-              "$ref": "#/components/schemas/ReviewSchema"
+              "$ref": "#/components/schemas/ReviewResponse"
             },
             "type": "array",
             "title": "Reviews"
@@ -823,23 +1245,23 @@
           },
           "skip": {
             "type": "integer",
-            "title": "Skip",
-            "default": 0
+            "title": "Skip"
           },
           "limit": {
             "type": "integer",
-            "title": "Limit",
-            "default": 20
+            "title": "Limit"
           }
         },
         "type": "object",
         "required": [
           "reviews",
-          "total"
+          "total",
+          "skip",
+          "limit"
         ],
         "title": "ReviewListResponse"
       },
-      "ReviewSchema": {
+      "ReviewResponse": {
         "properties": {
           "id": {
             "type": "string",
@@ -853,17 +1275,6 @@
             "type": "string",
             "title": "User Id"
           },
-          "user_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Name"
-          },
           "rating": {
             "type": "integer",
             "title": "Rating"
@@ -876,6 +1287,28 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "user_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Email"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name"
           }
         },
         "type": "object",
@@ -887,7 +1320,7 @@
           "comment",
           "created_at"
         ],
-        "title": "ReviewSchema"
+        "title": "ReviewResponse"
       },
       "TokenResponse": {
         "properties": {
@@ -901,13 +1334,19 @@
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/UserResponse"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
-          "access_token",
-          "user"
+          "access_token"
         ],
         "title": "TokenResponse"
       },
@@ -919,7 +1358,14 @@
             "title": "Email"
           },
           "full_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Full Name"
           },
           "password": {
@@ -931,7 +1377,6 @@
         "type": "object",
         "required": [
           "email",
-          "full_name",
           "password"
         ],
         "title": "UserCreate"
@@ -963,7 +1408,14 @@
             "title": "Email"
           },
           "full_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Full Name"
           },
           "id": {
@@ -978,6 +1430,10 @@
             "type": "boolean",
             "title": "Is Active"
           },
+          "is_verified": {
+            "type": "boolean",
+            "title": "Is Verified"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -987,10 +1443,10 @@
         "type": "object",
         "required": [
           "email",
-          "full_name",
           "id",
           "role",
           "is_active",
+          "is_verified",
           "created_at"
         ],
         "title": "UserResponse"
@@ -1037,9 +1493,14 @@
       }
     },
     "securitySchemes": {
-      "HTTPBearer": {
-        "type": "http",
-        "scheme": "bearer"
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/auth/login"
+          }
+        }
       }
     }
   }

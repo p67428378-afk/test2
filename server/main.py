@@ -1,7 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from server.database import init_db, seed_data, SessionLocal
 from server.routers import auth, categories, boxes, reviews
@@ -9,9 +8,8 @@ from server.routers import auth, categories, boxes, reviews
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB schema
+    # Initialize database tables and seed test data
     init_db()
-    # Seed initial users, categories, boxes, curations, and reviews
     db = SessionLocal()
     try:
         seed_data(db)
@@ -22,26 +20,30 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Subscription Box Finder API",
+    description="Discover monthly box curations, gift box subscriptions, customize curations, and review subscription boxes.",
     version="1.0.0",
-    description="Discover monthly subscription box curations, read authentic subscriber reviews, and submit ratings.",
     lifespan=lifespan,
 )
 
-# Configure CORS Middleware
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000",
-).split(",")
+# Mandatory CORS setup
+raw_origins = os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+)
+allowed_origins = [
+    origin.strip() for origin in raw_origins.split(",") if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()],
+    allow_origins=allowed_origins
+    if allowed_origins
+    else ["http://localhost:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register Routers
+# Include Routers
 app.include_router(auth.router)
 app.include_router(categories.router)
 app.include_router(boxes.router)
@@ -53,13 +55,14 @@ def health_check():
     return {
         "status": "ok",
         "service": "Subscription Box Finder API",
-        "database": "connected",
+        "version": "1.0.0",
     }
 
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "An unexpected internal server error occurred."},
-    )
+@app.get("/", tags=["health"])
+def root():
+    return {
+        "message": "Welcome to the Subscription Box Finder API",
+        "docs_url": "/docs",
+        "version": "1.0.0",
+    }

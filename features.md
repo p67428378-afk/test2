@@ -1,11 +1,14 @@
 # Project Features
 
-## SCRUM-223 - Build Subscription Box Finder
+## SCRUM-223 - Build Subscription Box Finder & Gift / Customization Extension
 
 ### Feature Summary
-This feature allows users to browse and filter monthly subscription box curations by category, price, and rating, view detailed box contents and pricing, and read or submit user reviews.
+Allows users to browse subscription boxes, send subscriptions as gifts with custom recipient messages, swap up to 1 item in a box curation before checkout, and read/submit ratings and reviews.
 
 ### Key Features
-- Box Discovery & Filtering (browse by category, price range, rating)
-- Detailed Box Curation View (monthly highlights, items, billing frequency)
-- User Review System (read reviews, submit 1-5 star ratings and comments)
+- Box Discovery & Filtering
+- Detailed Box Curation View
+- Gift Subscription Processing (POST /api/v1/boxes/{id}/gift)
+- Custom Box Curation Item Swapping (GET/POST /api/v1/boxes/{id}/customizations)
+- User Review System (GET/POST /api/v1/boxes/{id}/reviews)
+- Full Backward Compatibility & Test Coverage
