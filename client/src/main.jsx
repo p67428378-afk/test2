@@ -46,47 +46,30 @@ class ErrorBoundary extends React.Component {
 
 function App() {
   const [currentUser, setCurrentUser] = useState(authApi.getUser());
-  const [initLoading, setInitLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
       const token = authApi.getToken();
       if (!token) {
         try {
-          // Attempt default test login for immediate seamless QA review
           const data = await authApi.login("test@example.com", "testpassword");
           setCurrentUser(data.user || authApi.getUser());
         } catch {
-          // Unauthenticated mode
+          // Unauthenticated / offline mode
         }
       } else {
         try {
           const user = await authApi.getMe();
           setCurrentUser(user);
         } catch {
-          // Token may be invalid/expired
           authApi.logout();
           setCurrentUser(null);
         }
       }
-      setInitLoading(false);
     };
 
     initAuth();
   }, []);
-
-  if (initLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-blue-600 mb-4"></div>
-          <p className="text-sm font-semibold text-slate-600">
-            Initializing FinTrack Pro...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <BrowserRouter>
