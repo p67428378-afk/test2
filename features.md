@@ -113,6 +113,7 @@ Not yet authored.
 User Story: Inventory Management Module
 
 ### User Stories
+
 ## User Story: Inventory Management Module
 
 **As a** hospital administrator, **I want to** manage the hospital\'s inventory of medical supplies and equipment, **so that** we can ensure essential items are always in stock, track usage, and optimize procurement.
@@ -169,3 +170,14 @@ Not yet authored.
 
 ### Deployment Notes
 Not yet authored.
+
+## SCRUM-229 - Expense Tracker Application with Dashboard & Monthly Expense Summary
+
+### Feature Summary
+Allows users to manage expenses, filter expenses by month, and view total spending summaries for selected months on a dashboard.
+
+### Key Features
+- Expense CRUD operations (Create, Read, Update, Delete) with fields: amount, category, date, and description.
+- Monthly expense summary feature allowing users to filter expenses by month (YYYY-MM) and display total spending for the selected month.
+- Dashboard displaying aggregate metrics including overall expenses, monthly total spending, and breakdown by category.
+- Form validations, month picker controls, and responsive UI layout.

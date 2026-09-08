@@ -10,6 +10,7 @@ from server.api.v1.endpoints import (
     scores,
     standings,
     certificates,
+    expenses,
 )
 from server.database import init_db, seed_data, SessionLocal
 
@@ -24,9 +25,9 @@ finally:
     db.close()
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Expense Tracker Application & Management System API",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    description="Expense management, monthly summary calculations, and tournament management API.",
 )
 
 # CORS Middleware configuration
@@ -50,11 +51,12 @@ app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
 app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
 app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
 app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+app.include_router(expenses.router, prefix="/api/v1", tags=["expenses"])
 
 
 @app.get("/")
 def read_root():
     return {
-        "message": "Welcome to the Chess Tournament Management System API",
+        "message": "Welcome to the Expense Tracker Application API",
         "docs": "/docs",
     }

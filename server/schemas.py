@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date as date_type, datetime
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
 
@@ -125,6 +125,50 @@ class CertificateVerificationResponse(BaseModel):
     total_points: float
     issued_at: datetime
     qr_code_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# Expense Schemas
+class ExpenseBase(BaseModel):
+    amount: float = Field(..., gt=0, description="Amount must be positive")
+    category: str = Field(..., min_length=1)
+    date: date_type
+    description: Optional[str] = None
+
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+
+class ExpenseUpdate(BaseModel):
+    amount: Optional[float] = Field(None, gt=0)
+    category: Optional[str] = Field(None, min_length=1)
+    date: Optional[date_type] = None
+    description: Optional[str] = None
+
+
+class ExpenseResponse(ExpenseBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CategoryBreakdownItem(BaseModel):
+    category: str
+    amount: float
+    percentage: float
+
+
+class DashboardSummaryResponse(BaseModel):
+    active_month: Optional[str] = None
+    monthly_total: float
+    total_expenses: float
+    category_breakdown: List[CategoryBreakdownItem] = []
 
     class Config:
         from_attributes = True

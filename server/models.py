@@ -10,6 +10,8 @@ from sqlalchemy import (
     UniqueConstraint,
     TypeDecorator,
     CHAR,
+    Date,
+    Index,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -248,3 +250,18 @@ class AuditLog(Base):
     original_score = Column(String(50), nullable=True)
     new_score = Column(String(50), nullable=True)
     timestamp = Column(DateTime, default=func.now(), nullable=False)
+
+
+class Expense(Base):
+    __tablename__ = "expenses"
+    __table_args__ = (Index("idx_expense_date_category", "date", "category"),)
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    amount = Column(Float, nullable=False)
+    category = Column(String(100), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    description = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )

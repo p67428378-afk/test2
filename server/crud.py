@@ -1,5 +1,8 @@
+import calendar
+from datetime import date
 import uuid
 from typing import List, Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from server import models, schemas
 
@@ -148,4 +151,160 @@ def get_certificate_by_uuid(
         db.query(models.Certificate)
         .filter(models.Certificate.verification_uuid == verification_uuid)
         .first()
+    )
+
+
+# Expense CRUD
+def create_expense(db: Session, expense_in: schemas.ExpenseCreate) -> models.Expense:
+    expense = models.Expense(
+        amount=expense_in.amount,
+        category=expense_in.category,
+        date=expense_in.date,
+        description=expense_in.description,
+    )
+    db.add(expense)
+    db.commit()
+    db.refresh(expense)
+    return expense
+
+
+def get_expense(db: Session, expense_id: uuid.UUID) -> Optional[models.Expense]:
+    return db.query(models.Expense).filter(models.Expense.id == expense_id).first()
+
+
+def get_expenses(
+    db: Session,
+    month: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> List[models.Expense]:
+    query = db.query(models.Expense)
+
+    if month and month.strip() not in ("", "All", "All Months"):
+        try:
+            parts = month.strip().split("-")
+            year = int(parts[0])
+            m = int(parts[1])
+            first_day = date(year, m, 1)
+            last_day_num = calendar.monthrange(year, m)[1]
+            last_day = date(year, m, last_day_num)
+            query = query.filter(
+                models.Expense.date >= first_day, models.Expense.date <= last_day
+            )
+        except Exception:
+            pass
+    elif start_date or end_date:
+        if start_date:
+            query = query.filter(models.Expense.date >= start_date)
+        if end_date:
+            query = query.filter(models.Expense.date <= end_date)
+
+    return (
+        query.order_by(models.Expense.date.desc(), models.Expense.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def update_expense(
+    db: Session, expense_id: uuid.UUID, expense_in: schemas.ExpenseUpdate
+) -> Optional[models.Expense]:
+    expense = get_expense(db, expense_id)
+    if not expense:
+        return None
+
+    update_data = expense_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(expense, field, value)
+
+    db.add(expense)
+    db.commit()
+    db.refresh(expense)
+    return expense
+
+
+def delete_expense(db: Session, expense_id: uuid.UUID) -> bool:
+    expense = get_expense(db, expense_id)
+    if not expense:
+        return False
+    db.delete(expense)
+    db.commit()
+    return True
+
+
+def get_dashboard_summary(
+    db: Session, month: Optional[str] = None
+) -> schemas.DashboardSummaryResponse:
+    # 1. Total expenses across all time
+    total_all = db.query(func.sum(models.Expense.amount)).scalar() or 0.0
+
+    # 2. Monthly total
+    filter_start = None
+    filter_end = None
+    active_month_str = (
+        month.strip()
+        if month and month.strip() not in ("", "All", "All Months")
+        else "All Months"
+    )
+
+    if active_month_str != "All Months":
+        try:
+            parts = active_month_str.split("-")
+            year = int(parts[0])
+            m = int(parts[1])
+            filter_start = date(year, m, 1)
+            last_day_num = calendar.monthrange(year, m)[1]
+            filter_end = date(year, m, last_day_num)
+        except Exception:
+            active_month_str = "All Months"
+
+    if filter_start and filter_end:
+        m_total = (
+            db.query(func.sum(models.Expense.amount))
+            .filter(
+                models.Expense.date >= filter_start, models.Expense.date <= filter_end
+            )
+            .scalar()
+            or 0.0
+        )
+    else:
+        m_total = total_all
+
+    # 3. Category breakdown
+    cat_query = db.query(
+        models.Expense.category,
+        func.sum(models.Expense.amount).label("cat_total"),
+    )
+    if filter_start and filter_end:
+        cat_query = cat_query.filter(
+            models.Expense.date >= filter_start, models.Expense.date <= filter_end
+        )
+    cat_results = cat_query.group_by(models.Expense.category).all()
+
+    effective_total = m_total if (filter_start and filter_end) else total_all
+
+    category_breakdown = []
+    for cat_name, cat_total in cat_results:
+        cat_amount = float(cat_total or 0.0)
+        percentage = (
+            round((cat_amount / effective_total) * 100, 2)
+            if effective_total > 0
+            else 0.0
+        )
+        category_breakdown.append(
+            schemas.CategoryBreakdownItem(
+                category=cat_name,
+                amount=round(cat_amount, 2),
+                percentage=percentage,
+            )
+        )
+
+    return schemas.DashboardSummaryResponse(
+        active_month=active_month_str,
+        monthly_total=round(float(m_total), 2),
+        total_expenses=round(float(total_all), 2),
+        category_breakdown=category_breakdown,
     )
