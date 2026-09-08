@@ -1,35 +1,82 @@
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from fastapi.testclient import TestClient
 
-from server.database import Base, get_db
+from server.database import Base, get_db, seed_data
+from server.models import User, Category, Transaction, Budget  # noqa: F401
 from server.main import app
+from server.auth import create_access_token
+
+# Shared in-memory SQLite database for testing
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
-    "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def _override_get_db():
+@pytest.fixture(scope="session", autouse=True)
+def setup_db():
+    Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
-        yield db
+        seed_data(db)
     finally:
         db.close()
-
-
-@pytest.fixture(autouse=True)
-def _setup_database():
-    Base.metadata.create_all(bind=engine)
-    app.dependency_overrides[get_db] = _override_get_db
     yield
-    app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
-def client():
-    return TestClient(app)
+def db_session():
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = TestingSessionLocal(bind=connection)
+
+    yield session
+
+    session.close()
+    transaction.rollback()
+    connection.close()
+
+
+@pytest.fixture
+def client(db_session):
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def test_user(db_session):
+    user = db_session.query(User).filter(User.email == "test@example.com").first()
+    return user
+
+
+@pytest.fixture
+def auth_headers(test_user):
+    token = create_access_token(
+        data={"sub": test_user.email, "role": test_user.role, "user_id": test_user.id}
+    )
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def admin_headers(db_session):
+    admin = db_session.query(User).filter(User.email == "admin@example.com").first()
+    token = create_access_token(
+        data={"sub": admin.email, "role": admin.role, "user_id": admin.id}
+    )
+    return {"Authorization": f"Bearer {token}"}
