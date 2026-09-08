@@ -1,11 +1,43 @@
-# Chess Tournament Management System (`SCRUM-55`)
+# Expense Tracker Application
 
-An end-to-end tournament management application supporting player registrations, FIDE Swiss-system pairings, match score tracking, live standings with Buchholz and Sonneborn-Berger tie-breaks, and verifiable digital certificates with QR codes.
+Full-stack expense tracking application with dashboard analytics.
+
+## Backend (Server)
+
+### Requirements & Setup
+- Python 3.11+
+- Install dependencies:
+  ```bash
+  cd server
+  pip install -r requirements.txt
+  ```
+
+### Configuration
+Set environment variables or copy `.env.example`:
+```bash
+DATABASE_URL=sqlite:////tmp/app.db
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+### Running the Server
+```bash
+uvicorn server.main:app --reload --port 8000
+```
+
+### Running Tests
+```bash
+pytest server/tests
+```
+
+## Full-Stack Local Development
+1. Start the backend server on port 8000.
+2. Start the frontend client on port 5173 (`npm run dev` in `client/`).
+3. Open `http://localhost:5173` in your browser.
 
 ## Server
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.9+
 - pip and venv
 
 ### Setup
@@ -49,7 +81,7 @@ To run both backend and frontend together locally:
 ### 1. Environment Setup
 ```bash
 # Copy the example environment file
-cp server/.env.example .env
+cp .env.example .env
 ```
 
 ### 2. Start the Backend (Terminal 1)
@@ -72,9 +104,14 @@ Frontend: `http://localhost:5173`
 The frontend connects to the backend API at `http://localhost:8000` by default via the `VITE_API_BASE_URL` environment variable.
 
 ### 4. Test Credentials
-The backend seeds ready-to-use accounts on startup (idempotent):
+If the app has authentication, the backend seeds ready-to-use accounts on startup
+(idempotent). These are guaranteed logged-in-able — every activation/verification
+gate (`is_active`, `is_verified`, `email_verified`, `disabled`) is set to the
+permissive value, so no manual DB step is needed:
 - **Regular user** — Email: `test@example.com`, Password: `testpassword`
-- **Admin/Organizer user** — Email: `admin@example.com`, Password: `adminpassword`, Role: `admin`
+- **Admin user** (only when the app has roles/RBAC) — Email: `admin@example.com`, Password: `adminpassword`, role: `admin`
+
+Passwords are stored hashed with the app's own hashing utility (never in plaintext).
 
 ### Port Reference
 | Service  | Port | URL                        |
@@ -82,3 +119,4 @@ The backend seeds ready-to-use accounts on startup (idempotent):
 | Backend  | 8000 | http://localhost:8000      |
 | Frontend | 5173 | http://localhost:5173      |
 | API Docs | 8000 | http://localhost:8000/docs |
+

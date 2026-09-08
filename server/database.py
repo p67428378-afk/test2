@@ -1,20 +1,24 @@
+import os
+from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+
+# SQLite specific connect args
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
 
-def get_db():
+def get_db() -> Generator[Session, None, None]:
+    """Dependency that yields a database session."""
     db = SessionLocal()
     try:
         yield db
@@ -22,48 +26,43 @@ def get_db():
         db.close()
 
 
-def init_db():
+def init_db() -> None:
+    """Initialize database tables idempotently."""
+    # Ensure all models are imported so Base metadata is populated
+    from server.models.expense import Expense  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
-
-    # Ensure tables exist
-    init_db()
-
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
+def seed_data(db: Session) -> None:
+    """Seed initial sample data if table is empty (idempotent)."""
+    from server.models.expense import Expense
+    import datetime
 
     try:
-        db.commit()
-    except Exception:
+        if db.query(Expense).first() is None:
+            sample_expenses = [
+                Expense(
+                    amount=120.50,
+                    category="Food & Dining",
+                    date=datetime.date.today(),
+                    description="Groceries at Trader Joe's",
+                ),
+                Expense(
+                    amount=85.00,
+                    category="Housing/Utilities",
+                    date=datetime.date.today() - datetime.timedelta(days=1),
+                    description="Electric Bill",
+                ),
+                Expense(
+                    amount=45.25,
+                    category="Transportation",
+                    date=datetime.date.today() - datetime.timedelta(days=2),
+                    description="Gas Station",
+                ),
+            ]
+            db.add_all(sample_expenses)
+            db.commit()
+    except Exception as e:
         db.rollback()
+        print(f"Seed data error or table not ready: {e}")
