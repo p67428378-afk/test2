@@ -23,6 +23,7 @@ export default function TransactionTable({
   loading = false,
   error = "",
 }) {
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const totalPages = Math.ceil(total / limit) || 1;
   const currentPage = Math.floor(skip / limit) + 1;
 
@@ -45,7 +46,7 @@ export default function TransactionTable({
     );
   }
 
-  if (!transactions.length) {
+  if (!safeTransactions.length) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
         <div className="p-3 bg-slate-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-slate-400">
@@ -78,9 +79,9 @@ export default function TransactionTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
-            {transactions.map((tx) => {
+            {safeTransactions.map((tx) => {
               const isIncome = tx.transaction_type === "Income";
-              const formattedAmount = Number(tx.amount).toLocaleString(
+              const formattedAmount = Number(tx.amount || 0).toLocaleString(
                 "en-US",
                 {
                   style: "currency",

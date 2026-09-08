@@ -24,15 +24,15 @@ import LogTransactionModal from "../components/LogTransactionModal";
 import { reportApi, budgetApi, expenseApi, categoryApi } from "../services/api";
 
 const COLORS = [
-  "#3B82F6", // Blue
-  "#10B981", // Emerald
-  "#F59E0B", // Amber
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#EC4899", // Pink
-  "#14B8A6", // Teal
-  "#6366F1", // Indigo
-  "#F97316", // Orange
+  "#3B82F6",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#8B5CF6",
+  "#EC4899",
+  "#14B8A6",
+  "#6366F1",
+  "#F97316",
 ];
 
 export default function DashboardPage({ currentUser }) {
@@ -48,7 +48,6 @@ export default function DashboardPage({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -58,15 +57,29 @@ export default function DashboardPage({ currentUser }) {
     setError("");
     try {
       const [summaryRes, budgetRes, txRes, catRes] = await Promise.all([
-        reportApi.getSummary(),
-        budgetApi.getBudgets(),
-        expenseApi.getExpenses({ limit: 5 }),
-        categoryApi.getCategories(),
+        reportApi.getSummary().catch(() => ({
+          total_income: 0,
+          total_expense: 0,
+          net_balance: 0,
+          category_breakdown: [],
+        })),
+        budgetApi.getBudgets().catch(() => []),
+        expenseApi.getExpenses({ limit: 5 }).catch(() => ({ items: [] })),
+        categoryApi.getCategories().catch(() => []),
       ]);
-      setSummary(summaryRes);
-      setBudgets(budgetRes);
-      setRecentTransactions(txRes.items || []);
-      setCategories(catRes || []);
+      setSummary(
+        summaryRes || {
+          total_income: 0,
+          total_expense: 0,
+          net_balance: 0,
+          category_breakdown: [],
+        },
+      );
+      setBudgets(Array.isArray(budgetRes) ? budgetRes : budgetRes?.items || []);
+      setRecentTransactions(
+        txRes?.items || (Array.isArray(txRes) ? txRes : []),
+      );
+      setCategories(Array.isArray(catRes) ? catRes : catRes?.items || []);
     } catch (err) {
       setError(
         err.response?.data?.detail ||
@@ -97,33 +110,35 @@ export default function DashboardPage({ currentUser }) {
     }
   };
 
-  // Format currencies
   const formatCurrency = (amount) =>
     Number(amount || 0).toLocaleString("en-US", {
       style: "currency",
       currency: "USD",
     });
 
-  // Calculate Savings Rate
+  const totalIncome = Number(summary?.total_income || 0);
+  const totalExpense = Number(summary?.total_expense || 0);
+  const netBalance =
+    summary?.net_balance !== undefined
+      ? Number(summary.net_balance)
+      : totalIncome - totalExpense;
+  const rawBreakdown = Array.isArray(summary?.category_breakdown)
+    ? summary.category_breakdown
+    : [];
+
   const savingsRate =
-    summary.total_income > 0
-      ? (
-          ((summary.total_income - summary.total_expense) /
-            summary.total_income) *
-          100
-        ).toFixed(1)
+    totalIncome > 0
+      ? (((totalIncome - totalExpense) / totalIncome) * 100).toFixed(1)
       : "0.0";
 
-  // Prepare chart data
-  const chartData = summary.category_breakdown.map((item) => ({
-    name: item.category_name,
-    value: item.amount,
-    percentage: item.percentage,
+  const chartData = rawBreakdown.map((item) => ({
+    name: item.category_name || "Uncategorized",
+    value: Number(item.amount || 0),
+    percentage: Number(item.percentage || 0),
   }));
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -144,40 +159,35 @@ export default function DashboardPage({ currentUser }) {
         </button>
       </div>
 
-      {/* Global Error Banner */}
       {error && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-700 font-medium">
           {error}
         </div>
       )}
 
-      {/* Budget Threshold Alert Banners (80% warning / 100% breached) */}
       <BudgetAlertBanner budgets={budgets} />
 
-      {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           title="Total Income"
-          value={`+${formatCurrency(summary.total_income)}`}
+          value={`+${formatCurrency(totalIncome)}`}
           icon={TrendingUp}
           variant="income"
           subtitle="All recorded earnings"
         />
         <StatCard
           title="Total Expenses"
-          value={`-${formatCurrency(summary.total_expense)}`}
+          value={`-${formatCurrency(totalExpense)}`}
           icon={TrendingDown}
           variant="expense"
           subtitle="All recorded spending"
         />
         <StatCard
           title="Net Balance"
-          value={formatCurrency(summary.net_balance)}
+          value={formatCurrency(netBalance)}
           icon={Wallet}
           variant="balance"
-          subtitle={
-            summary.net_balance >= 0 ? "Surplus balance" : "Deficit balance"
-          }
+          subtitle={netBalance >= 0 ? "Surplus balance" : "Deficit balance"}
         />
         <StatCard
           title="Savings Rate"
@@ -188,9 +198,7 @@ export default function DashboardPage({ currentUser }) {
         />
       </div>
 
-      {/* Analytics & Recent Activity Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Category Spending Donut Chart */}
         <div className="lg:col-span-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -260,7 +268,6 @@ export default function DashboardPage({ currentUser }) {
           </div>
         </div>
 
-        {/* Recent Transactions List */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -350,7 +357,6 @@ export default function DashboardPage({ currentUser }) {
         </div>
       </div>
 
-      {/* Log Transaction Modal */}
       <LogTransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -16,27 +16,29 @@ export default function BudgetTable({
   onDelete,
   loading = false,
 }) {
+  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+
   const getAlertBadge = (alertLevel, percentage) => {
     switch (alertLevel) {
       case "BREACHED":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
             <AlertOctagon className="w-3.5 h-3.5 text-rose-600" />
-            Breached ({percentage}%)
+            Breached ({percentage || 0}%)
           </span>
         );
       case "WARNING":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-            Warning ({percentage}%)
+            Warning ({percentage || 0}%)
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            On Track ({percentage}%)
+            On Track ({percentage || 0}%)
           </span>
         );
     }
@@ -88,7 +90,7 @@ export default function BudgetTable({
             Loading budget allocations...
           </p>
         </div>
-      ) : !budgets.length ? (
+      ) : !safeBudgets.length ? (
         <div className="py-12 text-center">
           <div className="p-3 bg-slate-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-slate-400">
             <PieChart className="w-6 h-6" />
@@ -103,19 +105,18 @@ export default function BudgetTable({
         </div>
       ) : (
         <div className="divide-y divide-slate-100 mt-4">
-          {budgets.map((b) => {
-            const formattedLimit = Number(b.monthly_limit).toLocaleString(
-              "en-US",
-              {
-                style: "currency",
-                currency: "USD",
-              },
-            );
-            const formattedSpent = Number(b.spent).toLocaleString("en-US", {
+          {safeBudgets.map((b) => {
+            const limitVal = Number(b.monthly_limit || 0);
+            const spentVal = Number(b.spent || 0);
+            const formattedLimit = limitVal.toLocaleString("en-US", {
               style: "currency",
               currency: "USD",
             });
-            const remaining = Math.max(0, b.monthly_limit - b.spent);
+            const formattedSpent = spentVal.toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+            });
+            const remaining = Math.max(0, limitVal - spentVal);
             const formattedRemaining = remaining.toLocaleString("en-US", {
               style: "currency",
               currency: "USD",
@@ -126,7 +127,7 @@ export default function BudgetTable({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-sm text-slate-900">
-                      {b.category_name}
+                      {b.category_name || "Uncategorized"}
                     </span>
                     {getAlertBadge(b.alert_level, b.percentage)}
                   </div>
@@ -163,7 +164,9 @@ export default function BudgetTable({
                     className={`h-full rounded-full transition-all duration-500 ${getProgressBarColor(
                       b.alert_level,
                     )}`}
-                    style={{ width: `${Math.min(100, b.percentage)}%` }}
+                    style={{
+                      width: `${Math.min(100, Math.max(0, b.percentage || 0))}%`,
+                    }}
                   />
                 </div>
               </div>

@@ -3,8 +3,9 @@ import { AlertTriangle, AlertOctagon, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function BudgetAlertBanner({ budgets = [] }) {
-  const alerts = budgets.filter(
-    (b) => b.alert_level === "WARNING" || b.alert_level === "BREACHED",
+  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+  const alerts = safeBudgets.filter(
+    (b) => b && (b.alert_level === "WARNING" || b.alert_level === "BREACHED"),
   );
 
   if (!alerts.length) {
@@ -15,11 +16,14 @@ export default function BudgetAlertBanner({ budgets = [] }) {
     <div className="mb-6 space-y-3">
       {alerts.map((budget) => {
         const isBreached = budget.alert_level === "BREACHED";
-        const formattedSpent = Number(budget.spent).toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-        });
-        const formattedLimit = Number(budget.monthly_limit).toLocaleString(
+        const formattedSpent = Number(budget.spent || 0).toLocaleString(
+          "en-US",
+          {
+            style: "currency",
+            currency: "USD",
+          },
+        );
+        const formattedLimit = Number(budget.monthly_limit || 0).toLocaleString(
           "en-US",
           {
             style: "currency",
@@ -55,8 +59,9 @@ export default function BudgetAlertBanner({ budgets = [] }) {
                   {isBreached ? "🚨 BREACHED" : "⚠️ WARNING"}
                 </span>
                 <span className="font-medium text-sm">
-                  <strong>'{budget.category_name}'</strong> category budget is
-                  at <span className="font-bold">{budget.percentage}%</span> (
+                  <strong>'{budget.category_name || "Category"}'</strong>{" "}
+                  category budget is at{" "}
+                  <span className="font-bold">{budget.percentage || 0}%</span> (
                   {formattedSpent} / {formattedLimit})
                 </span>
               </div>

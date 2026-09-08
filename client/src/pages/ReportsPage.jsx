@@ -5,7 +5,6 @@ import {
   Wallet,
   BarChart3,
   PieChart as PieChartIcon,
-  Calendar,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -16,9 +15,6 @@ import {
   Tooltip,
   CartesianGrid,
   Cell,
-  PieChart,
-  Pie,
-  Legend,
 } from "recharts";
 import StatCard from "../components/StatCard";
 import ReportExportPanel from "../components/ReportExportPanel";
@@ -53,12 +49,25 @@ export default function ReportsPage({ currentUser }) {
     setError("");
     try {
       const data = await reportApi.getSummary(startDate, endDate);
-      setSummary(data);
+      setSummary(
+        data || {
+          total_income: 0,
+          total_expense: 0,
+          net_balance: 0,
+          category_breakdown: [],
+        },
+      );
     } catch (err) {
       setError(
         err.response?.data?.detail ||
           "Failed to generate financial summary report.",
       );
+      setSummary({
+        total_income: 0,
+        total_expense: 0,
+        net_balance: 0,
+        category_breakdown: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -101,10 +110,20 @@ export default function ReportsPage({ currentUser }) {
       currency: "USD",
     });
 
-  const chartData = summary.category_breakdown.map((c) => ({
-    name: c.category_name,
-    amount: c.amount,
-    percentage: c.percentage,
+  const totalIncome = Number(summary?.total_income || 0);
+  const totalExpense = Number(summary?.total_expense || 0);
+  const netBalance =
+    summary?.net_balance !== undefined
+      ? Number(summary.net_balance)
+      : totalIncome - totalExpense;
+  const rawBreakdown = Array.isArray(summary?.category_breakdown)
+    ? summary.category_breakdown
+    : [];
+
+  const chartData = rawBreakdown.map((c) => ({
+    name: c.category_name || "Uncategorized",
+    amount: Number(c.amount || 0),
+    percentage: Number(c.percentage || 0),
   }));
 
   return (
@@ -169,7 +188,7 @@ export default function ReportsPage({ currentUser }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard
           title="Period Income"
-          value={`+${formatCurrency(summary.total_income)}`}
+          value={`+${formatCurrency(totalIncome)}`}
           icon={TrendingUp}
           variant="income"
           subtitle={
@@ -178,7 +197,7 @@ export default function ReportsPage({ currentUser }) {
         />
         <StatCard
           title="Period Expenses"
-          value={`-${formatCurrency(summary.total_expense)}`}
+          value={`-${formatCurrency(totalExpense)}`}
           icon={TrendingDown}
           variant="expense"
           subtitle={
@@ -189,12 +208,10 @@ export default function ReportsPage({ currentUser }) {
         />
         <StatCard
           title="Net Savings / Balance"
-          value={formatCurrency(summary.net_balance)}
+          value={formatCurrency(netBalance)}
           icon={Wallet}
           variant="balance"
-          subtitle={
-            summary.net_balance >= 0 ? "Positive net savings" : "Net deficit"
-          }
+          subtitle={netBalance >= 0 ? "Positive net savings" : "Net deficit"}
         />
       </div>
 
@@ -288,14 +305,17 @@ export default function ReportsPage({ currentUser }) {
             <div className="py-12 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-blue-600 mx-auto"></div>
             </div>
-          ) : summary.category_breakdown.length === 0 ? (
+          ) : rawBreakdown.length === 0 ? (
             <div className="py-12 text-center text-slate-400 text-xs">
               No category expense breakdown available for this range.
             </div>
           ) : (
             <div className="divide-y divide-slate-100 mt-2">
-              {summary.category_breakdown.map((item, idx) => (
-                <div key={item.category_name} className="py-3 space-y-1.5">
+              {rawBreakdown.map((item, idx) => (
+                <div
+                  key={item.category_name || idx}
+                  className="py-3 space-y-1.5"
+                >
                   <div className="flex items-center justify-between text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
                       <span
@@ -303,7 +323,7 @@ export default function ReportsPage({ currentUser }) {
                         style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                       />
                       <span className="font-semibold text-slate-800">
-                        {item.category_name}
+                        {item.category_name || "Uncategorized"}
                       </span>
                     </div>
                     <div className="text-right">
@@ -311,7 +331,7 @@ export default function ReportsPage({ currentUser }) {
                         {formatCurrency(item.amount)}
                       </span>
                       <span className="text-xs text-slate-500 font-medium">
-                        ({item.percentage}%)
+                        ({item.percentage || 0}%)
                       </span>
                     </div>
                   </div>
@@ -320,7 +340,10 @@ export default function ReportsPage({ currentUser }) {
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{
-                        width: `${item.percentage}%`,
+                        width: `${Math.min(
+                          100,
+                          Math.max(0, item.percentage || 0),
+                        )}%`,
                         backgroundColor: COLORS[idx % COLORS.length],
                       }}
                     />
