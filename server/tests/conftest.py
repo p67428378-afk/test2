@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 # Set TESTING environment variable
 os.environ["TESTING"] = "true"
 
+import server.models  # noqa: F401
 from server.database import Base, get_db
 from server.main import app
 

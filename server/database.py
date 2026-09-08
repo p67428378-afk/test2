@@ -1,8 +1,14 @@
 import os
+import sys
 from collections.abc import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+
+if __name__ == "database":
+    sys.modules["server.database"] = sys.modules["database"]
+elif __name__ == "server.database":
+    sys.modules["database"] = sys.modules["server.database"]
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./travel_app.db")
 
@@ -31,7 +37,10 @@ def get_db() -> Generator[Session, None, None]:
 def init_db(bind_engine=None) -> None:
     target_engine = bind_engine or engine
     # Import models so tables are registered with Base.metadata
-    import server.models  # noqa: F401
+    try:
+        import server.models  # noqa: F401
+    except ImportError:
+        import models  # noqa: F401
 
     Base.metadata.create_all(bind=target_engine)
 
