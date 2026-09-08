@@ -2,109 +2,17 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Visitor Management System API",
-    "description": "RESTful API for residential visitor pre-approval, QR entry validation, delivery tracking, and security alerts.",
+    "description": "API for residential community visitor pre-approvals, gate QR scans, courier packages, alerts, and overstay monitoring.",
     "version": "1.0.0"
   },
   "paths": {
-    "/api/v1/visitors": {
-      "post": {
-        "tags": [
-          "Visitors & QR Validation"
-        ],
-        "summary": "Create Visitor Pre Approval",
-        "operationId": "create_visitor_pre_approval_api_v1_visitors_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VisitorPreApprovalCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VisitorPreApprovalResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Visitors & QR Validation"
-        ],
-        "summary": "List Visitor Pre Approvals",
-        "operationId": "list_visitor_pre_approvals_api_v1_visitors_get",
-        "parameters": [
-          {
-            "name": "unit_number",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Unit Number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/VisitorPreApprovalResponse"
-                  },
-                  "title": "Response List Visitor Pre Approvals Api V1 Visitors Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/visitors/pre-approval": {
       "post": {
         "tags": [
-          "Visitors & QR Validation"
+          "visitors"
         ],
-        "summary": "Create Visitor Pre Approval",
-        "operationId": "create_visitor_pre_approval_api_v1_visitors_pre_approval_post",
+        "summary": "Create Pre Approval",
+        "operationId": "create_pre_approval_api_v1_visitors_pre_approval_post",
         "requestBody": {
           "required": true,
           "content": {
@@ -140,7 +48,7 @@
       },
       "get": {
         "tags": [
-          "Visitors & QR Validation"
+          "visitors"
         ],
         "summary": "List Visitor Pre Approvals",
         "operationId": "list_visitor_pre_approvals_api_v1_visitors_pre_approval_get",
@@ -193,10 +101,10 @@
     "/api/v1/visitors/qr/validate": {
       "post": {
         "tags": [
-          "Visitors & QR Validation"
+          "visitors"
         ],
-        "summary": "Validate Qr Entry",
-        "operationId": "validate_qr_entry_api_v1_visitors_qr_validate_post",
+        "summary": "Validate Qr Code",
+        "operationId": "validate_qr_code_api_v1_visitors_qr_validate_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -231,13 +139,91 @@
         }
       }
     },
+    "/api/v1/visitors/{id}/extend-stay": {
+      "post": {
+        "tags": [
+          "visitors"
+        ],
+        "summary": "Extend Visitor Stay",
+        "operationId": "extend_visitor_stay_api_v1_visitors__id__extend_stay_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtendStayRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendStayResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/visitors": {
+      "get": {
+        "tags": [
+          "visitors"
+        ],
+        "summary": "List Visitors",
+        "operationId": "list_visitors_api_v1_visitors_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Visitors Api V1 Visitors Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/deliveries": {
       "post": {
         "tags": [
-          "Delivery Package Management"
+          "deliveries"
         ],
-        "summary": "Log Delivery Package",
-        "operationId": "log_delivery_package_api_v1_deliveries_post",
+        "summary": "Create Delivery",
+        "operationId": "create_delivery_api_v1_deliveries_post",
         "requestBody": {
           "required": true,
           "content": {
@@ -273,7 +259,7 @@
       },
       "get": {
         "tags": [
-          "Delivery Package Management"
+          "deliveries"
         ],
         "summary": "List Deliveries",
         "operationId": "list_deliveries_api_v1_deliveries_get",
@@ -292,22 +278,6 @@
                 }
               ],
               "title": "Unit Number"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
             }
           }
         ],
@@ -339,180 +309,24 @@
         }
       }
     },
-    "/api/v1/deliveries/overdue": {
-      "get": {
-        "tags": [
-          "Delivery Package Management"
-        ],
-        "summary": "Get Overdue Deliveries",
-        "operationId": "get_overdue_deliveries_api_v1_deliveries_overdue_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/DeliveryResponse"
-                  },
-                  "type": "array",
-                  "title": "Response Get Overdue Deliveries Api V1 Deliveries Overdue Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/deliveries/{delivery_id}/collect": {
+    "/api/v1/deliveries/{id}/pickup": {
       "put": {
         "tags": [
-          "Delivery Package Management"
+          "deliveries"
         ],
-        "summary": "Collect Delivery Package",
-        "operationId": "collect_delivery_package_api_v1_deliveries__delivery_id__collect_put",
+        "summary": "Acknowledge Pickup",
+        "operationId": "acknowledge_pickup_api_v1_deliveries__id__pickup_put",
         "parameters": [
           {
-            "name": "delivery_id",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Delivery Id"
+              "title": "Id"
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/DeliveryCollectRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeliveryResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Delivery Package Management"
-        ],
-        "summary": "Collect Delivery Package",
-        "operationId": "collect_delivery_package_api_v1_deliveries__delivery_id__collect_patch",
-        "parameters": [
-          {
-            "name": "delivery_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Delivery Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/DeliveryCollectRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeliveryResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Delivery Package Management"
-        ],
-        "summary": "Collect Delivery Package",
-        "operationId": "collect_delivery_package_api_v1_deliveries__delivery_id__collect_post",
-        "parameters": [
-          {
-            "name": "delivery_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Delivery Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/DeliveryCollectRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -540,16 +354,16 @@
     "/api/v1/alerts": {
       "post": {
         "tags": [
-          "Security Alerts & Emergency Broadcasting"
+          "alerts"
         ],
-        "summary": "Create Security Alert",
-        "operationId": "create_security_alert_api_v1_alerts_post",
+        "summary": "Create Alert",
+        "operationId": "create_alert_api_v1_alerts_post",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SecurityAlertCreate"
+                "$ref": "#/components/schemas/AlertCreate"
               }
             }
           }
@@ -560,7 +374,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SecurityAlertResponse"
+                  "$ref": "#/components/schemas/AlertResponse"
                 }
               }
             }
@@ -579,13 +393,13 @@
       },
       "get": {
         "tags": [
-          "Security Alerts & Emergency Broadcasting"
+          "alerts"
         ],
-        "summary": "List Security Alerts",
-        "operationId": "list_security_alerts_api_v1_alerts_get",
+        "summary": "List Alerts",
+        "operationId": "list_alerts_api_v1_alerts_get",
         "parameters": [
           {
-            "name": "status",
+            "name": "status_filter",
             "in": "query",
             "required": false,
             "schema": {
@@ -597,7 +411,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Status"
+              "title": "Status Filter"
             }
           }
         ],
@@ -609,9 +423,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SecurityAlertResponse"
+                    "$ref": "#/components/schemas/AlertResponse"
                   },
-                  "title": "Response List Security Alerts Api V1 Alerts Get"
+                  "title": "Response List Alerts Api V1 Alerts Get"
                 }
               }
             }
@@ -629,21 +443,21 @@
         }
       }
     },
-    "/api/v1/alerts/{alert_id}/cancel": {
+    "/api/v1/alerts/{id}/cancel": {
       "post": {
         "tags": [
-          "Security Alerts & Emergency Broadcasting"
+          "alerts"
         ],
-        "summary": "Cancel Security Alert",
-        "operationId": "cancel_security_alert_api_v1_alerts__alert_id__cancel_post",
+        "summary": "Cancel Alert",
+        "operationId": "cancel_alert_api_v1_alerts__id__cancel_post",
         "parameters": [
           {
-            "name": "alert_id",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Alert Id"
+              "title": "Id"
             }
           }
         ],
@@ -652,7 +466,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SecurityAlertCancel"
+                "$ref": "#/components/schemas/AlertCancel"
               }
             }
           }
@@ -663,7 +477,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SecurityAlertResponse"
+                  "$ref": "#/components/schemas/AlertResponse"
                 }
               }
             }
@@ -674,6 +488,137 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/visitors/recurring": {
+      "get": {
+        "tags": [
+          "recurring-passes"
+        ],
+        "summary": "List Recurring Passes",
+        "operationId": "list_recurring_passes_api_v1_visitors_recurring_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringPassResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Recurring Passes Api V1 Visitors Recurring Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "recurring-passes"
+        ],
+        "summary": "Create Recurring Pass",
+        "operationId": "create_recurring_pass_api_v1_visitors_recurring_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringPassCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringPassResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/visitors/recurring/{id}": {
+      "delete": {
+        "tags": [
+          "recurring-passes"
+        ],
+        "summary": "Revoke Recurring Pass",
+        "operationId": "revoke_recurring_pass_api_v1_visitors_recurring__id__delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringPassRevokeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/visitors/overstay/active": {
+      "get": {
+        "tags": [
+          "overstay-parking"
+        ],
+        "summary": "Get Active Overstays",
+        "operationId": "get_active_overstays_api_v1_visitors_overstay_active_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OverstayResponseItem"
+                  },
+                  "type": "array",
+                  "title": "Response Get Active Overstays Api V1 Visitors Overstay Active Get"
                 }
               }
             }
@@ -697,10 +642,10 @@
         }
       }
     },
-    "/api/v1/health": {
+    "/health": {
       "get": {
         "summary": "Health Check",
-        "operationId": "health_check_api_v1_health_get",
+        "operationId": "health_check_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -716,9 +661,30 @@
   },
   "components": {
     "schemas": {
-      "DeliveryCollectRequest": {
+      "AlertCancel": {
         "properties": {
-          "notes": {
+          "cancel_reason": {
+            "type": "string",
+            "title": "Cancel Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cancel_reason"
+        ],
+        "title": "AlertCancel"
+      },
+      "AlertCreate": {
+        "properties": {
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "alert_type": {
+            "type": "string",
+            "title": "Alert Type"
+          },
+          "location": {
             "anyOf": [
               {
                 "type": "string"
@@ -727,23 +693,143 @@
                 "type": "null"
               }
             ],
-            "title": "Notes"
+            "title": "Location"
+          },
+          "location_tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Tag"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           }
         },
         "type": "object",
-        "title": "DeliveryCollectRequest"
+        "required": [
+          "severity",
+          "alert_type"
+        ],
+        "title": "AlertCreate"
+      },
+      "AlertResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "alert_type": {
+            "type": "string",
+            "title": "Alert Type"
+          },
+          "location": {
+            "type": "string",
+            "title": "Location"
+          },
+          "location_tag": {
+            "type": "string",
+            "title": "Location Tag"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "severity",
+          "alert_type",
+          "location",
+          "location_tag",
+          "status",
+          "created_at"
+        ],
+        "title": "AlertResponse"
       },
       "DeliveryCreate": {
         "properties": {
           "unit_number": {
             "type": "string",
-            "title": "Unit Number",
-            "example": "Unit 4B"
+            "title": "Unit Number"
+          },
+          "courier_company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Courier Company"
           },
           "courier_name": {
-            "type": "string",
-            "title": "Courier Name",
-            "example": "FedEx"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Courier Name"
           },
           "tracking_number": {
             "anyOf": [
@@ -754,8 +840,7 @@
                 "type": "null"
               }
             ],
-            "title": "Tracking Number",
-            "example": "FX-99201123"
+            "title": "Tracking Number"
           },
           "package_description": {
             "anyOf": [
@@ -766,37 +851,28 @@
                 "type": "null"
               }
             ],
-            "title": "Package Description",
-            "example": "Small box"
+            "title": "Package Description"
           }
         },
         "type": "object",
         "required": [
-          "unit_number",
-          "courier_name"
+          "unit_number"
         ],
         "title": "DeliveryCreate"
       },
       "DeliveryResponse": {
         "properties": {
-          "delivery_id": {
-            "type": "string",
-            "title": "Delivery Id"
-          },
           "id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Id"
           },
           "unit_number": {
             "type": "string",
             "title": "Unit Number"
+          },
+          "courier_company": {
+            "type": "string",
+            "title": "Courier Company"
           },
           "courier_name": {
             "type": "string",
@@ -844,32 +920,50 @@
               }
             ],
             "title": "Collected At"
-          },
-          "is_overdue": {
-            "type": "boolean",
-            "title": "Is Overdue",
-            "default": false
-          },
-          "notification_sent": {
-            "type": "boolean",
-            "title": "Notification Sent",
-            "default": true
-          },
-          "notification_status": {
-            "type": "string",
-            "title": "Notification Status",
-            "default": "DELIVERED_TO_RESIDENT"
           }
         },
         "type": "object",
         "required": [
-          "delivery_id",
+          "id",
           "unit_number",
+          "courier_company",
           "courier_name",
           "status",
           "logged_at"
         ],
         "title": "DeliveryResponse"
+      },
+      "ExtendStayRequest": {
+        "properties": {
+          "extension_minutes": {
+            "type": "integer",
+            "maximum": 240.0,
+            "minimum": 1.0,
+            "title": "Extension Minutes",
+            "default": 120
+          }
+        },
+        "type": "object",
+        "title": "ExtendStayRequest"
+      },
+      "ExtendStayResponse": {
+        "properties": {
+          "visitor_id": {
+            "type": "string",
+            "title": "Visitor Id"
+          },
+          "new_expected_departure": {
+            "type": "string",
+            "format": "date-time",
+            "title": "New Expected Departure"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visitor_id",
+          "new_expected_departure"
+        ],
+        "title": "ExtendStayResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -884,20 +978,17 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "QRValidateRequest": {
+      "OverstayResponseItem": {
         "properties": {
-          "qr_token": {
+          "visitor_id": {
             "type": "string",
-            "title": "Qr Token",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            "title": "Visitor Id"
           },
-          "gate_id": {
+          "visitor_name": {
             "type": "string",
-            "title": "Gate Id",
-            "default": "Main Gate",
-            "example": "Main Gate"
+            "title": "Visitor Name"
           },
-          "guard_id": {
+          "vehicle_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -906,14 +997,88 @@
                 "type": "null"
               }
             ],
-            "title": "Guard Id",
-            "example": "b4cc290f-9cf0-4999-aa23-432123456789"
+            "title": "Vehicle Number"
+          },
+          "slot_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Number"
+          },
+          "entry_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Entry Time"
+          },
+          "expected_exit_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expected Exit Time"
+          },
+          "grace_period_expires": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Grace Period Expires"
+          },
+          "overstay_status": {
+            "type": "string",
+            "title": "Overstay Status"
           }
         },
         "type": "object",
         "required": [
-          "qr_token"
+          "visitor_id",
+          "visitor_name",
+          "entry_time",
+          "expected_exit_time",
+          "grace_period_expires",
+          "overstay_status"
         ],
+        "title": "OverstayResponseItem"
+      },
+      "QRValidateRequest": {
+        "properties": {
+          "qr_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr Token"
+          },
+          "qr_code_payload": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr Code Payload"
+          },
+          "gate_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate Id",
+            "default": "Main Gate"
+          }
+        },
+        "type": "object",
         "title": "QRValidateRequest"
       },
       "QRValidateResponse": {
@@ -922,45 +1087,24 @@
             "type": "boolean",
             "title": "Access Granted"
           },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
           "visitor_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Visitor Name"
           },
-          "unit_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit Number"
+          "resident_unit": {
+            "type": "string",
+            "title": "Resident Unit"
           },
           "entry_timestamp": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date-time",
             "title": "Entry Timestamp"
           },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          },
-          "error_code": {
+          "assigned_parking_slot": {
             "anyOf": [
               {
                 "type": "string"
@@ -969,202 +1113,147 @@
                 "type": "null"
               }
             ],
-            "title": "Error Code"
-          },
-          "detail": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Detail"
-          },
-          "resident_notification_sent": {
-            "type": "boolean",
-            "title": "Resident Notification Sent",
-            "default": true
+            "title": "Assigned Parking Slot"
           }
         },
         "type": "object",
         "required": [
           "access_granted",
-          "message"
+          "status",
+          "visitor_name",
+          "resident_unit",
+          "entry_timestamp"
         ],
         "title": "QRValidateResponse"
       },
-      "SecurityAlertCancel": {
+      "RecurringPassCreate": {
         "properties": {
-          "cancellation_reason": {
+          "visitor_name": {
             "type": "string",
-            "title": "Cancellation Reason",
-            "example": "Accidental trigger during guard shift handoff"
+            "title": "Visitor Name"
+          },
+          "service_type": {
+            "type": "string",
+            "title": "Service Type"
+          },
+          "days_of_week": {
+            "type": "string",
+            "title": "Days Of Week"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Date"
+          },
+          "access_start_time": {
+            "type": "string",
+            "title": "Access Start Time"
+          },
+          "access_end_time": {
+            "type": "string",
+            "title": "Access End Time"
           }
         },
         "type": "object",
         "required": [
-          "cancellation_reason"
+          "visitor_name",
+          "service_type",
+          "days_of_week",
+          "start_date",
+          "end_date",
+          "access_start_time",
+          "access_end_time"
         ],
-        "title": "SecurityAlertCancel"
+        "title": "RecurringPassCreate"
       },
-      "SecurityAlertCreate": {
+      "RecurringPassResponse": {
         "properties": {
-          "alert_type": {
-            "type": "string",
-            "title": "Alert Type",
-            "example": "UNAUTHORIZED_ENTRY"
-          },
-          "severity": {
-            "type": "string",
-            "title": "Severity",
-            "default": "HIGH",
-            "example": "HIGH"
-          },
-          "location": {
-            "type": "string",
-            "title": "Location",
-            "example": "North Gate"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "example": "Vehicle bypassed barrier without valid QR code"
-          }
-        },
-        "type": "object",
-        "required": [
-          "alert_type",
-          "location",
-          "description"
-        ],
-        "title": "SecurityAlertCreate"
-      },
-      "SecurityAlertResponse": {
-        "properties": {
-          "alert_id": {
-            "type": "string",
-            "title": "Alert Id"
-          },
           "id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Id"
           },
-          "alert_type": {
+          "visitor_name": {
             "type": "string",
-            "title": "Alert Type"
+            "title": "Visitor Name"
           },
-          "severity": {
+          "service_type": {
             "type": "string",
-            "title": "Severity"
+            "title": "Service Type"
           },
-          "location": {
+          "days_of_week": {
             "type": "string",
-            "title": "Location"
+            "title": "Days Of Week"
           },
-          "description": {
+          "start_date": {
             "type": "string",
-            "title": "Description"
+            "format": "date-time",
+            "title": "Start Date"
           },
-          "status": {
+          "end_date": {
             "type": "string",
-            "title": "Status"
+            "format": "date-time",
+            "title": "End Date"
+          },
+          "access_start_time": {
+            "type": "string",
+            "title": "Access Start Time"
+          },
+          "access_end_time": {
+            "type": "string",
+            "title": "Access End Time"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "updated_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Updated At"
-          },
-          "can_cancel_until": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Can Cancel Until"
-          },
-          "cancellation_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cancellation Reason"
-          },
-          "cancelled_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cancelled By"
-          },
-          "cancelled_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cancelled At"
-          },
-          "broadcast_status": {
-            "type": "string",
-            "title": "Broadcast Status",
-            "default": "BROADCASTED_TO_GUARD_TERMINALS"
-          },
-          "broadcast_recipients": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Broadcast Recipients"
           }
         },
         "type": "object",
         "required": [
-          "alert_id",
-          "alert_type",
-          "severity",
-          "location",
-          "description",
-          "status",
+          "id",
+          "visitor_name",
+          "service_type",
+          "days_of_week",
+          "start_date",
+          "end_date",
+          "access_start_time",
+          "access_end_time",
+          "is_active",
           "created_at"
         ],
-        "title": "SecurityAlertResponse"
+        "title": "RecurringPassResponse"
+      },
+      "RecurringPassRevokeResponse": {
+        "properties": {
+          "recurring_pass_id": {
+            "type": "string",
+            "title": "Recurring Pass Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recurring_pass_id",
+          "is_active",
+          "message"
+        ],
+        "title": "RecurringPassRevokeResponse"
       },
       "ValidationError": {
         "properties": {
@@ -1189,6 +1278,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",
@@ -1202,79 +1298,31 @@
       "VisitorPreApprovalCreate": {
         "properties": {
           "unit_number": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Unit Number",
-            "example": "Unit 4B"
-          },
-          "visitor_name": {
-            "type": "string",
-            "title": "Visitor Name",
-            "example": "Bob Smith"
-          },
-          "contact_phone": {
-            "type": "string",
-            "title": "Contact Phone",
-            "example": "+15550192834"
-          },
-          "vehicle_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Vehicle Number",
-            "example": "XYZ-9876"
-          },
-          "valid_from": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Valid From",
-            "example": "2026-06-01T14:00:00Z"
-          },
-          "valid_until": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Valid Until",
-            "example": "2026-06-01T18:00:00Z"
-          }
-        },
-        "type": "object",
-        "required": [
-          "unit_number",
-          "visitor_name",
-          "contact_phone",
-          "valid_from",
-          "valid_until"
-        ],
-        "title": "VisitorPreApprovalCreate"
-      },
-      "VisitorPreApprovalResponse": {
-        "properties": {
-          "visitor_id": {
-            "type": "string",
-            "title": "Visitor Id"
-          },
-          "id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
-          "unit_number": {
-            "type": "string",
-            "title": "Unit Number"
+            "default": "Unit 4B"
           },
           "visitor_name": {
             "type": "string",
             "title": "Visitor Name"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
           },
           "contact_phone": {
             "anyOf": [
@@ -1298,6 +1346,86 @@
             ],
             "title": "Vehicle Number"
           },
+          "assigned_parking_slot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Parking Slot"
+          },
+          "expected_arrival": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Arrival"
+          },
+          "expected_departure": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Departure"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visitor_name"
+        ],
+        "title": "VisitorPreApprovalCreate"
+      },
+      "VisitorPreApprovalResponse": {
+        "properties": {
+          "visitor_id": {
+            "type": "string",
+            "title": "Visitor Id"
+          },
+          "qr_token_id": {
+            "type": "string",
+            "title": "Qr Token Id"
+          },
+          "qr_code_payload": {
+            "type": "string",
+            "title": "Qr Code Payload"
+          },
           "qr_token": {
             "type": "string",
             "title": "Qr Token"
@@ -1312,26 +1440,31 @@
             "format": "date-time",
             "title": "Valid Until"
           },
-          "status": {
-            "type": "string",
-            "title": "Status"
+          "unit_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Number"
           },
-          "created_at": {
+          "visitor_name": {
             "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+            "title": "Visitor Name"
           }
         },
         "type": "object",
         "required": [
           "visitor_id",
-          "unit_number",
-          "visitor_name",
+          "qr_token_id",
+          "qr_code_payload",
           "qr_token",
           "valid_from",
           "valid_until",
-          "status",
-          "created_at"
+          "visitor_name"
         ],
         "title": "VisitorPreApprovalResponse"
       }

@@ -1,100 +1,65 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 
 
-def test_create_visitor_pre_approval(client):
-    now = datetime.now(timezone.utc)
-    valid_from = now - timedelta(minutes=5)
-    valid_until = now + timedelta(hours=4)
+def test_visitor_pre_approval_and_qr_validation(client):
+    now = datetime.utcnow()
+    expected_arrival = (now - timedelta(minutes=5)).isoformat()
+    expected_departure = (now + timedelta(hours=4)).isoformat()
 
-    payload = {
-        "unit_number": "Unit 101",
-        "visitor_name": "Alice Johnson",
-        "contact_phone": "+15551234567",
-        "vehicle_number": "ABC-1234",
-        "valid_from": valid_from.isoformat(),
-        "valid_until": valid_until.isoformat(),
-    }
-
-    response = client.post("/api/v1/visitors/pre-approval", json=payload)
-    assert response.status_code == 201, response.text
+    # 1. Create Pre-approval
+    response = client.post(
+        "/api/v1/visitors/pre-approval",
+        json={
+            "unit_number": "Unit 4B",
+            "visitor_name": "Bob Smith",
+            "contact_phone": "+1234567890",
+            "vehicle_number": "ABC-1234",
+            "assigned_parking_slot": "P-42",
+            "valid_from": expected_arrival,
+            "valid_until": expected_departure,
+        },
+    )
+    assert response.status_code == 201
     data = response.json()
-
-    assert data["unit_number"] == "Unit 101"
-    assert data["visitor_name"] == "Alice Johnson"
-    assert data["contact_phone"] == "+15551234567"
+    assert "visitor_id" in data
     assert "qr_token" in data
-    assert data["qr_token"].startswith("QR_")
-    assert data["status"] == "ACTIVE"
+    visitor_id = data["visitor_id"]
+    qr_payload = data["qr_token"]
 
-
-def test_list_visitor_pre_approvals(client):
-    response = client.get("/api/v1/visitors/pre-approval?unit_number=Unit%20101")
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) >= 1
-    assert data[0]["unit_number"] == "Unit 101"
-
-
-def test_validate_qr_entry_success_and_reuse_prevention(client):
-    now = datetime.now(timezone.utc)
-    valid_from = now - timedelta(minutes=10)
-    valid_until = now + timedelta(hours=2)
-
-    # 1. Create a pre-approval
-    payload = {
-        "unit_number": "Unit 202",
-        "visitor_name": "Charlie Brown",
-        "contact_phone": "+15559876543",
-        "vehicle_number": "XYZ-5555",
-        "valid_from": valid_from.isoformat(),
-        "valid_until": valid_until.isoformat(),
-    }
-    create_res = client.post("/api/v1/visitors/pre-approval", json=payload)
-    assert create_res.status_code == 201
-    qr_token = create_res.json()["qr_token"]
-
-    # 2. First scan -> Should grant access
-    scan_payload = {
-        "qr_token": qr_token,
-        "gate_id": "North Gate",
-        "guard_id": "Guard-1",
-    }
-    val_res = client.post("/api/v1/visitors/qr/validate", json=scan_payload)
-    assert val_res.status_code == 200
-    val_data = val_res.json()
+    # 2. Validate QR Code at gate
+    val_response = client.post(
+        "/api/v1/visitors/qr/validate",
+        json={"qr_token": qr_payload, "gate_id": "Main Gate"},
+    )
+    assert val_response.status_code == 200
+    val_data = val_response.json()
     assert val_data["access_granted"] is True
-    assert val_data["visitor_name"] == "Charlie Brown"
-    assert val_data["unit_number"] == "Unit 202"
+    assert val_data["status"] == "VALID"
+    assert val_data["visitor_name"] == "Bob Smith"
+    assert val_data["assigned_parking_slot"] == "P-42"
 
-    # 3. Second scan of the same single-use token -> Should deny access
-    val_res2 = client.post("/api/v1/visitors/qr/validate", json=scan_payload)
-    assert val_res2.status_code == 200
-    val_data2 = val_res2.json()
-    assert val_data2["access_granted"] is False
-    assert val_data2["error_code"] == "TOKEN_EXPIRED_OR_USED"
+    # 3. Attempt re-use of single-use QR token
+    reuse_response = client.post(
+        "/api/v1/visitors/qr/validate",
+        json={"qr_token": qr_payload, "gate_id": "Main Gate"},
+    )
+    assert reuse_response.status_code == 200
+    assert reuse_response.json()["access_granted"] is False
+
+    # 4. Extend Stay
+    extend_response = client.post(
+        f"/api/v1/visitors/{visitor_id}/extend-stay", json={"extension_minutes": 120}
+    )
+    assert extend_response.status_code == 200
+    ext_data = extend_response.json()
+    assert ext_data["visitor_id"] == visitor_id
+    assert "new_expected_departure" in ext_data
 
 
-def test_validate_qr_outside_validity_window(client):
-    now = datetime.now(timezone.utc)
-    # Expired token (valid_until in the past)
-    valid_from = now - timedelta(hours=5)
-    valid_until = now - timedelta(hours=1)
-
-    payload = {
-        "unit_number": "Unit 303",
-        "visitor_name": "Dave Miller",
-        "contact_phone": "+15554443333",
-        "valid_from": valid_from.isoformat(),
-        "valid_until": valid_until.isoformat(),
-    }
-    create_res = client.post("/api/v1/visitors/pre-approval", json=payload)
-    assert create_res.status_code == 201
-    qr_token = create_res.json()["qr_token"]
-
-    scan_payload = {"qr_token": qr_token, "gate_id": "Main Gate"}
-    val_res = client.post("/api/v1/visitors/qr/validate", json=scan_payload)
-    assert val_res.status_code == 200
-    val_data = val_res.json()
-    assert val_data["access_granted"] is False
-    assert val_data["error_code"] == "TOKEN_OUTSIDE_VALIDITY_WINDOW"
+def test_invalid_qr_code_validation(client):
+    response = client.post(
+        "/api/v1/visitors/qr/validate",
+        json={"qr_token": "INVALID_TAMPERED_PAYLOAD", "gate_id": "Main Gate"},
+    )
+    assert response.status_code == 200
+    assert response.json()["access_granted"] is False

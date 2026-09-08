@@ -1,29 +1,34 @@
 import os
-import json
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
 from server.database import init_db, seed_data, SessionLocal
-from server.routers import visitors, deliveries, alerts
+from server.routers import visitors, deliveries, alerts, recurring, overstay
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager for database initialization and seeding."""
+    logger.info("Initializing database schema...")
     init_db()
     db = SessionLocal()
     try:
+        logger.info("Seeding initial data...")
         seed_data(db)
     finally:
         db.close()
     yield
+    logger.info("Shutting down application...")
 
 
 app = FastAPI(
     title="Visitor Management System API",
-    description="RESTful API for residential visitor pre-approval, QR entry validation, delivery tracking, and security alerts.",
     version="1.0.0",
+    description="API for residential community visitor pre-approvals, gate QR scans, courier packages, alerts, and overstay monitoring.",
     lifespan=lifespan,
 )
 
@@ -43,43 +48,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register API Routers
+# Include Routers
 app.include_router(visitors.router)
 app.include_router(deliveries.router)
 app.include_router(alerts.router)
+app.include_router(recurring.router)
+app.include_router(overstay.router)
 
 
 @app.get("/")
 def root():
     return {
         "message": "Visitor Management System API is running",
-        "docs": "/docs",
-        "version": "1.0.0",
+        "docs_url": "/docs",
+        "status": "healthy",
     }
 
 
-@app.get("/api/v1/health")
+@app.get("/health")
 def health_check():
-    return {"status": "healthy"}
-
-
-def generate_openapi_json():
-    """Generates openapi.json at the repository root and server/ directory."""
-    try:
-        schema = app.openapi()
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        server_dir = os.path.dirname(os.path.abspath(__file__))
-
-        root_openapi = os.path.join(base_dir, "openapi.json")
-        server_openapi = os.path.join(server_dir, "openapi.json")
-
-        with open(root_openapi, "w", encoding="utf-8") as f:
-            json.dump(schema, f, indent=2)
-
-        with open(server_openapi, "w", encoding="utf-8") as f:
-            json.dump(schema, f, indent=2)
-    except Exception as e:
-        print(f"Warning: Failed to generate openapi.json: {e}")
-
-
-generate_openapi_json()
+    return {"status": "ok"}

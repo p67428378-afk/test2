@@ -1,127 +1,183 @@
-import sys
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, Field
-
-# Aliasing sys.modules to prevent duplicate module loading ('schemas' vs 'server.schemas')
-if __name__ == "server.schemas":
-    sys.modules["schemas"] = sys.modules["server.schemas"]
-elif __name__ == "schemas":
-    sys.modules["server.schemas"] = sys.modules["schemas"]
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-# Visitor Pre-Approval Schemas
+# --- Visitor Schemas ---
 class VisitorPreApprovalCreate(BaseModel):
-    unit_number: str = Field(..., example="Unit 4B")
-    visitor_name: str = Field(..., example="Bob Smith")
-    contact_phone: str = Field(..., example="+15550192834")
-    vehicle_number: Optional[str] = Field(None, example="XYZ-9876")
-    valid_from: datetime = Field(..., example="2026-06-01T14:00:00Z")
-    valid_until: datetime = Field(..., example="2026-06-01T18:00:00Z")
+    unit_number: Optional[str] = "Unit 4B"
+    visitor_name: str
+    phone_number: Optional[str] = None
+    contact_phone: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    assigned_parking_slot: Optional[str] = None
+    expected_arrival: Optional[datetime] = None
+    expected_departure: Optional[datetime] = None
+    valid_from: Optional[datetime] = None
+    valid_until: Optional[datetime] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_aliases(cls, values):
+        if isinstance(values, dict):
+            phone = values.get("contact_phone") or values.get("phone_number") or ""
+            values["contact_phone"] = phone
+            values["phone_number"] = phone
+
+            vf = values.get("valid_from") or values.get("expected_arrival")
+            vu = values.get("valid_until") or values.get("expected_departure")
+            values["valid_from"] = vf
+            values["valid_until"] = vu
+            values["expected_arrival"] = vf
+            values["expected_departure"] = vu
+        return values
 
 
 class VisitorPreApprovalResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     visitor_id: str
-    id: Optional[str] = None
-    unit_number: str
-    visitor_name: str
-    contact_phone: Optional[str] = None
-    vehicle_number: Optional[str] = None
+    qr_token_id: str
+    qr_code_payload: str
     qr_token: str
     valid_from: datetime
     valid_until: datetime
-    status: str
-    created_at: datetime
+    unit_number: Optional[str] = None
+    visitor_name: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-# QR Entry Validation Schemas
 class QRValidateRequest(BaseModel):
-    qr_token: str = Field(..., example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-    gate_id: str = Field("Main Gate", example="Main Gate")
-    guard_id: Optional[str] = Field(
-        None, example="b4cc290f-9cf0-4999-aa23-432123456789"
-    )
+    qr_token: Optional[str] = None
+    qr_code_payload: Optional[str] = None
+    gate_id: Optional[str] = "Main Gate"
 
 
 class QRValidateResponse(BaseModel):
     access_granted: bool
-    visitor_name: Optional[str] = None
-    unit_number: Optional[str] = None
-    entry_timestamp: Optional[datetime] = None
-    message: str
-    error_code: Optional[str] = None
-    detail: Optional[str] = None
-    resident_notification_sent: bool = True
+    status: str
+    visitor_name: str
+    resident_unit: str
+    entry_timestamp: datetime
+    assigned_parking_slot: Optional[str] = None
 
 
-# Delivery Schemas
+class ExtendStayRequest(BaseModel):
+    extension_minutes: int = Field(120, ge=1, le=240)
+
+
+class ExtendStayResponse(BaseModel):
+    visitor_id: str
+    new_expected_departure: datetime
+
+
+# --- Delivery Schemas ---
 class DeliveryCreate(BaseModel):
-    unit_number: str = Field(..., example="Unit 4B")
-    courier_name: str = Field(..., example="FedEx")
-    tracking_number: Optional[str] = Field(None, example="FX-99201123")
-    package_description: Optional[str] = Field(None, example="Small box")
+    unit_number: str
+    courier_company: Optional[str] = None
+    courier_name: Optional[str] = None
+    tracking_number: Optional[str] = None
+    package_description: Optional[str] = None
 
-
-class DeliveryCollectRequest(BaseModel):
-    notes: Optional[str] = None
+    @model_validator(mode="before")
+    @classmethod
+    def populate_courier(cls, values):
+        if isinstance(values, dict):
+            c = values.get("courier_company") or values.get("courier_name") or "Courier"
+            values["courier_company"] = c
+            values["courier_name"] = c
+        return values
 
 
 class DeliveryResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    delivery_id: str
-    id: Optional[str] = None
+    id: str
     unit_number: str
+    courier_company: str
     courier_name: str
     tracking_number: Optional[str] = None
     package_description: Optional[str] = None
     status: str
     logged_at: datetime
     collected_at: Optional[datetime] = None
-    is_overdue: bool = False
-    notification_sent: bool = True
-    notification_status: str = "DELIVERED_TO_RESIDENT"
 
-
-# Security Alert Schemas
-class SecurityAlertCreate(BaseModel):
-    alert_type: str = Field(..., example="UNAUTHORIZED_ENTRY")
-    severity: str = Field("HIGH", example="HIGH")
-    location: str = Field(..., example="North Gate")
-    description: str = Field(
-        ..., example="Vehicle bypassed barrier without valid QR code"
-    )
-
-
-class SecurityAlertCancel(BaseModel):
-    cancellation_reason: str = Field(
-        ..., example="Accidental trigger during guard shift handoff"
-    )
-
-
-class SecurityAlertResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    alert_id: str
-    id: Optional[str] = None
-    alert_type: str
+
+# --- Alert Schemas ---
+class AlertCreate(BaseModel):
     severity: str
+    alert_type: str
+    location: Optional[str] = None
+    location_tag: Optional[str] = None
+    description: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_location(cls, values):
+        if isinstance(values, dict):
+            loc = values.get("location") or values.get("location_tag") or "Main Gate"
+            values["location"] = loc
+            values["location_tag"] = loc
+        return values
+
+
+class AlertCancel(BaseModel):
+    cancel_reason: str
+
+
+class AlertResponse(BaseModel):
+    id: str
+    severity: str
+    alert_type: str
     location: str
-    description: str
+    location_tag: str
+    description: Optional[str] = None
     status: str
+    cancel_reason: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    can_cancel_until: Optional[datetime] = None
-    cancellation_reason: Optional[str] = None
-    cancelled_by: Optional[str] = None
-    cancelled_at: Optional[datetime] = None
-    broadcast_status: str = "BROADCASTED_TO_GUARD_TERMINALS"
-    broadcast_recipients: List[str] = Field(
-        default_factory=lambda: [
-            "Guard Terminal 1",
-            "Guard Terminal 2",
-            "Security Supervisor App",
-        ]
-    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Recurring Pass Schemas ---
+class RecurringPassCreate(BaseModel):
+    visitor_name: str
+    service_type: str
+    days_of_week: str
+    start_date: datetime
+    end_date: datetime
+    access_start_time: str
+    access_end_time: str
+
+
+class RecurringPassResponse(BaseModel):
+    id: str
+    visitor_name: str
+    service_type: str
+    days_of_week: str
+    start_date: datetime
+    end_date: datetime
+    access_start_time: str
+    access_end_time: str
+    is_active: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecurringPassRevokeResponse(BaseModel):
+    recurring_pass_id: str
+    is_active: bool
+    message: str
+
+
+# --- Overstay & Parking Schemas ---
+class OverstayResponseItem(BaseModel):
+    visitor_id: str
+    visitor_name: str
+    vehicle_number: Optional[str] = None
+    slot_number: Optional[str] = None
+    entry_time: datetime
+    expected_exit_time: datetime
+    grace_period_expires: datetime
+    overstay_status: str

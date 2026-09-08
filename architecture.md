@@ -8,12 +8,15 @@ graph TD
   User([User])
   UI["React 18 / Vite / Tailwind CSS<br/>client/"]
   API["FastAPI Backend<br/>server/"]
-  DB[("PostgreSQL")]
+  DB[("PostgreSQL / SQLite")]
   User --> UI
   UI -->|HTTP / JSON| API
   API --> DB
+  DB --- tbl_users["users"]
   DB --- tbl_visitors["visitors"]
   DB --- tbl_qr_tokens["qr_tokens"]
+  DB --- tbl_recurring_passes["recurring_passes"]
+  DB --- tbl_parking_allocations["parking_allocations"]
   DB --- tbl_deliveries["deliveries"]
   DB --- tbl_security_alerts["security_alerts"]
 ```
@@ -21,8 +24,8 @@ graph TD
 ## Tech Stack
 - **language**: Python 3.11
 - **backend_framework**: FastAPI
-- **orm**: SQLAlchemy 2.x
-- **database**: PostgreSQL
+- **orm**: SQLAlchemy 2.0
+- **database**: PostgreSQL / SQLite
 - **frontend**: React 18 / Vite / Tailwind CSS
 - **cloud_provider**: Google Cloud Platform (GCP)
 - **constitution_section_4_followed**: True
@@ -35,12 +38,16 @@ graph TD
 - server/routers/__init__.py
 - server/routers/alerts.py
 - server/routers/deliveries.py
+- server/routers/overstay.py
+- server/routers/recurring.py
 - server/routers/visitors.py
 - server/schemas.py
 - server/tests/__init__.py
 - server/tests/conftest.py
 - server/tests/test_alerts.py
 - server/tests/test_deliveries.py
+- server/tests/test_overstay.py
+- server/tests/test_recurring.py
 - server/tests/test_visitors.py
 
 ## Frontend Modules (client/)
@@ -74,11 +81,19 @@ graph TD
 - POST /api/v1/visitors/pre-approval
 - POST /api/v1/visitors/qr/validate
 - POST /api/v1/deliveries
+- PUT /api/v1/deliveries/{id}/pickup
 - POST /api/v1/alerts
 - POST /api/v1/alerts/{id}/cancel
+- POST /api/v1/visitors/recurring
+- DELETE /api/v1/visitors/recurring/{id}
+- GET /api/v1/visitors/overstay/active
+- POST /api/v1/visitors/{id}/extend-stay
 
 ## Data Model
+- users
 - visitors
 - qr_tokens
+- recurring_passes
+- parking_allocations
 - deliveries
 - security_alerts

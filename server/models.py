@@ -1,38 +1,112 @@
-import sys
 import uuid
-from datetime import datetime, timezone
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from datetime import datetime
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from server.database import Base
 
-# Aliasing sys.modules to prevent duplicate module loading ('models' vs 'server.models')
-if __name__ == "server.models":
-    sys.modules["models"] = sys.modules["server.models"]
-elif __name__ == "models":
-    sys.modules["server.models"] = sys.modules["models"]
 
-
-def utc_now():
-    return datetime.now(timezone.utc)
-
-
-def generate_uuid():
+def generate_uuid() -> str:
     return str(uuid.uuid4())
 
 
-class VisitorPreApproval(Base):
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    full_name = Column(String(255), nullable=True)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), default="resident", nullable=False)
+    unit_number = Column(String(50), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    visitors = relationship(
+        "Visitor", back_populates="resident", cascade="all, delete-orphan"
+    )
+    recurring_passes = relationship(
+        "RecurringPass", back_populates="resident", cascade="all, delete-orphan"
+    )
+    deliveries = relationship(
+        "Delivery", foreign_keys="Delivery.resident_id", back_populates="resident"
+    )
+    security_alerts = relationship("SecurityAlert", back_populates="reporter")
+
+
+class Visitor(Base):
     __tablename__ = "visitors"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    unit_number = Column(String(50), nullable=False, index=True)
+    resident_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    unit_number = Column(String(50), nullable=True, index=True)
     visitor_name = Column(String(255), nullable=False)
-    contact_phone = Column(String(30), nullable=False)
-    vehicle_number = Column(String(30), nullable=True)
-    created_by_user = Column(String(255), nullable=False, default="test@example.com")
-    created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+    phone_number = Column(String(50), nullable=False)
+    vehicle_number = Column(String(50), nullable=True)
+    assigned_parking_slot = Column(String(50), nullable=True)
+    expected_arrival = Column(DateTime, nullable=False)
+    expected_departure = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
+    resident = relationship("User", back_populates="visitors")
     qr_tokens = relationship(
         "QRToken", back_populates="visitor", cascade="all, delete-orphan"
+    )
+    parking_allocations = relationship(
+        "ParkingAllocation", back_populates="visitor", cascade="all, delete-orphan"
+    )
+
+    @property
+    def visitor_id(self) -> str:
+        return str(self.id)
+
+    @property
+    def valid_from(self) -> datetime:
+        return self.expected_arrival
+
+    @property
+    def valid_until(self) -> datetime:
+        return self.expected_departure
+
+    @property
+    def qr_token(self) -> str:
+        return self.qr_tokens[0].token_signature if self.qr_tokens else ""
+
+    @property
+    def qr_token_id(self) -> str:
+        return str(self.qr_tokens[0].id) if self.qr_tokens else ""
+
+    @property
+    def qr_code_payload(self) -> str:
+        return self.qr_token
+
+
+class RecurringPass(Base):
+    __tablename__ = "recurring_passes"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    resident_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    visitor_name = Column(String(255), nullable=False)
+    service_type = Column(String(100), nullable=False)
+    days_of_week = Column(String(100), nullable=False)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    access_start_time = Column(String(10), nullable=False)
+    access_end_time = Column(String(10), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    resident = relationship("User", back_populates="recurring_passes")
+    qr_tokens = relationship(
+        "QRToken", back_populates="recurring_pass", cascade="all, delete-orphan"
     )
 
 
@@ -40,17 +114,44 @@ class QRToken(Base):
     __tablename__ = "qr_tokens"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    visitor_id = Column(String(36), ForeignKey("visitors.id"), nullable=False)
-    token_signature = Column(Text, unique=True, nullable=False, index=True)
-    valid_from = Column(DateTime(timezone=True), nullable=False)
-    valid_until = Column(DateTime(timezone=True), nullable=False)
-    status = Column(
-        String(30), nullable=False, default="ACTIVE"
-    )  # ACTIVE, USED, EXPIRED, REVOKED
-    used_at = Column(DateTime(timezone=True), nullable=True)
-    used_at_gate = Column(String(100), nullable=True)
+    visitor_id = Column(
+        String(36), ForeignKey("visitors.id"), nullable=True, index=True
+    )
+    recurring_pass_id = Column(
+        String(36), ForeignKey("recurring_passes.id"), nullable=True, index=True
+    )
+    token_signature = Column(String(512), unique=True, index=True, nullable=False)
+    valid_from = Column(DateTime, nullable=False)
+    valid_until = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False, nullable=False)
+    is_recurring = Column(Boolean, default=False, nullable=False)
+    entry_timestamp = Column(DateTime, nullable=True)
+    exit_timestamp = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    visitor = relationship("VisitorPreApproval", back_populates="qr_tokens")
+    visitor = relationship("Visitor", back_populates="qr_tokens")
+    recurring_pass = relationship("RecurringPass", back_populates="qr_tokens")
+
+
+class ParkingAllocation(Base):
+    __tablename__ = "parking_allocations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    visitor_id = Column(
+        String(36), ForeignKey("visitors.id"), nullable=False, index=True
+    )
+    vehicle_number = Column(String(50), nullable=False)
+    slot_number = Column(String(50), nullable=False)
+    entry_time = Column(DateTime, nullable=False)
+    expected_exit_time = Column(DateTime, nullable=False)
+    actual_exit_time = Column(DateTime, nullable=True)
+    overstay_flag = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    visitor = relationship("Visitor", back_populates="parking_allocations")
 
 
 class Delivery(Base):
@@ -58,33 +159,43 @@ class Delivery(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     unit_number = Column(String(50), nullable=False, index=True)
-    courier_name = Column(String(100), nullable=False)
+    resident_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    courier_company = Column(String(100), nullable=False)
     tracking_number = Column(String(100), nullable=True)
-    package_description = Column(Text, nullable=True)
-    status = Column(
-        String(30), nullable=False, default="PENDING_PICKUP"
-    )  # PENDING_PICKUP, COLLECTED
-    logged_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
-    collected_at = Column(DateTime(timezone=True), nullable=True)
+    package_description = Column(String(255), nullable=True)
+    status = Column(String(50), default="Pending Pickup", nullable=False)
+    logged_by_guard_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    logged_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    collected_at = Column(DateTime, nullable=True)
+
+    resident = relationship(
+        "User", foreign_keys=[resident_id], back_populates="deliveries"
+    )
+    logged_by_guard = relationship("User", foreign_keys=[logged_by_guard_id])
+
+    @property
+    def courier_name(self) -> str:
+        return str(self.courier_company)
 
 
 class SecurityAlert(Base):
     __tablename__ = "security_alerts"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
+    reporter_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    severity = Column(String(20), nullable=False)
     alert_type = Column(String(50), nullable=False)
-    severity = Column(
-        String(20), nullable=False, default="HIGH"
-    )  # INFO, MEDIUM, HIGH, CRITICAL
-    location = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    status = Column(
-        String(30), nullable=False, default="ACTIVE"
-    )  # ACTIVE, CANCELLED, RESOLVED
-    cancellation_reason = Column(Text, nullable=True)
-    cancelled_by = Column(String(255), nullable=True)
-    cancelled_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+    location_tag = Column(String(100), nullable=False)
+    description = Column(String(255), nullable=True)
+    status = Column(String(50), default="ACTIVE", nullable=False)
+    cancel_reason = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
-        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
+
+    reporter = relationship("User", back_populates="security_alerts")
+
+    @property
+    def location(self) -> str:
+        return str(self.location_tag)
