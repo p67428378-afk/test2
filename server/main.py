@@ -1,38 +1,35 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import os
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
-)
-from server.database import init_db, seed_data, SessionLocal
+from server.database import init_db, seed_data
+from server.routers import recommendations, health
 
-# Initialize database tables
-init_db()
 
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize DB tables and seed data idempotently
+    init_db()
+    seed_data()
+    yield
+    # Shutdown: Clean up resources if needed
+
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Travel Recommendation System API",
+    description="API for AI-Powered Travel Recommendations by Destination, Budget, and Interests",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    lifespan=lifespan,
 )
 
-# CORS Middleware configuration
-ALLOWED_ORIGINS = os.getenv(
+# CORS Configuration
+allowed_origins_env = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-).split(",")
+)
+ALLOWED_ORIGINS = [
+    origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,19 +39,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+# Register Routers
+app.include_router(recommendations.router)
+app.include_router(health.router)
 
 
-@app.get("/")
-def read_root():
+@app.get("/", tags=["root"])
+def root_status():
     return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
+        "message": "Welcome to the Travel Recommendation System API",
+        "docs_url": "/docs",
+        "health_url": "/api/v1/health",
     }

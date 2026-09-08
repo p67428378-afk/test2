@@ -1,130 +1,76 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class TravelRequestCreate(BaseModel):
+    destination: str = Field(
+        ..., min_length=1, description="Target destination (city/country)"
+    )
+    budget: float = Field(
+        ..., gt=0, description="Daily budget numerical value (must be > 0)"
+    )
+    currency: str = Field(
+        default="USD", description="Currency code (e.g. USD, EUR, JPY)"
+    )
+    interests: List[str] = Field(
+        ..., min_length=1, description="List of interest tags (at least 1 required)"
+    )
+
+    @field_validator("destination")
+    @classmethod
+    def validate_destination_not_empty(cls, v: str) -> str:
+        clean = v.strip()
+        if not clean:
+            raise ValueError("Destination cannot be empty or blank")
+        return clean
+
+    @field_validator("interests")
+    @classmethod
+    def validate_interests_not_empty(cls, v: List[str]) -> List[str]:
+        cleaned = [item.strip() for item in v if item and item.strip()]
+        if not cleaned:
+            raise ValueError("At least one non-empty interest tag is required")
+        return cleaned
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "destination": "Tokyo, Japan",
+                "budget": 150.00,
+                "currency": "USD",
+                "interests": ["Food & Dining", "Temples & Culture"],
+            }
+        }
+    )
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class RecommendationItemSchema(BaseModel):
+    id: Optional[str] = None
+    title: str
+    category: str
+    estimated_cost: float = Field(default=0.0, ge=0)
+    location: Optional[str] = None
+    duration: Optional[str] = None
+    description: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
-    pass
-
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class RecommendationResponse(BaseModel):
+    request_id: str
+    recommendation_id: str
+    destination: str
+    budget: float
+    currency: str
+    interests: List[str]
+    is_fallback: bool = False
     created_at: datetime
-    updated_at: datetime
+    items: List[RecommendationItemSchema] = []
 
-    class Config:
-        from_attributes = True
-
-
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
-
-
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
-
-
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
-
-
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+class HealthResponse(BaseModel):
+    status: str = "healthy"
+    service: str = "travel-recommendation-api"

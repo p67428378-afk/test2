@@ -1,50 +1,53 @@
+import os
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
-from server.main import app
+from sqlalchemy.pool import StaticPool
+from fastapi.testclient import TestClient
+
+# Set testing environment variable
+os.environ["TESTING"] = "true"
+
 from server.database import Base, get_db
+from server.main import app
 
-SQLALCHEMY_DATABASE_URL = "sqlite://"
+# Shared test database engine with SQLite in-memory and StaticPool
+TEST_SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
+test_engine = create_engine(
+    TEST_SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_database():
-    Base.metadata.create_all(bind=engine)
+def setup_test_database():
+    """Create all tables in the in-memory SQLite database once per test session."""
+    Base.metadata.create_all(bind=test_engine)
     yield
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=test_engine)
 
 
-@pytest.fixture(scope="function")
-def db():
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+@pytest.fixture
+def db_session():
+    """Provide a transactional database session for a test."""
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
-@pytest.fixture(scope="function")
-def client(db):
+@pytest.fixture
+def client(db_session):
+    """Provide a TestClient with overridden get_db dependency."""
+
     def override_get_db():
         try:
-            yield db
+            yield db_session
         finally:
             pass
 
