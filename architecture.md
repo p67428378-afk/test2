@@ -62,7 +62,11 @@ graph TD
 - client/src/components/GateValidationBanner.jsx
 - client/src/components/GuardQRScanner.jsx
 - client/src/components/GuardQRScanner.test.jsx
+- client/src/components/OverstayParkingMonitor.jsx
 - client/src/components/PackageLogForm.jsx
+- client/src/components/ParkingAllocationGrid.jsx
+- client/src/components/RecurringPassForm.jsx
+- client/src/components/RecurringPassTable.jsx
 - client/src/components/ResidentVisitorForm.jsx
 - client/src/components/ResidentVisitorForm.test.jsx
 - client/src/components/SecurityAlertTrigger.jsx
@@ -70,6 +74,7 @@ graph TD
 - client/src/main.jsx
 - client/src/pages/DeliveryManagementPage.jsx
 - client/src/pages/GuardTerminalPage.jsx
+- client/src/pages/RecurringPassesPage.jsx
 - client/src/pages/ResidentDashboardPage.jsx
 - client/src/pages/SecurityBroadcastPage.jsx
 - client/src/services/api.js

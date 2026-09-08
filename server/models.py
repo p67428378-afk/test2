@@ -25,15 +25,23 @@ class User(Base):
     )
 
     visitors = relationship(
-        "Visitor", back_populates="resident", cascade="all, delete-orphan"
+        "server.models.Visitor",
+        back_populates="resident",
+        cascade="all, delete-orphan",
     )
     recurring_passes = relationship(
-        "RecurringPass", back_populates="resident", cascade="all, delete-orphan"
+        "server.models.RecurringPass",
+        back_populates="resident",
+        cascade="all, delete-orphan",
     )
     deliveries = relationship(
-        "Delivery", foreign_keys="Delivery.resident_id", back_populates="resident"
+        "server.models.Delivery",
+        foreign_keys="server.models.Delivery.resident_id",
+        back_populates="resident",
     )
-    security_alerts = relationship("SecurityAlert", back_populates="reporter")
+    security_alerts = relationship(
+        "server.models.SecurityAlert", back_populates="reporter"
+    )
 
 
 class Visitor(Base):
@@ -53,12 +61,16 @@ class Visitor(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    resident = relationship("User", back_populates="visitors")
+    resident = relationship("server.models.User", back_populates="visitors")
     qr_tokens = relationship(
-        "QRToken", back_populates="visitor", cascade="all, delete-orphan"
+        "server.models.QRToken",
+        back_populates="visitor",
+        cascade="all, delete-orphan",
     )
     parking_allocations = relationship(
-        "ParkingAllocation", back_populates="visitor", cascade="all, delete-orphan"
+        "server.models.ParkingAllocation",
+        back_populates="visitor",
+        cascade="all, delete-orphan",
     )
 
     @property
@@ -104,9 +116,11 @@ class RecurringPass(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    resident = relationship("User", back_populates="recurring_passes")
+    resident = relationship("server.models.User", back_populates="recurring_passes")
     qr_tokens = relationship(
-        "QRToken", back_populates="recurring_pass", cascade="all, delete-orphan"
+        "server.models.QRToken",
+        back_populates="recurring_pass",
+        cascade="all, delete-orphan",
     )
 
 
@@ -129,8 +143,10 @@ class QRToken(Base):
     exit_timestamp = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    visitor = relationship("Visitor", back_populates="qr_tokens")
-    recurring_pass = relationship("RecurringPass", back_populates="qr_tokens")
+    visitor = relationship("server.models.Visitor", back_populates="qr_tokens")
+    recurring_pass = relationship(
+        "server.models.RecurringPass", back_populates="qr_tokens"
+    )
 
 
 class ParkingAllocation(Base):
@@ -151,7 +167,9 @@ class ParkingAllocation(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    visitor = relationship("Visitor", back_populates="parking_allocations")
+    visitor = relationship(
+        "server.models.Visitor", back_populates="parking_allocations"
+    )
 
 
 class Delivery(Base):
@@ -169,9 +187,13 @@ class Delivery(Base):
     collected_at = Column(DateTime, nullable=True)
 
     resident = relationship(
-        "User", foreign_keys=[resident_id], back_populates="deliveries"
+        "server.models.User",
+        foreign_keys=[resident_id],
+        back_populates="deliveries",
     )
-    logged_by_guard = relationship("User", foreign_keys=[logged_by_guard_id])
+    logged_by_guard = relationship(
+        "server.models.User", foreign_keys=[logged_by_guard_id]
+    )
 
     @property
     def courier_name(self) -> str:
@@ -194,7 +216,7 @@ class SecurityAlert(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    reporter = relationship("User", back_populates="security_alerts")
+    reporter = relationship("server.models.User", back_populates="security_alerts")
 
     @property
     def location(self) -> str:
