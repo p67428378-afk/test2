@@ -23,6 +23,7 @@ def get_db():
 
 
 def init_db():
+    from server import models  # Ensure models are imported so Base.metadata knows about tables
     Base.metadata.create_all(bind=engine)
 
 

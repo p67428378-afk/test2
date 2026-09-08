@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 import os
 
+from server import models  # Ensure models are registered on Base.metadata
 from server.api.v1.endpoints import (
     auth,
     tournaments,
@@ -21,6 +22,8 @@ init_db()
 db = SessionLocal()
 try:
     seed_data(db)
+except Exception as e:
+    print(f"Seed error: {e}")
 finally:
     db.close()
 
