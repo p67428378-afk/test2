@@ -1,35 +1,35 @@
 import os
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from server.database import init_db, seed_data
-from server.routers import recommendations, health
+from server.database import SessionLocal, init_db, seed_data
+from server.routers import codebase_analyzer, health, recommendations
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize DB tables and seed data idempotently
+    # Initialize DB tables
     init_db()
-    seed_data()
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
     yield
-    # Shutdown: Clean up resources if needed
 
 
 app = FastAPI(
-    title="Travel Recommendation System API",
-    description="API for AI-Powered Travel Recommendations by Destination, Budget, and Interests",
+    title="Travel Recommendation & Codebase Analyzer API",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# CORS Configuration
-allowed_origins_env = os.getenv(
+# CORS Middleware configuration
+ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
-)
-ALLOWED_ORIGINS = [
-    origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
-]
+).split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,15 +39,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register Routers
-app.include_router(recommendations.router)
-app.include_router(health.router)
+# Include API Routers under /api/v1
+app.include_router(health.router, prefix="/api/v1")
+app.include_router(recommendations.router, prefix="/api/v1")
+app.include_router(codebase_analyzer.router, prefix="/api/v1")
 
 
-@app.get("/", tags=["root"])
-def root_status():
-    return {
-        "message": "Welcome to the Travel Recommendation System API",
-        "docs_url": "/docs",
-        "health_url": "/api/v1/health",
-    }
+# Also provide direct health check at /health
+@app.get("/health", tags=["health"])
+def root_health():
+    return {"status": "ok", "service": "travel-recommendations-backend"}

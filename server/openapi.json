@@ -1,19 +1,36 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Travel Recommendation System API",
-    "description": "API for AI-Powered Travel Recommendations by Destination, Budget, and Interests",
+    "title": "Travel Recommendation & Codebase Analyzer API",
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/recommendations": {
       "post": {
         "tags": [
           "recommendations"
         ],
-        "summary": "Generate AI Travel Recommendations",
-        "description": "Accepts destination, budget, currency, and interests, and returns personalized recommendations.",
-        "operationId": "generate_recommendations_api_v1_recommendations_post",
+        "summary": "Create Recommendation",
+        "operationId": "create_recommendation_api_v1_recommendations_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -53,8 +70,7 @@
         "tags": [
           "recommendations"
         ],
-        "summary": "Get Travel Recommendation by ID",
-        "description": "Retrieves a previously generated travel recommendation by its UUID.",
+        "summary": "Get Recommendation",
         "operationId": "get_recommendation_api_v1_recommendations__recommendation_id__get",
         "parameters": [
           {
@@ -91,21 +107,40 @@
         }
       }
     },
-    "/api/v1/health": {
-      "get": {
+    "/api/v1/recommendations/export": {
+      "post": {
         "tags": [
-          "health"
+          "recommendations"
         ],
-        "summary": "Service Health Check",
-        "description": "Check the availability and operational health of the Travel Recommendation API service.",
-        "operationId": "health_check_api_v1_health_get",
+        "summary": "Export Recommendation",
+        "operationId": "export_recommendation_api_v1_recommendations_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
+                  "$ref": "#/components/schemas/ExportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -113,13 +148,106 @@
         }
       }
     },
-    "/": {
+    "/api/v1/codebase-analyzer/report": {
       "get": {
         "tags": [
-          "root"
+          "codebase-analyzer"
         ],
-        "summary": "Root Status",
-        "operationId": "root_status__get",
+        "summary": "Get Codebase Report",
+        "operationId": "get_codebase_report_api_v1_codebase_analyzer_report_get",
+        "parameters": [
+          {
+            "name": "issue_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Jira issue key to retrieve report for",
+              "default": "SCRUM-231",
+              "title": "Issue Key"
+            },
+            "description": "Jira issue key to retrieve report for"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodebaseReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/codebase-analyzer/run": {
+      "post": {
+        "tags": [
+          "codebase-analyzer"
+        ],
+        "summary": "Trigger Codebase Analysis",
+        "operationId": "trigger_codebase_analysis_api_v1_codebase_analyzer_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CodebaseAnalysisRunRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodebaseAnalysisRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Root Health",
+        "operationId": "root_health_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -135,6 +263,225 @@
   },
   "components": {
     "schemas": {
+      "CodebaseAnalysisRunRequest": {
+        "properties": {
+          "issue_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Key",
+            "default": "SCRUM-231"
+          },
+          "repo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo Url",
+            "default": "https://github.com/p67428378-afk/test2"
+          },
+          "branch_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch Name",
+            "default": "staging/ISSUE-SCRUM-231"
+          }
+        },
+        "type": "object",
+        "title": "CodebaseAnalysisRunRequest"
+      },
+      "CodebaseAnalysisRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "issue_key": {
+            "type": "string",
+            "title": "Issue Key"
+          },
+          "repo_url": {
+            "type": "string",
+            "title": "Repo Url"
+          },
+          "branch_name": {
+            "type": "string",
+            "title": "Branch Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "report_gcs_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Gcs Path"
+          },
+          "triggered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Triggered At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "issue_key",
+          "repo_url",
+          "branch_name",
+          "status",
+          "triggered_at"
+        ],
+        "title": "CodebaseAnalysisRunResponse"
+      },
+      "CodebaseReport": {
+        "properties": {
+          "issue_key": {
+            "type": "string",
+            "title": "Issue Key"
+          },
+          "repo_url": {
+            "type": "string",
+            "title": "Repo Url"
+          },
+          "branch_analyzed": {
+            "type": "string",
+            "title": "Branch Analyzed"
+          },
+          "analyzed_at": {
+            "type": "string",
+            "title": "Analyzed At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "tech_stack": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Tech Stack"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_key",
+          "repo_url",
+          "branch_analyzed",
+          "analyzed_at",
+          "status",
+          "tech_stack",
+          "metrics"
+        ],
+        "title": "CodebaseReport"
+      },
+      "ExportRequest": {
+        "properties": {
+          "recommendation_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Recommendation Id"
+          },
+          "export_format": {
+            "type": "string",
+            "title": "Export Format",
+            "description": "Export format: json, pdf, or link",
+            "default": "json"
+          },
+          "include_cost_summary": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Cost Summary",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "recommendation_id"
+        ],
+        "title": "ExportRequest"
+      },
+      "ExportResponse": {
+        "properties": {
+          "export_id": {
+            "type": "string",
+            "title": "Export Id"
+          },
+          "recommendation_id": {
+            "type": "string",
+            "title": "Recommendation Id"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type"
+          },
+          "content_base64": {
+            "type": "string",
+            "title": "Content Base64"
+          },
+          "share_url": {
+            "type": "string",
+            "title": "Share Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "export_id",
+          "recommendation_id",
+          "file_name",
+          "mime_type",
+          "content_base64",
+          "share_url"
+        ],
+        "title": "ExportResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -148,35 +495,8 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "HealthResponse": {
+      "RecommendationItemResponse": {
         "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "default": "healthy"
-          },
-          "service": {
-            "type": "string",
-            "title": "Service",
-            "default": "travel-recommendation-api"
-          }
-        },
-        "type": "object",
-        "title": "HealthResponse"
-      },
-      "RecommendationItemSchema": {
-        "properties": {
-          "id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
           "title": {
             "type": "string",
             "title": "Title"
@@ -187,7 +507,6 @@
           },
           "estimated_cost": {
             "type": "number",
-            "minimum": 0.0,
             "title": "Estimated Cost",
             "default": 0.0
           },
@@ -223,24 +542,123 @@
               }
             ],
             "title": "Description"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "recommendation_id": {
+            "type": "string",
+            "title": "Recommendation Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
           "title",
-          "category"
+          "category",
+          "id",
+          "recommendation_id",
+          "created_at"
         ],
-        "title": "RecommendationItemSchema"
+        "title": "RecommendationItemResponse"
       },
       "RecommendationResponse": {
         "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "request_id": {
             "type": "string",
             "title": "Request Id"
           },
-          "recommendation_id": {
+          "is_fallback": {
+            "type": "boolean",
+            "title": "Is Fallback"
+          },
+          "created_at": {
             "type": "string",
-            "title": "Recommendation Id"
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TravelRequestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_estimated_cost": {
+            "type": "number",
+            "title": "Total Estimated Cost",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "request_id",
+          "is_fallback",
+          "created_at"
+        ],
+        "title": "RecommendationResponse"
+      },
+      "TravelRequestCreate": {
+        "properties": {
+          "destination": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Destination",
+            "description": "Target destination city/country"
+          },
+          "budget": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Budget",
+            "description": "Numerical budget constraint"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code (e.g. USD, EUR, JPY)",
+            "default": "USD"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Interests",
+            "description": "List of interest categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "destination",
+          "budget"
+        ],
+        "title": "TravelRequestCreate"
+      },
+      "TravelRequestResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
           },
           "destination": {
             "type": "string",
@@ -255,89 +673,34 @@
             "title": "Currency"
           },
           "interests": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Interests"
-          },
-          "is_fallback": {
-            "type": "boolean",
-            "title": "Is Fallback",
-            "default": false
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/RecommendationItemSchema"
-            },
-            "type": "array",
-            "title": "Items",
-            "default": []
           }
         },
         "type": "object",
         "required": [
-          "request_id",
-          "recommendation_id",
+          "id",
           "destination",
           "budget",
           "currency",
-          "interests",
           "created_at"
         ],
-        "title": "RecommendationResponse"
-      },
-      "TravelRequestCreate": {
-        "properties": {
-          "destination": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Destination",
-            "description": "Target destination (city/country)"
-          },
-          "budget": {
-            "type": "number",
-            "exclusiveMinimum": 0.0,
-            "title": "Budget",
-            "description": "Daily budget numerical value (must be > 0)"
-          },
-          "currency": {
-            "type": "string",
-            "title": "Currency",
-            "description": "Currency code (e.g. USD, EUR, JPY)",
-            "default": "USD"
-          },
-          "interests": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Interests",
-            "description": "List of interest tags (at least 1 required)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "destination",
-          "budget",
-          "interests"
-        ],
-        "title": "TravelRequestCreate",
-        "example": {
-          "budget": 150.0,
-          "currency": "USD",
-          "destination": "Tokyo, Japan",
-          "interests": [
-            "Food & Dining",
-            "Temples & Culture"
-          ]
-        }
+        "title": "TravelRequestResponse"
       },
       "ValidationError": {
         "properties": {

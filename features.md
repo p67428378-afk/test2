@@ -1,12 +1,14 @@
 # Project Features
 
-## SCRUM-231 - User Story: AI-Powered Travel Recommendation System
+## SCRUM-231 - User Story: Enhanced AI-Powered Travel Recommendation System & Codebase Analyzer Report
 
 ### Feature Summary
-An interactive web application allowing travelers to input their destination, budget constraints, and personal interests to receive tailored AI recommendations for places to visit, dining, and activities.
+Enables travelers to generate personalized AI travel recommendations, view structured itineraries, and export/share them, while allowing system administrators to trigger and view automated codebase analysis reports.
 
 ### Key Features
 - Destination, Budget, and Interest Input Form
-- AI Recommendation Engine Integration
-- Structured Recommendation Display with categories, costs, and locations
-- Input Validation and Graceful Error Handling
+- AI Recommendation Generation
+- Structured Recommendation Display
+- Itinerary Export and Sharing
+- Codebase Analyzer Execution & Report Viewer
+- Error Handling & Input Validation

@@ -1,6 +1,16 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
+
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from server.database import Base
@@ -21,11 +31,11 @@ class TravelRequest(Base):
     destination = Column(String(255), nullable=False)
     budget = Column(Float, nullable=False)
     currency = Column(String(10), default="USD", nullable=False)
-    interests = Column(JSON, nullable=False)
+    interests = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     recommendations = relationship(
-        "Recommendation", back_populates="travel_request", cascade="all, delete-orphan"
+        "Recommendation", back_populates="request", cascade="all, delete-orphan"
     )
 
 
@@ -33,19 +43,20 @@ class Recommendation(Base):
     __tablename__ = "recommendations"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    request_id = Column(
-        String(36), ForeignKey("travel_requests.id", ondelete="CASCADE"), nullable=False
-    )
-    raw_ai_response = Column(JSON, nullable=True)
+    request_id = Column(String(36), ForeignKey("travel_requests.id"), nullable=False)
     is_fallback = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
 
-    travel_request = relationship("TravelRequest", back_populates="recommendations")
+    request = relationship("TravelRequest", back_populates="recommendations")
     items = relationship(
         "RecommendationItem",
         back_populates="recommendation",
         cascade="all, delete-orphan",
-        order_by="RecommendationItem.created_at",
+    )
+    export_logs = relationship(
+        "ExportLog",
+        back_populates="recommendation",
+        cascade="all, delete-orphan",
     )
 
 
@@ -54,14 +65,40 @@ class RecommendationItem(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     recommendation_id = Column(
-        String(36), ForeignKey("recommendations.id", ondelete="CASCADE"), nullable=False
+        String(36), ForeignKey("recommendations.id"), nullable=False
     )
     title = Column(String(255), nullable=False)
     category = Column(String(100), nullable=False)
-    estimated_cost = Column(Float, default=0.0, nullable=False)
+    estimated_cost = Column(Float, nullable=False, default=0.0)
     location = Column(String(255), nullable=True)
     duration = Column(String(100), nullable=True)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     recommendation = relationship("Recommendation", back_populates="items")
+
+
+class ExportLog(Base):
+    __tablename__ = "export_logs"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    recommendation_id = Column(
+        String(36), ForeignKey("recommendations.id"), nullable=False
+    )
+    export_format = Column(String(20), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    recommendation = relationship("Recommendation", back_populates="export_logs")
+
+
+class CodebaseAnalysisRun(Base):
+    __tablename__ = "codebase_analysis_runs"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    issue_key = Column(String(50), nullable=False)
+    repo_url = Column(String(255), nullable=False)
+    branch_name = Column(String(100), nullable=False)
+    status = Column(String(20), nullable=False, default="completed")
+    report_gcs_path = Column(String(255), nullable=True)
+    triggered_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)

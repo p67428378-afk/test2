@@ -1,14 +1,12 @@
-def test_health_check_endpoint(client):
+def test_root_health(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+
+
+def test_api_v1_health(client):
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "healthy"
-    assert data["service"] == "travel-recommendation-api"
-
-
-def test_root_endpoint(client):
-    response = client.get("/")
-    assert response.status_code == 200
-    data = response.json()
-    assert "message" in data
-    assert data["health_url"] == "/api/v1/health"
+    assert data["status"] == "ok"

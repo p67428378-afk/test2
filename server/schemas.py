@@ -1,76 +1,105 @@
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TravelRequestCreate(BaseModel):
     destination: str = Field(
-        ..., min_length=1, description="Target destination (city/country)"
+        ..., min_length=1, description="Target destination city/country"
     )
-    budget: float = Field(
-        ..., gt=0, description="Daily budget numerical value (must be > 0)"
-    )
+    budget: float = Field(..., gt=0, description="Numerical budget constraint")
     currency: str = Field(
         default="USD", description="Currency code (e.g. USD, EUR, JPY)"
     )
-    interests: List[str] = Field(
-        ..., min_length=1, description="List of interest tags (at least 1 required)"
-    )
-
-    @field_validator("destination")
-    @classmethod
-    def validate_destination_not_empty(cls, v: str) -> str:
-        clean = v.strip()
-        if not clean:
-            raise ValueError("Destination cannot be empty or blank")
-        return clean
-
-    @field_validator("interests")
-    @classmethod
-    def validate_interests_not_empty(cls, v: List[str]) -> List[str]:
-        cleaned = [item.strip() for item in v if item and item.strip()]
-        if not cleaned:
-            raise ValueError("At least one non-empty interest tag is required")
-        return cleaned
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "destination": "Tokyo, Japan",
-                "budget": 150.00,
-                "currency": "USD",
-                "interests": ["Food & Dining", "Temples & Culture"],
-            }
-        }
+    interests: list[str] = Field(
+        default_factory=list, description="List of interest categories"
     )
 
 
-class RecommendationItemSchema(BaseModel):
-    id: Optional[str] = None
+class TravelRequestResponse(BaseModel):
+    id: str
+    destination: str
+    budget: float
+    currency: str
+    interests: list[str] | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecommendationItemBase(BaseModel):
     title: str
     category: str
-    estimated_cost: float = Field(default=0.0, ge=0)
-    location: Optional[str] = None
-    duration: Optional[str] = None
-    description: Optional[str] = None
+    estimated_cost: float = 0.0
+    location: str | None = None
+    duration: str | None = None
+    description: str | None = None
+
+
+class RecommendationItemResponse(RecommendationItemBase):
+    id: str
+    recommendation_id: str
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RecommendationResponse(BaseModel):
+    id: str
     request_id: str
-    recommendation_id: str
-    destination: str
-    budget: float
-    currency: str
-    interests: List[str]
-    is_fallback: bool = False
+    is_fallback: bool
     created_at: datetime
-    items: List[RecommendationItemSchema] = []
+    request: TravelRequestResponse | None = None
+    items: list[RecommendationItemResponse] = Field(default_factory=list)
+    total_estimated_cost: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class HealthResponse(BaseModel):
-    status: str = "healthy"
-    service: str = "travel-recommendation-api"
+class ExportRequest(BaseModel):
+    recommendation_id: str = Field(..., min_length=1)
+    export_format: str = Field(
+        default="json", description="Export format: json, pdf, or link"
+    )
+    include_cost_summary: bool | None = Field(default=True)
+
+
+class ExportResponse(BaseModel):
+    export_id: str
+    recommendation_id: str
+    file_name: str
+    mime_type: str
+    content_base64: str
+    share_url: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CodebaseReport(BaseModel):
+    issue_key: str
+    repo_url: str
+    branch_analyzed: str
+    analyzed_at: str
+    status: str
+    tech_stack: dict[str, Any]
+    metrics: dict[str, Any]
+
+
+class CodebaseAnalysisRunRequest(BaseModel):
+    issue_key: str | None = Field(default="SCRUM-231")
+    repo_url: str | None = Field(default="https://github.com/p67428378-afk/test2")
+    branch_name: str | None = Field(default="staging/ISSUE-SCRUM-231")
+
+
+class CodebaseAnalysisRunResponse(BaseModel):
+    id: str
+    issue_key: str
+    repo_url: str
+    branch_name: str
+    status: str
+    report_gcs_path: str | None = None
+    triggered_at: datetime
+    completed_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
