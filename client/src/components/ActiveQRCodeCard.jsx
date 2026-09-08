@@ -8,10 +8,16 @@ import {
   User,
   Phone,
   Car,
+  PlusCircle,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+import { extendVisitorStay } from "../services/api";
 
-export default function ActiveQRCodeCard({ visitor }) {
+export default function ActiveQRCodeCard({ visitor, onStayExtended }) {
   const [copied, setCopied] = useState(false);
+  const [extending, setExtending] = useState(false);
+  const [extensionMessage, setExtensionMessage] = useState(null);
 
   if (!visitor) {
     return (
@@ -26,10 +32,32 @@ export default function ActiveQRCodeCard({ visitor }) {
   }
 
   const handleCopy = () => {
-    if (visitor.qr_token) {
-      navigator.clipboard?.writeText(visitor.qr_token);
+    if (visitor.qr_token || visitor.qr_code_payload) {
+      navigator.clipboard?.writeText(
+        visitor.qr_token || visitor.qr_code_payload,
+      );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleExtendStay = async () => {
+    const visitorId = visitor.visitor_id || visitor.id;
+    if (!visitorId) return;
+
+    setExtending(true);
+    setExtensionMessage(null);
+    try {
+      const res = await extendVisitorStay(visitorId, 120);
+      setExtensionMessage("Stay extended by +2 Hours successfully!");
+      if (onStayExtended) onStayExtended(res);
+    } catch (err) {
+      console.error("Failed to extend stay:", err);
+      setExtensionMessage(
+        err?.response?.data?.detail || "Failed to extend stay.",
+      );
+    } finally {
+      setExtending(false);
     }
   };
 
@@ -56,7 +84,7 @@ export default function ActiveQRCodeCard({ visitor }) {
       default:
         return (
           <span className="bg-slate-100 text-slate-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-            {status}
+            {status || "ACTIVE"}
           </span>
         );
     }
@@ -73,7 +101,7 @@ export default function ActiveQRCodeCard({ visitor }) {
       </div>
 
       <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300 mb-4">
-        {/* Simulated visual QR Code Box */}
+        {/* Visual QR Code Box */}
         <div className="w-40 h-40 bg-white p-2 rounded-lg border border-slate-300 shadow-inner flex flex-col items-center justify-center relative">
           <QrCode className="w-32 h-32 text-slate-800" />
           <span className="text-[10px] font-mono text-slate-400 absolute bottom-1">
@@ -81,7 +109,7 @@ export default function ActiveQRCodeCard({ visitor }) {
           </span>
         </div>
         <p className="mt-2 text-xs text-slate-500 font-mono text-center truncate max-w-full px-2">
-          {visitor.qr_token || "Token pending..."}
+          {visitor.qr_token || visitor.qr_code_payload || "Token pending..."}
         </p>
       </div>
 
@@ -99,7 +127,7 @@ export default function ActiveQRCodeCard({ visitor }) {
             <Phone className="w-3.5 h-3.5" /> Contact:
           </span>
           <span className="font-medium text-slate-900">
-            {visitor.contact_phone || "N/A"}
+            {visitor.contact_phone || visitor.phone_number || "N/A"}
           </span>
         </div>
         <div className="flex justify-between items-center">
@@ -115,33 +143,55 @@ export default function ActiveQRCodeCard({ visitor }) {
             <Clock className="w-3.5 h-3.5" /> Window:
           </span>
           <span className="font-medium text-slate-900 text-[11px]">
-            {new Date(visitor.valid_from).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}{" "}
+            {visitor.valid_from
+              ? new Date(visitor.valid_from).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "14:00"}{" "}
             -{" "}
-            {new Date(visitor.valid_until).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            {visitor.valid_until
+              ? new Date(visitor.valid_until).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "18:00"}
           </span>
         </div>
       </div>
 
-      <button
-        onClick={handleCopy}
-        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition"
-      >
-        {copied ? (
-          <>
-            <Check className="w-4 h-4 text-emerald-400" /> Token Copied!
-          </>
-        ) : (
-          <>
-            <Copy className="w-4 h-4" /> Copy QR Token Signature
-          </>
-        )}
-      </button>
+      {extensionMessage && (
+        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 text-blue-800 rounded text-xs flex items-center gap-1">
+          <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+          <span>{extensionMessage}</span>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <button
+          onClick={handleExtendStay}
+          disabled={extending}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow"
+        >
+          <PlusCircle className="w-4 h-4" />
+          {extending ? "Extending..." : "Extend Stay (+2 Hours)"}
+        </button>
+
+        <button
+          onClick={handleCopy}
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition"
+        >
+          {copied ? (
+            <>
+              <Check className="w-4 h-4 text-emerald-400" /> Token Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4" /> Copy QR Token Signature
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

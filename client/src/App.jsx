@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   BrowserRouter,
   Routes,
@@ -13,18 +13,21 @@ import {
   Siren,
   UserCheck,
   KeyRound,
+  Repeat,
 } from "lucide-react";
 
 import ResidentDashboardPage from "./pages/ResidentDashboardPage";
 import GuardTerminalPage from "./pages/GuardTerminalPage";
 import DeliveryManagementPage from "./pages/DeliveryManagementPage";
 import SecurityBroadcastPage from "./pages/SecurityBroadcastPage";
+import RecurringPassesPage from "./pages/RecurringPassesPage";
 
 function Navigation() {
   const location = useLocation();
 
   const navItems = [
     { path: "/", label: "Resident Portal", icon: UserCheck },
+    { path: "/recurring", label: "Recurring & Parking", icon: Repeat },
     { path: "/terminal", label: "Guard Terminal", icon: ShieldCheck },
     { path: "/deliveries", label: "Delivery Packages", icon: Package },
     { path: "/alerts", label: "Security Broadcast", icon: Siren },
@@ -95,6 +98,7 @@ export default function App() {
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Routes>
             <Route path="/" element={<ResidentDashboardPage />} />
+            <Route path="/recurring" element={<RecurringPassesPage />} />
             <Route path="/terminal" element={<GuardTerminalPage />} />
             <Route path="/deliveries" element={<DeliveryManagementPage />} />
             <Route path="/alerts" element={<SecurityBroadcastPage />} />

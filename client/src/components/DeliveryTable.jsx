@@ -6,7 +6,7 @@ import {
   CheckCircle,
   Search,
 } from "lucide-react";
-import { collectDelivery } from "../services/api";
+import { acknowledgePickup } from "../services/api";
 
 export default function DeliveryTable({ deliveries = [], onRefresh }) {
   const [filterUnit, setFilterUnit] = useState("");
@@ -17,14 +17,16 @@ export default function DeliveryTable({ deliveries = [], onRefresh }) {
     setCollectingId(deliveryId);
     setActionError(null);
     try {
-      await collectDelivery(deliveryId, "Resident acknowledged pickup at gate");
+      await acknowledgePickup(deliveryId);
       if (onRefresh) {
         onRefresh();
       }
     } catch (err) {
-      console.error("Failed to collect package:", err);
+      console.error("Failed to acknowledge pickup:", err);
       const detail =
-        err.response?.data?.detail || err.message || "Collection failed";
+        err.response?.data?.detail ||
+        err.message ||
+        "Acknowledge pickup failed";
       setActionError(
         typeof detail === "string" ? detail : JSON.stringify(detail),
       );
@@ -99,7 +101,7 @@ export default function DeliveryTable({ deliveries = [], onRefresh }) {
                     {item.unit_number}
                   </td>
                   <td className="py-3 px-3 text-slate-800 font-medium">
-                    {item.courier_name}
+                    {item.courier_company || item.courier_name || "Courier"}
                   </td>
                   <td className="py-3 px-3 text-slate-600">
                     <div className="font-mono text-[11px] text-slate-800">
@@ -116,7 +118,8 @@ export default function DeliveryTable({ deliveries = [], onRefresh }) {
                   </td>
                   <td className="py-3 px-3">
                     <div className="flex flex-col items-start gap-1">
-                      {item.status === "PENDING_PICKUP" ? (
+                      {item.status === "Pending Pickup" ||
+                      item.status === "PENDING_PICKUP" ? (
                         <span className="bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full border border-amber-200">
                           Pending Pickup
                         </span>
@@ -127,16 +130,19 @@ export default function DeliveryTable({ deliveries = [], onRefresh }) {
                         </span>
                       )}
 
-                      {item.is_overdue && item.status === "PENDING_PICKUP" && (
-                        <span className="bg-red-100 text-red-800 font-bold text-[10px] px-2 py-0.5 rounded-full border border-red-300 flex items-center gap-1 animate-pulse">
-                          <AlertTriangle className="w-3 h-3 text-red-600" />{" "}
-                          OVERDUE (&gt;48h)
-                        </span>
-                      )}
+                      {item.is_overdue &&
+                        (item.status === "Pending Pickup" ||
+                          item.status === "PENDING_PICKUP") && (
+                          <span className="bg-red-100 text-red-800 font-bold text-[10px] px-2 py-0.5 rounded-full border border-red-300 flex items-center gap-1 animate-pulse">
+                            <AlertTriangle className="w-3 h-3 text-red-600" />{" "}
+                            OVERDUE (&gt;48h)
+                          </span>
+                        )}
                     </div>
                   </td>
                   <td className="py-3 px-3 text-right">
-                    {item.status === "PENDING_PICKUP" ? (
+                    {item.status === "Pending Pickup" ||
+                    item.status === "PENDING_PICKUP" ? (
                       <button
                         onClick={() =>
                           handleCollect(item.delivery_id || item.id)
@@ -148,11 +154,11 @@ export default function DeliveryTable({ deliveries = [], onRefresh }) {
                       >
                         {collectingId === (item.delivery_id || item.id)
                           ? "Marking..."
-                          : "Mark Collected"}
+                          : "Acknowledge Pickup"}
                       </button>
                     ) : (
                       <span className="text-slate-400 text-[11px] italic">
-                        Picked up{" "}
+                        Collected{" "}
                         {item.collected_at
                           ? new Date(item.collected_at).toLocaleTimeString()
                           : ""}
