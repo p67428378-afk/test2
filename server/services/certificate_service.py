@@ -1,5 +1,6 @@
 import io
 import uuid
+from typing import List
 import qrcode
 from sqlalchemy.orm import Session
 from reportlab.lib.pagesizes import letter, landscape
