@@ -1,37 +1,26 @@
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
 import os
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from starlette.middleware.cors import CORSMiddleware
 
-from server.api.v1.endpoints import (
-    auth,
-    tournaments,
-    players,
-    pairings,
-    scores,
-    standings,
-    certificates,
+from server.schemas import HealthResponse
+from server.services.calculator import (
+    CalculatorError,
+    DivisionByZeroError,
+    InvalidSyntaxError,
 )
-from server.database import init_db, seed_data, SessionLocal
-
-# Initialize database tables
-init_db()
-
-# Seed initial data
-db = SessionLocal()
-try:
-    seed_data(db)
-finally:
-    db.close()
+from server.routers.calculator import router as calculator_router
 
 app = FastAPI(
-    title="Chess Tournament Management System API",
+    title="Simple Calculator API",
     version="1.0.0",
-    description="FIDE Swiss pairings, match score tracking, live standings, and verifiable digital certificates.",
+    description="Stateless REST API for basic mathematical calculations with precision arithmetic.",
 )
 
 # CORS Middleware configuration
 ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000",
 ).split(",")
 
 app.add_middleware(
@@ -42,19 +31,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers under /api/v1
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-app.include_router(tournaments.router, prefix="/api/v1", tags=["tournaments"])
-app.include_router(players.router, prefix="/api/v1", tags=["players"])
-app.include_router(pairings.router, prefix="/api/v1", tags=["pairings"])
-app.include_router(scores.router, prefix="/api/v1", tags=["scores"])
-app.include_router(standings.router, prefix="/api/v1", tags=["standings"])
-app.include_router(certificates.router, prefix="/api/v1", tags=["certificates"])
+
+@app.exception_handler(DivisionByZeroError)
+async def division_by_zero_handler(request: Request, exc: DivisionByZeroError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": exc.message, "error_code": exc.error_code},
+    )
 
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Welcome to the Chess Tournament Management System API",
-        "docs": "/docs",
-    }
+@app.exception_handler(InvalidSyntaxError)
+async def invalid_syntax_handler(request: Request, exc: InvalidSyntaxError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.message, "error_code": exc.error_code},
+    )
+
+
+@app.exception_handler(CalculatorError)
+async def calculator_error_handler(request: Request, exc: CalculatorError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": exc.message, "error_code": exc.error_code},
+    )
+
+
+@app.get("/health", response_model=HealthResponse, tags=["health"])
+def health_check() -> HealthResponse:
+    return HealthResponse(status="healthy")
+
+
+# Register routers under /api/v1
+app.include_router(calculator_router, prefix="/api/v1")
