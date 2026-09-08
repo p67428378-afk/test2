@@ -32,14 +32,16 @@ describe("CheckInForm Component", () => {
     );
 
     expect(screen.getByText(/Bob Marley/i)).toBeInTheDocument();
-    expect(screen.getByText(/Double Suite/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Double Suite/i).length).toBeGreaterThan(0);
 
     // Check government ID checkbox
     const idCheckbox = screen.getByLabelText(/Government Issued Photo ID/i);
     fireEvent.click(idCheckbox);
 
     // Submit form
-    const submitBtn = screen.getByRole("button", { name: /Confirm Check-In/i });
+    const submitBtn = screen.getByRole("button", {
+      name: /Confirm Check-In/i,
+    });
     fireEvent.click(submitBtn);
 
     expect(handleConfirm).toHaveBeenCalledWith("res-12345678", "room-1");

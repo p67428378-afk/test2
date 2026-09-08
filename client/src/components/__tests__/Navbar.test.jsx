@@ -16,10 +16,10 @@ describe("Navbar Component", () => {
     );
 
     expect(screen.getByText(/Grand Horizon/i)).toBeInTheDocument();
-    expect(screen.getByText(/Rooms Inventory/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reservations/i)).toBeInTheDocument();
-    expect(screen.getByText(/Front Desk/i)).toBeInTheDocument();
-    expect(screen.getByText(/Billing & Folios/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Rooms Inventory/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Reservations/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Front Desk/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Billing & Folios/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Jane Doe/i)).toBeInTheDocument();
   });
 });

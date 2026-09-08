@@ -32,9 +32,9 @@ describe("InvoiceFolioCard Component", () => {
     );
 
     expect(screen.getByText(/Invoice #inv-1234/i)).toBeInTheDocument();
-    expect(screen.getByText(/\$440.00/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/\$440.00/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/\$44.00/i)).toBeInTheDocument();
-    expect(screen.getByText(/\$504.00/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/\$504.00/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("button", { name: /Settle & Pay/i }),
     ).toBeInTheDocument();

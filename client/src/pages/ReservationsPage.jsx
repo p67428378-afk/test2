@@ -160,7 +160,7 @@ export default function ReservationsPage() {
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition"
           >
-            <Plus className="w-4 h-4" /> + New Reservation
+            <Plus className="w-4 h-4" /> New Reservation
           </button>
         </div>
       </div>
