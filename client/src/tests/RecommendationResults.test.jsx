@@ -6,7 +6,7 @@ import BudgetSummaryCard from "../components/BudgetSummaryCard";
 
 const mockRecommendation = {
   request_id: "req-123",
-  recommendation_id: "rec-456",
+  id: "rec-456",
   destination: "Tokyo, Japan",
   budget: 150.0,
   currency: "USD",
@@ -42,6 +42,21 @@ describe("RecommendationResults", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Senso-ji Temple")).toBeInTheDocument();
     expect(screen.getByText("Omoide Yokocho")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Export Itinerary/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Share Link/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens export modal when export button is clicked", () => {
+    render(<RecommendationResults recommendation={mockRecommendation} />);
+
+    const exportBtn = screen.getByRole("button", { name: /Export Itinerary/i });
+    fireEvent.click(exportBtn);
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("filters items when category tab is clicked", () => {

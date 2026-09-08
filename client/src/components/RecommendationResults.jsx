@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ExportItineraryModal from "./ExportItineraryModal";
 
 const CATEGORY_STYLES = {
   "Temples & Culture": "bg-blue-100 text-blue-800",
@@ -12,16 +13,26 @@ const CATEGORY_STYLES = {
 
 export default function RecommendationResults({ recommendation, onReset }) {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportModalFormat, setExportModalFormat] = useState("json");
 
   if (!recommendation) return null;
 
-  const {
-    destination,
-    budget,
-    currency = "USD",
-    is_fallback = false,
-    items = [],
-  } = recommendation;
+  const recId = recommendation.id || recommendation.recommendation_id;
+  const destination =
+    recommendation.destination ||
+    recommendation.request?.destination ||
+    "Destination";
+  const budget = recommendation.budget ?? recommendation.request?.budget ?? 0;
+  const currency =
+    recommendation.currency || recommendation.request?.currency || "USD";
+  const isFallback = recommendation.is_fallback || false;
+  const items = recommendation.items || [];
+
+  const totalEstimatedSpend = items.reduce(
+    (sum, item) => sum + (Number(item.estimated_cost) || 0),
+    0,
+  );
 
   // Extract unique categories
   const categories = [
@@ -45,15 +56,21 @@ export default function RecommendationResults({ recommendation, onReset }) {
     return `$${Number(cost).toFixed(2)} ${currency}`;
   };
 
+  const handleOpenExport = (format = "json") => {
+    setExportModalFormat(format);
+    setIsExportModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Top Header with Action Buttons */}
       <header className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center space-x-3 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
             <h1 className="text-2xl font-bold text-slate-900">
               Personalized Itinerary for {destination}
             </h1>
-            {is_fallback ? (
+            {isFallback ? (
               <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full border border-amber-200">
                 Fallback Results
               </span>
@@ -64,18 +81,35 @@ export default function RecommendationResults({ recommendation, onReset }) {
             )}
           </div>
           <p className="text-slate-600 text-sm">
-            Daily Budget: ${Number(budget).toFixed(2)} {currency} | Total
-            Activities: {items.length}
+            Daily Budget: ${Number(budget).toFixed(2)} | Total Estimated Spend:
+            ${totalEstimatedSpend.toFixed(2)} {currency}
           </p>
         </div>
-        {onReset && (
+
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={onReset}
-            className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition"
+            onClick={() => handleOpenExport("json")}
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm flex items-center space-x-1.5"
           >
-            ← Modify Search
+            <span>📥</span>
+            <span>Export Itinerary</span>
           </button>
-        )}
+          <button
+            onClick={() => handleOpenExport("link")}
+            className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition border border-slate-200 flex items-center space-x-1.5"
+          >
+            <span>🔗</span>
+            <span>Share Link</span>
+          </button>
+          {onReset && (
+            <button
+              onClick={onReset}
+              className="px-3.5 py-2 bg-slate-50 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-100 transition border border-slate-200"
+            >
+              Modify
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Category Filter Tabs */}
@@ -138,6 +172,17 @@ export default function RecommendationResults({ recommendation, onReset }) {
           ))
         )}
       </div>
+
+      {/* Export Modal */}
+      {isExportModalOpen && (
+        <ExportItineraryModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          recommendationId={recId}
+          destination={destination}
+          defaultFormat={exportModalFormat}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
 
 import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
+import CodebaseReportPage from "./pages/CodebaseReportPage";
 import { getRecommendationById } from "./services/api";
 
 function HomeView({ setRecommendation }) {
@@ -108,6 +109,7 @@ export default function App() {
           path="/recommendations/:id"
           element={<DetailView setRecommendation={setRecommendation} />}
         />
+        <Route path="/admin/codebase-report" element={<CodebaseReportPage />} />
       </Routes>
     </Router>
   );

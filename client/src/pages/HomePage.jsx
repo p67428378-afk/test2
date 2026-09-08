@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import { Link } from "react-router-dom";
 import RecommendationForm from "../components/RecommendationForm";
 import { generateRecommendations } from "../services/api";
 
@@ -34,15 +34,20 @@ export default function HomePage({ onRecommendationGenerated }) {
       <header className="max-w-6xl mx-auto bg-white shadow-sm p-4 rounded-2xl border border-slate-200 flex justify-between items-center mb-8">
         <div className="flex items-center space-x-2">
           <span className="text-2xl">✈️</span>
-          <h1 className="text-xl font-bold text-blue-600">TravelAI</h1>
+          <Link to="/" className="text-xl font-bold text-blue-600">
+            TravelAI
+          </Link>
         </div>
         <nav className="space-x-4 text-sm font-medium">
-          <a href="#" className="text-blue-600 font-semibold">
+          <Link to="/" className="text-blue-600 font-semibold">
             Plan Trip
-          </a>
-          <a href="#" className="text-slate-600 hover:text-blue-600 transition">
-            Saved Itineraries
-          </a>
+          </Link>
+          <Link
+            to="/admin/codebase-report"
+            className="text-slate-600 hover:text-blue-600 transition"
+          >
+            Codebase Report
+          </Link>
         </nav>
       </header>
 

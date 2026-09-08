@@ -21,6 +21,29 @@ export const getRecommendationById = async (recommendationId) => {
   return response.data;
 };
 
+export const exportItinerary = async (payload) => {
+  const response = await apiClient.post(
+    "/api/v1/recommendations/export",
+    payload,
+  );
+  return response.data;
+};
+
+export const getCodebaseReport = async (issueKey = "SCRUM-231") => {
+  const response = await apiClient.get("/api/v1/codebase-analyzer/report", {
+    params: { issue_key: issueKey },
+  });
+  return response.data;
+};
+
+export const triggerCodebaseAnalysis = async (payload = {}) => {
+  const response = await apiClient.post(
+    "/api/v1/codebase-analyzer/run",
+    payload,
+  );
+  return response.data;
+};
+
 export const checkHealth = async () => {
   const response = await apiClient.get("/api/v1/health");
   return response.data;
@@ -29,5 +52,8 @@ export const checkHealth = async () => {
 export default {
   generateRecommendations,
   getRecommendationById,
+  exportItinerary,
+  getCodebaseReport,
+  triggerCodebaseAnalysis,
   checkHealth,
 };

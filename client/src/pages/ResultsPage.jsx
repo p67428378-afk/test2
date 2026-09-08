@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import { Link } from "react-router-dom";
 import RecommendationResults from "../components/RecommendationResults";
 import BudgetSummaryCard from "../components/BudgetSummaryCard";
 
@@ -25,19 +25,40 @@ export default function ResultsPage({ recommendation, onReset }) {
     );
   }
 
+  const budget = recommendation.budget ?? recommendation.request?.budget ?? 0;
+  const currency =
+    recommendation.currency || recommendation.request?.currency || "USD";
+  const items = recommendation.items || [];
+
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
       <header className="max-w-6xl mx-auto bg-white shadow-sm p-4 rounded-2xl border border-slate-200 flex justify-between items-center mb-6">
         <div className="flex items-center space-x-2">
           <span className="text-2xl">✈️</span>
-          <h1 className="text-xl font-bold text-blue-600">TravelAI</h1>
+          <Link to="/" className="text-xl font-bold text-blue-600">
+            TravelAI
+          </Link>
         </div>
-        <button
-          onClick={onReset}
-          className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition"
-        >
-          + New Search
-        </button>
+        <div className="flex items-center space-x-4 text-sm font-medium">
+          <Link
+            to="/"
+            className="text-slate-600 hover:text-blue-600 transition"
+          >
+            Plan Trip
+          </Link>
+          <Link
+            to="/admin/codebase-report"
+            className="text-slate-600 hover:text-blue-600 transition"
+          >
+            Codebase Report
+          </Link>
+          <button
+            onClick={onReset}
+            className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition pl-2 border-l border-slate-200"
+          >
+            + New Search
+          </button>
+        </div>
       </header>
 
       {saveSuccess && (
@@ -56,9 +77,9 @@ export default function ResultsPage({ recommendation, onReset }) {
 
         <aside>
           <BudgetSummaryCard
-            budget={recommendation.budget}
-            currency={recommendation.currency}
-            items={recommendation.items}
+            budget={budget}
+            currency={currency}
+            items={items}
             onSave={handleSave}
           />
         </aside>
