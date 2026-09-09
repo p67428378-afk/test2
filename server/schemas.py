@@ -1,130 +1,140 @@
-import uuid
+from typing import List, Optional
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# ---------------------------------------------------------
+# POSE SCHEMAS
+# ---------------------------------------------------------
+class PoseBase(BaseModel):
+    english_name: str = Field(..., min_length=1, description="English name of the pose")
+    sanskrit_name: Optional[str] = Field(None, description="Sanskrit name of the pose")
+    difficulty: str = Field(
+        ..., description="Difficulty level: Beginner, Intermediate, Advanced"
+    )
+    category: str = Field(
+        ..., description="Category: Standing, Seated, Inversion, Balance, Restorative"
+    )
+    alignment_cues: Optional[str] = None
+    breath_instructions: Optional[str] = None
+    target_muscles: Optional[str] = None
+    common_mistakes: Optional[str] = None
+    image_url: Optional[str] = None
+    video_url: Optional[str] = None
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
-
-
-class TournamentCreate(TournamentBase):
+class PoseCreate(PoseBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class PoseUpdate(BaseModel):
+    english_name: Optional[str] = None
+    sanskrit_name: Optional[str] = None
+    difficulty: Optional[str] = None
+    category: Optional[str] = None
+    alignment_cues: Optional[str] = None
+    breath_instructions: Optional[str] = None
+    target_muscles: Optional[str] = None
+    common_mistakes: Optional[str] = None
+    image_url: Optional[str] = None
+    video_url: Optional[str] = None
+
+
+class PoseResponse(PoseBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    is_favorite: Optional[bool] = False
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+
+# ---------------------------------------------------------
+# ROUTINE POSE ITEM SCHEMAS
+# ---------------------------------------------------------
+class RoutinePoseItemCreate(BaseModel):
+    pose_id: str = Field(..., description="UUID of the target pose")
+    sequence_order: Optional[int] = Field(
+        1, ge=1, description="Position order in sequence"
+    )
+    hold_duration_seconds: int = Field(30, ge=1, description="Hold duration in seconds")
+    transition_notes: Optional[str] = None
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class RoutinePoseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    routine_id: str
+    pose_id: str
+    sequence_order: int
+    hold_duration_seconds: int
+    transition_notes: Optional[str] = None
+    pose: Optional[PoseResponse] = None
+    created_at: datetime
+    updated_at: datetime
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+# ---------------------------------------------------------
+# ROUTINE SCHEMAS
+# ---------------------------------------------------------
+class RoutineCreate(BaseModel):
+    name: str = Field(..., min_length=1, description="Routine title")
+    description: Optional[str] = None
+    poses: Optional[List[RoutinePoseItemCreate]] = Field(default_factory=list)
+    items: Optional[List[RoutinePoseItemCreate]] = (
+        None  # Alias support for frontend flexibility
+    )
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+class RoutineUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    poses: Optional[List[RoutinePoseItemCreate]] = None
+    items: Optional[List[RoutinePoseItemCreate]] = None
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class RoutineResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: str
+    name: str
+    description: Optional[str] = None
+    total_duration_seconds: int
+    poses: List[RoutinePoseResponse] = Field(default_factory=list)
+    created_at: datetime
+    updated_at: datetime
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+# ---------------------------------------------------------
+# FAVORITES SCHEMAS
+# ---------------------------------------------------------
+class FavoriteActionResponse(BaseModel):
+    message: str
+    pose_id: str
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+# ---------------------------------------------------------
+# PRACTICE SESSION SCHEMAS
+# ---------------------------------------------------------
+class PracticeSessionCreate(BaseModel):
+    routine_id: Optional[str] = None
+    completed_duration_seconds: int = Field(
+        ..., ge=0, description="Total duration in seconds"
+    )
+    poses_completed: int = Field(..., ge=0, description="Count of poses completed")
+    notes: Optional[str] = None
+    user_id: Optional[str] = "default_user"
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class PracticeSessionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: str
+    user_id: str
+    routine_id: Optional[str] = None
+    completed_duration_seconds: int
+    poses_completed: int
+    notes: Optional[str] = None
+    completed_at: datetime
+    routine_name: Optional[str] = None
