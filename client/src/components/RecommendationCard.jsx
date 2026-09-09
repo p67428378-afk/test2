@@ -5,7 +5,7 @@ import {
   ThumbsDown,
   Star,
   ShoppingCart,
-  Check,
+  Heart,
   Tag,
 } from "lucide-react";
 import { api } from "../services/api";
@@ -15,6 +15,7 @@ export default function RecommendationCard({
   userId = "user-123",
   onAddToCart,
   onFeedbackSubmitted,
+  onBookmarkSaved,
 }) {
   if (!recommendation) return null;
 
@@ -28,6 +29,10 @@ export default function RecommendationCard({
   const [feedbackState, setFeedbackState] = useState(null); // 'like' | 'dislike' | null
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
+
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingBookmark, setSavingBookmark] = useState(false);
+  const [bookmarkMessage, setBookmarkMessage] = useState("");
 
   const matchPercent = Math.min(Math.max(match_score * 100, 0), 100).toFixed(1);
 
@@ -58,12 +63,49 @@ export default function RecommendationCard({
     }
   };
 
+  const handleBookmark = async () => {
+    if (isSaved || savingBookmark) return;
+    setSavingBookmark(true);
+    setBookmarkMessage("");
+    try {
+      const payload = {
+        user_id: userId,
+        product_id: product.id,
+        recommendation_id: recommendation_id || null,
+      };
+      const result = await api.bookmarkRecommendation(payload);
+      setIsSaved(true);
+      setBookmarkMessage("Saved to favorites!");
+      if (onBookmarkSaved) {
+        onBookmarkSaved(result);
+      }
+      setTimeout(() => setBookmarkMessage(""), 3000);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setIsSaved(true);
+        setBookmarkMessage("Already in saved items");
+        setTimeout(() => setBookmarkMessage(""), 3000);
+      } else {
+        const detail =
+          err.response?.data?.detail ||
+          err.message ||
+          "Failed to save bookmark.";
+        setBookmarkMessage(
+          typeof detail === "string" ? detail : JSON.stringify(detail),
+        );
+        setTimeout(() => setBookmarkMessage(""), 3000);
+      }
+    } finally {
+      setSavingBookmark(false);
+    }
+  };
+
   const isFallback =
     recommendation_type === "fallback_top_rated" ||
     recommendation_type === "fallback";
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative">
       <div>
         {/* Top Header Banner */}
         <div className="p-4 bg-gradient-to-r from-indigo-50 via-violet-50 to-amber-50/40 border-b border-slate-100 flex items-center justify-between">
@@ -86,11 +128,43 @@ export default function RecommendationCard({
             </span>
           </div>
 
-          <div className="flex items-center space-x-1 text-amber-500 text-xs font-bold">
-            <Star className="w-3.5 h-3.5 fill-current" />
-            <span>{product.rating ? product.rating.toFixed(1) : "4.8"}</span>
+          <div className="flex items-center space-x-2">
+            {/* Bookmark / Heart Button */}
+            <button
+              type="button"
+              disabled={savingBookmark}
+              onClick={handleBookmark}
+              className={`p-1.5 rounded-lg border text-xs font-semibold flex items-center space-x-1 transition-all ${
+                isSaved
+                  ? "bg-rose-50 border-rose-300 text-rose-600"
+                  : "bg-white border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200"
+              }`}
+              title={isSaved ? "Saved to Bookmarks" : "Save / Bookmark"}
+              aria-label="Save recommendation"
+            >
+              <Heart
+                className={`w-4 h-4 ${
+                  isSaved ? "fill-rose-500 text-rose-500" : ""
+                } ${savingBookmark ? "animate-pulse" : ""}`}
+              />
+              <span className="hidden sm:inline text-[10px]">
+                {isSaved ? "Saved" : "Save"}
+              </span>
+            </button>
+
+            <div className="flex items-center space-x-1 text-amber-500 text-xs font-bold">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>{product.rating ? product.rating.toFixed(1) : "4.8"}</span>
+            </div>
           </div>
         </div>
+
+        {/* Bookmark Feedback Message */}
+        {bookmarkMessage && (
+          <div className="px-4 py-1.5 bg-indigo-50 border-b border-indigo-100 text-[11px] text-indigo-700 font-medium flex items-center justify-between">
+            <span>{bookmarkMessage}</span>
+          </div>
+        )}
 
         {/* Content Body */}
         <div className="p-5 space-y-3">
@@ -112,7 +186,7 @@ export default function RecommendationCard({
             <div className="flex flex-wrap gap-1.5 pt-1">
               {product.tags.map((tag) => (
                 <span
-                  key={`${recommendation_id}-tag-${tag}`}
+                  key={`${recommendation_id || product.id}-tag-${tag}`}
                   className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200"
                 >
                   <Tag className="w-2.5 h-2.5 mr-1 text-slate-400" />
@@ -162,7 +236,11 @@ export default function RecommendationCard({
               aria-label="Like recommendation"
             >
               <ThumbsUp
-                className={`w-3.5 h-3.5 ${feedbackState === "like" ? "fill-emerald-600" : ""}`}
+                className={`w-3.5 h-3.5 ${
+                  feedbackState === "like"
+                    ? "fill-emerald-600 text-emerald-600"
+                    : ""
+                }`}
               />
               {feedbackState === "like" && (
                 <span className="text-[10px]">Liked</span>
@@ -182,7 +260,11 @@ export default function RecommendationCard({
               aria-label="Dislike recommendation"
             >
               <ThumbsDown
-                className={`w-3.5 h-3.5 ${feedbackState === "dislike" ? "fill-rose-600" : ""}`}
+                className={`w-3.5 h-3.5 ${
+                  feedbackState === "dislike"
+                    ? "fill-rose-600 text-rose-600"
+                    : ""
+                }`}
               />
               {feedbackState === "dislike" && (
                 <span className="text-[10px]">Disliked</span>

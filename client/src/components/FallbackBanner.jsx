@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Sparkles, ArrowRight, Info } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 export default function FallbackBanner({
   message = "Showing our top-rated popular picks across the catalog.",

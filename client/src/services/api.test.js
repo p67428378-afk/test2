@@ -23,6 +23,16 @@ describe("api service structure", () => {
     expect(typeof api.submitFeedback).toBe("function");
   });
 
+  it("exports expected saved recommendation endpoints", () => {
+    expect(typeof api.bookmarkRecommendation).toBe("function");
+    expect(typeof api.getSavedItems).toBe("function");
+    expect(typeof api.deleteSavedItem).toBe("function");
+  });
+
+  it("exports expected recommendation history endpoints", () => {
+    expect(typeof api.getRecommendationHistory).toBe("function");
+  });
+
   it("exports health check endpoint", () => {
     expect(typeof api.checkHealth).toBe("function");
   });

@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import PreferencesPage from "./PreferencesPage";
@@ -18,7 +18,7 @@ vi.mock("../services/api", () => ({
 }));
 
 describe("PreferencesPage Component", () => {
-  it("renders preference instructions and form", () => {
+  it("renders preference instructions and form", async () => {
     render(
       <BrowserRouter>
         <PreferencesPage userId="user-123" />
@@ -31,5 +31,11 @@ describe("PreferencesPage Component", () => {
     expect(screen.getByText("1. Select Categories")).toBeInTheDocument();
     expect(screen.getByText("2. Budget Boundaries")).toBeInTheDocument();
     expect(screen.getByText("3. AI Vector Scoring")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /save & sync ai profile/i }),
+      ).not.toBeDisabled();
+    });
   });
 });

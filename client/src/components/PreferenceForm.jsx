@@ -6,7 +6,6 @@ import {
   AlertCircle,
   Plus,
   X,
-  Sparkles,
 } from "lucide-react";
 import { api } from "../services/api";
 
@@ -75,7 +74,7 @@ export default function PreferenceForm({
             setTags(data.preferred_tags);
           }
         }
-      } catch (err) {
+      } catch {
         // Not found or not set yet - ignore error
       } finally {
         if (isMounted) setFetchingExisting(false);

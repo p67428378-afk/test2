@@ -4,6 +4,7 @@ import {
   ShoppingBag,
   Sliders,
   Sparkles,
+  Bookmark,
   User,
   ShoppingCart,
 } from "lucide-react";
@@ -15,6 +16,7 @@ export default function Navbar({ userId = "user-123", cartCount = 0 }) {
     { name: "Product Catalog", path: "/", icon: ShoppingBag },
     { name: "Preferences", path: "/preferences", icon: Sliders },
     { name: "AI Recommendations", path: "/recommendations", icon: Sparkles },
+    { name: "Saved Items", path: "/recommendations?tab=saved", icon: Bookmark },
   ];
 
   return (
@@ -42,9 +44,26 @@ export default function Navbar({ userId = "user-123", cartCount = 0 }) {
           <nav className="flex items-center space-x-1 sm:space-x-2">
             {navLinks.map((link) => {
               const Icon = link.icon;
+              const isSavedTab =
+                link.path.includes("tab=saved") &&
+                location.pathname === "/recommendations" &&
+                location.search.includes("tab=saved");
+              const isRecsTab =
+                link.path === "/recommendations" &&
+                location.pathname === "/recommendations" &&
+                !location.search.includes("tab=saved");
+              const isCatalog =
+                (link.path === "/" &&
+                  (location.pathname === "/" ||
+                    location.pathname === "/products")) ||
+                location.pathname === link.path;
               const isActive =
-                location.pathname === link.path ||
-                (link.path === "/" && location.pathname === "/products");
+                isSavedTab ||
+                isRecsTab ||
+                (link.path !== "/recommendations" &&
+                  !link.path.includes("tab=saved") &&
+                  isCatalog);
+
               return (
                 <Link
                   key={link.name}

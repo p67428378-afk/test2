@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import CatalogPage from "./pages/CatalogPage";
 import PreferencesPage from "./pages/PreferencesPage";
 import RecommendationsPage from "./pages/RecommendationsPage";
-import { Sparkles, Heart } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function App() {
   const [userId] = useState("user-123");

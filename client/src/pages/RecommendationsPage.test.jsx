@@ -9,6 +9,8 @@ vi.mock("../services/api", () => ({
   api: {
     generateRecommendations: vi.fn(),
     submitFeedback: vi.fn(),
+    getSavedItems: vi.fn(),
+    getRecommendationHistory: vi.fn(),
   },
 }));
 
@@ -45,7 +47,7 @@ describe("RecommendationsPage Component", () => {
     );
 
     expect(
-      screen.getByText("AI Personalized Picks for You"),
+      screen.getByText("Personalized Picks & Saved Items"),
     ).toBeInTheDocument();
 
     await waitFor(() => {

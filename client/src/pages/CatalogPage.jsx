@@ -3,7 +3,7 @@ import { api } from "../services/api";
 import FilterSidebar from "../components/FilterSidebar";
 import ProductCard from "../components/ProductCard";
 import PaginationBar from "../components/PaginationBar";
-import { Loader2, AlertCircle, ShoppingBag, Plus } from "lucide-react";
+import { Loader2, AlertCircle, ShoppingBag } from "lucide-react";
 
 export default function CatalogPage({ onAddToCart }) {
   const [products, setProducts] = useState([]);

@@ -57,9 +57,40 @@ export const api = {
     return response.data;
   },
 
+  // Saved Recommendations / Bookmarks
+  async bookmarkRecommendation(savedData) {
+    const response = await apiClient.post(
+      "/api/v1/recommendations/saved",
+      savedData,
+    );
+    return response.data;
+  },
+
+  async getSavedItems(params = {}) {
+    const response = await apiClient.get("/api/v1/recommendations/saved", {
+      params,
+    });
+    return response.data;
+  },
+
+  async deleteSavedItem(savedId) {
+    const response = await apiClient.delete(
+      `/api/v1/recommendations/saved/${savedId}`,
+    );
+    return response.data;
+  },
+
+  // Recommendation History & Audit Analytics
+  async getRecommendationHistory(params = {}) {
+    const response = await apiClient.get("/api/v1/recommendations/history", {
+      params,
+    });
+    return response.data;
+  },
+
   // Health check
   async checkHealth() {
-    const response = await apiClient.get("/api/v1/health");
+    const response = await apiClient.get("/health");
     return response.data;
   },
 };

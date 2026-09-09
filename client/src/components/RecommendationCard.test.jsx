@@ -7,6 +7,7 @@ import { api } from "../services/api";
 vi.mock("../services/api", () => ({
   api: {
     submitFeedback: vi.fn(),
+    bookmarkRecommendation: vi.fn(),
   },
 }));
 
@@ -69,5 +70,38 @@ describe("RecommendationCard Component", () => {
 
     expect(await screen.findByText("Liked")).toBeInTheDocument();
     expect(onFeedback).toHaveBeenCalledWith("rec-001", "like");
+  });
+
+  it("saves recommendation on bookmark click", async () => {
+    api.bookmarkRecommendation.mockResolvedValueOnce({
+      id: "save-1",
+      user_id: "user-123",
+      product_id: "prod-001",
+      recommendation_id: "rec-001",
+      created_at: "2026-01-15T10:00:00Z",
+    });
+
+    const onBookmark = vi.fn();
+    render(
+      <RecommendationCard
+        recommendation={mockRecommendation}
+        userId="user-123"
+        onBookmarkSaved={onBookmark}
+      />,
+    );
+
+    const saveButton = screen.getByTitle("Save / Bookmark");
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(api.bookmarkRecommendation).toHaveBeenCalledWith({
+        user_id: "user-123",
+        product_id: "prod-001",
+        recommendation_id: "rec-001",
+      });
+    });
+
+    expect(await screen.findByText("Saved to favorites!")).toBeInTheDocument();
+    expect(onBookmark).toHaveBeenCalled();
   });
 });
