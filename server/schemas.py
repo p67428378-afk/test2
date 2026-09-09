@@ -1,130 +1,85 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
+class ProductBase(BaseModel):
     name: str
-    total_rounds: int = Field(default=5, ge=1)
+    description: str | None = None
+    category: str
+    price: float
+    rating: float = 0.0
+    tags: list[str] = Field(default_factory=list)
+    in_stock: bool = True
 
 
-class TournamentCreate(TournamentBase):
+class ProductCreate(ProductBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
-    created_at: datetime
-    updated_at: datetime
+class ProductResponse(ProductBase):
+    id: str
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class ProductListResponse(BaseModel):
+    items: list[ProductResponse]
+    total: int
+    skip: int
+    limit: int
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class PreferenceCreate(BaseModel):
+    user_id: str = Field(..., min_length=1)
+    category_preferences: list[str] = Field(default_factory=list)
+    min_price: float = Field(0.0, ge=0.0)
+    max_price: float = Field(1000.0, ge=0.0)
+    preferred_tags: list[str] = Field(default_factory=list)
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
+class PreferenceResponse(BaseModel):
+    id: str
+    user_id: str
+    category_preferences: list[str]
+    min_price: float
+    max_price: float
+    preferred_tags: list[str]
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class RecommendationGenerateRequest(BaseModel):
+    user_id: str = Field(..., min_length=1)
+    limit: int | None = Field(5, ge=1, le=50)
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+class RecommendationItem(BaseModel):
+    recommendation_id: str
+    product: ProductResponse
+    match_score: float
+    recommendation_type: str = "ai_vector"
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+class RecommendationListResponse(BaseModel):
+    user_id: str
+    recommendations: list[RecommendationItem]
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+class FeedbackCreate(BaseModel):
+    recommendation_id: str = Field(..., min_length=1)
+    user_id: str = Field(..., min_length=1)
+    feedback: str = Field(..., pattern="^(like|dislike)$")
 
-    class Config:
-        from_attributes = True
+
+class FeedbackResponse(BaseModel):
+    id: str
+    recommendation_id: str
+    feedback: str
+    status: str = "updated"
+
+    model_config = ConfigDict(from_attributes=True)
