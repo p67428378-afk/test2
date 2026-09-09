@@ -1,151 +1,177 @@
 import uuid
 from typing import List, Optional
-from sqlalchemy.orm import Session
-from server import models, schemas
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
+from server.models import Pose, Routine, RoutinePose
+from server.schemas import PoseCreate, PoseUpdate, RoutineCreate, RoutineUpdate
 
 
-# User CRUD
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.email == email).first()
+# --- Pose CRUD Operations ---
+def get_poses(
+    db: Session,
+    query: Optional[str] = None,
+    category: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 20,
+) -> List[Pose]:
+    db_query = db.query(Pose)
+
+    if query:
+        search_pattern = f"%{query.strip()}%"
+        db_query = db_query.filter(
+            or_(
+                Pose.english_name.ilike(search_pattern),
+                Pose.sanskrit_name.ilike(search_pattern),
+            )
+        )
+
+    if category and category.lower() not in ("all", "all categories"):
+        db_query = db_query.filter(Pose.category.ilike(category.strip()))
+
+    if difficulty and difficulty.lower() not in ("all", "all difficulties"):
+        db_query = db_query.filter(Pose.difficulty.ilike(difficulty.strip()))
+
+    return db_query.offset(skip).limit(limit).all()
 
 
-# Tournament CRUD
-def create_tournament(
-    db: Session, tournament_in: schemas.TournamentCreate
-) -> models.Tournament:
-    tournament = models.Tournament(
-        name=tournament_in.name,
-        total_rounds=tournament_in.total_rounds,
-        status="DRAFT",
-        current_round=0,
+def get_pose_by_id(db: Session, pose_id: str) -> Optional[Pose]:
+    return db.query(Pose).filter(Pose.id == pose_id).first()
+
+
+def create_pose(db: Session, pose_in: PoseCreate) -> Pose:
+    db_pose = Pose(
+        id=str(uuid.uuid4()),
+        english_name=pose_in.english_name,
+        sanskrit_name=pose_in.sanskrit_name,
+        difficulty=pose_in.difficulty,
+        category=pose_in.category,
+        alignment_cues=pose_in.alignment_cues,
+        breath_instructions=pose_in.breath_instructions,
+        target_muscles=pose_in.target_muscles,
+        common_mistakes=pose_in.common_mistakes,
+        image_url=pose_in.image_url,
+        video_url=pose_in.video_url,
     )
-    db.add(tournament)
+    db.add(db_pose)
     db.commit()
-    db.refresh(tournament)
-    return tournament
+    db.refresh(db_pose)
+    return db_pose
 
 
-def get_tournament(
-    db: Session, tournament_id: uuid.UUID
-) -> Optional[models.Tournament]:
-    return (
-        db.query(models.Tournament)
-        .filter(models.Tournament.id == tournament_id)
-        .first()
-    )
-
-
-def list_tournaments(
-    db: Session, skip: int = 0, limit: int = 100
-) -> List[models.Tournament]:
-    return db.query(models.Tournament).offset(skip).limit(limit).all()
-
-
-# Player & Registration CRUD
-def register_player(
-    db: Session, player_in: schemas.PlayerCreate, tournament_id: uuid.UUID
-) -> models.Player:
-    # Check if email is already registered in this tournament
-    existing_reg = (
-        db.query(models.Registration)
-        .join(models.Player)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Player.email == player_in.email,
-        )
-        .first()
-    )
-    if existing_reg:
-        raise ValueError("Player email already registered in this tournament")
-
-    # Check if player exists globally, else create
-    player = (
-        db.query(models.Player).filter(models.Player.email == player_in.email).first()
-    )
-    if not player:
-        player = models.Player(
-            full_name=player_in.full_name,
-            email=player_in.email,
-            rating=player_in.rating if player_in.rating is not None else 1200,
-            fide_id=player_in.fide_id,
-        )
-        db.add(player)
-        db.flush()
-
-    # Create registration
-    reg = models.Registration(
-        tournament_id=tournament_id,
-        player_id=player.id,
-        status="ACTIVE",
-    )
-    db.add(reg)
-
-    # Initialize standing entry
-    existing_standing = (
-        db.query(models.Standing)
-        .filter(
-            models.Standing.tournament_id == tournament_id,
-            models.Standing.player_id == player.id,
-        )
-        .first()
-    )
-    if not existing_standing:
-        standing = models.Standing(
-            tournament_id=tournament_id,
-            player_id=player.id,
-            total_points=0.0,
-            buchholz=0.0,
-            sonneborn_berger=0.0,
-        )
-        db.add(standing)
-
+def update_pose(db: Session, db_pose: Pose, pose_in: PoseUpdate) -> Pose:
+    update_data = pose_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_pose, field, value)
     db.commit()
-    db.refresh(player)
-    return player
+    db.refresh(db_pose)
+    return db_pose
 
 
-def get_tournament_players(
-    db: Session, tournament_id: uuid.UUID
-) -> List[models.Player]:
+# --- Routine CRUD Operations ---
+def get_routines(db: Session, skip: int = 0, limit: int = 20) -> List[Routine]:
     return (
-        db.query(models.Player)
-        .join(models.Registration, models.Registration.player_id == models.Player.id)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Registration.status == "ACTIVE",
-        )
+        db.query(Routine)
+        .options(joinedload(Routine.items).joinedload(RoutinePose.pose))
+        .order_by(Routine.created_at.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
 
 
-def get_player(db: Session, player_id: uuid.UUID) -> Optional[models.Player]:
-    return db.query(models.Player).filter(models.Player.id == player_id).first()
-
-
-# Round & Match CRUD
-def get_round(db: Session, round_id: uuid.UUID) -> Optional[models.Round]:
-    return db.query(models.Round).filter(models.Round.id == round_id).first()
-
-
-def get_match(db: Session, match_id: uuid.UUID) -> Optional[models.Match]:
-    return db.query(models.Match).filter(models.Match.id == match_id).first()
-
-
-# Standing CRUD
-def get_standings(db: Session, tournament_id: uuid.UUID) -> List[models.Standing]:
+def get_routine_by_id(db: Session, routine_id: str) -> Optional[Routine]:
     return (
-        db.query(models.Standing)
-        .filter(models.Standing.tournament_id == tournament_id)
-        .all()
-    )
-
-
-# Certificate CRUD
-def get_certificate_by_uuid(
-    db: Session, verification_uuid: uuid.UUID
-) -> Optional[models.Certificate]:
-    return (
-        db.query(models.Certificate)
-        .filter(models.Certificate.verification_uuid == verification_uuid)
+        db.query(Routine)
+        .options(joinedload(Routine.items).joinedload(RoutinePose.pose))
+        .filter(Routine.id == routine_id)
         .first()
     )
+
+
+def create_routine(db: Session, routine_in: RoutineCreate) -> Routine:
+    total_duration = sum(item.hold_duration_seconds for item in routine_in.items)
+    db_routine = Routine(
+        id=str(uuid.uuid4()),
+        name=routine_in.name,
+        description=routine_in.description,
+        total_duration_seconds=total_duration,
+    )
+    db.add(db_routine)
+    db.flush()
+
+    for item in routine_in.items:
+        db_item = RoutinePose(
+            id=str(uuid.uuid4()),
+            routine_id=db_routine.id,
+            pose_id=item.pose_id,
+            sequence_order=item.sequence_order,
+            hold_duration_seconds=item.hold_duration_seconds,
+            transition_notes=item.transition_notes,
+        )
+        db.add(db_item)
+
+    db.commit()
+    db.refresh(db_routine)
+    return db_routine
+
+
+def update_routine(
+    db: Session, db_routine: Routine, routine_in: RoutineUpdate
+) -> Routine:
+    if routine_in.name is not None:
+        db_routine.name = routine_in.name
+    if routine_in.description is not None:
+        db_routine.description = routine_in.description
+
+    if routine_in.items is not None:
+        # Delete existing items and insert new ones
+        db.query(RoutinePose).filter(RoutinePose.routine_id == db_routine.id).delete()
+        total_duration = sum(item.hold_duration_seconds for item in routine_in.items)
+        db_routine.total_duration_seconds = total_duration
+
+        for item in routine_in.items:
+            db_item = RoutinePose(
+                id=str(uuid.uuid4()),
+                routine_id=db_routine.id,
+                pose_id=item.pose_id,
+                sequence_order=item.sequence_order,
+                hold_duration_seconds=item.hold_duration_seconds,
+                transition_notes=item.transition_notes,
+            )
+            db.add(db_item)
+
+    db.commit()
+    db.refresh(db_routine)
+    return db_routine
+
+
+def duplicate_routine(db: Session, db_routine: Routine) -> Routine:
+    new_routine = Routine(
+        id=str(uuid.uuid4()),
+        name=f"{db_routine.name} (Copy)",
+        description=db_routine.description,
+        total_duration_seconds=db_routine.total_duration_seconds,
+    )
+    db.add(new_routine)
+    db.flush()
+
+    for item in db_routine.items:
+        new_item = RoutinePose(
+            id=str(uuid.uuid4()),
+            routine_id=new_routine.id,
+            pose_id=item.pose_id,
+            sequence_order=item.sequence_order,
+            hold_duration_seconds=item.hold_duration_seconds,
+            transition_notes=item.transition_notes,
+        )
+        db.add(new_item)
+
+    db.commit()
+    db.refresh(new_routine)
+    return new_routine
+
+
+def delete_routine(db: Session, db_routine: Routine) -> None:
+    db.delete(db_routine)
+    db.commit()

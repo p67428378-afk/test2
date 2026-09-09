@@ -1,1 +1,1 @@
-# Tests package
+"""Test package for Yoga Pose Dictionary."""

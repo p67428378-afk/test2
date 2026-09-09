@@ -1,15 +1,19 @@
 import pytest
+from typing import Generator
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
-from sqlalchemy.orm import sessionmaker
-from server.main import app
-from server.database import Base, get_db
 
-SQLALCHEMY_DATABASE_URL = "sqlite://"
+from server.models import Base
+from server.database import get_db, seed_data
+from server.main import app
+
+# In-memory SQLite with StaticPool ensures all threads/connections share the exact same database
+TEST_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
+    TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
@@ -17,21 +21,24 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_database():
+def setup_test_database():
+    """Create all tables and seed standard test dataset once for the test session."""
     Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
     yield
     Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
-def db():
+def db() -> Generator[Session, None, None]:
+    """Provide a transactional database session for each test function."""
     connection = engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-
-    from server.database import seed_data
-
-    seed_data(session)
 
     yield session
 
@@ -41,7 +48,9 @@ def db():
 
 
 @pytest.fixture(scope="function")
-def client(db):
+def client(db: Session) -> Generator[TestClient, None, None]:
+    """TestClient fixture with dependency override for get_db."""
+
     def override_get_db():
         try:
             yield db
@@ -49,6 +58,6 @@ def client(db):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
+    with TestClient(app) as test_client:
+        yield test_client
     app.dependency_overrides.clear()
