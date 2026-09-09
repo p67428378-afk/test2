@@ -1,41 +1,107 @@
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from server.database import Base
+from datetime import datetime, timezone
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    Boolean,
+    DateTime,
+    Text,
+    ForeignKey,
+)
+from sqlalchemy.orm import relationship, declarative_base
+
+Base = declarative_base()
+
+
+def utc_now():
+    return datetime.now(timezone.utc)
+
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    login_id = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True, nullable=False)
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    security_question = Column(String(255), nullable=False)
-    security_answer_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    full_name = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    role = Column(String(50), default="user", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
 
-    otps = relationship("OTP", back_populates="user")
-    password_history = relationship("PasswordHistory", back_populates="user")
+    plants = relationship(
+        "UserPlant", back_populates="user", cascade="all, delete-orphan"
+    )
 
-class OTP(Base):
-    __tablename__ = "otps"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    otp_code_hash = Column(String(255), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
 
-    user = relationship("User", back_populates="otps")
+class Species(Base):
+    __tablename__ = "species"
 
-class PasswordHistory(Base):
-    __tablename__ = "password_history"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    changed_at = Column(DateTime, default=func.now())
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    common_name = Column(String(255), index=True, nullable=False)
+    scientific_name = Column(String(255), index=True, nullable=True)
+    sunlight_requirement = Column(String(255), nullable=False)
+    humidity_requirement = Column(String(255), nullable=False)
+    recommended_watering_days = Column(Integer, nullable=False, default=7)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
 
-    user = relationship("User", back_populates="password_history")
+    plants = relationship("UserPlant", back_populates="species")
+
+
+class UserPlant(Base):
+    __tablename__ = "user_plants"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(
+        String(36),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    species_id = Column(
+        String(36),
+        ForeignKey("species.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    nickname = Column(String(255), nullable=False)
+    location = Column(String(255), nullable=True)
+    photo_url = Column(Text, nullable=True)
+    watering_interval_days = Column(Integer, nullable=False, default=7)
+    last_watered = Column(DateTime(timezone=True), nullable=True)
+    next_due_date = Column(DateTime(timezone=True), nullable=True, index=True)
+    notifications_enabled = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
+
+    user = relationship("User", back_populates="plants")
+    species = relationship("Species", back_populates="plants")
+    watering_logs = relationship(
+        "WateringLog",
+        back_populates="plant",
+        cascade="all, delete-orphan",
+        order_by="desc(WateringLog.watered_at)",
+    )
+
+
+class WateringLog(Base):
+    __tablename__ = "watering_logs"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    plant_id = Column(
+        String(36),
+        ForeignKey("user_plants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    watered_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    plant = relationship("UserPlant", back_populates="watering_logs")
