@@ -5,7 +5,7 @@ import { rbacAPI } from "../services/api";
 
 export default function RBACPage() {
   const [matrixData, setMatrixData] = useState(null);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -19,9 +19,13 @@ export default function RBACPage() {
       setMatrixData(matrixRes);
 
       const usersRes = await rbacAPI.listUsers();
-      setUsers(usersRes || []);
+      const userList = Array.isArray(usersRes)
+        ? usersRes
+        : usersRes?.items || usersRes?.users || [];
+      setUsers(userList);
     } catch (err) {
       console.error("Failed to load RBAC data:", err);
+      setUsers([]);
     }
   };
 
@@ -31,14 +35,17 @@ export default function RBACPage() {
     try {
       await rbacAPI.updateUserRole(userId, newRole);
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+        (prev || []).map((u) =>
+          u.id === userId ? { ...u, role: newRole } : u,
+        ),
       );
       setMsg(`User role successfully updated to ${newRole}!`);
     } catch (err) {
       console.error("Role update failed:", err);
-      // Local fallback
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+        (prev || []).map((u) =>
+          u.id === userId ? { ...u, role: newRole } : u,
+        ),
       );
       setMsg(`User role updated to ${newRole} (Local cache)`);
     } finally {

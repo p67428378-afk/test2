@@ -1,9 +1,9 @@
 import React from "react";
-import { Users, Shield, ShieldCheck, UserCheck } from "lucide-react";
+import { Users, ShieldCheck, UserCheck } from "lucide-react";
 import Badge from "../common/Badge";
 
 export default function UserDirectoryTable({
-  users = [],
+  users,
   onRoleChange,
   isUpdating,
 }) {
@@ -45,7 +45,7 @@ export default function UserDirectoryTable({
     },
   ];
 
-  const displayUsers = users.length > 0 ? users : defaultUsers;
+  const displayUsers = users ?? defaultUsers;
 
   const rolesList = [
     "Administrator",
@@ -81,52 +81,67 @@ export default function UserDirectoryTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {displayUsers.map((u) => (
-              <tr
-                key={u.id}
-                className="hover:bg-slate-800/40 transition-colors"
-              >
-                <td className="p-3 font-semibold text-slate-200">
-                  {u.full_name || "N/A"}
-                </td>
-                <td className="p-3 font-mono text-xs text-blue-400">
-                  {u.email}
-                </td>
-                <td className="p-3">
-                  <Badge
-                    variant={
-                      u.role === "Administrator"
-                        ? "purple"
-                        : u.role === "External Auditor"
-                          ? "warning"
-                          : "info"
-                    }
-                  >
-                    {u.role}
-                  </Badge>
-                </td>
-                <td className="p-3 text-xs text-emerald-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>CJIS L4 Cleared</span>
-                </td>
-                <td className="p-3 text-right">
-                  {onRoleChange && (
-                    <select
-                      value={u.role}
-                      onChange={(e) => onRoleChange(u.id, e.target.value)}
-                      disabled={isUpdating}
-                      className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
-                    >
-                      {rolesList.map((r) => (
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+            {displayUsers.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="p-8 text-center text-xs text-slate-400 font-mono"
+                >
+                  No authorized system users found.
                 </td>
               </tr>
-            ))}
+            ) : (
+              displayUsers.map((u) => (
+                <tr
+                  key={u.id}
+                  className="hover:bg-slate-800/40 transition-colors"
+                >
+                  <td className="p-3 font-semibold text-slate-200">
+                    {u.full_name || "N/A"}
+                  </td>
+                  <td className="p-3 font-mono text-xs text-blue-400">
+                    {u.email}
+                  </td>
+                  <td className="p-3">
+                    <Badge
+                      variant={
+                        u.role === "Administrator"
+                          ? "purple"
+                          : u.role === "External Auditor"
+                            ? "warning"
+                            : "info"
+                      }
+                    >
+                      {u.role}
+                    </Badge>
+                  </td>
+                  <td className="p-3 text-xs text-emerald-400 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>CJIS L4 Cleared</span>
+                  </td>
+                  <td className="p-3 text-right">
+                    {onRoleChange && (
+                      <select
+                        value={u.role}
+                        onChange={(e) => onRoleChange(u.id, e.target.value)}
+                        disabled={isUpdating}
+                        className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
+                      >
+                        {rolesList.map((r) => (
+                          <option
+                            key={r}
+                            value={r}
+                            className="bg-slate-900 text-slate-200"
+                          >
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

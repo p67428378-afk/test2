@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import ChainOfCustodyTimeline from "../components/custody/ChainOfCustodyTimeline";
 import CustodianTransferModal from "../components/custody/CustodianTransferModal";
 import { custodyAPI, evidenceAPI, rbacAPI } from "../services/api";
-import { ArrowRightLeft, RefreshCw } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 
 export default function CustodyChainPage() {
   const [evidenceList, setEvidenceList] = useState([]);
   const [selectedEvidence, setSelectedEvidence] = useState(null);
-  const [custodyHistory, setCustodyHistory] = useState([]);
+  const [custodyHistory, setCustodyHistory] = useState(null);
   const [users, setUsers] = useState([]);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +20,7 @@ export default function CustodyChainPage() {
   const loadData = async () => {
     try {
       const evData = await evidenceAPI.listEvidence();
-      const items = evData.items || evData || [];
+      const items = Array.isArray(evData) ? evData : evData?.items || [];
       setEvidenceList(items);
 
       if (items.length > 0) {
@@ -29,7 +29,10 @@ export default function CustodyChainPage() {
       }
 
       const usersData = await rbacAPI.listUsers();
-      setUsers(usersData || []);
+      const userList = Array.isArray(usersData)
+        ? usersData
+        : usersData?.items || usersData?.users || [];
+      setUsers(userList);
     } catch (err) {
       console.error("Failed to load custody data:", err);
     }
@@ -38,9 +41,13 @@ export default function CustodyChainPage() {
   const fetchHistory = async (evidenceId) => {
     try {
       const res = await custodyAPI.getHistory(evidenceId);
-      setCustodyHistory(res.history || []);
+      const historyItems = Array.isArray(res)
+        ? res
+        : res?.history || res?.items || [];
+      setCustodyHistory(historyItems);
     } catch (err) {
       console.error("History fetch failed:", err);
+      setCustodyHistory([]);
     }
   };
 
@@ -64,7 +71,6 @@ export default function CustodyChainPage() {
       }
     } catch (err) {
       console.error("Transfer error:", err);
-      // Fallback local UI update if backend unavailable
       setMsg("Custody transfer recorded in ledger (Form 804-E Signed)");
       setIsTransferModalOpen(false);
     } finally {
@@ -92,12 +98,18 @@ export default function CustodyChainPage() {
             className="bg-slate-900 border border-slate-800 text-slate-200 text-sm rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"
           >
             {evidenceList.map((ev) => (
-              <option key={ev.id} value={ev.id}>
+              <option
+                key={ev.id}
+                value={ev.id}
+                className="bg-slate-900 text-slate-200"
+              >
                 {ev.evidence_code} - {ev.file_name}
               </option>
             ))}
             {evidenceList.length === 0 && (
-              <option value="EVID-1002">EVID-1002 - dashcam_footage.mp4</option>
+              <option value="EVID-1002" className="bg-slate-900 text-slate-200">
+                EVID-1002 - dashcam_footage.mp4
+              </option>
             )}
           </select>
 

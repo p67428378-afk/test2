@@ -1,9 +1,9 @@
 import React from "react";
-import { ShieldCheck, FileText, Trash2, ExternalLink } from "lucide-react";
+import { ShieldCheck, FileText, Trash2 } from "lucide-react";
 import Badge from "../common/Badge";
 
 export default function LinkedEvidenceTable({
-  evidenceItems = [],
+  evidenceItems,
   onUnassign,
   caseNumber = "CASE-2026-089",
 }) {
@@ -29,8 +29,7 @@ export default function LinkedEvidenceTable({
     },
   ];
 
-  const itemsToDisplay =
-    evidenceItems.length > 0 ? evidenceItems : defaultItems;
+  const itemsToDisplay = evidenceItems ?? defaultItems;
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
@@ -56,50 +55,63 @@ export default function LinkedEvidenceTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {itemsToDisplay.map((item) => (
-              <tr
-                key={item.id}
-                className="hover:bg-slate-800/50 transition-colors"
-              >
-                <td className="p-3 font-mono font-semibold text-blue-400">
-                  {item.evidence_code}
-                </td>
-                <td className="p-3 font-medium text-slate-200">
-                  {item.file_name}
-                </td>
-                <td className="p-3 text-xs text-slate-400">{item.file_type}</td>
+            {itemsToDisplay.length === 0 ? (
+              <tr>
                 <td
-                  className="p-3 font-mono text-xs text-slate-400 truncate max-w-[150px]"
-                  title={item.sha256_hash}
+                  colSpan={7}
+                  className="p-8 text-center text-xs text-slate-400 font-mono"
                 >
-                  {item.sha256_hash
-                    ? `${item.sha256_hash.slice(0, 8)}...${item.sha256_hash.slice(-6)}`
-                    : "N/A"}
-                </td>
-                <td className="p-3 text-slate-300">
-                  {item.current_custodian?.full_name ||
-                    item.current_custodian?.email ||
-                    "Unassigned"}
-                </td>
-                <td className="p-3">
-                  <Badge variant="success">
-                    <ShieldCheck className="w-3 h-3" />
-                    <span>Verified</span>
-                  </Badge>
-                </td>
-                <td className="p-3 text-right">
-                  {onUnassign && (
-                    <button
-                      onClick={() => onUnassign(item.id)}
-                      className="text-slate-400 hover:text-red-400 p-1 rounded hover:bg-slate-800 transition-colors"
-                      title="Unassign from case"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  No evidence items currently linked to this case dossier.
                 </td>
               </tr>
-            ))}
+            ) : (
+              itemsToDisplay.map((item) => (
+                <tr
+                  key={item.id}
+                  className="hover:bg-slate-800/50 transition-colors"
+                >
+                  <td className="p-3 font-mono font-semibold text-blue-400">
+                    {item.evidence_code}
+                  </td>
+                  <td className="p-3 font-medium text-slate-200">
+                    {item.file_name}
+                  </td>
+                  <td className="p-3 text-xs text-slate-400">
+                    {item.file_type}
+                  </td>
+                  <td
+                    className="p-3 font-mono text-xs text-slate-400 truncate max-w-[150px]"
+                    title={item.sha256_hash}
+                  >
+                    {item.sha256_hash
+                      ? `${item.sha256_hash.slice(0, 8)}...${item.sha256_hash.slice(-6)}`
+                      : "N/A"}
+                  </td>
+                  <td className="p-3 text-slate-300">
+                    {item.current_custodian?.full_name ||
+                      item.current_custodian?.email ||
+                      "Unassigned"}
+                  </td>
+                  <td className="p-3">
+                    <Badge variant="success">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>Verified</span>
+                    </Badge>
+                  </td>
+                  <td className="p-3 text-right">
+                    {onUnassign && (
+                      <button
+                        onClick={() => onUnassign(item.id)}
+                        className="text-slate-400 hover:text-red-400 p-1 rounded hover:bg-slate-800 transition-colors"
+                        title="Unassign from case"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

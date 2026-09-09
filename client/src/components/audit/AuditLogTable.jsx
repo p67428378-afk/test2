@@ -1,19 +1,8 @@
 import React, { useState } from "react";
-import {
-  Activity,
-  ShieldAlert,
-  CheckCircle,
-  Search,
-  Filter,
-  Eye,
-} from "lucide-react";
+import { Activity, ShieldAlert, Filter, Eye } from "lucide-react";
 import Badge from "../common/Badge";
 
-export default function AuditLogTable({
-  logs = [],
-  total = 0,
-  onFilterChange,
-}) {
+export default function AuditLogTable({ logs, total = 0, onFilterChange }) {
   const [selectedLog, setSelectedLog] = useState(null);
   const [filterAction, setFilterAction] = useState("");
   const [filterEmail, setFilterEmail] = useState("");
@@ -60,7 +49,7 @@ export default function AuditLogTable({
     },
   ];
 
-  const displayLogs = logs.length > 0 ? logs : defaultLogs;
+  const displayLogs = logs ?? defaultLogs;
 
   const handleApplyFilter = () => {
     if (onFilterChange) {
@@ -98,7 +87,7 @@ export default function AuditLogTable({
             value={filterAction}
             onChange={(e) => setFilterAction(e.target.value)}
             placeholder="e.g. EVIDENCE_VIEW, TRANSFER"
-            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
+            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:border-blue-500 focus:outline-none placeholder-slate-500"
           />
         </div>
         <div>
@@ -110,7 +99,7 @@ export default function AuditLogTable({
             value={filterEmail}
             onChange={(e) => setFilterEmail(e.target.value)}
             placeholder="e.g. charlie@police.gov"
-            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
+            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:border-blue-500 focus:outline-none placeholder-slate-500"
           />
         </div>
         <div className="flex items-end">
@@ -139,49 +128,60 @@ export default function AuditLogTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {displayLogs.map((log) => {
-              const isDenied = log.status_code >= 400;
-              return (
-                <tr
-                  key={log.id}
-                  className="hover:bg-slate-800/40 transition-colors"
+            {displayLogs.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="p-8 text-center text-xs text-slate-400 font-mono"
                 >
-                  <td className="p-3 font-mono text-xs text-slate-400">
-                    {log.timestamp}
-                  </td>
-                  <td className="p-3 font-semibold text-slate-200">
-                    {log.user_email}
-                  </td>
-                  <td
-                    className={`p-3 font-mono text-xs ${isDenied ? "text-red-400" : "text-emerald-400"}`}
+                  No audit log records found matching the specified filters.
+                </td>
+              </tr>
+            ) : (
+              displayLogs.map((log) => {
+                const isDenied = log.status_code >= 400;
+                return (
+                  <tr
+                    key={log.id}
+                    className="hover:bg-slate-800/40 transition-colors"
                   >
-                    {log.action}
-                  </td>
-                  <td className="p-3 font-mono text-xs text-blue-400">
-                    {log.resource}
-                  </td>
-                  <td className="p-3">
-                    <Badge variant={isDenied ? "danger" : "success"}>
-                      {isDenied
-                        ? `${log.status_code} FORBIDDEN`
-                        : `${log.status_code} OK`}
-                    </Badge>
-                  </td>
-                  <td className="p-3 font-mono text-xs text-slate-400">
-                    {log.ip_address}
-                  </td>
-                  <td className="p-3 text-right">
-                    <button
-                      onClick={() => setSelectedLog(log)}
-                      className="text-slate-400 hover:text-blue-400 p-1 rounded hover:bg-slate-800 transition-colors"
-                      title="Inspect Log JSON"
+                    <td className="p-3 font-mono text-xs text-slate-400">
+                      {log.timestamp}
+                    </td>
+                    <td className="p-3 font-semibold text-slate-200">
+                      {log.user_email || log.user_id || "System"}
+                    </td>
+                    <td
+                      className={`p-3 font-mono text-xs ${isDenied ? "text-red-400" : "text-emerald-400"}`}
                     >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                      {log.action}
+                    </td>
+                    <td className="p-3 font-mono text-xs text-blue-400">
+                      {log.resource}
+                    </td>
+                    <td className="p-3">
+                      <Badge variant={isDenied ? "danger" : "success"}>
+                        {isDenied
+                          ? `${log.status_code} FORBIDDEN`
+                          : `${log.status_code} OK`}
+                      </Badge>
+                    </td>
+                    <td className="p-3 font-mono text-xs text-slate-400">
+                      {log.ip_address}
+                    </td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => setSelectedLog(log)}
+                        className="text-slate-400 hover:text-blue-400 p-1 rounded hover:bg-slate-800 transition-colors"
+                        title="Inspect Log JSON"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

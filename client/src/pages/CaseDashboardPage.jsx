@@ -4,7 +4,7 @@ import LinkedEvidenceTable from "../components/cases/LinkedEvidenceTable";
 import AssignEvidenceModal from "../components/cases/AssignEvidenceModal";
 import Modal from "../components/common/Modal";
 import { casesAPI, evidenceAPI } from "../services/api";
-import { Plus, Briefcase, Search } from "lucide-react";
+import { Plus, Briefcase } from "lucide-react";
 
 export default function CaseDashboardPage() {
   const [stats, setStats] = useState(null);
@@ -32,15 +32,17 @@ export default function CaseDashboardPage() {
       setStats(statsRes);
 
       const casesRes = await casesAPI.listCases();
-      const caseList = casesRes || [];
+      const caseList = Array.isArray(casesRes)
+        ? casesRes
+        : casesRes?.items || casesRes?.cases || [];
       setCases(caseList);
 
       if (caseList.length > 0) {
-        fetchCaseDetails(caseList[0].id);
+        fetchCaseDetails(caseList[0].id, caseList[0]);
       }
 
       const evRes = await evidenceAPI.listEvidence();
-      const allEv = evRes.items || evRes || [];
+      const allEv = Array.isArray(evRes) ? evRes : evRes?.items || [];
       setUnassignedEvidence(
         allEv.filter(
           (e) => !e.assigned_case_ids || e.assigned_case_ids.length === 0,
@@ -51,12 +53,15 @@ export default function CaseDashboardPage() {
     }
   };
 
-  const fetchCaseDetails = async (caseId) => {
+  const fetchCaseDetails = async (caseId, fallbackCase = null) => {
     try {
       const details = await casesAPI.getCase(caseId);
       setSelectedCase(details);
     } catch (err) {
       console.error("Fetch case error:", err);
+      if (fallbackCase) {
+        setSelectedCase(fallbackCase);
+      }
     }
   };
 
@@ -75,7 +80,6 @@ export default function CaseDashboardPage() {
       setIsCreateCaseOpen(false);
     } catch (err) {
       console.error("Case creation failed:", err);
-      // Mock fallback
       const mockCreated = {
         id: `cs-${Date.now()}`,
         case_number: newCaseNumber,
@@ -102,6 +106,7 @@ export default function CaseDashboardPage() {
       );
       setSelectedCase(updatedCase);
       setIsAssignModalOpen(false);
+      loadDashboardData();
     } catch (err) {
       console.error("Assign failed:", err);
       setIsAssignModalOpen(false);
@@ -118,6 +123,7 @@ export default function CaseDashboardPage() {
         evidenceId,
       );
       setSelectedCase(updatedCase);
+      loadDashboardData();
     } catch (err) {
       console.error("Unassign failed:", err);
     }
@@ -162,7 +168,7 @@ export default function CaseDashboardPage() {
           {cases.map((c) => (
             <button
               key={c.id}
-              onClick={() => fetchCaseDetails(c.id)}
+              onClick={() => fetchCaseDetails(c.id, c)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap border ${
                 selectedCase?.id === c.id
                   ? "bg-blue-600/20 text-blue-400 border-blue-500/50"
@@ -196,7 +202,7 @@ export default function CaseDashboardPage() {
 
       <LinkedEvidenceTable
         caseNumber={selectedCase?.case_number || "CASE-2026-089"}
-        evidenceItems={selectedCase?.evidence_items || []}
+        evidenceItems={selectedCase?.evidence_items}
         onUnassign={handleUnassign}
       />
 

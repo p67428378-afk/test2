@@ -1,19 +1,11 @@
 import React from "react";
-import {
-  FileText,
-  ArrowRight,
-  Shield,
-  Clock,
-  MapPin,
-  User,
-  CheckCircle2,
-} from "lucide-react";
+import { FileText, Shield, Clock, MapPin, User } from "lucide-react";
 import Badge from "../common/Badge";
 
 export default function ChainOfCustodyTimeline({
   evidenceCode,
   sha256Hash,
-  history = [],
+  history,
 }) {
   const defaultHistory = [
     {
@@ -37,7 +29,7 @@ export default function ChainOfCustodyTimeline({
     },
   ];
 
-  const displayHistory = history.length > 0 ? history : defaultHistory;
+  const displayHistory = history ?? defaultHistory;
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6 shadow-lg">
@@ -59,59 +51,65 @@ export default function ChainOfCustodyTimeline({
         </Badge>
       </div>
 
-      <div className="relative pl-6 border-l-2 border-slate-800 space-y-8">
-        {displayHistory.map((item, idx) => (
-          <div key={item.id || idx} className="relative">
-            <div className="absolute -left-[31px] top-0.5 bg-slate-950 border-2 border-blue-500 rounded-full w-4 h-4 flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-            </div>
-
-            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800">
-                  {item.action || "TRANSFER"}
-                </span>
-                <span className="text-xs text-slate-400 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {item.timestamp
-                    ? new Date(item.timestamp).toUTCString()
-                    : item.timestamp}
-                </span>
+      {displayHistory.length === 0 ? (
+        <div className="p-8 text-center text-xs text-slate-400 font-mono bg-slate-950/60 border border-slate-800 rounded-xl">
+          No chain of custody entries recorded for this evidence item.
+        </div>
+      ) : (
+        <div className="relative pl-6 border-l-2 border-slate-800 space-y-8">
+          {displayHistory.map((item, idx) => (
+            <div key={item.id || idx} className="relative">
+              <div className="absolute -left-[31px] top-0.5 bg-slate-950 border-2 border-blue-500 rounded-full w-4 h-4 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
               </div>
 
-              <h4 className="text-sm font-semibold text-slate-200">
-                {item.title || item.transfer_reason || "Custody Update"}
-              </h4>
-
-              <div className="text-xs text-slate-300 space-y-1">
-                <p className="flex items-center gap-1 text-slate-300">
-                  <User className="w-3.5 h-3.5 text-slate-400" />
-                  <span>
-                    {item.new_custodian
-                      ? `Departing: ${item.previous_custodian?.full_name || "Previous"} → Receiving: ${item.new_custodian.full_name}`
-                      : item.custodian}
+              <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800">
+                    {item.action || "TRANSFER"}
                   </span>
-                </p>
+                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {item.timestamp
+                      ? new Date(item.timestamp).toUTCString()
+                      : item.timestamp}
+                  </span>
+                </div>
 
-                {(item.reason || item.transfer_reason) && (
-                  <p className="italic text-slate-400">
-                    Reason: {item.reason || item.transfer_reason}
-                  </p>
-                )}
+                <h4 className="text-sm font-semibold text-slate-200">
+                  {item.title || item.transfer_reason || "Custody Update"}
+                </h4>
 
-                {(item.location || item.location_context) && (
-                  <p className="flex items-center gap-1 text-slate-400">
-                    <MapPin className="w-3.5 h-3.5" />
+                <div className="text-xs text-slate-300 space-y-1">
+                  <p className="flex items-center gap-1 text-slate-300">
+                    <User className="w-3.5 h-3.5 text-slate-400" />
                     <span>
-                      Location: {item.location || item.location_context}
+                      {item.new_custodian
+                        ? `Departing: ${item.previous_custodian?.full_name || item.previous_custodian?.email || "Previous"} → Receiving: ${item.new_custodian.full_name || item.new_custodian.email}`
+                        : item.custodian || "Custodian Assigned"}
                     </span>
                   </p>
-                )}
+
+                  {(item.reason || item.transfer_reason) && (
+                    <p className="italic text-slate-400">
+                      Reason: {item.reason || item.transfer_reason}
+                    </p>
+                  )}
+
+                  {(item.location || item.location_context) && (
+                    <p className="flex items-center gap-1 text-slate-400">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>
+                        Location: {item.location || item.location_context}
+                      </span>
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

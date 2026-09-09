@@ -3,7 +3,7 @@ import AuditLogTable from "../components/audit/AuditLogTable";
 import { auditAPI } from "../services/api";
 
 export default function AuditLogPage() {
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(null);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -13,10 +13,12 @@ export default function AuditLogPage() {
   const fetchLogs = async (params = {}) => {
     try {
       const res = await auditAPI.listLogs(params);
-      setLogs(res.items || res || []);
-      setTotal(res.total || (res.items ? res.items.length : 0));
+      const items = Array.isArray(res) ? res : res?.items || res?.logs || [];
+      setLogs(items);
+      setTotal(res?.total ?? items.length);
     } catch (err) {
       console.error("Failed to fetch audit logs:", err);
+      setLogs([]);
     }
   };
 
