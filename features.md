@@ -1,12 +1,14 @@
 # Project Features
 
-## SCRUM-244 - Product Recommendation System - Product Browsing, Preference Capture & AI Recommendations
+## SCRUM-244 - Product Recommendation System - Product Browsing, Preference Capture, AI Recommendations & Saved Items
 
 ### Feature Summary
-A product recommendation system allowing customers to browse products, submit category and price preferences, and view AI-recommended products with match score badges and feedback capabilities.
+Allows users to browse products, specify preference profiles, receive personalized AI recommendations with sorting/filtering options, bookmark recommendations, and review past recommendation history.
 
 ### Key Features
-- Product Browsing & Catalog View with pagination and filtering
-- User Preference Submission form and persistence
-- AI-Driven Product Recommendation Generation scoring vectors against metadata
-- Interactive Recommendation Display & Feedback logging
+- Product Browsing & Catalog View with pagination and filters
+- User Preference Submission for categories, price ranges, and tags
+- AI-Driven Product Recommendation Generation with dynamic sorting and min_rating filtering
+- Interactive Recommendation Display & Feedback
+- Recommendation Bookmarking & Saved Items management
+- Recommendation History & Audit Analytics

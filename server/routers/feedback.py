@@ -1,3 +1,7 @@
+"""Recommendation feedback endpoints."""
+
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -5,20 +9,28 @@ from server.database import get_db
 from server.models import Recommendation, RecommendationFeedback
 from server.schemas import FeedbackCreate, FeedbackResponse
 
-router = APIRouter(prefix="/api/v1/feedback", tags=["feedback"])
+router = APIRouter()
 
 
-@router.post("", response_model=FeedbackResponse, status_code=status.HTTP_200_OK)
-def submit_feedback(
+@router.post(
+    "/feedback", response_model=FeedbackResponse, status_code=status.HTTP_200_OK
+)
+def submit_recommendation_feedback(
     payload: FeedbackCreate,
     db: Session = Depends(get_db),
 ):
-    if payload.feedback not in ["like", "dislike"]:
+    """
+    Submit positive/negative ('like'/'dislike') feedback on a recommended product.
+    Updates existing feedback if already submitted for the same recommendation.
+    """
+    feedback_clean = payload.feedback.strip().lower()
+    if feedback_clean not in ["like", "dislike"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="feedback must be either 'like' or 'dislike'",
+            detail="Feedback must be either 'like' or 'dislike'",
         )
 
+    # Verify recommendation exists
     rec = (
         db.query(Recommendation)
         .filter(Recommendation.id == payload.recommendation_id)
@@ -27,10 +39,11 @@ def submit_feedback(
     if not rec:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Recommendation with id '{payload.recommendation_id}' not found",
+            detail=f"Recommendation with id {payload.recommendation_id} not found",
         )
 
-    existing_fb = (
+    # Find existing feedback or create new
+    fb = (
         db.query(RecommendationFeedback)
         .filter(
             RecommendationFeedback.recommendation_id == payload.recommendation_id,
@@ -39,28 +52,23 @@ def submit_feedback(
         .first()
     )
 
-    if existing_fb:
-        existing_fb.feedback = payload.feedback
-        db.commit()
-        db.refresh(existing_fb)
-        return {
-            "id": existing_fb.id,
-            "recommendation_id": existing_fb.recommendation_id,
-            "feedback": existing_fb.feedback,
-            "status": "updated",
-        }
+    if fb:
+        fb.feedback = feedback_clean
+        fb.updated_at = datetime.now(timezone.utc)
     else:
-        new_fb = RecommendationFeedback(
+        fb = RecommendationFeedback(
             recommendation_id=payload.recommendation_id,
             user_id=payload.user_id,
-            feedback=payload.feedback,
+            feedback=feedback_clean,
         )
-        db.add(new_fb)
-        db.commit()
-        db.refresh(new_fb)
-        return {
-            "id": new_fb.id,
-            "recommendation_id": new_fb.recommendation_id,
-            "feedback": new_fb.feedback,
-            "status": "created",
-        }
+        db.add(fb)
+
+    db.commit()
+    db.refresh(fb)
+
+    return FeedbackResponse(
+        id=fb.id,
+        recommendation_id=fb.recommendation_id,
+        feedback=fb.feedback,
+        status="updated",
+    )

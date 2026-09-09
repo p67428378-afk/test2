@@ -1,86 +1,86 @@
 # Product Recommendation System (SCRUM-244)
 
-An intelligent e-commerce product recommendation platform featuring catalog browsing, user preference capturing, content vector-based AI recommendations, and interactive feedback loops.
+An intelligent e-commerce product recommendation platform enabling customers to browse products, configure personalized preferences, receive AI-driven vector similarity recommendations with custom filtering/sorting, bookmark items to a saved list, submit feedback, and review recommendation history.
 
 ---
 
-## Architecture & Features
+## Architecture Overview
 
-- **Product Catalog Service**: Browse, search, filter by category, and paginate through products.
-- **User Preference Engine**: Capture and persist user interest categories, price bounds, and feature tags.
-- **AI Recommendation Engine**: Score candidate products against preference vectors using weighted category, price, tag matching, and dynamic feedback adjustments.
-- **Interactive Feedback System**: Record user `like` / `dislike` responses on recommendations to continuously adapt user scoring profiles.
-- **RESTful API**: Built with FastAPI, Pydantic v2, and SQLAlchemy 2.x.
-
----
-
-### 1. Prerequisites
-- Python 3.11+
-- Virtual environment (`venv`)
-
-### 2. Environment Configuration
-Copy the `.env.example` file to create your `.env`:
-```bash
-cp .env.example .env
-```
-
-### 3. Installation
-Create and activate a virtual environment, then install dependencies:
-```bash
-python -m venv .venv
-# On macOS/Linux:
-source .venv/bin/activate
-# On Windows:
-.venv\Scripts\activate
-
-pip install -r server/requirements.txt
-```
-
-### 4. Running the Backend Server
-Start the development server with Uvicorn:
-```bash
-uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
-```
-Interactive API docs will be available at:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-
-### 5. Running Backend Tests
-Execute the pytest suite:
-```bash
-pytest server/tests -v
-```
+- **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.x, SQLite (dev/test) / PostgreSQL (prod).
+- **Frontend**: React 18, Vite, Tailwind CSS, Axios, Lucide React icons.
 
 ---
 
 ## Full-Stack Local Development
 
-### Starting Both Backend & Frontend
-1. **Start Backend (Port 8000)**:
-   ```bash
-   uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
-   ```
-2. **Start Frontend (Port 5173)**:
-   ```bash
-   cd client
-   npm install
-   npm run dev
-   ```
-3. Open `http://localhost:5173` in your browser.
+### 1. Environment Variables
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+
+Default variables:
+```env
+DATABASE_URL=sqlite:///./app.db
+JWT_SECRET_KEY=dev-secret-change-in-production
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+### 2. Backend (Server) Setup & Start
+
+Navigate to the project root and create a Python virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r server/requirements.txt
+```
+
+Run the backend development server on port `8000`:
+```bash
+uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Run tests:
+```bash
+pytest
+```
+
+### 3. Frontend (Client) Setup & Start
+
+Navigate to `client/` and install npm dependencies:
+```bash
+cd client
+npm install
+```
+
+Start the Vite development server on port `5173`:
+```bash
+npm run dev
+```
+
+Run frontend tests:
+```bash
+npm run test
+```
 
 ---
 
-## API Summary
+## API Endpoints Reference
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/products` | Paginated product catalog with category and search filters |
-| `GET` | `/api/v1/products/{id}` | Get product details by ID |
-| `POST` | `/api/v1/preferences` | Create or update user preference profile |
-| `GET` | `/api/v1/preferences/{user_id}` | Fetch active user preferences |
-| `POST` | `/api/v1/recommendations/generate` | Generate AI-driven product recommendations |
-| `POST` | `/api/v1/recommendations/feedback` | Submit like/dislike feedback for a recommendation |
+| Method | Path | Description |
+| :--- | :--- | :--- |
 | `GET` | `/health` | Service health check |
+| `GET` | `/api/v1/products` | Paginated product catalog listing with category search |
+| `POST` | `/api/v1/products` | Create product in catalog |
+| `GET` | `/api/v1/products/{product_id}` | Retrieve single product details |
+| `POST` | `/api/v1/preferences` | Submit or update user preference profile |
+| `GET` | `/api/v1/preferences/{user_id}` | Get active preference profile |
+| `POST` | `/api/v1/recommendations/generate` | Generate AI recommendations with dynamic sorting and min_rating filter |
+| `POST` | `/api/v1/recommendations/feedback` | Submit like/dislike feedback on a recommendation |
+| `POST` | `/api/v1/recommendations/saved` | Bookmark product to saved items list (enforces 409 duplicate check) |
+| `GET` | `/api/v1/recommendations/saved` | List bookmarked saved items |
+| `DELETE` | `/api/v1/recommendations/saved/{saved_id}` | Remove item from saved list |
+| `GET` | `/api/v1/recommendations/history` | Retrieve timestamped recommendation sessions and logs |
 
 ## Server
 

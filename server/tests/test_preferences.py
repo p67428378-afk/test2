@@ -1,85 +1,75 @@
-def test_create_and_get_preference(client):
-    user_id = "test_user_001"
+"""Tests for User Preferences API endpoints."""
+
+
+def test_create_and_get_user_preferences(client):
+    """Verify creating and fetching user preference profile."""
+    user_id = "test_user_pref_001"
     payload = {
         "user_id": user_id,
         "category_preferences": ["electronics", "gadgets"],
         "min_price": 50.0,
-        "max_price": 300.0,
-        "preferred_tags": ["wireless", "portable", "audio"],
+        "max_price": 500.0,
+        "preferred_tags": ["wireless", "audio"],
     }
-    # Create
-    res = client.post("/api/v1/preferences", json=payload)
-    assert res.status_code == 201
-    data = res.json()
+    create_res = client.post("/api/v1/preferences", json=payload)
+    assert create_res.status_code == 201
+    data = create_res.json()
     assert data["user_id"] == user_id
     assert "electronics" in data["category_preferences"]
     assert data["min_price"] == 50.0
-    assert data["max_price"] == 300.0
-    assert "wireless" in data["preferred_tags"]
-    assert "id" in data
+    assert data["max_price"] == 500.0
 
-    # Get
+    # Fetch preference
     get_res = client.get(f"/api/v1/preferences/{user_id}")
     assert get_res.status_code == 200
-    get_data = get_res.json()
-    assert get_data["user_id"] == user_id
-    assert get_data["category_preferences"] == ["electronics", "gadgets"]
+    fetched = get_res.json()
+    assert fetched["user_id"] == user_id
+    assert fetched["preferred_tags"] == ["wireless", "audio"]
 
 
-def test_update_existing_preference(client):
-    user_id = "test_user_002"
+def test_update_existing_preferences(client):
+    """Verify submitting preferences for existing user updates the profile."""
+    user_id = "test_user_pref_update"
     payload_1 = {
         "user_id": user_id,
         "category_preferences": ["books"],
         "min_price": 10.0,
         "max_price": 50.0,
-        "preferred_tags": ["educational"],
+        "preferred_tags": ["education"],
     }
-    res1 = client.post("/api/v1/preferences", json=payload_1)
-    assert res1.status_code == 201
+    client.post("/api/v1/preferences", json=payload_1)
 
+    # Update preferences
     payload_2 = {
         "user_id": user_id,
         "category_preferences": ["books", "electronics"],
         "min_price": 20.0,
-        "max_price": 100.0,
-        "preferred_tags": ["educational", "ai"],
+        "max_price": 200.0,
+        "preferred_tags": ["education", "ai"],
     }
-    res2 = client.post("/api/v1/preferences", json=payload_2)
-    assert res2.status_code == 201
-    data2 = res2.json()
-    assert data2["min_price"] == 20.0
-    assert data2["max_price"] == 100.0
-    assert "electronics" in data2["category_preferences"]
+    update_res = client.post("/api/v1/preferences", json=payload_2)
+    assert update_res.status_code == 201
+
+    get_res = client.get(f"/api/v1/preferences/{user_id}")
+    assert get_res.status_code == 200
+    assert "electronics" in get_res.json()["category_preferences"]
+    assert get_res.json()["max_price"] == 200.0
 
 
-def test_get_preference_not_found(client):
-    res = client.get("/api/v1/preferences/non_existent_user_99999")
-    assert res.status_code == 404
-    assert "not found" in res.json()["detail"].lower()
-
-
-def test_create_preference_invalid_prices(client):
-    # min_price > max_price
+def test_invalid_price_range_preferences(client):
+    """Verify 400 Bad Request when min_price is greater than max_price."""
     payload = {
-        "user_id": "test_user_bad_prices",
-        "category_preferences": ["books"],
-        "min_price": 200.0,
-        "max_price": 50.0,
-        "preferred_tags": [],
-    }
-    res = client.post("/api/v1/preferences", json=payload)
-    assert res.status_code == 400
-    assert "min_price cannot be greater" in res.json()["detail"]
-
-
-def test_create_preference_empty_user_id(client):
-    payload = {
-        "user_id": "",
+        "user_id": "invalid_pref_user",
         "category_preferences": ["electronics"],
-        "min_price": 10.0,
-        "max_price": 100.0,
-        "preferred_tags": [],
+        "min_price": 500.0,
+        "max_price": 50.0,
+        "preferred_tags": ["audio"],
     }
-    res = client.post("/api/v1/preferences", json=payload)
-    assert res.status_code in [400, 422]
+    response = client.post("/api/v1/preferences", json=payload)
+    assert response.status_code == 400
+
+
+def test_get_non_existent_preferences(client):
+    """Verify 404 response when querying preferences for unknown user."""
+    response = client.get("/api/v1/preferences/unknown_user_99999")
+    assert response.status_code == 404

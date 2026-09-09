@@ -1,27 +1,35 @@
+"""Database configuration and session management."""
+
 import os
-import uuid
 from collections.abc import Generator
+from datetime import datetime, timezone
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.pool import StaticPool
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
+# SQLite configuration adjustments
 connect_args = {}
+poolclass = None
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+    if ":memory:" in DATABASE_URL or os.getenv("TESTING") == "true":
+        poolclass = StaticPool
 
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
+    poolclass=poolclass if poolclass else None,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 
 def get_db() -> Generator[Session, None, None]:
+    """Provide a transactional database session."""
     db = SessionLocal()
     try:
         yield db
@@ -29,14 +37,16 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def init_db() -> None:
-    # Import models here to ensure metadata registration
-    import server.models  # noqa: F401
+def init_db(target_engine=None):
+    """Create all database tables."""
+    from server import models  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
+    bind_engine = target_engine or engine
+    Base.metadata.create_all(bind=bind_engine)
 
 
-def seed_data(db: Session) -> None:
+def seed_data(db: Session):
+    """Seed sample products for the catalog and recommendation testing."""
     from server.models import Product
 
     existing_count = db.query(Product).count()
@@ -45,109 +55,90 @@ def seed_data(db: Session) -> None:
 
     sample_products = [
         {
-            "id": str(uuid.uuid4()),
+            "id": "123e4567-e89b-12d3-a456-426614174000",
             "name": "Wireless Noise-Canceling Headphones",
-            "description": "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
+            "description": "High fidelity audio with active noise cancellation and 30hr battery life.",
             "category": "electronics",
             "price": 199.99,
             "rating": 4.8,
-            "tags": ["audio", "wireless", "anc", "bluetooth", "portable"],
+            "tags": ["audio", "wireless", "anc", "bluetooth", "gadgets"],
             "in_stock": True,
         },
         {
-            "id": str(uuid.uuid4()),
-            "name": "Smart Fitness Watch Pro",
-            "description": "Waterproof smartwatch with heart rate monitoring, GPS, and OLED display.",
+            "id": "123e4567-e89b-12d3-a456-426614174001",
+            "name": "Ultra-Slim 4K Laptop",
+            "description": "14-inch OLED display, 16GB RAM, 512GB NVMe SSD, lightweight aluminum chassis.",
             "category": "electronics",
-            "price": 149.50,
-            "rating": 4.6,
-            "tags": ["fitness", "wearable", "smartwatch", "wireless", "waterproof"],
-            "in_stock": True,
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "name": "4K Ultra HD Action Camera",
-            "description": "Rugged action camera supporting 60fps 4K video recording with stabilization.",
-            "category": "electronics",
-            "price": 289.00,
-            "rating": 4.5,
-            "tags": ["camera", "video", "4k", "portable", "waterproof"],
-            "in_stock": True,
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Mechanical Gaming Keyboard RGB",
-            "description": "Tactile mechanical switches with customizable RGB backlighting and wrist rest.",
-            "category": "electronics",
-            "price": 89.99,
+            "price": 899.99,
             "rating": 4.7,
-            "tags": ["gaming", "keyboard", "rgb", "mechanical", "accessories"],
+            "tags": ["computer", "portable", "work", "wireless", "gadgets"],
             "in_stock": True,
         },
         {
-            "id": str(uuid.uuid4()),
-            "name": "Clean Code & Architecture Guide",
-            "description": "A comprehensive handbook for modern software craftsmanship and architecture patterns.",
+            "id": "123e4567-e89b-12d3-a456-426614174002",
+            "name": "Smart Fitness Watch",
+            "description": "Heart rate monitor, GPS tracking, sleep analyzer, water-resistant up to 50m.",
+            "category": "electronics",
+            "price": 129.50,
+            "rating": 4.3,
+            "tags": ["fitness", "wearable", "health", "smart", "wireless"],
+            "in_stock": True,
+        },
+        {
+            "id": "123e4567-e89b-12d3-a456-426614174003",
+            "name": "Deep Learning & AI Handbook",
+            "description": "Comprehensive guide to neural networks, machine learning algorithms, and real-world AI applications.",
             "category": "books",
-            "price": 39.99,
+            "price": 49.99,
             "rating": 4.9,
-            "tags": ["programming", "architecture", "educational", "software"],
+            "tags": ["ai", "python", "education", "books", "data"],
             "in_stock": True,
         },
         {
-            "id": str(uuid.uuid4()),
-            "name": "The Art of Machine Learning",
-            "description": "In-depth guide to modern deep learning, neural networks, and recommendation systems.",
-            "category": "books",
-            "price": 49.95,
-            "rating": 4.8,
-            "tags": ["ai", "machine-learning", "educational", "data-science"],
-            "in_stock": True,
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Ergonomic Office Mesh Chair",
-            "description": "High back breathable mesh desk chair with adjustable lumbar support and armrests.",
-            "category": "home",
-            "price": 219.00,
-            "rating": 4.4,
-            "tags": ["furniture", "ergonomic", "office", "comfortable"],
-            "in_stock": True,
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Adjustable Standing Desk Converter",
-            "description": "Dual-tier sit-stand desk riser with smooth gas spring height adjustment.",
-            "category": "home",
-            "price": 179.99,
-            "rating": 4.6,
-            "tags": ["furniture", "office", "standing-desk", "ergonomic"],
-            "in_stock": True,
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Performance Running Shoes",
-            "description": "Lightweight breathable running shoes with responsive foam cushioning.",
-            "category": "clothing",
-            "price": 119.99,
+            "id": "123e4567-e89b-12d3-a456-426614174004",
+            "name": "Ergonomic Mechanical Keyboard",
+            "description": "Custom mechanical switches, RGB backlighting, wrist rest, programmable macro keys.",
+            "category": "electronics",
+            "price": 89.00,
             "rating": 4.5,
-            "tags": ["fitness", "running", "shoes", "sportswear", "breathable"],
+            "tags": ["keyboard", "gaming", "accessories", "wireless"],
             "in_stock": True,
         },
         {
-            "id": str(uuid.uuid4()),
-            "name": "Thermal Insulated Travel Mug",
-            "description": "Stainless steel vacuum insulated tumbler keeping drinks hot for 12 hours.",
-            "category": "home",
-            "price": 24.99,
-            "rating": 4.7,
-            "tags": ["kitchen", "travel", "insulated", "portable"],
+            "id": "123e4567-e89b-12d3-a456-426614174005",
+            "name": "Running Performance Shoes",
+            "description": "Breathable mesh, responsive foam cushioning, durable rubber traction outsole.",
+            "category": "apparel",
+            "price": 110.00,
+            "rating": 4.2,
+            "tags": ["fitness", "running", "shoes", "sport"],
+            "in_stock": True,
+        },
+        {
+            "id": "123e4567-e89b-12d3-a456-426614174006",
+            "name": "Budget Wired Earphones",
+            "description": "Standard 3.5mm jack in-ear headphones with built-in microphone.",
+            "category": "electronics",
+            "price": 19.99,
+            "rating": 3.8,
+            "tags": ["audio", "budget", "wired"],
             "in_stock": True,
         },
     ]
 
     for item in sample_products:
-        p = Product(**item)
+        p = Product(
+            id=item["id"],
+            name=item["name"],
+            description=item["description"],
+            category=item["category"],
+            price=item["price"],
+            rating=item["rating"],
+            tags=item["tags"],
+            in_stock=item["in_stock"],
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
         db.add(p)
 
     try:

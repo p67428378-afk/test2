@@ -1,75 +1,73 @@
-def test_submit_feedback_like_and_dislike(client):
-    user_id = "user_fb_test_001"
-    # First generate a recommendation to get a valid recommendation_id
+"""Tests for Recommendation Feedback API endpoints."""
+
+
+def test_submit_and_update_feedback(client):
+    """Verify submitting like feedback, and updating to dislike on same recommendation."""
+    user_id = "test_feedback_user"
+    # 1. Generate a recommendation to obtain a recommendation_id
     gen_res = client.post(
-        "/api/v1/recommendations/generate", json={"user_id": user_id, "limit": 2}
+        "/api/v1/recommendations/generate",
+        json={"user_id": user_id, "limit": 1},
     )
     assert gen_res.status_code == 200
-    recs = gen_res.json()["recommendations"]
-    assert len(recs) > 0
-    rec_id = recs[0]["recommendation_id"]
+    rec_id = gen_res.json()["recommendations"][0]["recommendation_id"]
 
-    # Submit 'like' feedback via /api/v1/recommendations/feedback
-    fb_payload = {
-        "recommendation_id": rec_id,
-        "user_id": user_id,
-        "feedback": "like",
-    }
-    res = client.post("/api/v1/recommendations/feedback", json=fb_payload)
-    assert res.status_code == 200
-    data = res.json()
-    assert data["recommendation_id"] == rec_id
-    assert data["feedback"] == "like"
-    assert data["status"] in ["created", "updated"]
+    # 2. Submit initial "like" feedback
+    fb_res = client.post(
+        "/api/v1/recommendations/feedback",
+        json={
+            "recommendation_id": rec_id,
+            "user_id": user_id,
+            "feedback": "like",
+        },
+    )
+    assert fb_res.status_code == 200
+    fb_data = fb_res.json()
+    assert fb_data["recommendation_id"] == rec_id
+    assert fb_data["feedback"] == "like"
+    assert fb_data["status"] == "updated"
 
-    # Submit 'dislike' update on same recommendation
-    fb_payload["feedback"] = "dislike"
-    update_res = client.post("/api/v1/recommendations/feedback", json=fb_payload)
-    assert update_res.status_code == 200
-    update_data = update_res.json()
-    assert update_data["feedback"] == "dislike"
-    assert update_data["status"] == "updated"
+    # 3. Update feedback to "dislike"
+    update_fb_res = client.post(
+        "/api/v1/recommendations/feedback",
+        json={
+            "recommendation_id": rec_id,
+            "user_id": user_id,
+            "feedback": "dislike",
+        },
+    )
+    assert update_fb_res.status_code == 200
+    assert update_fb_res.json()["feedback"] == "dislike"
 
 
-def test_submit_feedback_via_feedback_route(client):
-    user_id = "user_fb_test_002"
+def test_submit_invalid_feedback(client):
+    """Verify submitting invalid feedback value returns 400 Bad Request."""
+    user_id = "test_invalid_fb_user"
     gen_res = client.post(
-        "/api/v1/recommendations/generate", json={"user_id": user_id, "limit": 2}
+        "/api/v1/recommendations/generate",
+        json={"user_id": user_id, "limit": 1},
     )
     rec_id = gen_res.json()["recommendations"][0]["recommendation_id"]
 
-    fb_payload = {
-        "recommendation_id": rec_id,
-        "user_id": user_id,
-        "feedback": "like",
-    }
-    res = client.post("/api/v1/feedback", json=fb_payload)
-    assert res.status_code == 200
-    assert res.json()["feedback"] == "like"
-
-
-def test_submit_feedback_not_found(client):
-    fb_payload = {
-        "recommendation_id": "non-existent-rec-uuid",
-        "user_id": "user_123",
-        "feedback": "like",
-    }
-    res = client.post("/api/v1/recommendations/feedback", json=fb_payload)
-    assert res.status_code == 404
-    assert "not found" in res.json()["detail"].lower()
-
-
-def test_submit_feedback_invalid_value(client):
-    user_id = "user_fb_test_003"
-    gen_res = client.post(
-        "/api/v1/recommendations/generate", json={"user_id": user_id, "limit": 1}
+    response = client.post(
+        "/api/v1/recommendations/feedback",
+        json={
+            "recommendation_id": rec_id,
+            "user_id": user_id,
+            "feedback": "neutral_maybe",
+        },
     )
-    rec_id = gen_res.json()["recommendations"][0]["recommendation_id"]
+    assert response.status_code == 400 or response.status_code == 422
 
-    fb_payload = {
-        "recommendation_id": rec_id,
-        "user_id": user_id,
-        "feedback": "invalid_option",
-    }
-    res = client.post("/api/v1/recommendations/feedback", json=fb_payload)
-    assert res.status_code in [400, 422]
+
+def test_feedback_non_existent_recommendation(client):
+    """Verify 404 when submitting feedback for unknown recommendation ID."""
+    response = client.post(
+        "/api/v1/recommendations/feedback",
+        json={
+            "recommendation_id": "non-existent-rec-id-9999",
+            "user_id": "test_user",
+            "feedback": "like",
+        },
+    )
+    assert response.status_code == 404

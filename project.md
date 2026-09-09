@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-244** - Product Recommendation System - Product Browsing, Preference Capture & AI Recommendations
+- **SCRUM-244** - Product Recommendation System - Product Browsing, Preference Capture, AI Recommendations & Saved Items
