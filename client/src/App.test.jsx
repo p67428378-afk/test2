@@ -5,13 +5,11 @@ import App from "./App.jsx";
 
 // Mock API module so tests run cleanly in isolation
 vi.mock("./services/api.js", () => ({
-  getCurrentUser: vi
-    .fn()
-    .mockResolvedValue({
-      id: "u1",
-      email: "test@example.com",
-      full_name: "Test User",
-    }),
+  getCurrentUser: vi.fn().mockResolvedValue({
+    id: "u1",
+    email: "test@example.com",
+    full_name: "Test User",
+  }),
   getWateringNotifications: vi.fn().mockResolvedValue({ total_alerts: 2 }),
   getDashboardSchedules: vi.fn().mockResolvedValue({
     due_today: [],

@@ -9,15 +9,71 @@ const api = axios.create({
   },
 });
 
+let loginPromise = null;
+
+async function ensureAuthToken() {
+  let token = localStorage.getItem("sproutcare_token");
+  if (!token) {
+    if (!loginPromise) {
+      loginPromise = axios
+        .post(`${BASE_URL}/api/v1/auth/login`, {
+          email: "test@example.com",
+          password: "testpassword",
+        })
+        .then((res) => {
+          if (res.data && res.data.access_token) {
+            localStorage.setItem("sproutcare_token", res.data.access_token);
+            return res.data.access_token;
+          }
+          return null;
+        })
+        .catch(() => null)
+        .finally(() => {
+          loginPromise = null;
+        });
+    }
+    token = await loginPromise;
+  }
+  return token;
+}
+
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("sproutcare_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    if (
+      !config.url.includes("/api/v1/auth/login") &&
+      !config.url.includes("/api/v1/auth/register")
+    ) {
+      const token = await ensureAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
   (error) => Promise.reject(error),
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/api/v1/auth/login")
+    ) {
+      originalRequest._retry = true;
+      localStorage.removeItem("sproutcare_token");
+      const token = await ensureAuthToken();
+      if (token) {
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      }
+    }
+    return Promise.reject(error);
+  },
 );
 
 // Auth APIs
