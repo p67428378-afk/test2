@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-242** - Houseplant Care Guide - Species Identification & Watering Schedule Management
+- **SCRUM-242** - Houseplant Care Guide - Species Identification, Care Schedule Management & Plant Health Logging

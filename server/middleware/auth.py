@@ -1,29 +1,24 @@
 import os
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from jose import JWTError, jwt
-from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from server.database import get_db
 from server.models import User
 from server.schemas import TokenData
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
+)  # 24 hours
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer(auto_error=False)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=True)
+oauth2_scheme_optional = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login", auto_error=False
+)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -35,12 +30,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
     credentials_exception = HTTPException(
@@ -48,26 +43,21 @@ def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    if not credentials or not credentials.credentials:
-        raise credentials_exception
-
-    token = credentials.credentials
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub") or payload.get("user_id")
-        email: str = payload.get("email")
-        role: str = payload.get("role", "user")
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: Optional[str] = payload.get("sub")
+        email: Optional[str] = payload.get("email")
         if user_id is None and email is None:
             raise credentials_exception
-        token_data = TokenData(user_id=user_id, email=email, role=role)
+        token_data = TokenData(user_id=user_id, email=email, role=payload.get("role"))
     except JWTError:
         raise credentials_exception
 
-    query = db.query(User)
+    user = None
     if token_data.user_id:
-        user = query.filter(User.id == token_data.user_id).first()
-    else:
-        user = query.filter(User.email == token_data.email).first()
+        user = db.query(User).filter(User.id == token_data.user_id).first()
+    if not user and token_data.email:
+        user = db.query(User).filter(User.email == token_data.email).first()
 
     if user is None:
         raise credentials_exception
@@ -79,10 +69,34 @@ def get_current_user(
     return user
 
 
-def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: Optional[str] = payload.get("sub")
+        email: Optional[str] = payload.get("email")
+        if not user_id and not email:
+            return None
+        user = None
+        if user_id:
+            user = db.query(User).filter(User.id == user_id).first()
+        if not user and email:
+            user = db.query(User).filter(User.email == email).first()
+        if user and user.is_active:
+            return user
+        return None
+    except JWTError:
+        return None
+
+
+def require_admin_user(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Operation requires administrative privileges",
+            detail="Admin privileges required",
         )
     return current_user

@@ -4,34 +4,34 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from server.database import get_db, seed_data
-from server.models import Base
+from server.database import Base, get_db, seed_data
+from server.models import User, Species, UserPlant, PlantHealthLog, CareLog  # noqa: F401
 from server.main import app
+from server.middleware.auth import create_access_token
 
-# Test database setup with StaticPool and SQLite in-memory
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
-test_engine = create_engine(
-    SQLALCHEMY_TEST_DATABASE_URL,
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
-    Base.metadata.create_all(bind=test_engine)
+    Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     seed_data(db)
     db.close()
     yield
-    Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def db_session():
-    connection = test_engine.connect()
+    connection = engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
 
@@ -42,7 +42,7 @@ def db_session():
     connection.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def client(db_session):
     def override_get_db():
         try:
@@ -56,25 +56,27 @@ def client(db_session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def auth_headers(client):
-    # Log in as the seeded test user
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpassword"},
+@pytest.fixture(scope="function")
+def auth_headers(db_session):
+    user = db_session.query(User).filter(User.email == "test@example.com").first()
+    if not user:
+        seed_data(db_session)
+        user = db_session.query(User).filter(User.email == "test@example.com").first()
+
+    token = create_access_token(
+        data={"sub": user.id, "email": user.email, "role": user.role}
     )
-    assert response.status_code == 200, f"Login failed: {response.text}"
-    token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
-@pytest.fixture
-def admin_auth_headers(client):
-    # Log in as the seeded admin user
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "admin@example.com", "password": "adminpassword"},
+@pytest.fixture(scope="function")
+def admin_headers(db_session):
+    admin = db_session.query(User).filter(User.email == "admin@example.com").first()
+    if not admin:
+        seed_data(db_session)
+        admin = db_session.query(User).filter(User.email == "admin@example.com").first()
+
+    token = create_access_token(
+        data={"sub": admin.id, "email": admin.email, "role": admin.role}
     )
-    assert response.status_code == 200, f"Admin login failed: {response.text}"
-    token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

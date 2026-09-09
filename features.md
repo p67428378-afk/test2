@@ -1,12 +1,13 @@
 # Project Features
 
-## SCRUM-242 - Houseplant Care Guide - Species Identification & Watering Schedule Management
+## SCRUM-242 - Houseplant Care Guide - Species Identification, Care Schedule Management & Plant Health Logging
 
 ### Feature Summary
-A comprehensive houseplant care guide allowing users to search and identify plant species, add plants to a personal collection, set up watering schedules, log watering events, and receive daily dashboard reminders.
+Allows plant owners to search species care guides, manage their personal plant collection, set and track custom care schedules, log plant health notes/photos, and receive daily care reminders.
 
 ### Key Features
-- Species Identification & Search
-- Personalized Plant Collection Management
-- Watering Schedule Setup & Tracking
-- Watering Reminders & Dashboard Notifications
+- Botanical Species Identification & Care Catalog Search
+- Personal Plant Collection ("My Garden") Management
+- Automated Watering & Fertilization Schedule Tracking
+- Plant Health Observations, Growth Milestones & Photo Logging
+- Care Reminders & Dashboard Notifications

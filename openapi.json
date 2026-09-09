@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "SproutCare Houseplant Care API",
-    "description": "Backend API for species identification, plant care guides, and watering schedule management.",
+    "title": "Houseplant Care Guide API",
+    "description": "API for botanical species identification, custom care scheduling, plant collection management, and health logging.",
     "version": "1.0.0"
   },
   "paths": {
@@ -17,7 +17,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UserCreate"
+                "$ref": "#/components/schemas/UserRegister"
               }
             }
           },
@@ -29,7 +29,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Token"
+                  "$ref": "#/components/schemas/TokenResponse"
                 }
               }
             }
@@ -54,33 +54,13 @@
         ],
         "summary": "Login",
         "operationId": "login_api_v1_auth_login_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserLogin"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Token"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/TokenResponse"
                 }
               }
             }
@@ -101,7 +81,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/UserOut"
                 }
               }
             }
@@ -109,7 +89,7 @@
         },
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ]
       }
@@ -117,7 +97,7 @@
     "/api/v1/species": {
       "get": {
         "tags": [
-          "Species"
+          "Botanical Species Catalog"
         ],
         "summary": "List Species",
         "operationId": "list_species_api_v1_species_get",
@@ -135,159 +115,13 @@
                   "type": "null"
                 }
               ],
-              "description": "Search by common or scientific name",
+              "description": "Search query across common and scientific names",
               "title": "Q"
             },
-            "description": "Search by common or scientific name"
+            "description": "Search query across common and scientific names"
           },
           {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SpeciesResponse"
-                  },
-                  "title": "Response List Species Api V1 Species Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Species"
-        ],
-        "summary": "Create Species",
-        "operationId": "create_species_api_v1_species_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SpeciesCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpeciesResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/species/{species_id}": {
-      "get": {
-        "tags": [
-          "Species"
-        ],
-        "summary": "Get Species",
-        "operationId": "get_species_api_v1_species__species_id__get",
-        "parameters": [
-          {
-            "name": "species_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Species Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpeciesResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/plants": {
-      "get": {
-        "tags": [
-          "Plants"
-        ],
-        "summary": "List User Plants",
-        "operationId": "list_user_plants_api_v1_plants_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "location",
+            "name": "query",
             "in": "query",
             "required": false,
             "schema": {
@@ -299,10 +133,28 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by room/location",
-              "title": "Location"
+              "description": "Search query alias",
+              "title": "Query"
             },
-            "description": "Filter by room/location"
+            "description": "Search query alias"
+          },
+          {
+            "name": "sunlight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by sunlight requirement",
+              "title": "Sunlight"
+            },
+            "description": "Filter by sunlight requirement"
           },
           {
             "name": "skip",
@@ -336,7 +188,287 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UserPlantResponse"
+                    "$ref": "#/components/schemas/SpeciesOut"
+                  },
+                  "title": "Response List Species Api V1 Species Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Botanical Species Catalog"
+        ],
+        "summary": "Create Custom Species",
+        "operationId": "create_custom_species_api_v1_species_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeciesCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpeciesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/species/{species_id}": {
+      "get": {
+        "tags": [
+          "Botanical Species Catalog"
+        ],
+        "summary": "Get Species",
+        "operationId": "get_species_api_v1_species__species_id__get",
+        "parameters": [
+          {
+            "name": "species_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Species Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpeciesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Botanical Species Catalog"
+        ],
+        "summary": "Update Species",
+        "operationId": "update_species_api_v1_species__species_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "species_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Species Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeciesUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpeciesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Botanical Species Catalog"
+        ],
+        "summary": "Delete Species",
+        "operationId": "delete_species_api_v1_species__species_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "species_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Species Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plants": {
+      "get": {
+        "tags": [
+          "My Garden Plants"
+        ],
+        "summary": "List User Plants",
+        "operationId": "list_user_plants_api_v1_plants_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter plants by room location",
+              "title": "Location"
+            },
+            "description": "Filter plants by room location"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter plants by status",
+              "title": "Status"
+            },
+            "description": "Filter plants by status"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserPlantOut"
                   },
                   "title": "Response List User Plants Api V1 Plants Get"
                 }
@@ -357,13 +489,13 @@
       },
       "post": {
         "tags": [
-          "Plants"
+          "My Garden Plants"
         ],
         "summary": "Create User Plant",
         "operationId": "create_user_plant_api_v1_plants_post",
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ],
         "requestBody": {
@@ -382,7 +514,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserPlantResponse"
+                  "$ref": "#/components/schemas/UserPlantOut"
                 }
               }
             }
@@ -403,13 +535,13 @@
     "/api/v1/plants/{plant_id}": {
       "get": {
         "tags": [
-          "Plants"
+          "My Garden Plants"
         ],
         "summary": "Get User Plant",
         "operationId": "get_user_plant_api_v1_plants__plant_id__get",
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ],
         "parameters": [
@@ -429,7 +561,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserPlantDetailResponse"
+                  "$ref": "#/components/schemas/UserPlantOut"
                 }
               }
             }
@@ -446,15 +578,15 @@
           }
         }
       },
-      "put": {
+      "patch": {
         "tags": [
-          "Plants"
+          "My Garden Plants"
         ],
         "summary": "Update User Plant",
-        "operationId": "update_user_plant_api_v1_plants__plant_id__put",
+        "operationId": "update_user_plant_api_v1_plants__plant_id__patch",
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ],
         "parameters": [
@@ -484,7 +616,62 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserPlantResponse"
+                  "$ref": "#/components/schemas/UserPlantOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "My Garden Plants"
+        ],
+        "summary": "Update User Plant",
+        "operationId": "update_user_plant_api_v1_plants__plant_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plant Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPlantUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPlantOut"
                 }
               }
             }
@@ -503,13 +690,13 @@
       },
       "delete": {
         "tags": [
-          "Plants"
+          "My Garden Plants"
         ],
         "summary": "Delete User Plant",
         "operationId": "delete_user_plant_api_v1_plants__plant_id__delete",
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ],
         "parameters": [
@@ -543,13 +730,13 @@
     "/api/v1/plants/{plant_id}/water": {
       "post": {
         "tags": [
-          "Plants"
+          "My Garden Plants"
         ],
-        "summary": "Water User Plant",
-        "operationId": "water_user_plant_api_v1_plants__plant_id__water_post",
+        "summary": "Water Plant",
+        "operationId": "water_plant_api_v1_plants__plant_id__water_post",
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ],
         "parameters": [
@@ -586,7 +773,135 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserPlantDetailResponse"
+                  "$ref": "#/components/schemas/UserPlantOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plants/{plant_id}/fertilize": {
+      "post": {
+        "tags": [
+          "My Garden Plants"
+        ],
+        "summary": "Fertilize Plant",
+        "operationId": "fertilize_plant_api_v1_plants__plant_id__fertilize_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plant Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/FertilizePlantRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Fertilize Req"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPlantOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plants/{plant_id}/snooze": {
+      "post": {
+        "tags": [
+          "My Garden Plants"
+        ],
+        "summary": "Snooze Plant Notifications",
+        "operationId": "snooze_plant_notifications_api_v1_plants__plant_id__snooze_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plant Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SnoozePlantRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Snooze Req"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPlantOut"
                 }
               }
             }
@@ -607,7 +922,7 @@
     "/api/v1/schedules/dashboard": {
       "get": {
         "tags": [
-          "Schedules"
+          "Care Schedules & Notifications"
         ],
         "summary": "Get Dashboard Schedules",
         "operationId": "get_dashboard_schedules_api_v1_schedules_dashboard_get",
@@ -617,7 +932,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DashboardScheduleResponse"
+                  "$ref": "#/components/schemas/DashboardSchedulesOut"
                 }
               }
             }
@@ -625,7 +940,33 @@
         },
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/schedules": {
+      "get": {
+        "tags": [
+          "Care Schedules & Notifications"
+        ],
+        "summary": "Get Dashboard Schedules",
+        "operationId": "get_dashboard_schedules_api_v1_schedules_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSchedulesOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
           }
         ]
       }
@@ -633,10 +974,9 @@
     "/api/v1/schedules/notifications": {
       "get": {
         "tags": [
-          "Schedules"
+          "Care Schedules & Notifications"
         ],
         "summary": "Get Watering Notifications",
-        "description": "Fetch active watering reminders and alerts for plants that have notifications_enabled=True.",
         "operationId": "get_watering_notifications_api_v1_schedules_notifications_get",
         "responses": {
           "200": {
@@ -644,7 +984,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationSummaryResponse"
+                  "$ref": "#/components/schemas/NotificationSummaryOut"
                 }
               }
             }
@@ -652,7 +992,7 @@
         },
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ]
       }
@@ -660,18 +1000,17 @@
     "/api/v1/schedules/notifications/send": {
       "post": {
         "tags": [
-          "Schedules"
+          "Care Schedules & Notifications"
         ],
-        "summary": "Trigger Daily Reminder Notifications",
-        "description": "Simulate sending daily summary reminder notifications (push/email) for plants due or overdue.",
-        "operationId": "trigger_daily_reminder_notifications_api_v1_schedules_notifications_send_post",
+        "summary": "Trigger Reminder Notifications",
+        "operationId": "trigger_reminder_notifications_api_v1_schedules_notifications_send_post",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationSummaryResponse"
+                  "$ref": "#/components/schemas/SendNotificationResponse"
                 }
               }
             }
@@ -679,9 +1018,221 @@
         },
         "security": [
           {
-            "HTTPBearer": []
+            "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/health-logs": {
+      "get": {
+        "tags": [
+          "Plant Health & Milestone Observations"
+        ],
+        "summary": "List Health Logs",
+        "operationId": "list_health_logs_api_v1_health_logs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter logs for a specific plant",
+              "title": "Plant Id"
+            },
+            "description": "Filter logs for a specific plant"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlantHealthLogOut"
+                  },
+                  "title": "Response List Health Logs Api V1 Health Logs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Plant Health & Milestone Observations"
+        ],
+        "summary": "Create Health Log",
+        "operationId": "create_health_log_api_v1_health_logs_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantHealthLogCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantHealthLogOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health-logs/{log_id}": {
+      "get": {
+        "tags": [
+          "Plant Health & Milestone Observations"
+        ],
+        "summary": "Get Health Log",
+        "operationId": "get_health_log_api_v1_health_logs__log_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Log Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantHealthLogOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Plant Health & Milestone Observations"
+        ],
+        "summary": "Delete Health Log",
+        "operationId": "delete_health_log_api_v1_health_logs__log_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Log Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/health": {
@@ -702,97 +1253,71 @@
           }
         }
       }
-    },
-    "/": {
-      "get": {
-        "tags": [
-          "Root"
-        ],
-        "summary": "Root",
-        "operationId": "root__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "DashboardScheduleResponse": {
+      "DashboardSchedulesOut": {
         "properties": {
-          "due_today": {
-            "items": {
-              "$ref": "#/components/schemas/UserPlantResponse"
-            },
-            "type": "array",
-            "title": "Due Today"
-          },
           "overdue": {
             "items": {
-              "$ref": "#/components/schemas/UserPlantResponse"
+              "$ref": "#/components/schemas/UserPlantOut"
             },
             "type": "array",
             "title": "Overdue"
           },
+          "due_today": {
+            "items": {
+              "$ref": "#/components/schemas/UserPlantOut"
+            },
+            "type": "array",
+            "title": "Due Today"
+          },
           "upcoming": {
             "items": {
-              "$ref": "#/components/schemas/UserPlantResponse"
+              "$ref": "#/components/schemas/UserPlantOut"
             },
             "type": "array",
             "title": "Upcoming"
           },
           "summary_stats": {
-            "$ref": "#/components/schemas/DashboardScheduleStats"
+            "$ref": "#/components/schemas/SummaryStats"
           }
         },
         "type": "object",
         "required": [
-          "due_today",
-          "overdue",
-          "upcoming",
           "summary_stats"
         ],
-        "title": "DashboardScheduleResponse"
+        "title": "DashboardSchedulesOut"
       },
-      "DashboardScheduleStats": {
+      "FertilizePlantRequest": {
         "properties": {
-          "total_plants": {
-            "type": "integer",
-            "title": "Total Plants"
+          "fertilized_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fertilized At"
           },
-          "overdue_count": {
-            "type": "integer",
-            "title": "Overdue Count"
-          },
-          "due_today_count": {
-            "type": "integer",
-            "title": "Due Today Count"
-          },
-          "healthy_count": {
-            "type": "integer",
-            "title": "Healthy Count"
-          },
-          "care_score": {
-            "type": "integer",
-            "title": "Care Score"
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
           }
         },
         "type": "object",
-        "required": [
-          "total_plants",
-          "overdue_count",
-          "due_today_count",
-          "healthy_count",
-          "care_score"
-        ],
-        "title": "DashboardScheduleStats"
+        "title": "FertilizePlantRequest"
       },
       "HTTPValidationError": {
         "properties": {
@@ -807,45 +1332,7 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "NotificationSummaryResponse": {
-        "properties": {
-          "notifications": {
-            "items": {
-              "$ref": "#/components/schemas/PlantNotificationItem"
-            },
-            "type": "array",
-            "title": "Notifications"
-          },
-          "total_alerts": {
-            "type": "integer",
-            "title": "Total Alerts"
-          },
-          "sent_to_email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sent To Email"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "notifications",
-          "total_alerts",
-          "timestamp"
-        ],
-        "title": "NotificationSummaryResponse"
-      },
-      "PlantNotificationItem": {
+      "NotificationItem": {
         "properties": {
           "plant_id": {
             "type": "string",
@@ -854,6 +1341,26 @@
           "nickname": {
             "type": "string",
             "title": "Nickname"
+          },
+          "care_type": {
+            "type": "string",
+            "title": "Care Type"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "is_overdue": {
+            "type": "boolean",
+            "title": "Is Overdue"
           },
           "location": {
             "anyOf": [
@@ -865,12 +1372,93 @@
               }
             ],
             "title": "Location"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "nickname",
+          "care_type",
+          "is_overdue"
+        ],
+        "title": "NotificationItem"
+      },
+      "NotificationSummaryOut": {
+        "properties": {
+          "total_alerts": {
+            "type": "integer",
+            "title": "Total Alerts"
           },
-          "status": {
+          "overdue_count": {
+            "type": "integer",
+            "title": "Overdue Count"
+          },
+          "due_today_count": {
+            "type": "integer",
+            "title": "Due Today Count"
+          },
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationItem"
+            },
+            "type": "array",
+            "title": "Alerts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_alerts",
+          "overdue_count",
+          "due_today_count",
+          "alerts"
+        ],
+        "title": "NotificationSummaryOut"
+      },
+      "PlantHealthLogCreate": {
+        "properties": {
+          "plant_id": {
             "type": "string",
-            "title": "Status"
+            "title": "Plant Id"
           },
-          "next_due_date": {
+          "rating": {
+            "type": "string",
+            "title": "Rating"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "repotted_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repotted Flag",
+            "default": false
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "logged_at": {
             "anyOf": [
               {
                 "type": "string",
@@ -880,21 +1468,131 @@
                 "type": "null"
               }
             ],
-            "title": "Next Due Date"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
+            "title": "Logged At"
           }
         },
         "type": "object",
         "required": [
           "plant_id",
-          "nickname",
-          "status",
-          "message"
+          "rating"
         ],
-        "title": "PlantNotificationItem"
+        "title": "PlantHealthLogCreate"
+      },
+      "PlantHealthLogOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "rating": {
+            "type": "string",
+            "title": "Rating"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "repotted_flag": {
+            "type": "boolean",
+            "title": "Repotted Flag"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "logged_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Logged At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "plant_id",
+          "user_id",
+          "rating",
+          "repotted_flag",
+          "logged_at",
+          "created_at"
+        ],
+        "title": "PlantHealthLogOut"
+      },
+      "SendNotificationResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "sent"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "total_alerts": {
+            "type": "integer",
+            "title": "Total Alerts"
+          },
+          "recipients": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recipients"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "total_alerts",
+          "recipients"
+        ],
+        "title": "SendNotificationResponse"
+      },
+      "SnoozePlantRequest": {
+        "properties": {
+          "snooze_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snooze Hours",
+            "default": 24
+          }
+        },
+        "type": "object",
+        "title": "SnoozePlantRequest"
       },
       "SpeciesCreate": {
         "properties": {
@@ -914,18 +1612,111 @@
             "title": "Scientific Name"
           },
           "sunlight_requirement": {
-            "type": "string",
-            "title": "Sunlight Requirement"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sunlight Requirement",
+            "default": "Bright Indirect Light"
+          },
+          "light_requirement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Light Requirement"
           },
           "humidity_requirement": {
-            "type": "string",
-            "title": "Humidity Requirement"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Humidity Requirement",
+            "default": "Medium to High (50-60%)"
+          },
+          "humidity_target_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Humidity Target Pct",
+            "default": 50
+          },
+          "temp_min_f": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Min F",
+            "default": 65
+          },
+          "temp_max_f": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Max F",
+            "default": 80
           },
           "recommended_watering_days": {
-            "type": "integer",
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Recommended Watering Days",
             "default": 7
+          },
+          "default_watering_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Watering Interval Days",
+            "default": 7
+          },
+          "default_fertilization_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Fertilization Interval Days",
+            "default": 30
           },
           "description": {
             "anyOf": [
@@ -941,13 +1732,11 @@
         },
         "type": "object",
         "required": [
-          "common_name",
-          "sunlight_requirement",
-          "humidity_requirement"
+          "common_name"
         ],
         "title": "SpeciesCreate"
       },
-      "SpeciesResponse": {
+      "SpeciesOut": {
         "properties": {
           "common_name": {
             "type": "string",
@@ -965,18 +1754,111 @@
             "title": "Scientific Name"
           },
           "sunlight_requirement": {
-            "type": "string",
-            "title": "Sunlight Requirement"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sunlight Requirement",
+            "default": "Bright Indirect Light"
+          },
+          "light_requirement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Light Requirement"
           },
           "humidity_requirement": {
-            "type": "string",
-            "title": "Humidity Requirement"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Humidity Requirement",
+            "default": "Medium to High (50-60%)"
+          },
+          "humidity_target_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Humidity Target Pct",
+            "default": 50
+          },
+          "temp_min_f": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Min F",
+            "default": 65
+          },
+          "temp_max_f": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Max F",
+            "default": 80
           },
           "recommended_watering_days": {
-            "type": "integer",
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Recommended Watering Days",
             "default": 7
+          },
+          "default_watering_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Watering Interval Days",
+            "default": 7
+          },
+          "default_fertilization_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Fertilization Interval Days",
+            "default": 30
           },
           "description": {
             "anyOf": [
@@ -993,23 +1875,212 @@
             "type": "string",
             "title": "Id"
           },
+          "is_custom": {
+            "type": "boolean",
+            "title": "Is Custom"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
           "common_name",
-          "sunlight_requirement",
-          "humidity_requirement",
           "id",
-          "created_at"
+          "is_custom",
+          "created_at",
+          "updated_at"
         ],
-        "title": "SpeciesResponse"
+        "title": "SpeciesOut"
       },
-      "Token": {
+      "SpeciesUpdate": {
+        "properties": {
+          "common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "scientific_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scientific Name"
+          },
+          "sunlight_requirement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sunlight Requirement"
+          },
+          "light_requirement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Light Requirement"
+          },
+          "humidity_requirement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Humidity Requirement"
+          },
+          "humidity_target_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Humidity Target Pct"
+          },
+          "temp_min_f": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Min F"
+          },
+          "temp_max_f": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Max F"
+          },
+          "recommended_watering_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Watering Days"
+          },
+          "default_watering_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Watering Interval Days"
+          },
+          "default_fertilization_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Fertilization Interval Days"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "title": "SpeciesUpdate"
+      },
+      "SummaryStats": {
+        "properties": {
+          "overdue_count": {
+            "type": "integer",
+            "title": "Overdue Count",
+            "default": 0
+          },
+          "due_today_count": {
+            "type": "integer",
+            "title": "Due Today Count",
+            "default": 0
+          },
+          "total_plants": {
+            "type": "integer",
+            "title": "Total Plants",
+            "default": 0
+          },
+          "healthy_count": {
+            "type": "integer",
+            "title": "Healthy Count",
+            "default": 0
+          },
+          "care_score": {
+            "type": "integer",
+            "title": "Care Score",
+            "default": 100
+          }
+        },
+        "type": "object",
+        "title": "SummaryStats"
+      },
+      "TokenResponse": {
         "properties": {
           "access_token": {
             "type": "string",
@@ -1021,17 +2092,23 @@
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/UserResponse"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
-          "access_token",
-          "user"
+          "access_token"
         ],
-        "title": "Token"
+        "title": "TokenResponse"
       },
-      "UserCreate": {
+      "UserOut": {
         "properties": {
           "email": {
             "type": "string",
@@ -1049,37 +2126,39 @@
             ],
             "title": "Full Name"
           },
-          "password": {
+          "id": {
             "type": "string",
-            "minLength": 6,
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "title": "UserCreate"
-      },
-      "UserLogin": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
+            "title": "Id"
           },
-          "password": {
+          "role": {
             "type": "string",
-            "title": "Password"
+            "title": "Role"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
           "email",
-          "password"
+          "id",
+          "role",
+          "is_active",
+          "created_at",
+          "updated_at"
         ],
-        "title": "UserLogin"
+        "title": "UserOut"
       },
       "UserPlantCreate": {
         "properties": {
@@ -1107,7 +2186,8 @@
                 "type": "null"
               }
             ],
-            "title": "Location"
+            "title": "Location",
+            "default": "Living Room"
           },
           "photo_url": {
             "anyOf": [
@@ -1120,34 +2200,53 @@
             ],
             "title": "Photo Url"
           },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "default": "Active"
+          },
           "watering_interval_days": {
             "anyOf": [
               {
-                "type": "integer",
-                "minimum": 1.0
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Watering Interval Days"
+            "title": "Watering Interval Days",
+            "default": 7
           },
-          "notifications_enabled": {
-            "type": "boolean",
-            "title": "Notifications Enabled",
-            "default": true
-          },
-          "last_watered": {
+          "fertilization_interval_days": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Last Watered"
+            "title": "Fertilization Interval Days",
+            "default": 30
+          },
+          "notifications_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifications Enabled",
+            "default": true
           }
         },
         "type": "object",
@@ -1156,7 +2255,7 @@
         ],
         "title": "UserPlantCreate"
       },
-      "UserPlantDetailResponse": {
+      "UserPlantOut": {
         "properties": {
           "nickname": {
             "type": "string",
@@ -1182,7 +2281,8 @@
                 "type": "null"
               }
             ],
-            "title": "Location"
+            "title": "Location",
+            "default": "Living Room"
           },
           "photo_url": {
             "anyOf": [
@@ -1195,14 +2295,51 @@
             ],
             "title": "Photo Url"
           },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "default": "Active"
+          },
           "watering_interval_days": {
-            "type": "integer",
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Watering Interval Days",
             "default": 7
           },
+          "fertilization_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fertilization Interval Days",
+            "default": 30
+          },
           "notifications_enabled": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Notifications Enabled",
             "default": true
           },
@@ -1213,6 +2350,76 @@
           "user_id": {
             "type": "string",
             "title": "User Id"
+          },
+          "last_watered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Watered At"
+          },
+          "next_water_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Water Due"
+          },
+          "last_fertilized_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Fertilized At"
+          },
+          "next_fertilize_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Fertilize Due"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           },
           "last_watered": {
             "anyOf": [
@@ -1238,141 +2445,21 @@
             ],
             "title": "Next Due Date"
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
+          "species_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Species Name"
           },
           "species": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/SpeciesResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "watering_logs": {
-            "items": {
-              "$ref": "#/components/schemas/WateringLogResponse"
-            },
-            "type": "array",
-            "title": "Watering Logs",
-            "default": []
-          }
-        },
-        "type": "object",
-        "required": [
-          "nickname",
-          "id",
-          "user_id",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "UserPlantDetailResponse"
-      },
-      "UserPlantResponse": {
-        "properties": {
-          "nickname": {
-            "type": "string",
-            "title": "Nickname"
-          },
-          "species_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Species Id"
-          },
-          "location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Location"
-          },
-          "photo_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Photo Url"
-          },
-          "watering_interval_days": {
-            "type": "integer",
-            "minimum": 1.0,
-            "title": "Watering Interval Days",
-            "default": 7
-          },
-          "notifications_enabled": {
-            "type": "boolean",
-            "title": "Notifications Enabled",
-            "default": true
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "user_id": {
-            "type": "string",
-            "title": "User Id"
-          },
-          "last_watered": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Watered"
-          },
-          "next_due_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Due Date"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "species": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/SpeciesResponse"
+                "$ref": "#/components/schemas/SpeciesOut"
               },
               {
                 "type": "null"
@@ -1388,7 +2475,7 @@
           "created_at",
           "updated_at"
         ],
-        "title": "UserPlantResponse"
+        "title": "UserPlantOut"
       },
       "UserPlantUpdate": {
         "properties": {
@@ -1436,17 +2523,38 @@
             ],
             "title": "Photo Url"
           },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
           "watering_interval_days": {
             "anyOf": [
               {
-                "type": "integer",
-                "minimum": 1.0
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Watering Interval Days"
+          },
+          "fertilization_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fertilization Interval Days"
           },
           "notifications_enabled": {
             "anyOf": [
@@ -1458,12 +2566,48 @@
               }
             ],
             "title": "Notifications Enabled"
+          },
+          "last_watered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Watered At"
+          },
+          "next_water_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Water Due"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
           }
         },
         "type": "object",
         "title": "UserPlantUpdate"
       },
-      "UserResponse": {
+      "UserRegister": {
         "properties": {
           "email": {
             "type": "string",
@@ -1481,33 +2625,17 @@
             ],
             "title": "Full Name"
           },
-          "id": {
+          "password": {
             "type": "string",
-            "title": "Id"
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active"
-          },
-          "role": {
-            "type": "string",
-            "title": "Role"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+            "title": "Password"
           }
         },
         "type": "object",
         "required": [
           "email",
-          "id",
-          "is_active",
-          "role",
-          "created_at"
+          "password"
         ],
-        "title": "UserResponse"
+        "title": "UserRegister"
       },
       "ValidationError": {
         "properties": {
@@ -1577,53 +2705,17 @@
         },
         "type": "object",
         "title": "WaterPlantRequest"
-      },
-      "WateringLogResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "plant_id": {
-            "type": "string",
-            "title": "Plant Id"
-          },
-          "watered_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Watered At"
-          },
-          "notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Notes"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "plant_id",
-          "watered_at",
-          "created_at"
-        ],
-        "title": "WateringLogResponse"
       }
     },
     "securitySchemes": {
-      "HTTPBearer": {
-        "type": "http",
-        "scheme": "bearer"
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/auth/login"
+          }
+        }
       }
     }
   }

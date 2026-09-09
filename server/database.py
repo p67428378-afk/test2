@@ -1,20 +1,19 @@
 import os
 import uuid
-from passlib.context import CryptContext
+from datetime import datetime, timezone, timedelta
+import bcrypt
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.exc import IntegrityError
-from server.models import Base, User, Species
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
-# For SQLite, ensure check_same_thread=False
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+Base = declarative_base()
 
 
 def get_db():
@@ -25,129 +24,284 @@ def get_db():
         db.close()
 
 
+def get_password_hash(password: str) -> str:
+    pw_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(pw_bytes, bcrypt.gensalt()).decode("utf-8")
+
+
 def init_db():
+    from server import models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
 def seed_data(db: Session):
-    # 1. Seed Default Users
-    users_to_seed = [
-        {
-            "email": "test@example.com",
-            "password": "testpassword",
-            "full_name": "Test User",
-            "role": "user",
-        },
-        {
-            "email": "admin@example.com",
-            "password": "adminpassword",
-            "full_name": "Admin User",
-            "role": "admin",
-        },
-    ]
+    from server.models import User, Species, UserPlant, CareLog
 
-    for user_info in users_to_seed:
-        existing = db.query(User).filter(User.email == user_info["email"]).first()
-        if not existing:
-            hashed = pwd_context.hash(user_info["password"])
-            user = User(
-                id=str(uuid.uuid4()),
-                email=user_info["email"],
-                hashed_password=hashed,
-                full_name=user_info["full_name"],
-                is_active=True,
-                role=user_info["role"],
-            )
-            try:
-                db.add(user)
-                db.commit()
-            except IntegrityError:
-                db.rollback()
+    # 1. Seed regular test user
+    test_user = db.query(User).filter(User.email == "test@example.com").first()
+    if not test_user:
+        test_user = User(
+            id=str(uuid.uuid4()),
+            email="test@example.com",
+            hashed_password=get_password_hash("testpassword"),
+            full_name="Test User",
+            role="user",
+            is_active=True,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        db.add(test_user)
+        db.flush()
 
-    # 2. Seed Species Catalog
-    species_catalog = [
+    # 2. Seed admin test user
+    admin_user = db.query(User).filter(User.email == "admin@example.com").first()
+    if not admin_user:
+        admin_user = User(
+            id=str(uuid.uuid4()),
+            email="admin@example.com",
+            hashed_password=get_password_hash("adminpassword"),
+            full_name="Admin User",
+            role="admin",
+            is_active=True,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        db.add(admin_user)
+        db.flush()
+
+    # 3. Seed botanical species catalog
+    default_species = [
         {
             "common_name": "Monstera Deliciosa",
             "scientific_name": "Monstera deliciosa",
-            "sunlight_requirement": "Bright Indirect",
-            "humidity_requirement": "Moderate to High (60-80%)",
+            "sunlight_requirement": "Bright Indirect Light",
+            "light_requirement": "Bright Indirect Light",
+            "humidity_requirement": "High humidity (60%+)",
+            "humidity_target_pct": 65,
+            "temp_min_f": 65,
+            "temp_max_f": 85,
             "recommended_watering_days": 7,
-            "description": "Famous for its natural leaf-holes, the Swiss Cheese Plant is a stunning tropical houseplant that thrives in warm, humid spaces.",
-        },
-        {
-            "common_name": "Fiddle Leaf Fig",
-            "scientific_name": "Ficus lyrata",
-            "sunlight_requirement": "Bright Indirect",
-            "humidity_requirement": "Moderate (50-65%)",
-            "recommended_watering_days": 10,
-            "description": "A popular indoor tree featuring broad, violin-shaped foliage that loves abundant filtered sunshine.",
+            "default_watering_interval_days": 7,
+            "default_fertilization_interval_days": 30,
+            "description": "Popular tropical plant with iconic split leaves. Thrives in warm, humid spaces with bright filtered light.",
+            "is_custom": False,
         },
         {
             "common_name": "Snake Plant",
-            "scientific_name": "Sansevieria trifasciata",
-            "sunlight_requirement": "Low to Bright Indirect",
-            "humidity_requirement": "Low to Average (30-50%)",
+            "scientific_name": "Dracaena trifasciata",
+            "sunlight_requirement": "Low Light / Shade",
+            "light_requirement": "Low Light / Shade",
+            "humidity_requirement": "Low / Moderate (30-50%)",
+            "humidity_target_pct": 40,
+            "temp_min_f": 55,
+            "temp_max_f": 85,
             "recommended_watering_days": 14,
-            "description": "An exceptionally hardy succulent with upright architectural leaves, tolerant of neglect and varied lighting.",
+            "default_watering_interval_days": 14,
+            "default_fertilization_interval_days": 60,
+            "description": "Hardy architectural succulent with upright sword-like foliage. Extremely drought-tolerant and adaptable.",
+            "is_custom": False,
+        },
+        {
+            "common_name": "Fiddle-Leaf Fig",
+            "scientific_name": "Ficus lyrata",
+            "sunlight_requirement": "Direct Sunlight",
+            "light_requirement": "Bright Direct / Filtered Light",
+            "humidity_requirement": "Medium to High (50-60%)",
+            "humidity_target_pct": 55,
+            "temp_min_f": 60,
+            "temp_max_f": 80,
+            "recommended_watering_days": 7,
+            "default_watering_interval_days": 7,
+            "default_fertilization_interval_days": 30,
+            "description": "Stunning indoor tree with large violin-shaped leaves. Needs consistent light and steady watering routine.",
+            "is_custom": False,
         },
         {
             "common_name": "Golden Pothos",
             "scientific_name": "Epipremnum aureum",
-            "sunlight_requirement": "Medium to Low Indirect",
-            "humidity_requirement": "Average (40-60%)",
+            "sunlight_requirement": "Medium Indirect Light",
+            "light_requirement": "Medium Indirect Light",
+            "humidity_requirement": "Moderate (40-60%)",
+            "humidity_target_pct": 50,
+            "temp_min_f": 60,
+            "temp_max_f": 85,
             "recommended_watering_days": 7,
-            "description": "A fast-growing trailing vine with heart-shaped variegated green and yellow leaves, ideal for hanging baskets.",
-        },
-        {
-            "common_name": "Peace Lily",
-            "scientific_name": "Spathiphyllum wallisii",
-            "sunlight_requirement": "Medium to Low Indirect",
-            "humidity_requirement": "High (60-80%)",
-            "recommended_watering_days": 5,
-            "description": "Graceful flowering indoor plant known for deep glossy green leaves and elegant white spathe blooms.",
-        },
-        {
-            "common_name": "Spider Plant",
-            "scientific_name": "Chlorophytum comosum",
-            "sunlight_requirement": "Bright to Moderate Indirect",
-            "humidity_requirement": "Average (40-60%)",
-            "recommended_watering_days": 7,
-            "description": "Adaptable arching houseplant producing charming offshoot plantlets, great for beginners and pet-friendly homes.",
+            "default_watering_interval_days": 7,
+            "default_fertilization_interval_days": 30,
+            "description": "Fast-growing trailing vine with heart-shaped variegated leaves. Great for hanging baskets or shelves.",
+            "is_custom": False,
         },
         {
             "common_name": "ZZ Plant",
             "scientific_name": "Zamioculcas zamiifolia",
-            "sunlight_requirement": "Low to Medium Indirect",
-            "humidity_requirement": "Low (30-50%)",
+            "sunlight_requirement": "Low Light / Shade",
+            "light_requirement": "Low Light / Shade",
+            "humidity_requirement": "Low / Moderate (30-50%)",
+            "humidity_target_pct": 40,
+            "temp_min_f": 60,
+            "temp_max_f": 80,
             "recommended_watering_days": 14,
-            "description": "Indestructible indoor plant with glossy, waxy leaves and thick rhizomes that store water during droughts.",
+            "default_watering_interval_days": 14,
+            "default_fertilization_interval_days": 60,
+            "description": "Indestructible glossy foliage plant with thick rhizomes that store water. Tolerates low light and drought.",
+            "is_custom": False,
         },
         {
-            "common_name": "Rubber Tree",
-            "scientific_name": "Ficus elastica",
-            "sunlight_requirement": "Bright Indirect",
-            "humidity_requirement": "Moderate (50-60%)",
-            "recommended_watering_days": 7,
-            "description": "Dramatic indoor ornamental tree featuring thick, shiny burgundy-green oval leaves.",
+            "common_name": "Peace Lily",
+            "scientific_name": "Spathiphyllum wallisii",
+            "sunlight_requirement": "Medium Indirect Light",
+            "light_requirement": "Medium Indirect Light",
+            "humidity_requirement": "High humidity (60%+)",
+            "humidity_target_pct": 60,
+            "temp_min_f": 65,
+            "temp_max_f": 80,
+            "recommended_watering_days": 5,
+            "default_watering_interval_days": 5,
+            "default_fertilization_interval_days": 30,
+            "description": "Lush tropical plant with elegant white blooms (spathes). Droops dramatically to signal when thirsty.",
+            "is_custom": False,
         },
     ]
 
-    for sp in species_catalog:
+    species_map = {}
+    for spec_info in default_species:
         existing = (
-            db.query(Species).filter(Species.common_name == sp["common_name"]).first()
+            db.query(Species)
+            .filter(Species.common_name == spec_info["common_name"])
+            .first()
         )
         if not existing:
-            new_sp = Species(
+            species_obj = Species(
                 id=str(uuid.uuid4()),
-                common_name=sp["common_name"],
-                scientific_name=sp["scientific_name"],
-                sunlight_requirement=sp["sunlight_requirement"],
-                humidity_requirement=sp["humidity_requirement"],
-                recommended_watering_days=sp["recommended_watering_days"],
-                description=sp["description"],
+                common_name=spec_info["common_name"],
+                scientific_name=spec_info["scientific_name"],
+                sunlight_requirement=spec_info["sunlight_requirement"],
+                light_requirement=spec_info["light_requirement"],
+                humidity_requirement=spec_info["humidity_requirement"],
+                humidity_target_pct=spec_info["humidity_target_pct"],
+                temp_min_f=spec_info["temp_min_f"],
+                temp_max_f=spec_info["temp_max_f"],
+                recommended_watering_days=spec_info["recommended_watering_days"],
+                default_watering_interval_days=spec_info[
+                    "default_watering_interval_days"
+                ],
+                default_fertilization_interval_days=spec_info[
+                    "default_fertilization_interval_days"
+                ],
+                description=spec_info["description"],
+                is_custom=False,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
-            try:
-                db.add(new_sp)
-                db.commit()
-            except IntegrityError:
-                db.rollback()
+            db.add(species_obj)
+            db.flush()
+            species_map[spec_info["common_name"]] = species_obj
+        else:
+            species_map[spec_info["common_name"]] = existing
+
+    # 4. Seed sample plants for test user if none exist
+    user_plants_count = (
+        db.query(UserPlant).filter(UserPlant.user_id == test_user.id).count()
+    )
+    if user_plants_count == 0:
+        now = datetime.now(timezone.utc)
+        monstera_species = species_map.get("Monstera Deliciosa")
+        snake_species = species_map.get("Snake Plant")
+        fiddle_species = species_map.get("Fiddle-Leaf Fig")
+        pothos_species = species_map.get("Golden Pothos")
+
+        sample_plants = [
+            {
+                "nickname": "Fernie Monstera",
+                "species_id": monstera_species.id if monstera_species else None,
+                "location": "Living Room",
+                "photo_url": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=600&q=80",
+                "status": "Active",
+                "watering_interval_days": 7,
+                "fertilization_interval_days": 30,
+                "last_watered_at": now - timedelta(days=9),
+                "next_water_due": now - timedelta(days=2),  # Overdue
+                "last_fertilized_at": now - timedelta(days=20),
+                "next_fertilize_due": now + timedelta(days=10),
+                "notifications_enabled": True,
+            },
+            {
+                "nickname": "Sunny Fig",
+                "species_id": fiddle_species.id if fiddle_species else None,
+                "location": "Sunroom",
+                "photo_url": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=600&q=80",
+                "status": "Active",
+                "watering_interval_days": 7,
+                "fertilization_interval_days": 30,
+                "last_watered_at": now - timedelta(days=7),
+                "next_water_due": now,  # Due today
+                "last_fertilized_at": now - timedelta(days=15),
+                "next_fertilize_due": now + timedelta(days=15),
+                "notifications_enabled": True,
+            },
+            {
+                "nickname": "Desk Pothos",
+                "species_id": pothos_species.id if pothos_species else None,
+                "location": "Office",
+                "photo_url": "https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=600&q=80",
+                "status": "Active",
+                "watering_interval_days": 5,
+                "fertilization_interval_days": 30,
+                "last_watered_at": now - timedelta(days=5),
+                "next_water_due": now,  # Due today
+                "last_fertilized_at": now - timedelta(days=10),
+                "next_fertilize_due": now + timedelta(days=20),
+                "notifications_enabled": True,
+            },
+            {
+                "nickname": "Bedroom Snake",
+                "species_id": snake_species.id if snake_species else None,
+                "location": "Bedroom",
+                "photo_url": "https://images.unsplash.com/photo-1593482892290-f54927ae1bf6?auto=format&fit=crop&w=600&q=80",
+                "status": "Active",
+                "watering_interval_days": 14,
+                "fertilization_interval_days": 60,
+                "last_watered_at": now - timedelta(days=4),
+                "next_water_due": now + timedelta(days=10),  # Upcoming
+                "last_fertilized_at": now - timedelta(days=30),
+                "next_fertilize_due": now + timedelta(days=30),
+                "notifications_enabled": True,
+            },
+        ]
+
+        for p_data in sample_plants:
+            plant_id = str(uuid.uuid4())
+            plant_obj = UserPlant(
+                id=plant_id,
+                user_id=test_user.id,
+                species_id=p_data["species_id"],
+                nickname=p_data["nickname"],
+                location=p_data["location"],
+                photo_url=p_data["photo_url"],
+                status=p_data["status"],
+                watering_interval_days=p_data["watering_interval_days"],
+                fertilization_interval_days=p_data["fertilization_interval_days"],
+                last_watered_at=p_data["last_watered_at"],
+                next_water_due=p_data["next_water_due"],
+                last_fertilized_at=p_data["last_fertilized_at"],
+                next_fertilize_due=p_data["next_fertilize_due"],
+                notifications_enabled=p_data["notifications_enabled"],
+                created_at=now,
+                updated_at=now,
+            )
+            db.add(plant_obj)
+            db.flush()
+
+            # Add initial care log
+            care_log = CareLog(
+                id=str(uuid.uuid4()),
+                plant_id=plant_id,
+                care_type="WATERING",
+                performed_at=p_data["last_watered_at"],
+                notes="Initial watering upon garden setup.",
+                created_at=now,
+            )
+            db.add(care_log)
+
+    db.commit()

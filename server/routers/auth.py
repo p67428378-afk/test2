@@ -1,63 +1,112 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime, timezone
+import bcrypt
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+
 from server.database import get_db
 from server.models import User
-from server.schemas import UserCreate, UserLogin, UserResponse, Token
-from server.middleware.auth import (
-    get_password_hash,
-    verify_password,
-    create_access_token,
-    get_current_user,
+from server.schemas import UserRegister, UserOut, TokenResponse
+from server.middleware.auth import create_access_token, get_current_user
+
+router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    try:
+        pw_bytes = plain_password.encode("utf-8")[:72]
+        hash_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(pw_bytes, hash_bytes)
+    except Exception:
+        return False
+
+
+def get_password_hash(password: str) -> str:
+    pw_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(pw_bytes, bcrypt.gensalt()).decode("utf-8")
+
+
+@router.post(
+    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
 )
-
-router = APIRouter()
-
-
-@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
-def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user_in.email).first()
-    if existing_user:
+def register(user_in: UserRegister, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.email == user_in.email.lower()).first()
+    if existing:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A user with this email already exists",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists",
         )
 
     user = User(
         id=str(uuid.uuid4()),
-        email=user_in.email,
+        email=user_in.email.lower(),
         hashed_password=get_password_hash(user_in.password),
         full_name=user_in.full_name,
-        is_active=True,
         role="user",
+        is_active=True,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
-    try:
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A user with this email already exists",
-        )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
     token = create_access_token(
         data={"sub": user.id, "email": user.email, "role": user.role}
     )
-    return Token(access_token=token, token_type="bearer", user=user)
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserOut.model_validate(user),
+    )
 
 
-@router.post("/login", response_model=Token)
-def login(login_in: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == login_in.email).first()
-    if not user or not verify_password(login_in.password, user.hashed_password):
+@router.post("/login", response_model=TokenResponse)
+async def login(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    # Support both JSON body and OAuth2 Form data
+    email = None
+    password = None
+
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        email = body.get("email") or body.get("username")
+        password = body.get("password")
+    elif (
+        "application/x-www-form-urlencoded" in content_type
+        or "multipart/form-data" in content_type
+    ):
+        form = await request.form()
+        email = form.get("username") or form.get("email")
+        password = form.get("password")
+    else:
+        try:
+            body = await request.json()
+            email = body.get("email") or body.get("username")
+            password = body.get("password")
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid request payload format",
+            )
+
+    if not email or not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email and password are required",
+        )
+
+    user = db.query(User).filter(User.email == str(email).lower()).first()
+    if not user or not verify_password(str(password), user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -67,9 +116,13 @@ def login(login_in: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token(
         data={"sub": user.id, "email": user.email, "role": user.role}
     )
-    return Token(access_token=token, token_type="bearer", user=user)
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserOut.model_validate(user),
+    )
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
