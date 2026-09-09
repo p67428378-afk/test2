@@ -1,130 +1,230 @@
-import uuid
+from typing import List, Optional, Any, Dict
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+
+MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 * 1024  # 5GB
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+# ================= User / Auth Schemas =================
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str
+    role: str = "Investigator"
 
 
-class LoginRequest(BaseModel):
+class UserRegisterRequest(UserBase):
+    password: str = Field(..., min_length=6)
+
+
+class UserLoginRequest(BaseModel):
     email: EmailStr
     password: str
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: "UserResponse"
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+class UserResponse(UserBase):
+    model_config = ConfigDict(from_attributes=True)
 
-
-class TournamentCreate(TournamentBase):
-    pass
-
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+    id: str
+    is_active: bool
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+
+class UserRoleUpdateRequest(BaseModel):
+    role: str
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+# ================= Evidence Schemas =================
+class EvidenceUploadURLRequest(BaseModel):
+    evidence_code: Optional[str] = None
+    file_name: str
+    file_type: str
+    file_size_bytes: int = Field(
+        ..., gt=0, le=MAX_FILE_SIZE_BYTES, description="File size up to 5GB"
+    )
+    collection_date: Optional[datetime] = None
+    collection_location: Optional[str] = None
+    source_device: Optional[str] = None
+    case_id: Optional[str] = None
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class EvidenceUploadURLResponse(BaseModel):
+    evidence_id: str
+    evidence_code: str
+    upload_url: str
+    storage_path: str
+    expires_in_seconds: int = 3600
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+class EvidenceConfirmUploadRequest(BaseModel):
+    evidence_id: str
+    sha256_hash: str
+    file_size_bytes: int = Field(
+        ..., gt=0, le=MAX_FILE_SIZE_BYTES, description="File size up to 5GB"
+    )
+    transfer_reason: Optional[str] = (
+        "Initial evidence upload and cryptographic SHA-256 verification"
+    )
+    location_context: Optional[str] = None
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class EvidenceItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    evidence_code: str
+    file_name: str
+    file_type: str
+    file_size_bytes: int
+    sha256_hash: str
+    storage_path: str
+    collection_date: datetime
+    collection_location: Optional[str] = None
+    source_device: Optional[str] = None
+    current_custodian_id: Optional[str] = None
+    current_custodian: Optional[UserResponse] = None
+    created_at: datetime
+    updated_at: datetime
+    assigned_case_ids: List[str] = []
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+class EvidenceListResponse(BaseModel):
+    total: int
+    items: List[EvidenceItemResponse]
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+class EvidenceVerificationResponse(BaseModel):
+    evidence_id: str
+    evidence_code: str
+    expected_hash: str
+    calculated_hash: str
+    is_valid: bool
+    verified_at: datetime
+    message: str
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# ================= Chain of Custody Schemas =================
+class ChainOfCustodyTransferRequest(BaseModel):
+    evidence_id: str
+    new_custodian_id: str
+    transfer_reason: str
+    location_context: Optional[str] = None
+    departing_signoff: bool = True
+    receiving_signoff: bool = True
 
-    class Config:
-        from_attributes = True
+
+class ChainOfCustodyActionRequest(BaseModel):
+    evidence_id: str
+    action: str  # VIEW, EXPORT, RELEASE
+    reason: str
+    location_context: Optional[str] = None
+
+
+class ChainOfCustodyEntryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    evidence_id: str
+    previous_custodian_id: Optional[str] = None
+    previous_custodian: Optional[UserResponse] = None
+    new_custodian_id: str
+    new_custodian: Optional[UserResponse] = None
+    action: str
+    transfer_reason: str
+    location_context: Optional[str] = None
+    timestamp: datetime
+
+
+class ChainOfCustodyHistoryResponse(BaseModel):
+    evidence_id: str
+    evidence_code: str
+    total_entries: int
+    history: List[ChainOfCustodyEntryResponse]
+
+
+# ================= Case Schemas =================
+class CaseBase(BaseModel):
+    case_number: str
+    title: str
+    description: Optional[str] = None
+    status: str = "Active"
+
+
+class CaseCreateRequest(CaseBase):
+    lead_investigator_id: Optional[str] = None
+
+
+class CaseUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    lead_investigator_id: Optional[str] = None
+
+
+class CaseResponse(CaseBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    lead_investigator_id: Optional[str] = None
+    lead_investigator: Optional[UserResponse] = None
+    evidence_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+
+class CaseDetailResponse(CaseResponse):
+    evidence_items: List[EvidenceItemResponse] = []
+
+
+class AssignEvidenceRequest(BaseModel):
+    evidence_ids: List[str]
+
+
+class CaseStatsSummaryResponse(BaseModel):
+    active_cases: int
+    total_cases: int
+    total_evidence_items: int
+    pending_transfers: int
+    unassigned_artifacts: int
+
+
+# ================= Audit Log Schemas =================
+class AuditLogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: Optional[str] = None
+    user_email: Optional[str] = None
+    action: str
+    resource: str
+    status_code: int
+    ip_address: str
+    details: Optional[Dict[str, Any]] = None
+    timestamp: datetime
+
+
+class AuditLogListResponse(BaseModel):
+    total: int
+    items: List[AuditLogResponse]
+
+
+# ================= RBAC Schemas =================
+class RoleCapability(BaseModel):
+    role: str
+    upload_evidence: str
+    view_evidence_ledger: str
+    transfer_custody: str
+    assign_to_case: str
+    view_audit_logs: str
+    admin_user_mgmt: str
+
+
+class RBACMatrixResponse(BaseModel):
+    roles: List[str]
+    capabilities: List[RoleCapability]

@@ -1,250 +1,210 @@
 import uuid
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column,
     String,
-    DateTime,
-    Boolean,
-    ForeignKey,
+    Text,
+    BigInteger,
     Integer,
-    Float,
-    UniqueConstraint,
-    TypeDecorator,
-    CHAR,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    JSON,
+    event,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from server.database import Base
 
 
-class GUID(TypeDecorator):
-    """Platform-independent GUID type.
-    Uses PostgreSQL's UUID type, otherwise uses CHAR(36).
-    """
-
-    impl = CHAR
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
-            from sqlalchemy.dialects.postgresql import UUID
-
-            return dialect.type_descriptor(UUID(as_uuid=True))
-        else:
-            return dialect.type_descriptor(CHAR(36))
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        elif dialect.name == "postgresql":
-            return str(value)
-        else:
-            if not isinstance(value, uuid.UUID):
-                return str(uuid.UUID(value))
-            else:
-                return str(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            if not isinstance(value, uuid.UUID):
-                return uuid.UUID(value)
-            else:
-                return value
+def generate_uuid():
+    return str(uuid.uuid4())
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=generate_uuid)
     email = Column(String(255), unique=True, nullable=False, index=True)
-    full_name = Column(String(255), nullable=True)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(
-        String(50), default="member", nullable=False
-    )  # 'admin', 'organizer', 'member'
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_verified = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-
-class Tournament(Base):
-    __tablename__ = "tournaments"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    status = Column(
-        String(50), default="DRAFT", nullable=False
-    )  # 'DRAFT', 'ACTIVE', 'COMPLETED'
-    total_rounds = Column(Integer, default=5, nullable=False)
-    current_round = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    registrations = relationship(
-        "Registration", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    rounds = relationship(
-        "Round", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    standings = relationship(
-        "Standing", back_populates="tournament", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="tournament", cascade="all, delete-orphan"
-    )
-
-
-class Player(Base):
-    __tablename__ = "players"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     full_name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False, index=True)
-    rating = Column(Integer, default=1200, nullable=False)
-    fide_id = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), nullable=False, default="Investigator")
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
 
-    registrations = relationship(
-        "Registration", back_populates="player", cascade="all, delete-orphan"
+    # Relationships
+    assigned_cases = relationship("Case", back_populates="lead_investigator")
+    custody_evidence = relationship("EvidenceItem", back_populates="current_custodian")
+
+
+class Case(Base):
+    __tablename__ = "cases"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    case_number = Column(String(64), unique=True, nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    lead_investigator_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    status = Column(String(50), default="Active", nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
-    standings = relationship(
-        "Standing", back_populates="player", cascade="all, delete-orphan"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="player", cascade="all, delete-orphan"
-    )
-
-
-class Registration(Base):
-    __tablename__ = "registrations"
-    __table_args__ = (
-        UniqueConstraint("tournament_id", "player_id", name="uq_tournament_player"),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    status = Column(
-        String(50), default="ACTIVE", nullable=False
-    )  # 'ACTIVE', 'WITHDRAWN'
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="registrations")
-    player = relationship("Player", back_populates="registrations")
-
-
-class Round(Base):
-    __tablename__ = "rounds"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    round_number = Column(Integer, nullable=False)
-    is_closed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    tournament = relationship("Tournament", back_populates="rounds")
-    matches = relationship(
-        "Match", back_populates="round", cascade="all, delete-orphan"
-    )
-
-
-class Match(Base):
-    __tablename__ = "matches"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    round_id = Column(
-        GUID(), ForeignKey("rounds.id", ondelete="CASCADE"), nullable=False
-    )
-    board_number = Column(Integer, nullable=True)
-    white_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    black_player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
-    result = Column(
-        String(50), default="PENDING", nullable=False
-    )  # 'PENDING', '1-0', '0-1', '0.5-0.5', 'BYE'
-    is_bye = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-
-    round = relationship("Round", back_populates="matches")
-    white_player = relationship("Player", foreign_keys=[white_player_id])
-    black_player = relationship("Player", foreign_keys=[black_player_id])
-
-
-class Standing(Base):
-    __tablename__ = "standings"
-    __table_args__ = (
-        UniqueConstraint(
-            "tournament_id", "player_id", name="uq_tournament_player_standing"
-        ),
-    )
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    total_points = Column(Float, default=0.0, nullable=False)
-    buchholz = Column(Float, default=0.0, nullable=False)
-    sonneborn_berger = Column(Float, default=0.0, nullable=False)
-    rank = Column(Integer, nullable=True)
     updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
 
-    tournament = relationship("Tournament", back_populates="standings")
-    player = relationship("Player", back_populates="standings")
-
-
-class Certificate(Base):
-    __tablename__ = "certificates"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    verification_uuid = Column(
-        GUID(), default=uuid.uuid4, unique=True, index=True, nullable=False
+    # Relationships
+    lead_investigator = relationship("User", back_populates="assigned_cases")
+    evidence_links = relationship(
+        "CaseEvidenceLink", back_populates="case", cascade="all, delete-orphan"
     )
-    tournament_id = Column(
-        GUID(), ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id = Column(
-        GUID(), ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
-    rank = Column(Integer, nullable=False)
-    total_points = Column(Float, default=0.0, nullable=False)
-    issued_at = Column(DateTime, default=func.now(), nullable=False)
-    qr_code_url = Column(String(512), nullable=True)
 
-    tournament = relationship("Tournament", back_populates="certificates")
-    player = relationship("Player", back_populates="certificates")
+
+class EvidenceItem(Base):
+    __tablename__ = "evidence_items"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    evidence_code = Column(String(64), unique=True, nullable=False, index=True)
+    file_name = Column(String(255), nullable=False)
+    file_type = Column(String(100), nullable=False)
+    file_size_bytes = Column(BigInteger, nullable=False)
+    sha256_hash = Column(String(64), nullable=False, index=True)
+    storage_path = Column(String(512), nullable=False)
+    collection_date = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    collection_location = Column(String(255), nullable=True)
+    source_device = Column(String(255), nullable=True)
+    current_custodian_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    # Relationships
+    current_custodian = relationship("User", back_populates="custody_evidence")
+    chain_of_custody_entries = relationship(
+        "ChainOfCustodyEntry",
+        back_populates="evidence_item",
+        cascade="all, delete-orphan",
+    )
+    case_links = relationship(
+        "CaseEvidenceLink", back_populates="evidence_item", cascade="all, delete-orphan"
+    )
+
+
+class CaseEvidenceLink(Base):
+    __tablename__ = "case_evidence_link"
+
+    case_id = Column(String(36), ForeignKey("cases.id"), primary_key=True)
+    evidence_id = Column(String(36), ForeignKey("evidence_items.id"), primary_key=True)
+    linked_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    linked_by_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+
+    # Relationships
+    case = relationship("Case", back_populates="evidence_links")
+    evidence_item = relationship("EvidenceItem", back_populates="case_links")
+    linked_by = relationship("User")
+
+
+class ChainOfCustodyEntry(Base):
+    __tablename__ = "chain_of_custody_entries"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    evidence_id = Column(
+        String(36), ForeignKey("evidence_items.id"), nullable=False, index=True
+    )
+    previous_custodian_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    new_custodian_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    action = Column(
+        String(50), nullable=False
+    )  # UPLOAD, TRANSFER, VIEW, EXPORT, RELEASE
+    transfer_reason = Column(Text, nullable=False)
+    location_context = Column(String(255), nullable=True)
+    timestamp = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
+
+    # Relationships
+    evidence_item = relationship(
+        "EvidenceItem", back_populates="chain_of_custody_entries"
+    )
+    previous_custodian = relationship("User", foreign_keys=[previous_custodian_id])
+    new_custodian = relationship("User", foreign_keys=[new_custodian_id])
 
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    admin_id = Column(String(255), nullable=True)
-    match_id = Column(
-        GUID(), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    user_email = Column(String(255), nullable=True)
+    action = Column(String(100), nullable=False, index=True)
+    resource = Column(String(255), nullable=False, index=True)
+    status_code = Column(Integer, nullable=False, index=True)
+    ip_address = Column(String(45), nullable=False)
+    details = Column(JSON, nullable=True)
+    timestamp = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
     )
-    original_score = Column(String(50), nullable=True)
-    new_score = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User")
+
+
+# Immutability triggers / event listeners preventing update or delete on chain_of_custody_entries and audit_logs
+@event.listens_for(ChainOfCustodyEntry, "before_update")
+def prevent_custody_update(mapper, connection, target):
+    raise ValueError(
+        "TAMPER ERROR: Chain-of-custody entries are immutable and cannot be updated."
+    )
+
+
+@event.listens_for(ChainOfCustodyEntry, "before_delete")
+def prevent_custody_delete(mapper, connection, target):
+    raise ValueError(
+        "TAMPER ERROR: Chain-of-custody entries are immutable and cannot be deleted."
+    )
+
+
+@event.listens_for(AuditLog, "before_update")
+def prevent_audit_update(mapper, connection, target):
+    raise ValueError("TAMPER ERROR: Audit logs are immutable and cannot be updated.")
+
+
+@event.listens_for(AuditLog, "before_delete")
+def prevent_audit_delete(mapper, connection, target):
+    raise ValueError("TAMPER ERROR: Audit logs are immutable and cannot be deleted.")
