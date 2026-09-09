@@ -17,10 +17,13 @@ def test_case_crud_and_evidence_assignment(client, investigator_headers):
     # 2. List cases
     list_res = client.get("/api/v1/cases", headers=investigator_headers)
     assert list_res.status_code == 200
-    cases_list = list_res.json()
+    cases_resp = list_res.json()
+    cases_list = (
+        cases_resp["items"] if isinstance(cases_resp, dict) else cases_resp
+    )
     assert any(c["case_number"] == "CASE-2026-999" for c in cases_list)
 
-    # 3. Assign evidence to case
+    # 3. Assign evidence to case with dictionary
     assign_res = client.post(
         f"/api/v1/cases/{case_id}/evidence",
         json={"evidence_ids": ["EVID-1005"]},
@@ -28,20 +31,35 @@ def test_case_crud_and_evidence_assignment(client, investigator_headers):
     )
     assert assign_res.status_code == 200
     detail_data = assign_res.json()
-    assert any(e["evidence_code"] == "EVID-1005" for e in detail_data["evidence_items"])
+    assert any(
+        e["evidence_code"] == "EVID-1005" for e in detail_data["evidence_items"]
+    )
 
     # 4. Get case details
     get_res = client.get(f"/api/v1/cases/{case_id}", headers=investigator_headers)
     assert get_res.status_code == 200
     assert len(get_res.json()["evidence_items"]) == 1
 
-    # 5. Unassign evidence from case
+    # 5. Assign evidence with a list format
+    assign_res2 = client.post(
+        f"/api/v1/cases/{case_id}/evidence",
+        json=["EVID-1001"],
+        headers=investigator_headers,
+    )
+    assert assign_res2.status_code == 200
+    detail_data2 = assign_res2.json()
+    assert any(
+        e["evidence_code"] == "EVID-1001"
+        for e in detail_data2["evidence_items"]
+    )
+
+    # 6. Unassign evidence from case
     unassign_res = client.delete(
         f"/api/v1/cases/{case_id}/evidence/EVID-1005",
         headers=investigator_headers,
     )
     assert unassign_res.status_code == 200
-    assert len(unassign_res.json()["evidence_items"]) == 0
+    assert len(unassign_res.json()["evidence_items"]) == 1
 
 
 def test_case_stats_summary(client, investigator_headers):

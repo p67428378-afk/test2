@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+from typing import Optional, List, Any, Union
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -18,6 +18,7 @@ from server.schemas import (
     CaseUpdateRequest,
     CaseResponse,
     CaseDetailResponse,
+    CaseListResponse,
     AssignEvidenceRequest,
     CaseStatsSummaryResponse,
     UserResponse,
@@ -140,7 +141,7 @@ def create_case(
     return format_case_response(new_case, db)
 
 
-@router.get("", response_model=List[CaseResponse])
+@router.get("", response_model=CaseListResponse)
 def list_cases(
     request: Request,
     query: Optional[str] = None,
@@ -164,7 +165,9 @@ def list_cases(
             )
         )
 
+    total = q.count()
     cases = q.order_by(Case.created_at.desc()).offset(skip).limit(limit).all()
+    case_items = [format_case_response(c, db) for c in cases]
 
     log_audit_event(
         db=db,
@@ -174,10 +177,14 @@ def list_cases(
         resource="/api/v1/cases",
         status_code=200,
         ip_address=client_ip,
-        details={"query": query, "status": status_filter, "count": len(cases)},
+        details={"query": query, "status": status_filter, "count": total},
     )
 
-    return [format_case_response(c, db) for c in cases]
+    return CaseListResponse(
+        total=total,
+        items=case_items,
+        cases=case_items,
+    )
 
 
 @router.get("/{case_id}", response_model=CaseDetailResponse)
@@ -228,6 +235,8 @@ def get_case(
     return CaseDetailResponse(
         **base_resp.model_dump(),
         evidence_items=evidence_items,
+        evidence_ids=[e.id for e in evidence_items],
+        assigned_evidence=[e.evidence_code for e in evidence_items],
     )
 
 
@@ -287,8 +296,8 @@ def update_case(
 @router.post("/{case_id}/evidence", response_model=CaseDetailResponse)
 def assign_evidence_to_case(
     case_id: str,
-    assign_req: AssignEvidenceRequest,
     request: Request,
+    assign_req: Optional[Any] = Body(None),
     current_user: User = Depends(
         require_roles([ROLE_ADMIN, ROLE_LEAD_INVESTIGATOR, ROLE_INVESTIGATOR])
     ),
@@ -307,14 +316,34 @@ def assign_evidence_to_case(
             detail=f"Case '{case_id}' not found",
         )
 
+    # Extract evidence IDs from assign_req whether it is AssignEvidenceRequest, dict, list, or str
+    extracted_ids = []
+    if isinstance(assign_req, AssignEvidenceRequest):
+        extracted_ids = assign_req.get_extracted_evidence_ids()
+    elif isinstance(assign_req, dict):
+        parsed = AssignEvidenceRequest(**assign_req)
+        extracted_ids = parsed.get_extracted_evidence_ids()
+    elif isinstance(assign_req, list):
+        for item in assign_req:
+            if isinstance(item, str):
+                extracted_ids.append(item)
+            elif isinstance(item, dict):
+                for key in ["evidence_id", "id", "evidence_code", "code"]:
+                    if key in item and item[key]:
+                        extracted_ids.append(str(item[key]))
+                        break
+    elif isinstance(assign_req, str):
+        extracted_ids.append(assign_req)
+
     assigned_codes = []
-    for evid_identifier in assign_req.evidence_ids:
+    for evid_identifier in extracted_ids:
         evidence = (
             db.query(EvidenceItem)
             .filter(
                 or_(
                     EvidenceItem.id == evid_identifier,
                     EvidenceItem.evidence_code == evid_identifier,
+                    EvidenceItem.file_name == evid_identifier,
                 )
             )
             .first()
@@ -386,6 +415,7 @@ def unassign_evidence_from_case(
             or_(
                 EvidenceItem.id == evidence_id,
                 EvidenceItem.evidence_code == evidence_id,
+                EvidenceItem.file_name == evidence_id,
             )
         )
         .first()

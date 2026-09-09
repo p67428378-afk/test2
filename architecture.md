@@ -56,7 +56,34 @@ graph TD
 - server/tests/test_rbac.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/App.test.jsx
+- client/src/components/audit/AuditLogTable.jsx
+- client/src/components/cases/AssignEvidenceModal.jsx
+- client/src/components/cases/CaseSummaryCard.jsx
+- client/src/components/cases/LinkedEvidenceTable.jsx
+- client/src/components/common/Badge.jsx
+- client/src/components/common/Modal.jsx
+- client/src/components/common/Navbar.jsx
+- client/src/components/custody/ChainOfCustodyTimeline.jsx
+- client/src/components/custody/CustodianTransferModal.jsx
+- client/src/components/evidence/EvidenceMetadataForm.jsx
+- client/src/components/evidence/EvidenceUploadCard.jsx
+- client/src/components/rbac/RBACPermissionMatrix.jsx
+- client/src/components/rbac/UserDirectoryTable.jsx
+- client/src/main.jsx
+- client/src/pages/AuditLogPage.jsx
+- client/src/pages/CaseDashboardPage.jsx
+- client/src/pages/CustodyChainPage.jsx
+- client/src/pages/EvidenceUploadPage.jsx
+- client/src/pages/RBACPage.jsx
+- client/src/services/api.js
+- client/src/services/api.test.js
+- client/src/setup.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - POST /api/v1/auth/login

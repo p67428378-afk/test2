@@ -824,11 +824,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CaseResponse"
-                  },
-                  "title": "Response List Cases Api V1 Cases Get"
+                  "$ref": "#/components/schemas/CaseListResponse"
                 }
               }
             }
@@ -972,11 +968,16 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AssignEvidenceRequest"
+                "anyOf": [
+                  {},
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Assign Req"
               }
             }
           }
@@ -1356,22 +1357,6 @@
   },
   "components": {
     "schemas": {
-      "AssignEvidenceRequest": {
-        "properties": {
-          "evidence_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Evidence Ids"
-          }
-        },
-        "type": "object",
-        "required": [
-          "evidence_ids"
-        ],
-        "title": "AssignEvidenceRequest"
-      },
       "AuditLogListResponse": {
         "properties": {
           "total": {
@@ -1653,6 +1638,22 @@
             "type": "array",
             "title": "Evidence Items",
             "default": []
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Ids",
+            "default": []
+          },
+          "assigned_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Assigned Evidence",
+            "default": []
           }
         },
         "type": "object",
@@ -1664,6 +1665,41 @@
           "updated_at"
         ],
         "title": "CaseDetailResponse"
+      },
+      "CaseListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CaseResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "cases": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CaseResponse"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "CaseListResponse"
       },
       "CaseResponse": {
         "properties": {

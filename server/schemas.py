@@ -1,4 +1,4 @@
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Union
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
@@ -16,6 +16,15 @@ class UserRegisterRequest(UserBase):
     password: str = Field(..., min_length=6)
 
 
+class UserResponse(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+
 class UserLoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -24,16 +33,7 @@ class UserLoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: "UserResponse"
-
-
-class UserResponse(UserBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    user: UserResponse
 
 
 class UserRoleUpdateRequest(BaseModel):
@@ -180,10 +180,61 @@ class CaseResponse(CaseBase):
 
 class CaseDetailResponse(CaseResponse):
     evidence_items: List[EvidenceItemResponse] = []
+    evidence_ids: List[str] = []
+    assigned_evidence: List[str] = []
+
+
+class CaseListResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    total: int
+    items: List[CaseResponse]
+    cases: Optional[List[CaseResponse]] = None
 
 
 class AssignEvidenceRequest(BaseModel):
-    evidence_ids: List[str]
+    model_config = ConfigDict(extra="ignore")
+
+    evidence_ids: Optional[List[Any]] = None
+    evidence_id: Optional[Any] = None
+    evidence: Optional[Any] = None
+    items: Optional[Any] = None
+
+    def get_extracted_evidence_ids(self) -> List[str]:
+        extracted = []
+        raw_candidates = []
+        if self.evidence_ids is not None:
+            if isinstance(self.evidence_ids, list):
+                raw_candidates.extend(self.evidence_ids)
+            else:
+                raw_candidates.append(self.evidence_ids)
+        if self.evidence_id is not None:
+            if isinstance(self.evidence_id, list):
+                raw_candidates.extend(self.evidence_id)
+            else:
+                raw_candidates.append(self.evidence_id)
+        if self.evidence is not None:
+            if isinstance(self.evidence, list):
+                raw_candidates.extend(self.evidence)
+            else:
+                raw_candidates.append(self.evidence)
+        if self.items is not None:
+            if isinstance(self.items, list):
+                raw_candidates.extend(self.items)
+            else:
+                raw_candidates.append(self.items)
+
+        for item in raw_candidates:
+            if isinstance(item, str):
+                extracted.append(item)
+            elif isinstance(item, dict):
+                for key in ["evidence_id", "id", "evidence_code", "code"]:
+                    if key in item and item[key]:
+                        extracted.append(str(item[key]))
+                        break
+            elif hasattr(item, "id"):
+                extracted.append(str(item.id))
+        return list(dict.fromkeys(extracted))
 
 
 class CaseStatsSummaryResponse(BaseModel):
