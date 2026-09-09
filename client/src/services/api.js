@@ -9,106 +9,91 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-    }
+export const poseService = {
+  getPoses: async (params = {}) => {
+    const response = await api.get("/api/v1/poses", { params });
     return response.data;
   },
-  logout: () => {
-    localStorage.removeItem("token");
-  },
-};
-
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
+  getPose: async (id, userId = "default_user") => {
+    const response = await api.get(`/api/v1/poses/${id}`, {
+      params: { user_id: userId },
+    });
     return response.data;
   },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
+  createPose: async (data) => {
+    const response = await api.post("/api/v1/poses", data);
     return response.data;
   },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
+  getFavorites: async (userId = "default_user") => {
+    const response = await api.get("/api/v1/poses/favorites", {
+      params: { user_id: userId },
+    });
     return response.data;
   },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
+  addFavorite: async (id, userId = "default_user") => {
+    const response = await api.post(`/api/v1/poses/${id}/favorite`, null, {
+      params: { user_id: userId },
+    });
     return response.data;
   },
-};
-
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
-    return response.data;
-  },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
-    );
-    return response.data;
-  },
-};
-
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
-    return response.data;
-  },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
-  },
-};
-
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
+  removeFavorite: async (id, userId = "default_user") => {
+    const response = await api.delete(`/api/v1/poses/${id}/favorite`, {
+      params: { user_id: userId },
     });
     return response.data;
   },
 };
 
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
-    );
+export const routineService = {
+  getRoutines: async (params = {}) => {
+    const response = await api.get("/api/v1/routines", { params });
+    return response.data;
+  },
+  getRoutine: async (id) => {
+    const response = await api.get(`/api/v1/routines/${id}`);
+    return response.data;
+  },
+  createRoutine: async (data) => {
+    const response = await api.post("/api/v1/routines", data);
+    return response.data;
+  },
+  updateRoutine: async (id, data) => {
+    const response = await api.put(`/api/v1/routines/${id}`, data);
+    return response.data;
+  },
+  deleteRoutine: async (id) => {
+    const response = await api.delete(`/api/v1/routines/${id}`);
+    return response.data;
+  },
+  duplicateRoutine: async (id) => {
+    const response = await api.post(`/api/v1/routines/${id}/duplicate`);
+    return response.data;
+  },
+  exportRoutine: async (id, format = "pdf") => {
+    if (format === "pdf") {
+      const response = await api.get(`/api/v1/routines/${id}/export`, {
+        params: { format: "pdf" },
+        responseType: "blob",
+      });
+      return response.data;
+    }
+    const response = await api.get(`/api/v1/routines/${id}/export`, {
+      params: { format: "json" },
+    });
     return response.data;
   },
 };
 
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
+export const practiceService = {
+  logPracticeSession: async (data) => {
+    const response = await api.post("/api/v1/practice-sessions", data);
     return response.data;
   },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
+  getPracticeSessions: async (userId = "default_user", params = {}) => {
+    const response = await api.get("/api/v1/practice-sessions", {
+      params: { user_id: userId, ...params },
+    });
+    return response.data;
   },
 };
 
