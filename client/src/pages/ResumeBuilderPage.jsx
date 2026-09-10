@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
-import ResumeForm, { SAMPLE_RESUME_DATA } from "../components/ResumeForm";
-import ResumePreview from "../components/ResumePreview";
+import ResumeFormEditor, {
+  SAMPLE_RESUME_DATA,
+} from "../components/resume/ResumeFormEditor";
+import LiveResumePreview from "../components/resume/LiveResumePreview";
+import ExportSettingsPanel from "../components/export/ExportSettingsPanel";
 import { resumeService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { Download, CheckCircle, AlertCircle, Save } from "lucide-react";
+import {
+  Download,
+  CheckCircle,
+  AlertCircle,
+  Save,
+  SlidersHorizontal,
+} from "lucide-react";
 
 export default function ResumeBuilderPage() {
   const { user } = useAuth();
@@ -14,17 +23,16 @@ export default function ResumeBuilderPage() {
       email: user?.email || SAMPLE_RESUME_DATA.email,
     };
   });
-  const [templates, setTemplates] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showExportSettings, setShowExportSettings] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const data = await resumeService.getTemplates();
-        setTemplates(data || []);
+        await resumeService.getTemplates();
       } catch {
         // Fallback gracefully
       }
@@ -74,18 +82,22 @@ export default function ResumeBuilderPage() {
     }
   };
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (customOptions) => {
     setIsExporting(true);
     setErrorMessage(null);
     setStatusMessage(null);
     try {
-      const blobData = await resumeService.exportPdf(resumeData);
-      // Create download link for [User_Name]_Resume.pdf
+      const payload = {
+        ...resumeData,
+        ...(customOptions || {}),
+      };
+      const blobData = await resumeService.exportPdf(payload);
+
       const safeUserName = (resumeData.user_name || "User").replace(
         /\s+/g,
         "_",
       );
-      const filename = `${safeUserName}_Resume.pdf`;
+      const filename = customOptions?.fileName || `${safeUserName}_Resume.pdf`;
 
       const blob = new Blob([blobData], { type: "application/pdf" });
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -126,6 +138,14 @@ export default function ResumeBuilderPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
+            onClick={() => setShowExportSettings(!showExportSettings)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg shadow-xs transition"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-slate-500" />
+            {showExportSettings ? "Hide Settings" : "Export Settings"}
+          </button>
+          <button
+            type="button"
             onClick={handleSaveResume}
             disabled={isSaving}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg shadow-xs transition disabled:opacity-50"
@@ -135,7 +155,7 @@ export default function ResumeBuilderPage() {
           </button>
           <button
             type="button"
-            onClick={handleExportPdf}
+            onClick={() => handleExportPdf()}
             disabled={isExporting}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition disabled:opacity-50"
           >
@@ -163,13 +183,24 @@ export default function ResumeBuilderPage() {
         </div>
       )}
 
+      {/* Optional Export Settings Panel */}
+      {showExportSettings && (
+        <div className="mb-6">
+          <ExportSettingsPanel
+            userName={resumeData.user_name}
+            templateId={resumeData.template_id}
+            isExporting={isExporting}
+            onExportPdf={handleExportPdf}
+          />
+        </div>
+      )}
+
       {/* Split grid view */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-6">
-          <ResumeForm
+          <ResumeFormEditor
             resumeData={resumeData}
             onChange={setResumeData}
-            templates={templates}
             onLoadSample={handleLoadSample}
             onReset={handleReset}
           />
@@ -181,7 +212,7 @@ export default function ResumeBuilderPage() {
               Template: {resumeData.template_id}
             </span>
           </div>
-          <ResumePreview resumeData={resumeData} />
+          <LiveResumePreview resumeData={resumeData} />
         </div>
       </div>
     </div>
