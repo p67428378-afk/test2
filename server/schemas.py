@@ -1,130 +1,59 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class ClassificationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str | None = None
+    email_id: str | None = None
+    primary_category: str
+    ai_category: str | None = None
+    confidence_score: float
+    user_override_category: str | None = None
+    is_overridden: bool = False
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class EmailClassifyRequest(BaseModel):
+    text: str = Field(..., min_length=1, description="Email content or body text")
+    subject: str | None = Field(None, max_length=500, description="Email subject line")
+    sender: str | None = Field(
+        None, max_length=255, description="Sender name or email address"
+    )
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
+class CategoryOverrideRequest(BaseModel):
+    category: str = Field(
+        ..., description="Target category: Work, Personal, Urgent, Promotional"
+    )
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+class EmailResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-
-class TournamentCreate(TournamentBase):
-    pass
-
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+    id: str
+    sender: str | None = None
+    subject: str | None = None
+    body_text: str
+    excerpt: str
+    source_type: str
+    file_name: str | None = None
+    classification: ClassificationResponse
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+
+class EmailListResponse(BaseModel):
+    total: int
+    skip: int
+    limit: int
+    items: list[EmailResponse]
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
-
-
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
-
-
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
-
-
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
-
-
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+class OverrideResponse(BaseModel):
+    id: str
+    classification: ClassificationResponse
+    updated_at: datetime
