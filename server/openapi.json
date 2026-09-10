@@ -1,294 +1,160 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Library Management System API",
+    "title": "Kerala Tourism Web Application API",
+    "description": "RESTful API services for Kerala tourist destinations, categories, reviews, and interactive maps.",
     "version": "1.0.0"
   },
   "paths": {
-    "/api/v1/password-reset/initiate": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Initiate Password Reset",
-        "operationId": "initiate_password_reset_api_v1_password_reset_initiate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PasswordResetInitiateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PasswordResetInitiateResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/verify-otp": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Verify Otp",
-        "operationId": "verify_otp_api_v1_password_reset_verify_otp_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OTPVerifyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OTPVerifyResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/verify-security-question": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Verify Security Question",
-        "operationId": "verify_security_question_api_v1_password_reset_verify_security_question_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SecurityQuestionVerifyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SecurityQuestionVerifyResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/password-reset/set-new-password": {
-      "post": {
-        "tags": [
-          "password-reset"
-        ],
-        "summary": "Set New Password",
-        "operationId": "set_new_password_api_v1_password_reset_set_new_password_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetNewPasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetNewPasswordResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/token": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Login For Access Token",
-        "operationId": "login_for_access_token_api_v1_auth_token_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_login_for_access_token_api_v1_auth_token_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/login": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Login Json",
-        "operationId": "login_json_api_v1_auth_login_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/users/me": {
+    "/api/v1/categories": {
       "get": {
         "tags": [
-          "auth"
+          "Categories"
         ],
-        "summary": "Read Users Me",
-        "operationId": "read_users_me_api_v1_users_me_get",
+        "summary": "List Categories",
+        "description": "Fetch all destination categories.",
+        "operationId": "list_categories_api_v1_categories_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  },
+                  "title": "Response List Categories Api V1 Categories Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
           }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
+        }
+      },
+      "post": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Create Category",
+        "description": "Create a new destination category.",
+        "operationId": "create_category_api_v1_categories_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreate"
+              }
+            }
           }
-        ]
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
-    "/api/v1/books": {
+    "/api/v1/categories/{category_id}": {
       "get": {
         "tags": [
-          "books"
+          "Categories"
         ],
-        "summary": "Read Books",
-        "operationId": "read_books_api_v1_books_get",
-        "security": [
+        "summary": "Get Category",
+        "description": "Fetch a category by ID.",
+        "operationId": "get_category_api_v1_categories__category_id__get",
+        "parameters": [
           {
-            "OAuth2PasswordBearer": []
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tourist-places": {
+      "get": {
+        "tags": [
+          "Tourist Places"
+        ],
+        "summary": "List Tourist Places",
+        "description": "List tourist places with multi-criteria search and filters.",
+        "operationId": "list_tourist_places_api_v1_tourist_places_get",
         "parameters": [
           {
             "name": "search",
@@ -303,13 +169,13 @@
                   "type": "null"
                 }
               ],
-              "description": "Search by title, author, or ISBN",
+              "description": "Search keyword in title, summary, description, district",
               "title": "Search"
             },
-            "description": "Search by title, author, or ISBN"
+            "description": "Search keyword in title, summary, description, district"
           },
           {
-            "name": "genre",
+            "name": "district",
             "in": "query",
             "required": false,
             "schema": {
@@ -321,772 +187,13 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by genre",
-              "title": "Genre"
+              "description": "Filter by district (e.g. Wayanad, Alappuzha)",
+              "title": "District"
             },
-            "description": "Filter by genre"
+            "description": "Filter by district (e.g. Wayanad, Alappuzha)"
           },
           {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BookResponse"
-                  },
-                  "title": "Response Read Books Api V1 Books Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Create Book",
-        "operationId": "create_book_api_v1_books_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BookCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/books/{book_id}": {
-      "get": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Read Book",
-        "operationId": "read_book_api_v1_books__book_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Update Book",
-        "operationId": "update_book_api_v1_books__book_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BookUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "books"
-        ],
-        "summary": "Delete Book",
-        "operationId": "delete_book_api_v1_books__book_id__delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "book_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Book Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members": {
-      "get": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Read Members",
-        "operationId": "read_members_api_v1_members_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponse"
-                  },
-                  "title": "Response Read Members Api V1 Members Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Create Member",
-        "operationId": "create_member_api_v1_members_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members/{member_id}": {
-      "get": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Read Member",
-        "operationId": "read_member_api_v1_members__member_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "members"
-        ],
-        "summary": "Update Member",
-        "operationId": "update_member_api_v1_members__member_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/members/{member_id}/loans": {
-      "get": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Read Member Loans",
-        "operationId": "read_member_loans_api_v1_members__member_id__loans_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "member_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Member Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoanResponse"
-                  },
-                  "title": "Response Read Member Loans Api V1 Members  Member Id  Loans Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans": {
-      "post": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Checkout Book",
-        "operationId": "checkout_book_api_v1_loans_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoanCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/loans/{loan_id}/return": {
-      "put": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Return Book",
-        "operationId": "return_book_api_v1_loans__loan_id__return_put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "loan_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Loan Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoanResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/loans/reminders": {
-      "post": {
-        "tags": [
-          "loans"
-        ],
-        "summary": "Send Due Reminders",
-        "operationId": "send_due_reminders_api_v1_loans_reminders_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/fines": {
-      "get": {
-        "tags": [
-          "fines"
-        ],
-        "summary": "Read Fines",
-        "operationId": "read_fines_api_v1_fines_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FineResponse"
-                  },
-                  "title": "Response Read Fines Api V1 Fines Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/fines/{fine_id}/pay": {
-      "post": {
-        "tags": [
-          "fines"
-        ],
-        "summary": "Pay Fine",
-        "operationId": "pay_fine_api_v1_fines__fine_id__pay_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "fine_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Fine Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FineResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/inventory": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Read Inventory Items",
-        "operationId": "read_inventory_items_api_v1_inventory_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
+            "name": "category_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -1098,13 +205,13 @@
                   "type": "null"
                 }
               ],
-              "description": "Search by name, supplier, or category",
-              "title": "Search"
+              "description": "Filter by Category UUID",
+              "title": "Category Id"
             },
-            "description": "Search by name, supplier, or category"
+            "description": "Filter by Category UUID"
           },
           {
-            "name": "category",
+            "name": "best_time_to_visit",
             "in": "query",
             "required": false,
             "schema": {
@@ -1116,10 +223,48 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by category",
-              "title": "Category"
+              "description": "Filter by best season/month",
+              "title": "Best Time To Visit"
             },
-            "description": "Filter by category"
+            "description": "Filter by best season/month"
+          },
+          {
+            "name": "min_fee",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum entry fee",
+              "title": "Min Fee"
+            },
+            "description": "Minimum entry fee"
+          },
+          {
+            "name": "max_fee",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum entry fee",
+              "title": "Max Fee"
+            },
+            "description": "Maximum entry fee"
           },
           {
             "name": "skip",
@@ -1127,6 +272,7 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -1137,7 +283,9 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
               "title": "Limit"
             }
           }
@@ -1150,9 +298,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/InventoryItemResponse"
+                    "$ref": "#/components/schemas/TouristPlaceResponse"
                   },
-                  "title": "Response Read Inventory Items Api V1 Inventory Get"
+                  "title": "Response List Tourist Places Api V1 Tourist Places Get"
                 }
               }
             }
@@ -1171,21 +319,17 @@
       },
       "post": {
         "tags": [
-          "inventory"
+          "Tourist Places"
         ],
-        "summary": "Create Inventory Item",
-        "operationId": "create_inventory_item_api_v1_inventory_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Create Tourist Place",
+        "description": "Create a new tourist place.",
+        "operationId": "create_tourist_place_api_v1_tourist_places_post",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InventoryItemCreate"
+                "$ref": "#/components/schemas/TouristPlaceCreate"
               }
             }
           }
@@ -1196,7 +340,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+                  "$ref": "#/components/schemas/TouristPlaceResponse"
                 }
               }
             }
@@ -1214,27 +358,22 @@
         }
       }
     },
-    "/api/v1/inventory/{item_id}": {
+    "/api/v1/tourist-places/{place_id}": {
       "get": {
         "tags": [
-          "inventory"
+          "Tourist Places"
         ],
-        "summary": "Read Inventory Item",
-        "operationId": "read_inventory_item_api_v1_inventory__item_id__get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Get Tourist Place",
+        "description": "Retrieve detailed profile for a tourist spot including gallery, reviews, and nearby attractions within 50 km.",
+        "operationId": "get_tourist_place_api_v1_tourist_places__place_id__get",
         "parameters": [
           {
-            "name": "item_id",
+            "name": "place_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
+              "title": "Place Id"
             }
           }
         ],
@@ -1244,7 +383,143 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+                  "$ref": "#/components/schemas/TouristPlaceDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tourist-places/{place_id}/media": {
+      "post": {
+        "tags": [
+          "Tourist Places"
+        ],
+        "summary": "Add Media Asset",
+        "description": "Add a photo or video media asset to a tourist place.",
+        "operationId": "add_media_asset_api_v1_tourist_places__place_id__media_post",
+        "parameters": [
+          {
+            "name": "place_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Place Id"
+            }
+          },
+          {
+            "name": "media_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "image",
+              "title": "Media Type"
+            }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Media image or video URL",
+              "title": "Url"
+            },
+            "description": "Media image or video URL"
+          },
+          {
+            "name": "caption",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Caption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAssetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reviews": {
+      "get": {
+        "tags": [
+          "Reviews & Ratings"
+        ],
+        "summary": "Get Reviews",
+        "description": "Fetch traveler reviews, optionally filtered by place_id.",
+        "operationId": "get_reviews_api_v1_reviews_get",
+        "parameters": [
+          {
+            "name": "place_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter reviews by place_id",
+              "title": "Place Id"
+            },
+            "description": "Filter reviews by place_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewResponse"
+                  },
+                  "title": "Response Get Reviews Api V1 Reviews Get"
                 }
               }
             }
@@ -1261,91 +536,31 @@
           }
         }
       },
-      "put": {
+      "post": {
         "tags": [
-          "inventory"
+          "Reviews & Ratings"
         ],
-        "summary": "Update Inventory Item",
-        "operationId": "update_inventory_item_api_v1_inventory__item_id__put",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
+        "summary": "Submit Review",
+        "description": "Submit a star rating (1-5) and textual feedback for a tourist place.",
+        "operationId": "submit_review_api_v1_reviews_post",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InventoryItemUpdate"
+                "$ref": "#/components/schemas/ReviewCreate"
               }
             }
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+                  "$ref": "#/components/schemas/ReviewResponse"
                 }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Delete Inventory Item",
-        "operationId": "delete_inventory_item_api_v1_inventory__item_id__delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Item Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           },
@@ -1364,8 +579,24 @@
     },
     "/": {
       "get": {
-        "summary": "Read Root",
-        "operationId": "read_root__get",
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1381,35 +612,17 @@
   },
   "components": {
     "schemas": {
-      "Body_login_for_access_token_api_v1_auth_token_post": {
+      "CategoryCreate": {
         "properties": {
-          "grant_type": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^password$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Grant Type"
-          },
-          "username": {
+          "name": {
             "type": "string",
-            "title": "Username"
+            "title": "Name"
           },
-          "password": {
+          "slug": {
             "type": "string",
-            "format": "password",
-            "title": "Password"
+            "title": "Slug"
           },
-          "scope": {
-            "type": "string",
-            "title": "Scope",
-            "default": ""
-          },
-          "client_id": {
+          "description": {
             "anyOf": [
               {
                 "type": "string"
@@ -1418,43 +631,27 @@
                 "type": "null"
               }
             ],
-            "title": "Client Id"
-          },
-          "client_secret": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "format": "password",
-            "title": "Client Secret"
+            "title": "Description"
           }
         },
         "type": "object",
         "required": [
-          "username",
-          "password"
+          "name",
+          "slug"
         ],
-        "title": "Body_login_for_access_token_api_v1_auth_token_post"
+        "title": "CategoryCreate"
       },
-      "BookCreate": {
+      "CategoryResponse": {
         "properties": {
-          "title": {
+          "name": {
             "type": "string",
-            "title": "Title"
+            "title": "Name"
           },
-          "author": {
+          "slug": {
             "type": "string",
-            "title": "Author"
+            "title": "Slug"
           },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
+          "description": {
             "anyOf": [
               {
                 "type": "string"
@@ -1463,82 +660,11 @@
                 "type": "null"
               }
             ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "author",
-          "isbn"
-        ],
-        "title": "BookCreate"
-      },
-      "BookResponse": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "author": {
-            "type": "string",
-            "title": "Author"
-          },
-          "isbn": {
-            "type": "string",
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "type": "integer",
-            "title": "Total Copies",
-            "default": 1
+            "title": "Description"
           },
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
-          },
-          "available_copies": {
-            "type": "integer",
-            "title": "Available Copies"
           },
           "created_at": {
             "type": "string",
@@ -1553,150 +679,13 @@
         },
         "type": "object",
         "required": [
-          "title",
-          "author",
-          "isbn",
+          "name",
+          "slug",
           "id",
-          "available_copies",
           "created_at",
           "updated_at"
         ],
-        "title": "BookResponse"
-      },
-      "BookUpdate": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author"
-          },
-          "isbn": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Isbn"
-          },
-          "genre": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Genre"
-          },
-          "publication_year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Publication Year"
-          },
-          "total_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Copies"
-          },
-          "available_copies": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Available Copies"
-          }
-        },
-        "type": "object",
-        "title": "BookUpdate"
-      },
-      "FineResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "loan_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Loan Id"
-          },
-          "amount": {
-            "type": "number",
-            "title": "Amount"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "loan": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LoanResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "loan_id",
-          "amount",
-          "status",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "FineResponse"
+        "title": "CategoryResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1711,33 +700,18 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "InventoryItemCreate": {
+      "MediaAssetResponse": {
         "properties": {
-          "name": {
+          "media_type": {
             "type": "string",
-            "title": "Name"
+            "title": "Media Type",
+            "default": "image"
           },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "quantity": {
-            "type": "integer",
-            "title": "Quantity",
-            "default": 0
-          },
-          "unit": {
+          "url": {
             "type": "string",
-            "title": "Unit"
+            "title": "Url"
           },
-          "supplier": {
+          "caption": {
             "anyOf": [
               {
                 "type": "string"
@@ -1746,257 +720,431 @@
                 "type": "null"
               }
             ],
-            "title": "Supplier"
+            "title": "Caption"
           },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "unit"
-        ],
-        "title": "InventoryItemCreate"
-      },
-      "InventoryItemResponse": {
-        "properties": {
-          "name": {
+          "id": {
             "type": "string",
-            "title": "Name"
+            "title": "Id"
           },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "quantity": {
-            "type": "integer",
-            "title": "Quantity",
-            "default": 0
-          },
-          "unit": {
+          "place_id": {
             "type": "string",
-            "title": "Unit"
-          },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "type": "integer",
-            "title": "Low Stock Threshold",
-            "default": 10
-          },
-          "item_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Item Id"
+            "title": "Place Id"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "is_low_stock": {
-            "type": "boolean",
-            "title": "Is Low Stock",
-            "default": false
           }
         },
         "type": "object",
         "required": [
-          "name",
-          "unit",
-          "item_id",
-          "created_at",
-          "updated_at"
+          "url",
+          "id",
+          "place_id",
+          "created_at"
         ],
-        "title": "InventoryItemResponse"
+        "title": "MediaAssetResponse"
       },
-      "InventoryItemUpdate": {
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "quantity": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Quantity"
-          },
-          "unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit"
-          },
-          "supplier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "low_stock_threshold": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Low Stock Threshold"
-          }
-        },
-        "type": "object",
-        "title": "InventoryItemUpdate"
-      },
-      "LoanCreate": {
-        "properties": {
-          "book_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
-          },
-          "member_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "book_id",
-          "member_id"
-        ],
-        "title": "LoanCreate"
-      },
-      "LoanResponse": {
+      "NearbyAttractionResponse": {
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "book_id": {
+          "title": {
             "type": "string",
-            "format": "uuid",
-            "title": "Book Id"
+            "title": "Title"
           },
-          "member_id": {
+          "district": {
             "type": "string",
-            "format": "uuid",
-            "title": "Member Id"
+            "title": "District"
           },
-          "checkout_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Checkout Date"
-          },
-          "due_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Due Date"
-          },
-          "return_date": {
+          "cover_image_url": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Return Date"
+            "title": "Cover Image Url"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "entry_fee": {
+            "type": "number",
+            "title": "Entry Fee"
+          },
+          "avg_rating": {
+            "type": "number",
+            "title": "Avg Rating"
+          },
+          "distance_km": {
+            "type": "number",
+            "title": "Distance Km"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "district",
+          "entry_fee",
+          "avg_rating",
+          "distance_km"
+        ],
+        "title": "NearbyAttractionResponse"
+      },
+      "ReviewCreate": {
+        "properties": {
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "rating": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "description": "Rating between 1 and 5 stars"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "place_id": {
+            "type": "string",
+            "title": "Place Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_name",
+          "rating",
+          "place_id"
+        ],
+        "title": "ReviewCreate"
+      },
+      "ReviewResponse": {
+        "properties": {
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "rating": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "description": "Rating between 1 and 5 stars"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "place_id": {
+            "type": "string",
+            "title": "Place Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_name",
+          "rating",
+          "id",
+          "place_id",
+          "created_at"
+        ],
+        "title": "ReviewResponse"
+      },
+      "TouristPlaceCreate": {
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "title": "Category Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "district": {
+            "type": "string",
+            "title": "District"
+          },
+          "state_region": {
+            "type": "string",
+            "title": "State Region",
+            "default": "Kerala"
+          },
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "best_time_to_visit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Time To Visit"
+          },
+          "operating_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating Hours"
+          },
+          "entry_fee": {
+            "type": "number",
+            "title": "Entry Fee",
+            "default": 0.0
+          },
+          "permit_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permit Requirements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_id",
+          "title",
+          "district"
+        ],
+        "title": "TouristPlaceCreate"
+      },
+      "TouristPlaceDetailResponse": {
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "title": "Category Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "district": {
+            "type": "string",
+            "title": "District"
+          },
+          "state_region": {
+            "type": "string",
+            "title": "State Region",
+            "default": "Kerala"
+          },
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "best_time_to_visit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Time To Visit"
+          },
+          "operating_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating Hours"
+          },
+          "entry_fee": {
+            "type": "number",
+            "title": "Entry Fee",
+            "default": 0.0
+          },
+          "permit_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permit Requirements"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "avg_rating": {
+            "type": "number",
+            "title": "Avg Rating"
+          },
+          "review_count": {
+            "type": "integer",
+            "title": "Review Count"
           },
           "created_at": {
             "type": "string",
@@ -2008,256 +1156,177 @@
             "format": "date-time",
             "title": "Updated At"
           },
-          "book": {
+          "category": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BookResponse"
+                "$ref": "#/components/schemas/CategoryResponse"
               },
               {
                 "type": "null"
               }
             ]
           },
-          "member": {
+          "media_assets": {
+            "items": {
+              "$ref": "#/components/schemas/MediaAssetResponse"
+            },
+            "type": "array",
+            "title": "Media Assets",
+            "default": []
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewResponse"
+            },
+            "type": "array",
+            "title": "Reviews",
+            "default": []
+          },
+          "nearby_attractions": {
+            "items": {
+              "$ref": "#/components/schemas/NearbyAttractionResponse"
+            },
+            "type": "array",
+            "title": "Nearby Attractions",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_id",
+          "title",
+          "district",
+          "id",
+          "avg_rating",
+          "review_count",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TouristPlaceDetailResponse"
+      },
+      "TouristPlaceResponse": {
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "title": "Category Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/UserResponse"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "book_id",
-          "member_id",
-          "checkout_date",
-          "due_date",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "LoanResponse"
-      },
-      "LoginRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "title": "Email"
+            ],
+            "title": "Summary"
           },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "title": "LoginRequest"
-      },
-      "OTPVerifyRequest": {
-        "properties": {
-          "otp_code": {
-            "type": "string",
-            "title": "Otp Code"
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
-          "otp_session_id": {
+          "district": {
             "type": "string",
-            "title": "Otp Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_code",
-          "otp_session_id"
-        ],
-        "title": "OTPVerifyRequest"
-      },
-      "OTPVerifyResponse": {
-        "properties": {
-          "security_question_session_id": {
-            "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "security_question_session_id"
-        ],
-        "title": "OTPVerifyResponse"
-      },
-      "PasswordResetInitiateRequest": {
-        "properties": {
-          "login_id": {
-            "type": "string",
-            "title": "Login Id"
+            "title": "District"
           },
-          "mobile_number": {
+          "state_region": {
             "type": "string",
-            "title": "Mobile Number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "login_id",
-          "mobile_number"
-        ],
-        "title": "PasswordResetInitiateRequest"
-      },
-      "PasswordResetInitiateResponse": {
-        "properties": {
-          "otp_session_id": {
-            "type": "string",
-            "title": "Otp Session Id"
+            "title": "State Region",
+            "default": "Kerala"
           },
-          "security_question": {
-            "type": "string",
-            "title": "Security Question"
-          }
-        },
-        "type": "object",
-        "required": [
-          "otp_session_id",
-          "security_question"
-        ],
-        "title": "PasswordResetInitiateResponse"
-      },
-      "SecurityQuestionVerifyRequest": {
-        "properties": {
-          "answer": {
-            "type": "string",
-            "title": "Answer"
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
           },
-          "security_question_session_id": {
-            "type": "string",
-            "title": "Security Question Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "answer",
-          "security_question_session_id"
-        ],
-        "title": "SecurityQuestionVerifyRequest"
-      },
-      "SecurityQuestionVerifyResponse": {
-        "properties": {
-          "password_reset_session_id": {
-            "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "password_reset_session_id"
-        ],
-        "title": "SecurityQuestionVerifyResponse"
-      },
-      "SetNewPasswordRequest": {
-        "properties": {
-          "new_password": {
-            "type": "string",
-            "title": "New Password"
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
           },
-          "password_reset_session_id": {
-            "type": "string",
-            "title": "Password Reset Session Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "new_password",
-          "password_reset_session_id"
-        ],
-        "title": "SetNewPasswordRequest"
-      },
-      "SetNewPasswordResponse": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status"
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
           },
-          "login_link": {
-            "type": "string",
-            "title": "Login Link"
-          }
-        },
-        "type": "object",
-        "required": [
-          "status",
-          "login_link"
-        ],
-        "title": "SetNewPasswordResponse"
-      },
-      "Token": {
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "title": "Access Token"
+          "best_time_to_visit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Time To Visit"
           },
-          "token_type": {
-            "type": "string",
-            "title": "Token Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "access_token",
-          "token_type"
-        ],
-        "title": "Token"
-      },
-      "UserCreate": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "title": "Email"
+          "operating_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating Hours"
           },
-          "full_name": {
-            "type": "string",
-            "title": "Full Name"
+          "entry_fee": {
+            "type": "number",
+            "title": "Entry Fee",
+            "default": 0.0
           },
-          "role": {
-            "type": "string",
-            "title": "Role",
-            "default": "member"
-          },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "full_name",
-          "password"
-        ],
-        "title": "UserCreate"
-      },
-      "UserResponse": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "title": "Email"
-          },
-          "full_name": {
-            "type": "string",
-            "title": "Full Name"
-          },
-          "role": {
-            "type": "string",
-            "title": "Role",
-            "default": "member"
+          "permit_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permit Requirements"
           },
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
+          },
+          "avg_rating": {
+            "type": "number",
+            "title": "Avg Rating"
+          },
+          "review_count": {
+            "type": "integer",
+            "title": "Review Count"
           },
           "created_at": {
             "type": "string",
@@ -2272,63 +1341,16 @@
         },
         "type": "object",
         "required": [
-          "email",
-          "full_name",
+          "category_id",
+          "title",
+          "district",
           "id",
+          "avg_rating",
+          "review_count",
           "created_at",
           "updated_at"
         ],
-        "title": "UserResponse"
-      },
-      "UserUpdate": {
-        "properties": {
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
-          "full_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Full Name"
-          },
-          "role": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Role"
-          },
-          "password": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "title": "UserUpdate"
+        "title": "TouristPlaceResponse"
       },
       "ValidationError": {
         "properties": {
@@ -2369,17 +1391,6 @@
           "type"
         ],
         "title": "ValidationError"
-      }
-    },
-    "securitySchemes": {
-      "OAuth2PasswordBearer": {
-        "type": "oauth2",
-        "flows": {
-          "password": {
-            "scopes": {},
-            "tokenUrl": "/api/v1/auth/token"
-          }
-        }
       }
     }
   }

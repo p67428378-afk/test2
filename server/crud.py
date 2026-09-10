@@ -1,151 +1,229 @@
+import math
 import uuid
-from typing import List, Optional
-from sqlalchemy.orm import Session
-from server import models, schemas
+from typing import Optional, List
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
+
+from server.models import Category, TouristPlace, MediaAsset, Review
+from server.schemas import (
+    CategoryCreate,
+    TouristPlaceCreate,
+    MediaAssetCreate,
+    ReviewCreate,
+    NearbyAttractionResponse,
+)
 
 
-# User CRUD
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.email == email).first()
-
-
-# Tournament CRUD
-def create_tournament(
-    db: Session, tournament_in: schemas.TournamentCreate
-) -> models.Tournament:
-    tournament = models.Tournament(
-        name=tournament_in.name,
-        total_rounds=tournament_in.total_rounds,
-        status="DRAFT",
-        current_round=0,
+def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0  # Radius of earth in km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlon / 2) ** 2
     )
-    db.add(tournament)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+
+# Categories CRUD
+def get_categories(db: Session, skip: int = 0, limit: int = 100) -> List[Category]:
+    return db.query(Category).offset(skip).limit(limit).all()
+
+
+def get_category(db: Session, category_id: str) -> Optional[Category]:
+    return db.query(Category).filter(Category.id == category_id).first()
+
+
+def get_category_by_slug(db: Session, slug: str) -> Optional[Category]:
+    return db.query(Category).filter(Category.slug == slug).first()
+
+
+def create_category(db: Session, category: CategoryCreate) -> Category:
+    db_cat = Category(
+        id=str(uuid.uuid4()),
+        name=category.name,
+        slug=category.slug,
+        description=category.description,
+    )
+    db.add(db_cat)
     db.commit()
-    db.refresh(tournament)
-    return tournament
+    db.refresh(db_cat)
+    return db_cat
 
 
-def get_tournament(
-    db: Session, tournament_id: uuid.UUID
-) -> Optional[models.Tournament]:
+# TouristPlaces CRUD
+def get_tourist_places(
+    db: Session,
+    search: Optional[str] = None,
+    district: Optional[str] = None,
+    category_id: Optional[str] = None,
+    best_time_to_visit: Optional[str] = None,
+    min_fee: Optional[float] = None,
+    max_fee: Optional[float] = None,
+    skip: int = 0,
+    limit: int = 20,
+) -> List[TouristPlace]:
+    query = db.query(TouristPlace)
+
+    if category_id:
+        query = query.filter(TouristPlace.category_id == category_id)
+
+    if district:
+        query = query.filter(TouristPlace.district.ilike(f"%{district}%"))
+
+    if best_time_to_visit:
+        query = query.filter(
+            TouristPlace.best_time_to_visit.ilike(f"%{best_time_to_visit}%")
+        )
+
+    if min_fee is not None:
+        query = query.filter(TouristPlace.entry_fee >= min_fee)
+
+    if max_fee is not None:
+        query = query.filter(TouristPlace.entry_fee <= max_fee)
+
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            or_(
+                TouristPlace.title.ilike(search_pattern),
+                TouristPlace.summary.ilike(search_pattern),
+                TouristPlace.description.ilike(search_pattern),
+                TouristPlace.district.ilike(search_pattern),
+            )
+        )
+
+    return query.offset(skip).limit(limit).all()
+
+
+def get_tourist_place(db: Session, place_id: str) -> Optional[TouristPlace]:
     return (
-        db.query(models.Tournament)
-        .filter(models.Tournament.id == tournament_id)
+        db.query(TouristPlace)
+        .options(
+            joinedload(TouristPlace.category),
+            joinedload(TouristPlace.media_assets),
+            joinedload(TouristPlace.reviews),
+        )
+        .filter(TouristPlace.id == place_id)
         .first()
     )
 
 
-def list_tournaments(
-    db: Session, skip: int = 0, limit: int = 100
-) -> List[models.Tournament]:
-    return db.query(models.Tournament).offset(skip).limit(limit).all()
-
-
-# Player & Registration CRUD
-def register_player(
-    db: Session, player_in: schemas.PlayerCreate, tournament_id: uuid.UUID
-) -> models.Player:
-    # Check if email is already registered in this tournament
-    existing_reg = (
-        db.query(models.Registration)
-        .join(models.Player)
-        .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Player.email == player_in.email,
-        )
-        .first()
+def create_tourist_place(db: Session, place: TouristPlaceCreate) -> TouristPlace:
+    db_place = TouristPlace(
+        id=str(uuid.uuid4()),
+        category_id=place.category_id,
+        title=place.title,
+        summary=place.summary,
+        description=place.description,
+        district=place.district,
+        state_region=place.state_region,
+        cover_image_url=place.cover_image_url,
+        latitude=place.latitude,
+        longitude=place.longitude,
+        best_time_to_visit=place.best_time_to_visit,
+        operating_hours=place.operating_hours,
+        entry_fee=place.entry_fee,
+        permit_requirements=place.permit_requirements,
+        avg_rating=0.0,
+        review_count=0,
     )
-    if existing_reg:
-        raise ValueError("Player email already registered in this tournament")
-
-    # Check if player exists globally, else create
-    player = (
-        db.query(models.Player).filter(models.Player.email == player_in.email).first()
-    )
-    if not player:
-        player = models.Player(
-            full_name=player_in.full_name,
-            email=player_in.email,
-            rating=player_in.rating if player_in.rating is not None else 1200,
-            fide_id=player_in.fide_id,
-        )
-        db.add(player)
-        db.flush()
-
-    # Create registration
-    reg = models.Registration(
-        tournament_id=tournament_id,
-        player_id=player.id,
-        status="ACTIVE",
-    )
-    db.add(reg)
-
-    # Initialize standing entry
-    existing_standing = (
-        db.query(models.Standing)
-        .filter(
-            models.Standing.tournament_id == tournament_id,
-            models.Standing.player_id == player.id,
-        )
-        .first()
-    )
-    if not existing_standing:
-        standing = models.Standing(
-            tournament_id=tournament_id,
-            player_id=player.id,
-            total_points=0.0,
-            buchholz=0.0,
-            sonneborn_berger=0.0,
-        )
-        db.add(standing)
-
+    db.add(db_place)
     db.commit()
-    db.refresh(player)
-    return player
+    db.refresh(db_place)
+    return db_place
 
 
-def get_tournament_players(
-    db: Session, tournament_id: uuid.UUID
-) -> List[models.Player]:
-    return (
-        db.query(models.Player)
-        .join(models.Registration, models.Registration.player_id == models.Player.id)
+def get_nearby_attractions(
+    db: Session, place_id: str, radius_km: float = 50.0
+) -> List[NearbyAttractionResponse]:
+    source_place = db.query(TouristPlace).filter(TouristPlace.id == place_id).first()
+    if (
+        not source_place
+        or source_place.latitude is None
+        or source_place.longitude is None
+    ):
+        return []
+
+    other_places = (
+        db.query(TouristPlace)
         .filter(
-            models.Registration.tournament_id == tournament_id,
-            models.Registration.status == "ACTIVE",
+            TouristPlace.id != place_id,
+            TouristPlace.latitude.isnot(None),
+            TouristPlace.longitude.isnot(None),
         )
         .all()
     )
 
+    nearby = []
+    for p in other_places:
+        dist = haversine_distance(
+            source_place.latitude, source_place.longitude, p.latitude, p.longitude
+        )
+        if dist <= radius_km:
+            nearby.append(
+                NearbyAttractionResponse(
+                    id=p.id,
+                    title=p.title,
+                    district=p.district,
+                    cover_image_url=p.cover_image_url,
+                    latitude=p.latitude,
+                    longitude=p.longitude,
+                    entry_fee=p.entry_fee,
+                    avg_rating=p.avg_rating,
+                    distance_km=round(dist, 2),
+                )
+            )
 
-def get_player(db: Session, player_id: uuid.UUID) -> Optional[models.Player]:
-    return db.query(models.Player).filter(models.Player.id == player_id).first()
+    nearby.sort(key=lambda x: x.distance_km)
+    return nearby
 
 
-# Round & Match CRUD
-def get_round(db: Session, round_id: uuid.UUID) -> Optional[models.Round]:
-    return db.query(models.Round).filter(models.Round.id == round_id).first()
-
-
-def get_match(db: Session, match_id: uuid.UUID) -> Optional[models.Match]:
-    return db.query(models.Match).filter(models.Match.id == match_id).first()
-
-
-# Standing CRUD
-def get_standings(db: Session, tournament_id: uuid.UUID) -> List[models.Standing]:
-    return (
-        db.query(models.Standing)
-        .filter(models.Standing.tournament_id == tournament_id)
-        .all()
+# MediaAssets CRUD
+def create_media_asset(db: Session, media: MediaAssetCreate) -> MediaAsset:
+    db_media = MediaAsset(
+        id=str(uuid.uuid4()),
+        place_id=media.place_id,
+        media_type=media.media_type,
+        url=media.url,
+        caption=media.caption,
     )
+    db.add(db_media)
+    db.commit()
+    db.refresh(db_media)
+    return db_media
 
 
-# Certificate CRUD
-def get_certificate_by_uuid(
-    db: Session, verification_uuid: uuid.UUID
-) -> Optional[models.Certificate]:
-    return (
-        db.query(models.Certificate)
-        .filter(models.Certificate.verification_uuid == verification_uuid)
-        .first()
+# Reviews CRUD
+def get_reviews_by_place(db: Session, place_id: str) -> List[Review]:
+    return db.query(Review).filter(Review.place_id == place_id).all()
+
+
+def create_review(db: Session, review: ReviewCreate) -> Review:
+    db_review = Review(
+        id=str(uuid.uuid4()),
+        place_id=review.place_id,
+        user_name=review.user_name,
+        rating=review.rating,
+        comment=review.comment,
     )
+    db.add(db_review)
+    db.commit()
+    db.refresh(db_review)
+
+    # Recalculate average rating and review count for the tourist place
+    place = db.query(TouristPlace).filter(TouristPlace.id == review.place_id).first()
+    if place:
+        all_reviews = db.query(Review).filter(Review.place_id == review.place_id).all()
+        place.review_count = len(all_reviews)
+        if place.review_count > 0:
+            place.avg_rating = round(
+                sum(r.rating for r in all_reviews) / place.review_count, 1
+            )
+        db.commit()
+        db.refresh(place)
+
+    return db_review

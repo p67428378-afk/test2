@@ -1,130 +1,113 @@
-import uuid
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
+# Category Schemas
+class CategoryBase(BaseModel):
     name: str
-    total_rounds: int = Field(default=5, ge=1)
+    slug: str
+    description: Optional[str] = None
 
 
-class TournamentCreate(TournamentBase):
+class CategoryCreate(CategoryBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class CategoryResponse(CategoryBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+
+# MediaAsset Schemas
+class MediaAssetBase(BaseModel):
+    media_type: str = "image"
+    url: str
+    caption: Optional[str] = None
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class MediaAssetCreate(MediaAssetBase):
+    place_id: str
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+class MediaAssetResponse(MediaAssetBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    place_id: str
+    created_at: datetime
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+# Review Schemas
+class ReviewBase(BaseModel):
+    user_name: str
+    rating: int = Field(..., ge=1, le=5, description="Rating between 1 and 5 stars")
+    comment: Optional[str] = None
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
+class ReviewCreate(ReviewBase):
+    place_id: str
 
 
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+class ReviewResponse(ReviewBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    place_id: str
+    created_at: datetime
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
+# Nearby Attraction Schema
+class NearbyAttractionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+    id: str
+    title: str
+    district: str
+    cover_image_url: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    entry_fee: float
+    avg_rating: float
+    distance_km: float
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# TouristPlace Schemas
+class TouristPlaceBase(BaseModel):
+    category_id: str
+    title: str
+    summary: Optional[str] = None
+    description: Optional[str] = None
+    district: str
+    state_region: str = "Kerala"
+    cover_image_url: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    best_time_to_visit: Optional[str] = None
+    operating_hours: Optional[str] = None
+    entry_fee: float = 0.0
+    permit_requirements: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+
+class TouristPlaceCreate(TouristPlaceBase):
+    pass
+
+
+class TouristPlaceResponse(TouristPlaceBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    avg_rating: float
+    review_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class TouristPlaceDetailResponse(TouristPlaceResponse):
+    category: Optional[CategoryResponse] = None
+    media_assets: List[MediaAssetResponse] = []
+    reviews: List[ReviewResponse] = []
+    nearby_attractions: List[NearbyAttractionResponse] = []
