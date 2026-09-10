@@ -9,106 +9,61 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+export const resumeService = {
+  // List all available resume templates
+  getTemplates: async () => {
+    const response = await api.get("/api/v1/templates");
+    return response.data;
   },
-  (error) => Promise.reject(error),
-);
 
-export const authService = {
-  login: async (email, password) => {
-    const response = await api.post("/api/v1/auth/login", { email, password });
-    if (response.data && response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-    }
-    return response.data;
-  },
-  logout: () => {
-    localStorage.removeItem("token");
-  },
-};
-
-export const tournamentService = {
-  getTournaments: async () => {
-    const response = await api.get("/api/v1/tournaments");
-    return response.data;
-  },
-  getTournament: async (id) => {
-    const response = await api.get(`/api/v1/tournaments/${id}`);
-    return response.data;
-  },
-  createTournament: async (data) => {
-    const response = await api.post("/api/v1/tournaments", data);
-    return response.data;
-  },
-  finishTournament: async (id) => {
-    const response = await api.post(`/api/v1/tournaments/${id}/finish`);
-    return response.data;
-  },
-};
-
-export const playerService = {
-  registerPlayer: async (playerData, tournamentId = null) => {
-    const url = tournamentId
-      ? `/api/v1/tournaments/${tournamentId}/players`
-      : `/api/v1/players`;
-    const response = await api.post(url, playerData);
-    return response.data;
-  },
-  getRoster: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/players`,
-    );
-    return response.data;
-  },
-};
-
-export const pairingService = {
-  generatePairings: async (tournamentId) => {
-    const response = await api.post(
-      `/api/v1/tournaments/${tournamentId}/rounds/pairings`,
-    );
-    return response.data;
-  },
-  getRounds: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/rounds`,
-    );
-    return response.data;
-  },
-};
-
-export const scoreService = {
-  submitScore: async (matchId, result) => {
-    const response = await api.post("/api/v1/scores", {
-      match_id: matchId,
-      result,
+  // List all stored resumes with pagination
+  listResumes: async (skip = 0, limit = 20) => {
+    const response = await api.get("/api/v1/resumes", {
+      params: { skip, limit },
     });
     return response.data;
   },
-};
 
-export const standingsService = {
-  getStandings: async (tournamentId) => {
-    const response = await api.get(
-      `/api/v1/tournaments/${tournamentId}/standings`,
+  // Get a single resume by UUID
+  getResume: async (id) => {
+    const response = await api.get(`/api/v1/resumes/${id}`);
+    return response.data;
+  },
+
+  // Create and persist a new resume
+  createResume: async (resumeData) => {
+    const response = await api.post("/api/v1/resumes", resumeData);
+    return response.data;
+  },
+
+  // Update an existing resume
+  updateResume: async (id, resumeData) => {
+    const response = await api.put(`/api/v1/resumes/${id}`, resumeData);
+    return response.data;
+  },
+
+  // Delete a resume
+  deleteResume: async (id) => {
+    const response = await api.delete(`/api/v1/resumes/${id}`);
+    return response.data;
+  },
+
+  // Export vector PDF CV
+  exportPdf: async (exportPayload) => {
+    const response = await api.post(
+      "/api/v1/resumes/export-pdf",
+      exportPayload,
+      {
+        responseType: "blob",
+      },
     );
     return response.data;
   },
-};
 
-export const certificateService = {
-  verifyCertificate: async (uuid) => {
-    const response = await api.get(`/api/v1/certificates/verify/${uuid}`);
+  // Health check
+  healthCheck: async () => {
+    const response = await api.get("/api/v1/health");
     return response.data;
-  },
-  getCertificatePdfUrl: (uuid) => {
-    return `${BASE_URL}/api/v1/certificates/${uuid}/pdf`;
   },
 };
 
