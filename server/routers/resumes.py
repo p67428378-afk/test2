@@ -1,11 +1,10 @@
-import uuid
-from datetime import datetime, timezone
+import re
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.models import ResumeModel
+from server.models import UserModel
 from server.schemas import (
     ResumeCreate,
     ResumeUpdate,
@@ -13,217 +12,122 @@ from server.schemas import (
     ExportPdfRequest,
     TemplateInfo,
 )
-from server.services.pdf_service import (
-    AVAILABLE_TEMPLATES,
-    generate_resume_pdf,
-    sanitize_filename,
+from server.services.auth_service import get_optional_current_user
+from server.services.resume_service import (
+    create_resume,
+    get_resume,
+    list_resumes,
+    update_resume,
+    delete_resume,
+    get_templates,
 )
+from server.services.pdf_service import generate_resume_pdf
 
 router = APIRouter(prefix="/api/v1", tags=["Resumes"])
 
 
 @router.get("/templates", response_model=List[TemplateInfo])
-@router.get("/resumes/templates", response_model=List[TemplateInfo])
-def list_templates():
-    """List all available resume templates."""
-    return list(AVAILABLE_TEMPLATES.values())
+def list_available_templates():
+    return get_templates()
 
 
 @router.post(
-    "/resumes",
-    response_model=ResumeResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create and persist a new resume"
+    "/resumes", response_model=ResumeResponse, status_code=status.HTTP_201_CREATED
 )
-def create_resume(payload: ResumeCreate, db: Session = Depends(get_db)):
-    """Create a new resume in the database."""
-    # Basic email check
-    if "@" not in payload.email or "." not in payload.email.split("@")[-1]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email address format"
-        )
-
-    resume_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
-    db_resume = ResumeModel(
-        id=resume_id,
-        user_name=payload.user_name,
-        email=payload.email,
-        phone=payload.phone,
-        portfolio_url=payload.portfolio_url,
-        template_id=payload.template_id or "classic",
-        experiences=[exp.model_dump() for exp in payload.experiences],
-        education=[edu.model_dump() for edu in payload.education],
-        skills=payload.skills,
-        created_at=now,
-        updated_at=now,
-    )
-    db.add(db_resume)
-    db.commit()
-    db.refresh(db_resume)
-    return db_resume
-
-
-@router.get(
-    "/resumes",
-    response_model=List[ResumeResponse],
-    summary="List all stored resumes with pagination"
-)
-def list_resumes(
-    skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Max records to return"),
-    db: Session = Depends(get_db)
+def create_new_resume(
+    resume_in: ResumeCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_optional_current_user),
 ):
-    """Retrieve a paginated list of resumes."""
-    resumes = db.query(ResumeModel).offset(skip).limit(limit).all()
-    return resumes
+    user_id = str(current_user.id) if current_user else resume_in.user_id
+    created = create_resume(db=db, resume_in=resume_in, user_id=user_id)
+    return created
 
 
-@router.get(
-    "/resumes/{resume_id}",
-    response_model=ResumeResponse,
-    summary="Get resume by UUID"
-)
-def get_resume(resume_id: str, db: Session = Depends(get_db)):
-    """Retrieve a single resume by its UUID."""
-    resume = db.query(ResumeModel).filter(ResumeModel.id == resume_id).first()
-    if not resume:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Resume with specified ID not found"
-        )
-    return resume
+@router.get("/resumes", response_model=List[ResumeResponse])
+def get_all_resumes(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_optional_current_user),
+):
+    user_id = str(current_user.id) if current_user else None
+    return list_resumes(db=db, skip=skip, limit=limit, user_id=user_id)
 
 
-@router.put(
-    "/resumes/{resume_id}",
-    response_model=ResumeResponse,
-    summary="Update an existing resume"
-)
-def update_resume(
+@router.get("/resumes/{resume_id}", response_model=ResumeResponse)
+def get_single_resume(
     resume_id: str,
-    payload: ResumeUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """Update resume fields."""
-    resume = db.query(ResumeModel).filter(ResumeModel.id == resume_id).first()
+    resume = get_resume(db=db, resume_id=resume_id)
     if not resume:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Resume with specified ID not found"
+            detail=f"Resume with id '{resume_id}' not found",
         )
-
-    if payload.user_name is not None:
-        resume.user_name = payload.user_name
-    if payload.email is not None:
-        if "@" not in payload.email or "." not in payload.email.split("@")[-1]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid email address format"
-            )
-        resume.email = payload.email
-    if payload.phone is not None:
-        resume.phone = payload.phone
-    if payload.portfolio_url is not None:
-        resume.portfolio_url = payload.portfolio_url
-    if payload.template_id is not None:
-        resume.template_id = payload.template_id
-    if payload.experiences is not None:
-        resume.experiences = [exp.model_dump() for exp in payload.experiences]
-    if payload.education is not None:
-        resume.education = [edu.model_dump() for edu in payload.education]
-    if payload.skills is not None:
-        resume.skills = payload.skills
-
-    resume.updated_at = datetime.now(timezone.utc)
-    db.commit()
-    db.refresh(resume)
     return resume
 
 
-@router.delete(
-    "/resumes/{resume_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a resume"
-)
-def delete_resume(resume_id: str, db: Session = Depends(get_db)):
-    """Delete a resume by UUID."""
-    resume = db.query(ResumeModel).filter(ResumeModel.id == resume_id).first()
-    if not resume:
+@router.put("/resumes/{resume_id}", response_model=ResumeResponse)
+def update_existing_resume(
+    resume_id: str,
+    resume_update: ResumeUpdate,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_optional_current_user),
+):
+    user_id = str(current_user.id) if current_user else None
+    updated = update_resume(
+        db=db, resume_id=resume_id, resume_update=resume_update, user_id=user_id
+    )
+    if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Resume with specified ID not found"
+            detail=f"Resume with id '{resume_id}' not found or unauthorized",
         )
-    db.delete(resume)
-    db.commit()
-    return None
+    return updated
 
 
-@router.post(
-    "/resumes/export-pdf",
-    summary="Export resume as downloadable vector PDF"
-)
+@router.delete("/resumes/{resume_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_existing_resume(
+    resume_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_optional_current_user),
+):
+    user_id = str(current_user.id) if current_user else None
+    deleted = delete_resume(db=db, resume_id=resume_id, user_id=user_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Resume with id '{resume_id}' not found or unauthorized",
+        )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/resumes/export-pdf")
 def export_resume_pdf(
     payload: ExportPdfRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """Render structured resume data into vector PDF and return as attachment."""
-    # Scenario A: Stored resume ID referenced
-    if payload.resume_id:
-        resume = db.query(ResumeModel).filter(ResumeModel.id == payload.resume_id).first()
-        if not resume:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resume with specified ID not found"
-            )
-        resume_data = {
-            "user_name": payload.user_name or resume.user_name,
-            "email": payload.email or resume.email,
-            "phone": payload.phone if payload.phone is not None else resume.phone,
-            "portfolio_url": payload.portfolio_url if payload.portfolio_url is not None else resume.portfolio_url,
-            "template_id": payload.template_id or resume.template_id,
-            "experiences": [exp.model_dump() for exp in payload.experiences] if payload.experiences is not None else resume.experiences,
-            "education": [edu.model_dump() for edu in payload.education] if payload.education is not None else resume.education,
-            "skills": payload.skills if payload.skills is not None else resume.skills,
-        }
-    else:
-        # Scenario B: Direct on-the-fly export
-        if not payload.user_name or not payload.email:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Both 'user_name' and 'email' are required for PDF export."
-            )
-        if "@" not in payload.email or "." not in payload.email.split("@")[-1]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid email address format"
-            )
-
-        resume_data = {
-            "user_name": payload.user_name,
-            "email": payload.email,
-            "phone": payload.phone,
-            "portfolio_url": payload.portfolio_url,
-            "template_id": payload.template_id or "classic",
-            "experiences": [exp.model_dump() for exp in payload.experiences] if payload.experiences else [],
-            "education": [edu.model_dump() for edu in payload.education] if payload.education else [],
-            "skills": payload.skills or [],
-        }
-
-    template_id = resume_data.get("template_id", "classic")
     try:
-        pdf_bytes = generate_resume_pdf(resume_data, template_id=template_id)
-    except Exception as exc:
+        data_dict = payload.model_dump()
+        pdf_bytes = generate_resume_pdf(data_dict)
+
+        clean_name = payload.user_name.strip() if payload.user_name else "User"
+        clean_name = re.sub(r"[^\w\s-]", "", clean_name)
+        clean_name = re.sub(r"[\s]+", "_", clean_name) or "User"
+        filename = f"{clean_name}_Resume.pdf"
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            },
+        )
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"PDF rendering failed: {str(exc)}"
+            detail=f"Failed to compile PDF CV: {str(e)}",
         )
-
-    filename = sanitize_filename(resume_data.get("user_name", "Resume"))
-    headers = {
-        "Content-Disposition": f'attachment; filename="{filename}"',
-        "Content-Type": "application/pdf"
-    }
-
-    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)

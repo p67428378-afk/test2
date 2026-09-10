@@ -2,29 +2,44 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Quick Resume Maker API",
-    "description": "RESTful API for creating, managing, and exporting vector PDF CVs.",
-    "version": "1.0.0"
+    "description": "Backend service for Quick Resume Maker with User Authentication and Vector PDF Export",
+    "version": "2.0.0"
   },
   "paths": {
-    "/api/v1/resumes/templates": {
-      "get": {
+    "/api/v1/auth/register": {
+      "post": {
         "tags": [
-          "Resumes"
+          "Authentication"
         ],
-        "summary": "List Templates",
-        "description": "List all available resume templates.",
-        "operationId": "list_templates_api_v1_resumes_templates_get",
+        "summary": "Register",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/TemplateInfo"
-                  },
-                  "type": "array",
-                  "title": "Response List Templates Api V1 Resumes Templates Get"
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -32,14 +47,60 @@
         }
       }
     },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get Me",
+        "operationId": "get_me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/templates": {
       "get": {
         "tags": [
           "Resumes"
         ],
-        "summary": "List Templates",
-        "description": "List all available resume templates.",
-        "operationId": "list_templates_api_v1_templates_get",
+        "summary": "List Available Templates",
+        "operationId": "list_available_templates_api_v1_templates_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -50,7 +111,7 @@
                     "$ref": "#/components/schemas/TemplateInfo"
                   },
                   "type": "array",
-                  "title": "Response List Templates Api V1 Templates Get"
+                  "title": "Response List Available Templates Api V1 Templates Get"
                 }
               }
             }
@@ -63,9 +124,13 @@
         "tags": [
           "Resumes"
         ],
-        "summary": "Create and persist a new resume",
-        "description": "Create a new resume in the database.",
-        "operationId": "create_resume_api_v1_resumes_post",
+        "summary": "Create New Resume",
+        "operationId": "create_new_resume_api_v1_resumes_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -103,9 +168,13 @@
         "tags": [
           "Resumes"
         ],
-        "summary": "List all stored resumes with pagination",
-        "description": "Retrieve a paginated list of resumes.",
-        "operationId": "list_resumes_api_v1_resumes_get",
+        "summary": "Get All Resumes",
+        "operationId": "get_all_resumes_api_v1_resumes_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "skip",
@@ -114,11 +183,9 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "Number of records to skip",
               "default": 0,
               "title": "Skip"
-            },
-            "description": "Number of records to skip"
+            }
           },
           {
             "name": "limit",
@@ -128,11 +195,9 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "description": "Max records to return",
               "default": 20,
               "title": "Limit"
-            },
-            "description": "Max records to return"
+            }
           }
         ],
         "responses": {
@@ -145,7 +210,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ResumeResponse"
                   },
-                  "title": "Response List Resumes Api V1 Resumes Get"
+                  "title": "Response Get All Resumes Api V1 Resumes Get"
                 }
               }
             }
@@ -168,9 +233,8 @@
         "tags": [
           "Resumes"
         ],
-        "summary": "Get resume by UUID",
-        "description": "Retrieve a single resume by its UUID.",
-        "operationId": "get_resume_api_v1_resumes__resume_id__get",
+        "summary": "Get Single Resume",
+        "operationId": "get_single_resume_api_v1_resumes__resume_id__get",
         "parameters": [
           {
             "name": "resume_id",
@@ -209,9 +273,13 @@
         "tags": [
           "Resumes"
         ],
-        "summary": "Update an existing resume",
-        "description": "Update resume fields.",
-        "operationId": "update_resume_api_v1_resumes__resume_id__put",
+        "summary": "Update Existing Resume",
+        "operationId": "update_existing_resume_api_v1_resumes__resume_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "resume_id",
@@ -260,9 +328,13 @@
         "tags": [
           "Resumes"
         ],
-        "summary": "Delete a resume",
-        "description": "Delete a resume by UUID.",
-        "operationId": "delete_resume_api_v1_resumes__resume_id__delete",
+        "summary": "Delete Existing Resume",
+        "operationId": "delete_existing_resume_api_v1_resumes__resume_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "resume_id",
@@ -296,8 +368,7 @@
         "tags": [
           "Resumes"
         ],
-        "summary": "Export resume as downloadable vector PDF",
-        "description": "Render structured resume data into vector PDF and return as attachment.",
+        "summary": "Export Resume Pdf",
         "operationId": "export_resume_pdf_api_v1_resumes_export_pdf_post",
         "requestBody": {
           "content": {
@@ -337,7 +408,6 @@
           "Health"
         ],
         "summary": "Health Check",
-        "description": "Health check endpoint.",
         "operationId": "health_check_api_v1_health_get",
         "responses": {
           "200": {
@@ -351,14 +421,13 @@
         }
       }
     },
-    "/health": {
+    "/": {
       "get": {
         "tags": [
-          "Health"
+          "Root"
         ],
-        "summary": "Health Check",
-        "description": "Health check endpoint.",
-        "operationId": "health_check_health_get",
+        "summary": "Root",
+        "operationId": "root__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -374,117 +443,15 @@
   },
   "components": {
     "schemas": {
-      "EducationSchema": {
-        "properties": {
-          "institution": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Institution",
-            "description": "Institution / University name"
-          },
-          "degree": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Degree",
-            "description": "Degree or Major"
-          },
-          "completion_year": {
-            "type": "string",
-            "title": "Completion Year",
-            "description": "Year of completion or expected graduation"
-          }
-        },
-        "type": "object",
-        "required": [
-          "institution",
-          "degree",
-          "completion_year"
-        ],
-        "title": "EducationSchema"
-      },
-      "ExperienceSchema": {
-        "properties": {
-          "company": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Company",
-            "description": "Company or Organization name"
-          },
-          "role": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Role",
-            "description": "Job Title / Role"
-          },
-          "start_date": {
-            "type": "string",
-            "title": "Start Date",
-            "description": "Start Date (e.g. '2022-01' or 'Jan 2022')"
-          },
-          "end_date": {
-            "type": "string",
-            "title": "End Date",
-            "description": "End Date (e.g. 'Present' or '2024-05')"
-          },
-          "bullet_points": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Bullet Points",
-            "description": "List of achievements or responsibilities"
-          }
-        },
-        "type": "object",
-        "required": [
-          "company",
-          "role",
-          "start_date",
-          "end_date"
-        ],
-        "title": "ExperienceSchema"
-      },
       "ExportPdfRequest": {
         "properties": {
-          "resume_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Resume Id",
-            "description": "Optional UUID of existing resume"
-          },
           "user_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Name",
-            "description": "Full name if exporting directly"
+            "type": "string",
+            "title": "User Name"
           },
           "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email",
-            "description": "Email if exporting directly"
+            "type": "string",
+            "title": "Email"
           },
           "phone": {
             "anyOf": [
@@ -509,6 +476,29 @@
             "title": "Portfolio Url"
           },
           "template_id": {
+            "type": "string",
+            "title": "Template Id",
+            "default": "classic"
+          },
+          "experiences": {
+            "items": {},
+            "type": "array",
+            "title": "Experiences",
+            "default": []
+          },
+          "education": {
+            "items": {},
+            "type": "array",
+            "title": "Education",
+            "default": []
+          },
+          "skills": {
+            "items": {},
+            "type": "array",
+            "title": "Skills",
+            "default": []
+          },
+          "resume_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -517,53 +507,14 @@
                 "type": "null"
               }
             ],
-            "title": "Template Id",
-            "description": "Template to use for export ('classic', 'modern')"
-          },
-          "experiences": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/ExperienceSchema"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Experiences"
-          },
-          "education": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EducationSchema"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Education"
-          },
-          "skills": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Skills"
+            "title": "Resume Id"
           }
         },
         "type": "object",
+        "required": [
+          "user_name",
+          "email"
+        ],
         "title": "ExportPdfRequest"
       },
       "HTTPValidationError": {
@@ -583,71 +534,67 @@
         "properties": {
           "user_name": {
             "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "User Name",
-            "description": "Full Name"
+            "title": "User Name"
           },
           "email": {
             "type": "string",
-            "title": "Email",
-            "description": "Contact Email Address"
+            "title": "Email"
           },
           "phone": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Phone",
-            "description": "Contact Phone Number"
+            "title": "Phone"
           },
           "portfolio_url": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 500
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Portfolio Url",
-            "description": "Portfolio or LinkedIn URL"
+            "title": "Portfolio Url"
           },
           "template_id": {
             "type": "string",
             "title": "Template Id",
-            "description": "Resume template identifier ('classic', 'modern')",
             "default": "classic"
           },
           "experiences": {
-            "items": {
-              "$ref": "#/components/schemas/ExperienceSchema"
-            },
+            "items": {},
             "type": "array",
             "title": "Experiences",
-            "description": "Work experiences"
+            "default": []
           },
           "education": {
-            "items": {
-              "$ref": "#/components/schemas/EducationSchema"
-            },
+            "items": {},
             "type": "array",
             "title": "Education",
-            "description": "Education records"
+            "default": []
           },
           "skills": {
-            "items": {
-              "type": "string"
-            },
+            "items": {},
             "type": "array",
             "title": "Skills",
-            "description": "List of skills"
+            "default": []
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
           }
         },
         "type": "object",
@@ -661,84 +608,94 @@
         "properties": {
           "user_name": {
             "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "User Name",
-            "description": "Full Name"
+            "title": "User Name"
           },
           "email": {
             "type": "string",
-            "title": "Email",
-            "description": "Contact Email Address"
+            "title": "Email"
           },
           "phone": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Phone",
-            "description": "Contact Phone Number"
+            "title": "Phone"
           },
           "portfolio_url": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 500
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Portfolio Url",
-            "description": "Portfolio or LinkedIn URL"
+            "title": "Portfolio Url"
           },
           "template_id": {
             "type": "string",
             "title": "Template Id",
-            "description": "Resume template identifier ('classic', 'modern')",
             "default": "classic"
           },
           "experiences": {
-            "items": {
-              "$ref": "#/components/schemas/ExperienceSchema"
-            },
+            "items": {},
             "type": "array",
             "title": "Experiences",
-            "description": "Work experiences"
+            "default": []
           },
           "education": {
-            "items": {
-              "$ref": "#/components/schemas/EducationSchema"
-            },
+            "items": {},
             "type": "array",
             "title": "Education",
-            "description": "Education records"
+            "default": []
           },
           "skills": {
-            "items": {
-              "type": "string"
-            },
+            "items": {},
             "type": "array",
             "title": "Skills",
-            "description": "List of skills"
+            "default": []
           },
           "id": {
             "type": "string",
             "title": "Id"
           },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Created At"
           },
           "updated_at": {
-            "type": "string",
-            "format": "date-time",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Updated At"
           }
         },
@@ -746,9 +703,7 @@
         "required": [
           "user_name",
           "email",
-          "id",
-          "created_at",
-          "updated_at"
+          "id"
         ],
         "title": "ResumeResponse"
       },
@@ -757,9 +712,7 @@
           "user_name": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 1
+                "type": "string"
               },
               {
                 "type": "null"
@@ -814,9 +767,7 @@
           "experiences": {
             "anyOf": [
               {
-                "items": {
-                  "$ref": "#/components/schemas/ExperienceSchema"
-                },
+                "items": {},
                 "type": "array"
               },
               {
@@ -828,9 +779,7 @@
           "education": {
             "anyOf": [
               {
-                "items": {
-                  "$ref": "#/components/schemas/EducationSchema"
-                },
+                "items": {},
                 "type": "array"
               },
               {
@@ -842,9 +791,7 @@
           "skills": {
             "anyOf": [
               {
-                "items": {
-                  "type": "string"
-                },
+                "items": {},
                 "type": "array"
               },
               {
@@ -871,19 +818,142 @@
             "type": "string",
             "title": "Description"
           },
-          "category": {
-            "type": "string",
-            "title": "Category"
+          "preview_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Color"
           }
         },
         "type": "object",
         "required": [
           "id",
           "name",
-          "description",
-          "category"
+          "description"
         ],
         "title": "TemplateInfo"
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "Token"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserCreate"
+      },
+      "UserResponse": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "id",
+          "is_active"
+        ],
+        "title": "UserResponse"
       },
       "ValidationError": {
         "properties": {
@@ -924,6 +994,17 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/auth/login"
+          }
+        }
       }
     }
   }
