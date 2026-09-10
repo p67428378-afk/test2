@@ -5,16 +5,46 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import HomePage from "./pages/HomePage";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import LoginPage from "./pages/Login";
+import ResumeBuilderPage from "./pages/ResumeBuilderPage";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
+function AppRoutes() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading application...</div>;
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/builder"
+        element={
+          <ProtectedRoute>
+            <ResumeBuilderPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <Navigate to={isAuthenticated ? "/builder" : "/login"} replace />
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 export default function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/builder" element={<HomePage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </Router>
   );
 }
