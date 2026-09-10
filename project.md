@@ -4,4 +4,4 @@ _Maintained automatically by the SDLC Assistant. Lists features implemented in t
 
 ## Implemented Features
 
-- **SCRUM-642** — User Story: Inventory Management Module
+- **SCRUM-265** - Employee Technical Research Note Platform & Knowledge Base

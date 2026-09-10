@@ -1,17 +1,16 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import sessionmaker
+from server.config import settings
+from server.models import Base, User, Tag
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+# Support SQLite check_same_thread if using sqlite
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
 
 
 def get_db():
@@ -22,48 +21,62 @@ def get_db():
         db.close()
 
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
+def seed_data(db):
+    from passlib.context import CryptContext
 
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
-
-    # Ensure tables exist
-    init_db()
-
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
-
+    # Seed test employee user
     try:
+        emp = db.query(User).filter(User.email == "test@example.com").first()
+        if not emp:
+            emp = User(
+                email="test@example.com",
+                full_name="Regular Employee",
+                hashed_password=pwd_context.hash("testpassword"),
+                role="ROLE_EMPLOYEE",
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(emp)
+
+        # Seed expert user
+        exp = db.query(User).filter(User.email == "admin@example.com").first()
+        if not exp:
+            exp = User(
+                email="admin@example.com",
+                full_name="Expert Reviewer",
+                hashed_password=pwd_context.hash("adminpassword"),
+                role="ROLE_EXPERT",
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(exp)
+
+        # Seed default tags
+        initial_tags = [
+            "Redis",
+            "Performance",
+            "Architecture",
+            "Security",
+            "DevOps",
+            "Database",
+            "Frontend",
+        ]
+        for tag_name in initial_tags:
+            existing_tag = db.query(Tag).filter(Tag.name == tag_name).first()
+            if not existing_tag:
+                db.add(Tag(name=tag_name))
+
         db.commit()
     except Exception:
         db.rollback()
+
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_data(db)
+    finally:
+        db.close()
