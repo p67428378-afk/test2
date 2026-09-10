@@ -27,8 +27,9 @@ describe("TopNavBar Component", () => {
     const loginLinks = screen.getAllByRole("link", { name: /Login/i });
     expect(loginLinks.length).toBeGreaterThan(0);
     expect(loginLinks[0]).toHaveAttribute("href", "/login");
-    expect(
-      screen.getByRole("link", { name: /Sign In \/ Register/i }),
-    ).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: /Register/i })).toHaveAttribute(
+      "href",
+      "/login",
+    );
   });
 });

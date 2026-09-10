@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { FileText, LogIn, LogOut, Sparkles } from "lucide-react";
+import { FileText, LogIn, LogOut, Sparkles, UserPlus } from "lucide-react";
 
 export default function TopNavBar({ onExportPdf, isExporting = false }) {
   const { user, isAuthenticated, logout } = useAuth();
@@ -32,25 +32,27 @@ export default function TopNavBar({ onExportPdf, isExporting = false }) {
 
         <nav className="hidden sm:flex items-center space-x-4">
           <Link
-            to="/"
+            to="/builder"
             className={`text-sm font-medium transition ${
-              location.pathname === "/" || location.pathname === "/builder"
+              location.pathname === "/builder"
                 ? "text-indigo-600 font-semibold"
                 : "text-slate-600 hover:text-indigo-600"
             }`}
           >
             Resume Builder
           </Link>
-          <Link
-            to="/login"
-            className={`text-sm font-medium transition ${
-              location.pathname === "/login"
-                ? "text-indigo-600 font-semibold"
-                : "text-slate-600 hover:text-indigo-600"
-            }`}
-          >
-            Login & Auth
-          </Link>
+          {!isAuthenticated && (
+            <Link
+              to="/login"
+              className={`text-sm font-medium transition ${
+                location.pathname === "/login" || location.pathname === "/"
+                  ? "text-indigo-600 font-semibold"
+                  : "text-slate-600 hover:text-indigo-600"
+              }`}
+            >
+              Login / Sign In
+            </Link>
+          )}
         </nav>
       </div>
 
@@ -105,13 +107,14 @@ export default function TopNavBar({ onExportPdf, isExporting = false }) {
               className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-slate-700 hover:text-indigo-600 font-medium px-3 py-1.5 rounded-lg hover:bg-slate-100 transition"
             >
               <LogIn className="w-4 h-4 text-slate-500" />
-              <span>Login</span>
+              <span>Login / Sign In</span>
             </Link>
             <Link
               to="/login"
               className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition"
             >
-              <span>Sign In / Register</span>
+              <UserPlus className="w-4 h-4" />
+              <span>Register</span>
             </Link>
           </div>
         )}

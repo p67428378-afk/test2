@@ -27,11 +27,13 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email, password, rememberMe) => {
+  const login = async (email, password, rememberMe = true) => {
     const data = await authService.login(email, password);
     if (data.access_token) {
-      const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem("token", data.access_token);
+      localStorage.setItem("token", data.access_token);
+      if (rememberMe) {
+        sessionStorage.setItem("token", data.access_token);
+      }
       if (data.user) {
         setUser(data.user);
       } else {
@@ -45,7 +47,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     const data = await authService.register(userData);
     if (data.id || data.email) {
-      await login(userData.email, userData.password, false);
+      await login(userData.email, userData.password, true);
     }
     return data;
   };

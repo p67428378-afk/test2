@@ -17,7 +17,7 @@ export default function AuthCard() {
   const [email, setEmail] = useState("test@example.com");
   const [password, setPassword] = useState("testpassword");
   const [fullName, setFullName] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
@@ -68,7 +68,7 @@ export default function AuthCard() {
       </div>
 
       <div className="p-6 sm:p-8">
-        {/* Tab switchers */}
+        {/* Tab switchers: Sign In vs Sign Up / Create Account */}
         <div className="flex border-b border-slate-200 mb-6" role="tablist">
           <button
             type="button"
@@ -80,7 +80,7 @@ export default function AuthCard() {
             }}
             className={`flex-1 py-3 text-center text-sm font-semibold flex items-center justify-center gap-2 transition ${
               !isRegister
-                ? "text-indigo-600 border-b-2 border-indigo-600"
+                ? "text-indigo-600 border-b-2 border-indigo-600 font-bold"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -97,12 +97,12 @@ export default function AuthCard() {
             }}
             className={`flex-1 py-3 text-center text-sm font-semibold flex items-center justify-center gap-2 transition ${
               isRegister
-                ? "text-indigo-600 border-b-2 border-indigo-600"
+                ? "text-indigo-600 border-b-2 border-indigo-600 font-bold"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <UserPlus className="w-4 h-4" />
-            Create Account
+            Sign Up / Create Account
           </button>
         </div>
 
@@ -225,7 +225,7 @@ export default function AuthCard() {
             ) : isRegister ? (
               <>
                 <UserPlus className="w-4 h-4" />
-                <span>Create Account</span>
+                <span>Sign Up / Create Account</span>
               </>
             ) : (
               <>
@@ -241,7 +241,7 @@ export default function AuthCard() {
           <div className="flex items-center justify-between">
             <span className="font-semibold text-slate-700 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              Test Account Credentials
+              Test account: test@example.com / testpassword
             </span>
             <button
               type="button"

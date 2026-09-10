@@ -30,8 +30,20 @@ function AppRoutes() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
       <TopNavBar />
-      <main className="flex-1">
+      <main className="flex-1 flex flex-col">
         <Routes>
+          {/* Default root route: directly renders Login for unauthenticated users, redirects to Builder when authenticated */}
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/builder" replace />
+              ) : (
+                <LoginPage />
+              )
+            }
+          />
+
           {/* Explicit Login route */}
           <Route path="/login" element={<LoginPage />} />
 
@@ -42,14 +54,6 @@ function AppRoutes() {
               <ProtectedRoute>
                 <ResumeBuilderPage />
               </ProtectedRoute>
-            }
-          />
-
-          {/* Root route: unauthenticated users redirect to /login, authenticated users redirect to /builder */}
-          <Route
-            path="/"
-            element={
-              <Navigate to={isAuthenticated ? "/builder" : "/login"} replace />
             }
           />
 

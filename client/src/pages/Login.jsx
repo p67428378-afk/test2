@@ -14,7 +14,7 @@ export default function LoginPage() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="min-h-full py-8 sm:py-12 px-4 flex flex-col items-center justify-center">
+    <div className="min-h-full flex-1 py-8 sm:py-12 px-4 flex flex-col items-center justify-center">
       <AuthCard />
     </div>
   );

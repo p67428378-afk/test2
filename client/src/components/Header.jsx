@@ -1,11 +1,13 @@
 import React from "react";
-import { FileText, Download, Sparkles, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { FileText, Download, Sparkles, LogIn, UserPlus } from "lucide-react";
 
 export default function Header({
   onExportPdf,
   isExporting,
   selectedTemplate,
   onTemplateChange,
+  user,
 }) {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-xs">
@@ -36,43 +38,66 @@ export default function Header({
           {/* Header Actions */}
           <div className="flex items-center gap-3">
             {/* Quick Template Switcher */}
-            <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => onTemplateChange("classic")}
-                className={`px-3 py-1 rounded-md transition ${
-                  selectedTemplate === "classic"
-                    ? "bg-white text-indigo-600 shadow-xs font-semibold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Classic
-              </button>
-              <button
-                type="button"
-                onClick={() => onTemplateChange("modern")}
-                className={`px-3 py-1 rounded-md transition ${
-                  selectedTemplate === "modern"
-                    ? "bg-white text-indigo-600 shadow-xs font-semibold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Modern
-              </button>
-            </div>
+            {onTemplateChange && (
+              <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => onTemplateChange("classic")}
+                  className={`px-3 py-1 rounded-md transition ${
+                    selectedTemplate === "classic"
+                      ? "bg-white text-indigo-600 shadow-xs font-semibold"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Classic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onTemplateChange("modern")}
+                  className={`px-3 py-1 rounded-md transition ${
+                    selectedTemplate === "modern"
+                      ? "bg-white text-indigo-600 shadow-xs font-semibold"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Modern
+                </button>
+              </div>
+            )}
 
             {/* Export PDF Button */}
-            <button
-              type="button"
-              onClick={onExportPdf}
-              disabled={isExporting}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg shadow-sm shadow-indigo-200 transition"
-            >
-              <Download
-                className={`w-4 h-4 ${isExporting ? "animate-bounce" : ""}`}
-              />
-              {isExporting ? "Generating PDF..." : "Export PDF"}
-            </button>
+            {onExportPdf && (
+              <button
+                type="button"
+                onClick={onExportPdf}
+                disabled={isExporting}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg shadow-sm shadow-indigo-200 transition"
+              >
+                <Download
+                  className={`w-4 h-4 ${isExporting ? "animate-bounce" : ""}`}
+                />
+                {isExporting ? "Generating PDF..." : "Export PDF"}
+              </button>
+            )}
+
+            {!user && (
+              <div className="flex items-center space-x-2">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-slate-700 hover:text-indigo-600 font-medium px-3 py-1.5 rounded-lg hover:bg-slate-100 transition"
+                >
+                  <LogIn className="w-4 h-4 text-slate-500" />
+                  <span>Login / Sign In</span>
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Register</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
