@@ -12,7 +12,6 @@ import {
   Sparkles,
   Layers,
   CheckCircle2,
-  ListPlus,
   RotateCcw,
 } from "lucide-react";
 
@@ -68,7 +67,6 @@ export const SAMPLE_RESUME_DATA = {
 export default function ResumeForm({
   resumeData,
   onChange,
-  templates = [],
   onLoadSample,
   onReset,
 }) {

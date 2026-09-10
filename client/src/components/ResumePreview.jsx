@@ -6,7 +6,6 @@ import {
   Briefcase,
   GraduationCap,
   Wrench,
-  FileText,
 } from "lucide-react";
 
 export default function ResumePreview({ resumeData }) {

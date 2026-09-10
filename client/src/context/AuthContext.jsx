@@ -17,8 +17,7 @@ export const AuthProvider = ({ children }) => {
         try {
           const currentUser = await authService.getMe();
           setUser(currentUser);
-        } catch (error) {
-          console.error("Failed to fetch user on init:", error);
+        } catch {
           authService.logout(); // Clean up invalid token
         }
       }
@@ -33,16 +32,19 @@ export const AuthProvider = ({ children }) => {
     if (data.access_token) {
       const storage = rememberMe ? localStorage : sessionStorage;
       storage.setItem("token", data.access_token);
-      const currentUser = await authService.getMe();
-      setUser(currentUser);
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        const currentUser = await authService.getMe();
+        setUser(currentUser);
+      }
     }
     return data;
   };
 
   const register = async (userData) => {
     const data = await authService.register(userData);
-    // Optionally log in the user directly after registration
-    if (data.id) {
+    if (data.id || data.email) {
       await login(userData.email, userData.password, false);
     }
     return data;
