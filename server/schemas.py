@@ -1,44 +1,50 @@
-import uuid
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class ExperienceSchema(BaseModel):
+    company: str = Field(..., min_length=1, max_length=255, description="Company or Organization name")
+    role: str = Field(..., min_length=1, max_length=255, description="Job Title / Role")
+    start_date: str = Field(..., description="Start Date (e.g. '2022-01' or 'Jan 2022')")
+    end_date: str = Field(..., description="End Date (e.g. 'Present' or '2024-05')")
+    bullet_points: List[str] = Field(default_factory=list, description="List of achievements or responsibilities")
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class EducationSchema(BaseModel):
+    institution: str = Field(..., min_length=1, max_length=255, description="Institution / University name")
+    degree: str = Field(..., min_length=1, max_length=255, description="Degree or Major")
+    completion_year: str = Field(..., description="Year of completion or expected graduation")
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    full_name: Optional[str] = None
-    role: str
-
-    class Config:
-        from_attributes = True
-
-
-# Tournament Schemas
-class TournamentBase(BaseModel):
-    name: str
-    total_rounds: int = Field(default=5, ge=1)
+class ResumeBase(BaseModel):
+    user_name: str = Field(..., min_length=1, max_length=255, description="Full Name")
+    email: str = Field(..., description="Contact Email Address")
+    phone: Optional[str] = Field(None, max_length=50, description="Contact Phone Number")
+    portfolio_url: Optional[str] = Field(None, max_length=500, description="Portfolio or LinkedIn URL")
+    template_id: str = Field(default="classic", description="Resume template identifier ('classic', 'modern')")
+    experiences: List[ExperienceSchema] = Field(default_factory=list, description="Work experiences")
+    education: List[EducationSchema] = Field(default_factory=list, description="Education records")
+    skills: List[str] = Field(default_factory=list, description="List of skills")
 
 
-class TournamentCreate(TournamentBase):
+class ResumeCreate(ResumeBase):
     pass
 
 
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
-    status: str
-    current_round: int
+class ResumeUpdate(BaseModel):
+    user_name: Optional[str] = Field(None, min_length=1, max_length=255)
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    portfolio_url: Optional[str] = None
+    template_id: Optional[str] = None
+    experiences: Optional[List[ExperienceSchema]] = None
+    education: Optional[List[EducationSchema]] = None
+    skills: Optional[List[str]] = None
+
+
+class ResumeResponse(ResumeBase):
+    id: str
     created_at: datetime
     updated_at: datetime
 
@@ -46,85 +52,20 @@ class TournamentResponse(TournamentBase):
         from_attributes = True
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class ExportPdfRequest(BaseModel):
+    resume_id: Optional[str] = Field(None, description="Optional UUID of existing resume")
+    user_name: Optional[str] = Field(None, description="Full name if exporting directly")
+    email: Optional[str] = Field(None, description="Email if exporting directly")
+    phone: Optional[str] = None
+    portfolio_url: Optional[str] = None
+    template_id: Optional[str] = Field(None, description="Template to use for export ('classic', 'modern')")
+    experiences: Optional[List[ExperienceSchema]] = None
+    education: Optional[List[EducationSchema]] = None
+    skills: Optional[List[str]] = None
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
-
-
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
-
-
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
-
-    class Config:
-        from_attributes = True
-
-
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
-
-
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+class TemplateInfo(BaseModel):
+    id: str
+    name: str
+    description: str
+    category: str
