@@ -52,7 +52,24 @@ graph TD
 - server/tests/test_reminders.py
 
 ## Frontend Modules (client/)
-- (no client/ files found yet)
+- client/eslint.config.js
+- client/postcss.config.js
+- client/src/App.jsx
+- client/src/App.test.jsx
+- client/src/components/ApprovalActionPanel.jsx
+- client/src/components/ContractDashboard.jsx
+- client/src/components/ExpiryMilestoneTracker.jsx
+- client/src/components/NegotiationDrawer.jsx
+- client/src/components/VersionDiffViewer.jsx
+- client/src/components/WorkflowStepper.jsx
+- client/src/main.jsx
+- client/src/pages/ContractDetailPage.jsx
+- client/src/pages/DashboardPage.jsx
+- client/src/pages/RemindersPage.jsx
+- client/src/services/api.js
+- client/src/setup.js
+- client/tailwind.config.js
+- client/vite.config.js
 
 ## API Endpoints
 - POST /api/v1/contracts
