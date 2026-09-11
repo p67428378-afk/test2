@@ -1,130 +1,173 @@
-import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
-# Auth Schemas
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
+# User / Auth
+class UserLogin(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
     password: str
 
 
-class UserResponse(BaseModel):
-    id: uuid.UUID
+class UserCreate(BaseModel):
     email: EmailStr
-    full_name: Optional[str] = None
+    password: str
+    full_name: str
+    role: str = "procurement_admin"
+
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: str
+    full_name: str
     role: str
-
-    class Config:
-        from_attributes = True
+    is_active: bool
 
 
-# Tournament Schemas
-class TournamentBase(BaseModel):
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+# Vendor
+class VendorCreate(BaseModel):
     name: str
-    total_rounds: int = Field(default=5, ge=1)
+    contact_email: EmailStr
 
 
-class TournamentCreate(TournamentBase):
-    pass
+class VendorOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-
-class TournamentResponse(TournamentBase):
-    id: uuid.UUID
+    id: str
+    name: str
+    contact_email: str
     status: str
-    current_round: int
+
+
+# Contract
+class ContractCreate(BaseModel):
+    title: str
+    vendor_id: Optional[str] = None
+    vendor_name: Optional[str] = None
+    effective_date: date
+    termination_date: date
+    total_value: float = 0.0
+    terms: Optional[str] = None
+    document_url: Optional[str] = None
+
+
+class ContractUpdate(BaseModel):
+    title: Optional[str] = None
+    effective_date: Optional[date] = None
+    termination_date: Optional[date] = None
+    total_value: Optional[float] = None
+    terms: Optional[str] = None
+    document_url: Optional[str] = None
+    current_version_num: Optional[int] = None  # for Optimistic Concurrency Control
+    change_summary: Optional[str] = None
+
+
+class ContractOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    contract_number: str
+    vendor_id: str
+    title: str
+    status: str
+    current_version: str
+    version_number: int
+    effective_date: date
+    termination_date: date
+    total_value: float
+    terms: Optional[str] = None
+    document_url: Optional[str] = None
+    created_by: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    vendor: Optional[VendorOut] = None
 
 
-# Player Schemas
-class PlayerBase(BaseModel):
-    full_name: str
-    email: EmailStr
-    rating: int = Field(default=1200)
-    fide_id: Optional[str] = None
+class ContractListOut(BaseModel):
+    items: List[ContractOut]
+    total: int
+    skip: int
+    limit: int
 
 
-class PlayerCreate(PlayerBase):
-    tournament_id: Optional[uuid.UUID] = None
+# Versions
+class ContractVersionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    contract_id: str
+    version_string: str
+    version_number: int
+    terms_content: Optional[str] = None
+    document_url: Optional[str] = None
+    change_summary: Optional[str] = None
+    created_by: Optional[str] = None
+    created_at: datetime
 
 
-class PlayerResponse(PlayerBase):
-    id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-class RosterPlayerResponse(PlayerResponse):
-    status: str = "ACTIVE"
+# Comments
+class CommentCreate(BaseModel):
+    parent_id: Optional[str] = None
+    clause_reference: Optional[str] = None
+    comment_text: Optional[str] = None
+    content: Optional[str] = None
+    is_internal_only: bool = False
 
 
-# Match & Round Schemas
-class MatchResponse(BaseModel):
-    id: uuid.UUID
-    round_id: uuid.UUID
-    board_number: Optional[int] = None
-    white_player_id: Optional[uuid.UUID] = None
-    black_player_id: Optional[uuid.UUID] = None
-    white_player_name: Optional[str] = None
-    black_player_name: Optional[str] = None
-    result: str
-    is_bye: bool
+class CommentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
-
-
-class MatchResultSubmit(BaseModel):
-    match_id: uuid.UUID
-    result: str = Field(description="Match outcome: 1-0, 0-1, 0.5-0.5, or BYE")
+    id: str
+    contract_id: str
+    parent_id: Optional[str] = None
+    user_id: str
+    clause_reference: Optional[str] = None
+    content: str
+    is_internal_only: bool
+    is_locked: bool
+    created_at: datetime
+    user_email: Optional[str] = None
+    user_name: Optional[str] = None
 
 
-class RoundResponse(BaseModel):
-    id: uuid.UUID
-    tournament_id: uuid.UUID
-    round_number: int
-    is_closed: bool
-    matches: List[MatchResponse] = []
-
-    class Config:
-        from_attributes = True
+# Approvals / Workflow
+class ApprovalAction(BaseModel):
+    action: str  # SUBMIT, APPROVE, REJECT, EXECUTE
+    target_stage: Optional[str] = None
+    comments: Optional[str] = None
 
 
-# Standing Schemas
-class StandingResponse(BaseModel):
-    rank: Optional[int] = None
-    player_id: uuid.UUID
-    full_name: str
-    total_points: float
-    buchholz: float
-    sonneborn_berger: float
-    rating: Optional[int] = None
+class WorkflowHistoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: str
+    contract_id: str
+    action: str
+    from_stage: Optional[str] = None
+    to_stage: Optional[str] = None
+    actor_id: Optional[str] = None
+    remarks: Optional[str] = None
+    created_at: datetime
 
 
-# Certificate Schemas
-class CertificateVerificationResponse(BaseModel):
-    verification_uuid: uuid.UUID
-    valid: bool = True
-    player_name: str
-    tournament_name: str
-    rank: int
-    total_points: float
-    issued_at: datetime
-    qr_code_url: Optional[str] = None
+# Reminders
+class RenewalReminderOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: str
+    contract_id: str
+    reminder_stage_days: int
+    recipient_email: str
+    status: str
+    sent_at: datetime
+    contract_title: Optional[str] = None
+    days_remaining: Optional[int] = None

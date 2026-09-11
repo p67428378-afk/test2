@@ -1,14 +1,14 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from server.core.config import settings
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -23,45 +23,59 @@ def get_db():
 
 
 def init_db():
+    from server import models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
-def seed_data(db: Session):
-    from server import models
-    from server.core.security import get_password_hash
+def seed_data(db):
+    from server.models import User, Vendor
+    from passlib.context import CryptContext
 
-    # Ensure tables exist
-    init_db()
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    # Seed regular user
-    test_user = (
-        db.query(models.User).filter(models.User.email == "test@example.com").first()
-    )
-    if not test_user:
-        test_user = models.User(
-            email="test@example.com",
-            full_name="Test Member",
-            role="member",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-            is_verified=True,
+    # Seed default users
+    users_to_seed = [
+        (
+            "test@example.com",
+            "testpassword",
+            "Test Procurement Admin",
+            "procurement_admin",
+        ),
+        ("admin@example.com", "adminpassword", "Admin User", "procurement_admin"),
+        ("legal@example.com", "legalpassword", "Legal Approver", "legal_approver"),
+        (
+            "finance@example.com",
+            "financepassword",
+            "Finance Approver",
+            "finance_approver",
+        ),
+        ("vendor@example.com", "vendorpassword", "Vendor Rep", "vendor_representative"),
+    ]
+
+    for email, password, name, role in users_to_seed:
+        existing = db.query(User).filter(User.email == email).first()
+        if not existing:
+            hashed_pw = pwd_context.hash(password)
+            user = User(
+                email=email,
+                hashed_password=hashed_pw,
+                full_name=name,
+                role=role,
+                is_active=True,
+            )
+            db.add(user)
+
+    # Seed a default vendor
+    default_vendor_name = "Acme Corp"
+    vendor = db.query(Vendor).filter(Vendor.name == default_vendor_name).first()
+    if not vendor:
+        vendor = Vendor(
+            name=default_vendor_name,
+            contact_email="vendor@example.com",
+            status="Active",
         )
-        db.add(test_user)
-
-    # Seed admin user
-    admin_user = (
-        db.query(models.User).filter(models.User.email == "admin@example.com").first()
-    )
-    if not admin_user:
-        admin_user = models.User(
-            email="admin@example.com",
-            full_name="Admin Organizer",
-            role="admin",
-            hashed_password=get_password_hash("adminpassword"),
-            is_active=True,
-            is_verified=True,
-        )
-        db.add(admin_user)
+        db.add(vendor)
 
     try:
         db.commit()
